@@ -1,0 +1,1958 @@
+需要翻译的文件列表：
+
+d:\Development\Workspace\zephyr\doc\404.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\404.rst
+
+d:\Development\Workspace\zephyr\doc\glossary.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\glossary.rst
+
+d:\Development\Workspace\zephyr\doc\index-tex.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\index-tex.rst
+
+d:\Development\Workspace\zephyr\doc\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\index.rst
+
+d:\Development\Workspace\zephyr\doc\kconfig.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kconfig.rst
+
+d:\Development\Workspace\zephyr\doc\LICENSING.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\LICENSING.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\bluetooth-arch.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\bluetooth-arch.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\bluetooth-ctlr-arch.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\bluetooth-ctlr-arch.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\bluetooth-dev.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\bluetooth-dev.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\bluetooth-le-host.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\bluetooth-le-host.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\bluetooth-qual.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\bluetooth-qual.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\bluetooth-shell.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\bluetooth-shell.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\bluetooth-tools.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\bluetooth-tools.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\features.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\features.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\a2dp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\a2dp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\att.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\att.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\connection_mgmt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\connection_mgmt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\controller.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\controller.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\crypto.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\crypto.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\data_buffer.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\data_buffer.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\gap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\gap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\gatt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\gatt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\hci_drivers.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\hci_drivers.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\hci_raw.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\hci_raw.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\hfp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\hfp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\l2cap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\l2cap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\rfcomm.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\rfcomm.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\sdp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\sdp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\services.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\services.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\uuid.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\uuid.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\audio\audio.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\audio\audio.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\audio\bap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\audio\bap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\audio\bluetooth-le-audio-arch.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\audio\bluetooth-le-audio-arch.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\audio\cap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\audio\cap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\audio\coordinated_sets.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\audio\coordinated_sets.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\audio\media.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\audio\media.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\audio\microphone.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\audio\microphone.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\audio\volume.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\audio\volume.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\access.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\access.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\blob.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\blob.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\blob_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\blob_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\blob_flash.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\blob_flash.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\blob_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\blob_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\brg_cfg.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\brg_cfg.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\brg_cfg_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\brg_cfg_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\brg_cfg_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\brg_cfg_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\cfg.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\cfg.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\cfg_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\cfg_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\cfg_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\cfg_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\core.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\core.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\dfd_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\dfd_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\dfu.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\dfu.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\dfu_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\dfu_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\dfu_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\dfu_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\health_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\health_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\health_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\health_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\heartbeat.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\heartbeat.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\lcd_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\lcd_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\lcd_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\lcd_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\models.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\models.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\msg.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\msg.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\od_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\od_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\od_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\od_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\op_agg_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\op_agg_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\op_agg_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\op_agg_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\priv_beacon_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\priv_beacon_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\priv_beacon_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\priv_beacon_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\provisioning.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\provisioning.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\proxy.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\proxy.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\rpr_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\rpr_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\rpr_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\rpr_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\sar_cfg.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\sar_cfg.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\sar_cfg_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\sar_cfg_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\sar_cfg_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\sar_cfg_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\shell.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\shell.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\srpl_cli.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\srpl_cli.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\srpl_srv.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\srpl_srv.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\api\mesh\statistic.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\api\mesh\statistic.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\autopts\autopts-linux.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\autopts\autopts-linux.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\autopts\autopts-win10.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\autopts\autopts-win10.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\bap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\bap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\bap_broadcast_assistant.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\bap_broadcast_assistant.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\bap_scan_delegator.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\bap_scan_delegator.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\cap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\cap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\ccp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\ccp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\csip.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\csip.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\gmap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\gmap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\mcp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\mcp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\pbp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\pbp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\tbs.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\tbs.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\audio\tmap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\audio\tmap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\classic\a2dp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\classic\a2dp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\classic\goep.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\classic\goep.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\classic\hfp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\classic\hfp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\classic\l2cap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\classic\l2cap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\classic\rfcomm.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\classic\rfcomm.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\host\gap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\host\gap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\host\gatt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\host\gatt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\host\iso.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\host\iso.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\bluetooth\shell\host\l2cap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\bluetooth\shell\host\l2cap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\canbus\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\canbus\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\canbus\isotp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\canbus\isotp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\lora_lorawan\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\lora_lorawan\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\modbus\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\modbus\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\armfvp_user_networking_setup.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\armfvp_user_networking_setup.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\dsa.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\dsa.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\eth_bridge_native_sim_setup.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\eth_bridge_native_sim_setup.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\native_sim_setup.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\native_sim_setup.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\net-stack-architecture.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\net-stack-architecture.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\networking_with_host.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\networking_with_host.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\networking_with_multiple_instances.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\networking_with_multiple_instances.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\network_monitoring.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\network_monitoring.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\network_tracing.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\network_tracing.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\net_config_guide.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\net_config_guide.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\net_pkt_processing_stats.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\net_pkt_processing_stats.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\overview.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\overview.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\qemu_802154_setup.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\qemu_802154_setup.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\qemu_eth_setup.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\qemu_eth_setup.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\qemu_setup.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\qemu_setup.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\qemu_user_setup.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\qemu_user_setup.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\usbnet_setup.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\usbnet_setup.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\8021Qav.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\8021Qav.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\apis.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\apis.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\buf_mgmt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\buf_mgmt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\capture.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\capture.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\coap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\coap.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\coap_client.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\coap_client.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\coap_server.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\coap_server.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\dhcpv4.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\dhcpv4.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\dhcpv6.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\dhcpv6.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\dns_resolve.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\dns_resolve.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\ethernet.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\ethernet.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\ethernet_mgmt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\ethernet_mgmt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\gptp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\gptp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\http_client.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\http_client.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\http_server.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\http_server.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\ieee802154.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\ieee802154.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\ip_4_6.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\ip_4_6.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\latmon.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\latmon.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\lldp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\lldp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\lwm2m.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\lwm2m.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\mqtt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\mqtt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\mqtt_sn.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\mqtt_sn.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_config.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_config.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_context.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_context.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_core.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_core.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_hostname.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_hostname.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_if.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_if.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_l2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_l2.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_linkaddr.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_linkaddr.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_mgmt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_mgmt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_offload.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_offload.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_pkt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_pkt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_pkt_filter.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_pkt_filter.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_shell.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_shell.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_stats.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_stats.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_tech.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_tech.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_time.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_time.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\net_timeout.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\net_timeout.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\ocpp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\ocpp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\ppp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\ppp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\promiscuous.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\promiscuous.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\protocols.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\protocols.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\ptp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\ptp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\ptp_time.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\ptp_time.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\sntp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\sntp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\sockets.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\sockets.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\socket_service.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\socket_service.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\socks5.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\socks5.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\system_mgmt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\system_mgmt.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\tftp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\tftp.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\thread.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\thread.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\tls_credentials_shell.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\tls_credentials_shell.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\traffic-class.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\traffic-class.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\trickle.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\trickle.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\tsn.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\tsn.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\vlan.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\vlan.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\websocket.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\websocket.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\wifi.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\wifi.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\wifi_credentials.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\wifi_credentials.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\api\zperf.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\api\zperf.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\conn_mgr\implementation.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\conn_mgr\implementation.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\conn_mgr\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\conn_mgr\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\networking\conn_mgr\main.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\networking\conn_mgr\main.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\api\hid.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\api\hid.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device\usb_device.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device\usb_device.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device\api\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device\api\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device\api\usb_dc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device\api\usb_dc.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device\api\usb_device.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device\api\usb_device.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device\api\usb_device_bos.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device\api\usb_device_bos.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device\api\usb_device_hid.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device\api\usb_device_hid.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\usb_device.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\usb_device.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\api\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\api\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\api\uac2_device.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\api\uac2_device.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\api\udc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\api\udc.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\api\usbd.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\api\usbd.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\api\usbd_dfu.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\api\usbd_dfu.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\api\usbd_hid_device.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\api\usbd_hid_device.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\api\usbd_midi2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\api\usbd_midi2.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\device_next\api\usbd_msc_device.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\device_next\api\usbd_msc_device.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\host\usbip.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\host\usbip.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\host\api\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\host\api\index.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\host\api\uhc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\host\api\uhc.rst
+
+d:\Development\Workspace\zephyr\doc\connectivity\usb\pd\ucds.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\connectivity\usb\pd\ucds.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\bin_blobs.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\bin_blobs.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\contributor_expectations.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\contributor_expectations.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\external.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\external.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\guidelines.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\guidelines.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\index.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\modifying_contributions.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\modifying_contributions.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\proposals_and_rfcs.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\proposals_and_rfcs.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\reviewer_expectations.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\reviewer_expectations.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\coding_guidelines\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\coding_guidelines\index.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\documentation\generation.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\documentation\generation.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\documentation\guidelines.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\documentation\guidelines.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\style\cmake.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\style\cmake.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\style\code.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\style\code.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\style\devicetree.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\style\devicetree.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\style\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\style\index.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\style\kconfig.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\style\kconfig.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\style\naming.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\style\naming.rst
+
+d:\Development\Workspace\zephyr\doc\contribute\style\python.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\contribute\style\python.rst
+
+d:\Development\Workspace\zephyr\doc\develop\beyond-GSG.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\beyond-GSG.rst
+
+d:\Development\Workspace\zephyr\doc\develop\env_vars.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\env_vars.rst
+
+d:\Development\Workspace\zephyr\doc\develop\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\modules.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\modules.rst
+
+d:\Development\Workspace\zephyr\doc\develop\api\api_lifecycle.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\api\api_lifecycle.rst
+
+d:\Development\Workspace\zephyr\doc\develop\api\design_guidelines.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\api\design_guidelines.rst
+
+d:\Development\Workspace\zephyr\doc\develop\api\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\api\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\api\overview.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\api\overview.rst
+
+d:\Development\Workspace\zephyr\doc\develop\api\terminology.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\api\terminology.rst
+
+d:\Development\Workspace\zephyr\doc\develop\application\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\application\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\debug\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\debug\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\flash_debug\host-tools.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\flash_debug\host-tools.rst
+
+d:\Development\Workspace\zephyr\doc\develop\flash_debug\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\flash_debug\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\flash_debug\nordic_segger.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\flash_debug\nordic_segger.rst
+
+d:\Development\Workspace\zephyr\doc\develop\flash_debug\probes.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\flash_debug\probes.rst
+
+d:\Development\Workspace\zephyr\doc\develop\getting_started\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\getting_started\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\getting_started\installation_linux.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\getting_started\installation_linux.rst
+
+d:\Development\Workspace\zephyr\doc\develop\getting_started\installation_mac.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\getting_started\installation_mac.rst
+
+d:\Development\Workspace\zephyr\doc\develop\getting_started\installation_win.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\getting_started\installation_win.rst
+
+d:\Development\Workspace\zephyr\doc\develop\languages\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\languages\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\languages\c\common_libc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\languages\c\common_libc.rst
+
+d:\Development\Workspace\zephyr\doc\develop\languages\c\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\languages\c\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\languages\c\minimal_libc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\languages\c\minimal_libc.rst
+
+d:\Development\Workspace\zephyr\doc\develop\languages\c\newlib.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\languages\c\newlib.rst
+
+d:\Development\Workspace\zephyr\doc\develop\languages\c\picolibc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\languages\c\picolibc.rst
+
+d:\Development\Workspace\zephyr\doc\develop\languages\cpp\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\languages\cpp\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\languages\rust\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\languages\rust\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\manifest\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\manifest\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\manifest\external\cannectivity.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\manifest\external\cannectivity.rst
+
+d:\Development\Workspace\zephyr\doc\develop\manifest\external\emlearn.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\manifest\external\emlearn.rst
+
+d:\Development\Workspace\zephyr\doc\develop\manifest\external\libmpix.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\manifest\external\libmpix.rst
+
+d:\Development\Workspace\zephyr\doc\develop\manifest\external\mender-mcu.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\manifest\external\mender-mcu.rst
+
+d:\Development\Workspace\zephyr\doc\develop\manifest\external\wolfssl.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\manifest\external\wolfssl.rst
+
+d:\Development\Workspace\zephyr\doc\develop\manifest\external\zenoh-pico.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\manifest\external\zenoh-pico.rst
+
+d:\Development\Workspace\zephyr\doc\develop\optimizations\footprint.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\optimizations\footprint.rst
+
+d:\Development\Workspace\zephyr\doc\develop\optimizations\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\optimizations\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\optimizations\tools.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\optimizations\tools.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\clang.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\clang.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\codechecker.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\codechecker.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\coverity.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\coverity.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\cpptest.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\cpptest.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\dtdoctor.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\dtdoctor.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\eclair.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\eclair.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\gcc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\gcc.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\iar_c_stat.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\iar_c_stat.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\polyspace.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\polyspace.rst
+
+d:\Development\Workspace\zephyr\doc\develop\sca\sparse.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\sca\sparse.rst
+
+d:\Development\Workspace\zephyr\doc\develop\test\bsim.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\test\bsim.rst
+
+d:\Development\Workspace\zephyr\doc\develop\test\coverage.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\test\coverage.rst
+
+d:\Development\Workspace\zephyr\doc\develop\test\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\test\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\test\pytest.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\test\pytest.rst
+
+d:\Development\Workspace\zephyr\doc\develop\test\twister.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\test\twister.rst
+
+d:\Development\Workspace\zephyr\doc\develop\test\twister_statuses.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\test\twister_statuses.rst
+
+d:\Development\Workspace\zephyr\doc\develop\test\ztest.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\test\ztest.rst
+
+d:\Development\Workspace\zephyr\doc\develop\test\twister\twister_blackbox.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\test\twister\twister_blackbox.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\arm_compiler_6.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\arm_compiler_6.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\arm_toolchain_for_embedded.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\arm_toolchain_for_embedded.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\cadence_xcc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\cadence_xcc.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\custom_cmake.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\custom_cmake.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\designware_arc_mwdt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\designware_arc_mwdt.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\gnu_arm_embedded.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\gnu_arm_embedded.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\host.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\host.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\iar_arm_toolchain.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\iar_arm_toolchain.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\intel_oneapi_toolkit.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\intel_oneapi_toolkit.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\other_x_compilers.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\other_x_compilers.rst
+
+d:\Development\Workspace\zephyr\doc\develop\toolchains\zephyr_sdk.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\toolchains\zephyr_sdk.rst
+
+d:\Development\Workspace\zephyr\doc\develop\tools\clion.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\tools\clion.rst
+
+d:\Development\Workspace\zephyr\doc\develop\tools\coccinelle.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\tools\coccinelle.rst
+
+d:\Development\Workspace\zephyr\doc\develop\tools\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\tools\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\tools\stm32cubeide.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\tools\stm32cubeide.rst
+
+d:\Development\Workspace\zephyr\doc\develop\tools\vscode.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\tools\vscode.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\alias.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\alias.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\basics.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\basics.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\build-flash-debug.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\build-flash-debug.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\built-in.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\built-in.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\config.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\config.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\extensions.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\extensions.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\index.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\install.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\install.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\manifest.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\manifest.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\release-notes.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\release-notes.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\sign.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\sign.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\troubleshooting.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\troubleshooting.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\west-apis.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\west-apis.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\west-not-found.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\west-not-found.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\why.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\why.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\without-west.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\without-west.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\workspaces.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\workspaces.rst
+
+d:\Development\Workspace\zephyr\doc\develop\west\zephyr-cmds.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\develop\west\zephyr-cmds.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\arch\arc-support-status.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\arch\arc-support-status.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\arch\arm-scmi.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\arch\arm-scmi.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\arch\arm_cortex_m.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\arch\arm_cortex_m.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\arch\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\arch\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\arch\risc-v.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\arch\risc-v.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\arch\semihost.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\arch\semihost.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\arch\x86.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\arch\x86.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\arch\xtensa.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\arch\xtensa.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\barriers\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\barriers\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\cache\config.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\cache\config.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\cache\guide.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\cache\guide.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\cache\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\cache\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\emulator\bus_emulators.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\emulator\bus_emulators.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\emulator\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\emulator\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\adc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\adc.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\auxdisplay.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\auxdisplay.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\bbram.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\bbram.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\bc12.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\bc12.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\charger.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\charger.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\clock_control.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\clock_control.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\comparator.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\comparator.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\coredump.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\coredump.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\counter.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\counter.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\crc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\crc.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\dac.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\dac.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\dma.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\dma.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\entropy.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\entropy.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\espi.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\espi.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\flash.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\flash.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\fuel_gauge.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\fuel_gauge.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\gnss.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\gnss.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\gpio.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\gpio.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\haptics.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\haptics.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\hwinfo.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\hwinfo.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\hwspinlock.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\hwspinlock.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\i2c.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\i2c.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\i2c_eeprom_target.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\i2c_eeprom_target.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\i3c.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\i3c.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\ipm.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\ipm.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\led.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\led.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\mbox.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\mbox.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\mdio.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\mdio.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\mspi.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\mspi.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\opamp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\opamp.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\pcie.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\pcie.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\peci.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\peci.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\ps2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\ps2.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\psi5.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\psi5.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\pwm.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\pwm.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\regulators.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\regulators.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\reset.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\reset.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\retained_mem.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\retained_mem.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\rtc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\rtc.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sdhc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sdhc.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sent.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sent.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\smbus.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\smbus.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\spi.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\spi.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\stepper.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\stepper.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\tcpc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\tcpc.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\tgpio.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\tgpio.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\uart.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\uart.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\usbc_vbus.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\usbc_vbus.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\video.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\video.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\w1.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\w1.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\watchdog.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\watchdog.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\audio\codec.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\audio\codec.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\audio\dai.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\audio\dai.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\audio\dmic.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\audio\dmic.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\audio\i2s.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\audio\i2s.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\audio\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\audio\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\can\controller.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\can\controller.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\can\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\can\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\can\shell.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\can\shell.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\can\transceiver.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\can\transceiver.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\display\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\display\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\edac\ibecc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\edac\ibecc.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\edac\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\edac\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\eeprom\api.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\eeprom\api.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\eeprom\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\eeprom\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\eeprom\shell.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\eeprom\shell.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sensor\attributes.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sensor\attributes.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sensor\channels.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sensor\channels.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sensor\device_tree.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sensor\device_tree.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sensor\fetch_and_get.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sensor\fetch_and_get.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sensor\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sensor\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sensor\power_management.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sensor\power_management.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sensor\read_and_decode.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sensor\read_and_decode.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\peripherals\sensor\triggers.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\peripherals\sensor\triggers.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\pinctrl\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\pinctrl\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\porting\arch.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\porting\arch.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\porting\board_porting.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\porting\board_porting.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\porting\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\porting\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\porting\shields.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\porting\shields.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\porting\soc_porting.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\porting\soc_porting.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\virtualization\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\virtualization\index.rst
+
+d:\Development\Workspace\zephyr\doc\hardware\virtualization\virtio.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\hardware\virtualization\virtio.rst
+
+d:\Development\Workspace\zephyr\doc\introduction\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\introduction\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\code-relocation.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\code-relocation.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\timeutil.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\timeutil.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\dlist.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\dlist.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\min_heap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\min_heap.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\mpsc_lockfree.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\mpsc_lockfree.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\mpsc_pbuf.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\mpsc_pbuf.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\rbtree.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\rbtree.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\ring_buffers.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\ring_buffers.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\slist.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\slist.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\spsc_lockfree.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\spsc_lockfree.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\data_structures\spsc_pbuf.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\data_structures\spsc_pbuf.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\drivers\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\drivers\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\iterable_sections\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\iterable_sections\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\memory_management\demand_paging.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\memory_management\demand_paging.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\memory_management\heap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\memory_management\heap.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\memory_management\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\memory_management\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\memory_management\shared_multi_heap.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\memory_management\shared_multi_heap.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\memory_management\slabs.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\memory_management\slabs.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\memory_management\sys_mem_blocks.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\memory_management\sys_mem_blocks.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\memory_management\virtual_memory.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\memory_management\virtual_memory.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\object_cores\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\object_cores\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\interrupts.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\interrupts.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\polling.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\polling.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\data_passing\fifos.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\data_passing\fifos.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\data_passing\lifos.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\data_passing\lifos.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\data_passing\mailboxes.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\data_passing\mailboxes.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\data_passing\message_queues.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\data_passing\message_queues.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\data_passing\pipes.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\data_passing\pipes.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\data_passing\queues.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\data_passing\queues.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\data_passing\stacks.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\data_passing\stacks.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\other\atomic.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\other\atomic.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\other\fatal.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\other\fatal.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\other\float.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\other\float.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\other\thread_local_storage.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\other\thread_local_storage.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\other\version.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\other\version.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\scheduling\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\scheduling\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\smp\smp.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\smp\smp.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\synchronization\condvar.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\synchronization\condvar.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\synchronization\events.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\synchronization\events.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\synchronization\mutexes.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\synchronization\mutexes.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\synchronization\semaphores.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\synchronization\semaphores.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\threads\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\threads\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\threads\nothread.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\threads\nothread.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\threads\system_threads.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\threads\system_threads.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\threads\workqueue.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\threads\workqueue.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\timing\clocks.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\timing\clocks.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\services\timing\timers.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\services\timing\timers.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\timing_functions\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\timing_functions\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\usermode\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\usermode\index.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\usermode\kernelobjects.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\usermode\kernelobjects.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\usermode\memory_domain.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\usermode\memory_domain.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\usermode\mpu_stack_objects.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\usermode\mpu_stack_objects.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\usermode\mpu_userspace.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\usermode\mpu_userspace.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\usermode\overview.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\usermode\overview.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\usermode\syscalls.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\usermode\syscalls.rst
+
+d:\Development\Workspace\zephyr\doc\kernel\util\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\kernel\util\index.rst
+
+d:\Development\Workspace\zephyr\doc\project\code_flow.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\code_flow.rst
+
+d:\Development\Workspace\zephyr\doc\project\communication.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\communication.rst
+
+d:\Development\Workspace\zephyr\doc\project\dev_env_and_tools.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\dev_env_and_tools.rst
+
+d:\Development\Workspace\zephyr\doc\project\documentation.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\documentation.rst
+
+d:\Development\Workspace\zephyr\doc\project\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\index.rst
+
+d:\Development\Workspace\zephyr\doc\project\issues.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\issues.rst
+
+d:\Development\Workspace\zephyr\doc\project\project_roles.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\project_roles.rst
+
+d:\Development\Workspace\zephyr\doc\project\proposals.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\proposals.rst
+
+d:\Development\Workspace\zephyr\doc\project\release_process.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\release_process.rst
+
+d:\Development\Workspace\zephyr\doc\project\tsc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\tsc.rst
+
+d:\Development\Workspace\zephyr\doc\project\working_groups.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\project\working_groups.rst
+
+d:\Development\Workspace\zephyr\doc\releases\eol_releases.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\eol_releases.rst
+
+d:\Development\Workspace\zephyr\doc\releases\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\index.rst
+
+d:\Development\Workspace\zephyr\doc\releases\migration-guide-3.5.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\migration-guide-3.5.rst
+
+d:\Development\Workspace\zephyr\doc\releases\migration-guide-3.6.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\migration-guide-3.6.rst
+
+d:\Development\Workspace\zephyr\doc\releases\migration-guide-3.7.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\migration-guide-3.7.rst
+
+d:\Development\Workspace\zephyr\doc\releases\migration-guide-4.0.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\migration-guide-4.0.rst
+
+d:\Development\Workspace\zephyr\doc\releases\migration-guide-4.1.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\migration-guide-4.1.rst
+
+d:\Development\Workspace\zephyr\doc\releases\migration-guide-4.2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\migration-guide-4.2.rst
+
+d:\Development\Workspace\zephyr\doc\releases\migration-guide-4.3.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\migration-guide-4.3.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.10.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.10.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.11.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.11.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.12.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.12.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.13.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.13.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.14.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.14.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.5.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.5.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.6.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.6.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.7.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.7.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.8.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.8.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-1.9.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-1.9.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-2.0.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-2.0.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-2.1.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-2.1.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-2.2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-2.2.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-2.3.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-2.3.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-2.4.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-2.4.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-2.5.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-2.5.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-2.6.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-2.6.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-2.7.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-2.7.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-3.0.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-3.0.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-3.1.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-3.1.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-3.2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-3.2.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-3.3.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-3.3.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-3.4.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-3.4.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-3.5.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-3.5.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-3.6.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-3.6.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-3.7.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-3.7.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-4.0.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-4.0.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-4.1.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-4.1.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-4.2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-4.2.rst
+
+d:\Development\Workspace\zephyr\doc\releases\release-notes-4.3.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\releases\release-notes-4.3.rst
+
+d:\Development\Workspace\zephyr\doc\safety\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\safety\index.rst
+
+d:\Development\Workspace\zephyr\doc\safety\safety_overview.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\safety\safety_overview.rst
+
+d:\Development\Workspace\zephyr\doc\safety\safety_requirements.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\safety\safety_requirements.rst
+
+d:\Development\Workspace\zephyr\doc\security\control-flow-integrity.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\control-flow-integrity.rst
+
+d:\Development\Workspace\zephyr\doc\security\hardening-tool.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\hardening-tool.rst
+
+d:\Development\Workspace\zephyr\doc\security\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\index.rst
+
+d:\Development\Workspace\zephyr\doc\security\reporting.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\reporting.rst
+
+d:\Development\Workspace\zephyr\doc\security\secure-coding.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\secure-coding.rst
+
+d:\Development\Workspace\zephyr\doc\security\security-citations.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\security-citations.rst
+
+d:\Development\Workspace\zephyr\doc\security\security-overview.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\security-overview.rst
+
+d:\Development\Workspace\zephyr\doc\security\sensor-threat.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\sensor-threat.rst
+
+d:\Development\Workspace\zephyr\doc\security\vulnerabilities.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\vulnerabilities.rst
+
+d:\Development\Workspace\zephyr\doc\security\standards\etsi-303645.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\standards\etsi-303645.rst
+
+d:\Development\Workspace\zephyr\doc\security\standards\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\security\standards\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\console.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\console.rst
+
+d:\Development\Workspace\zephyr\doc\services\formatted_output.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\formatted_output.rst
+
+d:\Development\Workspace\zephyr\doc\services\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\misc.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\misc.rst
+
+d:\Development\Workspace\zephyr\doc\services\notify.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\notify.rst
+
+d:\Development\Workspace\zephyr\doc\services\poweroff.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\poweroff.rst
+
+d:\Development\Workspace\zephyr\doc\services\binary_descriptors\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\binary_descriptors\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\cpu_freq\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\cpu_freq\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\cpu_freq\policies\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\cpu_freq\policies\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\cpu_freq\policies\on_demand.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\cpu_freq\policies\on_demand.rst
+
+d:\Development\Workspace\zephyr\doc\services\cpu_load\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\cpu_load\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\crypto\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\crypto\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\crypto\psa_crypto.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\crypto\psa_crypto.rst
+
+d:\Development\Workspace\zephyr\doc\services\crypto\api\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\crypto\api\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\crypto\random\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\crypto\random\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\coredump.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\coredump.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\cpu_load.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\cpu_load.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\cs_trace_defmt.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\cs_trace_defmt.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\debugmon.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\debugmon.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\gdbstub.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\gdbstub.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\mipi_stp_decoder.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\mipi_stp_decoder.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\symtab.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\symtab.rst
+
+d:\Development\Workspace\zephyr\doc\services\debugging\thread-analyzer.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\debugging\thread-analyzer.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\dfu.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\dfu.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\ec_host_cmd.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\ec_host_cmd.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\mcumgr.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\mcumgr.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\mcumgr_callbacks.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\mcumgr_callbacks.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\mcumgr_handlers.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\mcumgr_handlers.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\ota.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\ota.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_protocol.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_protocol.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_transport.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_transport.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_groups\smp_group_0.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_groups\smp_group_0.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_groups\smp_group_1.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_groups\smp_group_1.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_groups\smp_group_10.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_groups\smp_group_10.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_groups\smp_group_2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_groups\smp_group_2.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_groups\smp_group_3.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_groups\smp_group_3.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_groups\smp_group_63.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_groups\smp_group_63.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_groups\smp_group_8.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_groups\smp_group_8.rst
+
+d:\Development\Workspace\zephyr\doc\services\device_mgmt\smp_groups\smp_group_9.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\device_mgmt\smp_groups\smp_group_9.rst
+
+d:\Development\Workspace\zephyr\doc\services\dsp\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\dsp\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\file_system\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\file_system\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\input\gpio-kbd.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\input\gpio-kbd.rst
+
+d:\Development\Workspace\zephyr\doc\services\input\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\input\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\ipc\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\ipc\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\ipc\ipc_service\ipc_service.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\ipc\ipc_service\ipc_service.rst
+
+d:\Development\Workspace\zephyr\doc\services\ipc\ipc_service\backends\ipc_service_icbmsg.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\ipc\ipc_service\backends\ipc_service_icbmsg.rst
+
+d:\Development\Workspace\zephyr\doc\services\ipc\ipc_service\backends\ipc_service_icmsg.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\ipc\ipc_service\backends\ipc_service_icmsg.rst
+
+d:\Development\Workspace\zephyr\doc\services\llext\api.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\llext\api.rst
+
+d:\Development\Workspace\zephyr\doc\services\llext\build.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\llext\build.rst
+
+d:\Development\Workspace\zephyr\doc\services\llext\config.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\llext\config.rst
+
+d:\Development\Workspace\zephyr\doc\services\llext\debug.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\llext\debug.rst
+
+d:\Development\Workspace\zephyr\doc\services\llext\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\llext\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\llext\load.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\llext\load.rst
+
+d:\Development\Workspace\zephyr\doc\services\logging\cs_stm.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\logging\cs_stm.rst
+
+d:\Development\Workspace\zephyr\doc\services\logging\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\logging\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\mem_mgmt\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\mem_mgmt\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\modem\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\modem\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\net_buf\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\net_buf\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\nvmem\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\nvmem\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\pm\device.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\pm\device.rst
+
+d:\Development\Workspace\zephyr\doc\services\pm\device_runtime.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\pm\device_runtime.rst
+
+d:\Development\Workspace\zephyr\doc\services\pm\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\pm\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\pm\overview.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\pm\overview.rst
+
+d:\Development\Workspace\zephyr\doc\services\pm\power_domain.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\pm\power_domain.rst
+
+d:\Development\Workspace\zephyr\doc\services\pm\system.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\pm\system.rst
+
+d:\Development\Workspace\zephyr\doc\services\pm\api\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\pm\api\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\cmsis_rtos_v1.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\cmsis_rtos_v1.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\cmsis_rtos_v2.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\cmsis_rtos_v2.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\posix\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\posix\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\posix\aep\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\posix\aep\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\posix\conformance\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\posix\conformance\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\posix\implementation\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\posix\implementation\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\posix\kconfig\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\posix\kconfig\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\posix\option_groups\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\posix\option_groups\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\portability\posix\overview\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\portability\posix\overview\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\profiling\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\profiling\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\profiling\perf.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\profiling\perf.rst
+
+d:\Development\Workspace\zephyr\doc\services\resource_management\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\resource_management\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\retention\blinfo.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\retention\blinfo.rst
+
+d:\Development\Workspace\zephyr\doc\services\retention\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\retention\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\rtio\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\rtio\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\sensing\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\sensing\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\serialization\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\serialization\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\serialization\nanopb.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\serialization\nanopb.rst
+
+d:\Development\Workspace\zephyr\doc\services\shell\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\shell\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\smf\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\smf\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\disk\access.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\disk\access.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\disk\nvme.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\disk\nvme.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\fcb\fcb.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\fcb\fcb.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\flash_map\flash_map.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\flash_map\flash_map.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\nvs\nvs.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\nvs\nvs.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\secure_storage\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\secure_storage\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\settings\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\settings\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\stream\stream_flash.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\stream\stream_flash.rst
+
+d:\Development\Workspace\zephyr\doc\services\storage\zms\zms.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\storage\zms\zms.rst
+
+d:\Development\Workspace\zephyr\doc\services\task_wdt\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\task_wdt\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\tfm\build.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\tfm\build.rst
+
+d:\Development\Workspace\zephyr\doc\services\tfm\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\tfm\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\tfm\integration.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\tfm\integration.rst
+
+d:\Development\Workspace\zephyr\doc\services\tfm\overview.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\tfm\overview.rst
+
+d:\Development\Workspace\zephyr\doc\services\tfm\requirements.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\tfm\requirements.rst
+
+d:\Development\Workspace\zephyr\doc\services\tfm\testsuites.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\tfm\testsuites.rst
+
+d:\Development\Workspace\zephyr\doc\services\tracing\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\tracing\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\virtualization\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\virtualization\index.rst
+
+d:\Development\Workspace\zephyr\doc\services\virtualization\ivshmem.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\virtualization\ivshmem.rst
+
+d:\Development\Workspace\zephyr\doc\services\zbus\index.rst
+  -> d:\Development\Workspace\zephyr\doc-zh\services\zbus\index.rst
+
