@@ -1,12 +1,11 @@
 .. _spsc_lockfree:
 
-Single Producer Single Consumer Lock Free Queue
-===============================================
+单生产者单消费者无锁队列 (Single Producer Single Consumer Lock Free Queue)
+===========================================================================
 
-A :dfn:`Single Producer Single Consumer Lock Free Queue (SPSC)` is a lock free
-atomic ring buffer based queue.
+:dfn:`单生产者单消费者无锁队列 (SPSC)` 是一个基于无锁原子环形缓冲区的队列。
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: spsc_lockfree

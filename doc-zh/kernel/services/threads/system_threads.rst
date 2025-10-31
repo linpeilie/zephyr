@@ -1,85 +1,68 @@
 .. _system_threads_v2:
 
-System Threads
-##############
+系统线程
+########
 
 .. contents::
     :local:
     :depth: 2
 
-A :dfn:`system thread` is a thread that the kernel spawns automatically
-during system initialization.
+:dfn:`系统线程` (system thread) 是内核在系统初始化期间自动生成 (spawns) 的线程。
 
-The kernel spawns the following system threads:
+内核生成以下系统线程：
 
-**Main thread**
-    This thread performs kernel initialization, then calls the application's
-    :c:func:`main` function (if one is defined).
+**主线程 (Main thread)**
+    此线程执行内核初始化，然后调用应用程序的 :c:func:`main` 函数（如果定义了）。
 
-    By default, the main thread uses the highest configured preemptible thread
-    priority (i.e. 0). If the kernel is not configured to support preemptible
-    threads, the main thread uses the lowest configured cooperative thread
-    priority (i.e. -1).
+    默认情况下，主线程使用配置的最高可抢占线程优先级 (preemptible thread priority)（即 0）。
+    如果内核未配置为支持可抢占线程，则主线程使用配置的最低协作线程优先级 (cooperative thread priority)（即 -1）。
 
-    The main thread is an essential thread while it is performing kernel
-    initialization or executing the application's :c:func:`main` function;
-    this means a fatal system error is raised if the thread aborts. If
-    :c:func:`main` is not defined, or if it executes and then does a normal
-    return, the main thread terminates normally and no error is raised.
+    主线程在执行内核初始化或执行应用程序的 :c:func:`main` 函数时是一个基本线程 (essential thread)；
+    这意味着如果线程中止 (aborts)，会引发致命系统错误 (fatal system error)。如果未定义 :c:func:`main`，
+    或者它执行后正常返回，则主线程正常终止，不会引发错误。
 
-**Idle thread**
-    This thread executes when there is no other work for the system to do.
-    If possible, the idle thread activates the board's power management support
-    to save power; otherwise, the idle thread simply performs a "do nothing"
-    loop. The idle thread remains in existence as long as the system is running
-    and never terminates.
+**空闲线程 (Idle thread)**
+    此线程在系统没有其他工作要做时执行。如果可能，空闲线程会激活板卡的电源管理支持 (power management support)
+    以节省电力；否则，空闲线程只是执行"什么都不做"的循环。只要系统在运行，空闲线程就会一直存在，永不终止。
 
-    The idle thread always uses the lowest configured thread priority.
+    空闲线程始终使用配置的最低线程优先级。
 
-    The idle thread is an essential thread, which means a fatal system error
-    is raised if the thread aborts.
+    空闲线程是一个基本线程，这意味着如果线程中止，会引发致命系统错误。
 
-Additional system threads may also be spawned, depending on the kernel
-and board configuration options specified by the application. For example,
-enabling the system workqueue spawns a system thread
-that services the work items submitted to it. (See :ref:`workqueues_v2`.)
+根据应用程序指定的内核和板卡配置选项，还可能生成其他系统线程。例如，启用系统工作队列 (system workqueue)
+会生成一个系统线程来服务提交给它的工作项 (work items)。（参见 :ref:`workqueues_v2`。）
 
-Implementation
-**************
+实现
+****
 
-Writing a main() function
-=========================
+编写 main() 函数
+================
 
-An application-supplied ``main()`` function begins executing once
-kernel initialization is complete. The kernel does not pass any arguments
-to the function, unless ``CONFIG_BOOTARGS`` is selected. In such case the
-kernel passes arguments to it and ``main(int, char **)`` can be used.
+内核初始化完成后，应用程序提供的 ``main()`` 函数开始执行。内核不向该函数传递任何参数，
+除非选择了 ``CONFIG_BOOTARGS``。在这种情况下，内核会向其传递参数，可以使用 ``main(int, char **)``。
 
-The following code outlines a trivial ``main(void)`` function.
-The function used by a real application can be as complex as needed.
+以下代码概述了一个简单的 ``main(void)`` 函数。实际应用程序使用的函数可以根据需要变得复杂。
 
 .. code-block:: c
 
     int main(void)
     {
-        /* initialize a semaphore */
+        /* 初始化信号量 */
 	...
 
-	/* register an ISR that gives the semaphore */
+	/* 注册一个提供信号量的 ISR */
 	...
 
-	/* monitor the semaphore forever */
+	/* 永远监视信号量 */
 	while (1) {
-	    /* wait for the semaphore to be given by the ISR */
+	    /* 等待 ISR 提供信号量 */
 	    ...
-	    /* do whatever processing is now needed */
+	    /* 执行现在需要的任何处理 */
 	    ...
 	}
     }
 
-Suggested Uses
-**************
+建议用途
+********
 
-Use the main thread to perform thread-based processing in an application
-that only requires a single thread, rather than defining an additional
-application-specific thread.
+使用主线程在只需要单个线程的应用程序中执行基于线程的处理，而不是定义额外的特定于应用程序的线程。

@@ -1,170 +1,337 @@
-.. _sys_mem_blocks:
+.. _sys_mem_blocks:.. _sys_mem_blocks:
 
-内存块分配器
-############
 
-内存块分配器允许从指定的内存区域动态分配内存块,其中:
 
-* 所有内存块都具有单一固定大小。
+内存块分配器 (Memory Blocks Allocator)内存块分配器
 
-* 可以同时分配或释放多个块。
+##################################################
 
-* 一起分配的一组块可能不是连续的。这对于诸如分散-聚集 DMA 传输之类的操作很有用。
 
-* 分配块的簿记在关联缓冲区之外完成(与内存板不同)。这允许缓冲区驻留在可以
+
+内存块分配器允许从指定的内存区域动态分配内存块，其中：内存块分配器允许从指定的内存区域动态分配内存块,其中:
+
+
+
+* 所有内存块都具有单一的固定大小。* 所有内存块都具有单一固定大小。
+
+
+
+* 可以同时分配或释放多个块。* 可以同时分配或释放多个块。
+
+
+
+* 一起分配的一组块可能不是连续的。这对于诸如分散-聚集 DMA 传输等操作很有用。* 一起分配的一组块可能不是连续的。这对于诸如分散-聚集 DMA 传输之类的操作很有用。
+
+
+
+* 已分配块的簿记在关联缓冲区之外完成（与内存板不同）。这允许缓冲区驻留在可以断电以节省能量的内存区域中。* 分配块的簿记在关联缓冲区之外完成(与内存板不同)。这允许缓冲区驻留在可以
+
   断电以节省能源的内存区域中。
 
 .. contents::
-    :local:
+
+    :local:.. contents::
+
+    :depth: 2    :local:
+
     :depth: 2
 
 概念
+
+****概念
+
 ****
+
+可以定义任意数量的内存块分配器（仅受可用 RAM 限制）。每个分配器通过其内存地址引用。
 
 可以定义任意数量的内存块分配器(仅受可用 RAM 限制)。每个分配器由其内存地址引用。
 
+内存块分配器具有以下关键属性：
+
 内存块分配器具有以下关键属性:
+
+* 每个块的**块大小** (block size)，以字节为单位。它必须至少为 4N 字节长，其中 N 大于 0。
 
 * 每个块的**块大小**,以字节为单位。它必须至少为 4N 字节长,其中 N 大于 0。
 
+* 可用于分配的**块数量** (number of blocks)。它必须大于零。
+
 * 可用于分配的**块数**。它必须大于零。
+
+* 为内存板的块提供内存的**缓冲区** (buffer)。它必须至少为"块大小"乘以"块数量"字节长。
 
 * 为内存板的块提供内存的**缓冲区**。它必须至少为"块大小"乘以"块数"字节长。
 
+* 用于跟踪哪个块已被分配的**块位图** (blocks bitmap)。
+
 * 一个**块位图**,用于跟踪哪个块已被分配。
 
-缓冲区必须对齐到 N 字节边界,其中 N 是大于 2 的 2 的幂(即 4、8、16...)。
+缓冲区必须对齐到 N 字节边界，其中 N 是大于 2 的 2 的幂（即 4、8、16...）。
+
+为了确保缓冲区中的所有内存块都类似地对齐到此边界，块大小也必须是 N 的倍数。缓冲区必须对齐到 N 字节边界,其中 N 是大于 2 的 2 的幂(即 4、8、16...)。
+
 为了确保缓冲区中的所有内存块都类似地对齐到此边界,块大小也必须是 N 的倍数。
+
+由于使用内部簿记结构及其创建，每个内存块分配器必须在编译时声明和定义。
 
 由于使用内部簿记结构及其创建,每个内存块分配器必须在编译时声明和定义。
 
 内部操作
+
+========内部操作
+
 ========
 
+与分配器关联的每个缓冲区都是固定大小块的数组，块之间没有浪费的空间。
+
 与分配器关联的每个缓冲区都是固定大小块的数组,块之间没有浪费的空间。
+
+内存块分配器使用位图来跟踪未分配的块。
 
 内存块分配器使用位图跟踪未分配的块。
 
 内存块分配器
+
+************内存块分配器
+
 ************
 
-在内部,内存块分配器使用位图来跟踪哪些块已被分配。每个分配器利用
-``sys_bitarray`` 接口,从后备缓冲区一个接一个地获取内存块,直到达到请求的
+在内部，内存块分配器使用位图来跟踪哪些块已被分配。每个分配器利用 ``sys_bitarray`` 接口，
+
+从后备缓冲区中逐个获取内存块，最多达到请求的块数。有关分配器的所有元数据都存储在后备缓冲区之外。在内部,内存块分配器使用位图来跟踪哪些块已被分配。每个分配器利用
+
+这允许后备缓冲区的内存区域断电以节省能量，因为分配器代码从不触及缓冲区的内容。``sys_bitarray`` 接口,从后备缓冲区一个接一个地获取内存块,直到达到请求的
+
 块数。关于分配器的所有元数据都存储在后备缓冲区之外。这允许后备缓冲区的内存
-区域断电以节省能源,因为分配器代码从不触及缓冲区的内容。
+
+多内存块分配器组 (Multi Memory Blocks Allocator Group)区域断电以节省能源,因为分配器代码从不触及缓冲区的内容。
+
+*******************************************************
 
 多内存块分配器组
-****************
+
+多内存块分配器组实用函数提供了一种方便的方法来管理一组分配器。****************
+
+自定义分配器选择函数用于在此组中选择要使用的分配器。
 
 多内存块分配器组实用程序函数提供了一种方便的方法来管理一组分配器。使用自定义
-分配器选择函数在此组中选择要使用的分配器。
 
-分配器组应该在运行时通过 :c:func:`sys_multi_mem_blocks_init` 初始化。
+分配器组应该在运行时通过 :c:func:`sys_multi_mem_blocks_init` 进行初始化。分配器选择函数在此组中选择要使用的分配器。
+
 然后可以通过 :c:func:`sys_multi_mem_blocks_add_allocator` 添加每个分配器。
 
-要从组中分配内存块,调用 :c:func:`sys_multi_mem_blocks_alloc` 并使用不透明的
-"配置"参数。此参数直接传递给分配器选择函数,以便可以选择适当的分配器。选择
-分配器后,通过 :c:func:`sys_mem_blocks_alloc` 分配内存块。
+分配器组应该在运行时通过 :c:func:`sys_multi_mem_blocks_init` 初始化。
 
-可以通过 :c:func:`sys_multi_mem_blocks_free` 释放已分配的内存块。调用者不需要
+要从组中分配内存块，使用不透明的"配置"参数调用 :c:func:`sys_multi_mem_blocks_alloc`。然后可以通过 :c:func:`sys_multi_mem_blocks_add_allocator` 添加每个分配器。
+
+此参数直接传递给分配器选择函数，以便可以选择适当的分配器。
+
+选择分配器后，通过 :c:func:`sys_mem_blocks_alloc` 分配内存块。要从组中分配内存块,调用 :c:func:`sys_multi_mem_blocks_alloc` 并使用不透明的
+
+"配置"参数。此参数直接传递给分配器选择函数,以便可以选择适当的分配器。选择
+
+可以通过 :c:func:`sys_multi_mem_blocks_free` 释放已分配的内存块。分配器后,通过 :c:func:`sys_mem_blocks_alloc` 分配内存块。
+
+调用者不需要传递配置参数。分配器代码匹配传入的内存地址以找到正确的分配器，
+
+然后通过 :c:func:`sys_mem_blocks_free` 释放内存块。可以通过 :c:func:`sys_multi_mem_blocks_free` 释放已分配的内存块。调用者不需要
+
 传递配置参数。分配器代码匹配传入的内存地址以找到正确的分配器,然后通过
-:c:func:`sys_mem_blocks_free` 释放内存块。
+
+使用方法:c:func:`sys_mem_blocks_free` 释放内存块。
+
+********
 
 用法
-****
 
-定义内存块分配器
+定义内存块分配器****
+
 ================
 
+定义内存块分配器
+
+内存块分配器使用 :c:type:`sys_mem_blocks_t` 类型的变量定义。================
+
+它需要在编译时通过调用 :c:macro:`SYS_MEM_BLOCKS_DEFINE` 进行定义和初始化。
+
 使用类型 :c:type:`sys_mem_blocks_t` 的变量定义内存块分配器。它需要在编译时
-通过调用 :c:macro:`SYS_MEM_BLOCKS_DEFINE` 定义和初始化。
 
-以下代码定义并初始化一个内存块分配器,该分配器有 4 个块,每个块长 64 字节,
+以下代码定义并初始化一个内存块分配器，它有 4 个 64 字节长的块，每个块都对齐到 4 字节边界：通过调用 :c:macro:`SYS_MEM_BLOCKS_DEFINE` 定义和初始化。
+
+
+
+.. code-block:: c以下代码定义并初始化一个内存块分配器,该分配器有 4 个块,每个块长 64 字节,
+
 每个块都对齐到 4 字节边界:
-
-.. code-block:: c
 
    SYS_MEM_BLOCKS_DEFINE(allocator, 64, 4, 4);
 
-同样,您可以在私有作用域中定义内存块分配器:
+.. code-block:: c
+
+同样，您可以在私有作用域中定义内存块分配器：
+
+   SYS_MEM_BLOCKS_DEFINE(allocator, 64, 4, 4);
 
 .. code-block:: c
+
+同样,您可以在私有作用域中定义内存块分配器:
 
    SYS_MEM_BLOCKS_DEFINE_STATIC(static_allocator, 64, 4, 4);
 
-也可以向分配器提供预定义的缓冲区,其中缓冲区可以单独放置。请注意,需要在其
-定义处完成缓冲区的对齐。
-
 .. code-block:: c
 
-   uint8_t __aligned(4) backing_buffer[64 * 4];
-   SYS_MEM_BLOCKS_DEFINE_WITH_EXT_BUF(allocator, 64, 4, backing_buffer);
+也可以向分配器提供预定义的缓冲区，其中缓冲区可以单独放置。
 
-分配内存块
+请注意，缓冲区的对齐需要在其定义时完成。   SYS_MEM_BLOCKS_DEFINE_STATIC(static_allocator, 64, 4, 4);
+
+
+
+.. code-block:: c也可以向分配器提供预定义的缓冲区,其中缓冲区可以单独放置。请注意,需要在其
+
+定义处完成缓冲区的对齐。
+
+   uint8_t __aligned(4) backing_buffer[64 * 4];
+
+   SYS_MEM_BLOCKS_DEFINE_WITH_EXT_BUF(allocator, 64, 4, backing_buffer);.. code-block:: c
+
+
+
+分配内存块   uint8_t __aligned(4) backing_buffer[64 * 4];
+
+==========   SYS_MEM_BLOCKS_DEFINE_WITH_EXT_BUF(allocator, 64, 4, backing_buffer);
+
+
+
+可以通过调用 :c:func:`sys_mem_blocks_alloc` 分配内存块。分配内存块
+
 ==========
+
+.. code-block:: c
 
 可以通过调用 :c:func:`sys_mem_blocks_alloc` 分配内存块。
 
-.. code-block:: c
-
    int ret;
+
+   uintptr_t blocks[2];.. code-block:: c
+
+
+
+   ret = sys_mem_blocks_alloc(allocator, 2, blocks);   int ret;
+
    uintptr_t blocks[2];
+
+如果 ``ret == 0``，数组 ``blocks`` 将包含指向已分配块的内存地址数组。
 
    ret = sys_mem_blocks_alloc(allocator, 2, blocks);
 
-如果 ``ret == 0``,数组 ``blocks`` 将包含指向已分配块的内存地址数组。
-
 释放内存块
+
+==========如果 ``ret == 0``,数组 ``blocks`` 将包含指向已分配块的内存地址数组。
+
+
+
+通过调用 :c:func:`sys_mem_blocks_free` 释放内存块。释放内存块
+
 ==========
+
+以下代码基于上面的示例构建，分配 2 个内存块，然后在不再需要时释放它们。
 
 通过调用 :c:func:`sys_mem_blocks_free` 释放内存块。
 
-以下代码基于上面的示例,分配 2 个内存块,然后在不再需要时释放它们。
-
 .. code-block:: c
 
-   int ret;
-   uintptr_t blocks[2];
+以下代码基于上面的示例,分配 2 个内存块,然后在不再需要时释放它们。
 
-   ret = sys_mem_blocks_alloc(allocator, 2, blocks);
-   ... /* 对分配的内存块执行一些操作 */
+   int ret;
+
+   uintptr_t blocks[2];.. code-block:: c
+
+
+
+   ret = sys_mem_blocks_alloc(allocator, 2, blocks);   int ret;
+
+   ... /* perform some operations on the allocated memory blocks */   uintptr_t blocks[2];
+
    ret = sys_mem_blocks_free(allocator, 2, blocks);
 
-使用多内存块分配器组
+   ret = sys_mem_blocks_alloc(allocator, 2, blocks);
+
+使用多内存块分配器组   ... /* 对分配的内存块执行一些操作 */
+
+====================   ret = sys_mem_blocks_free(allocator, 2, blocks);
+
+
+
+以下代码演示如何初始化分配器组：使用多内存块分配器组
+
 ====================
+
+.. code-block:: c
 
 以下代码演示如何初始化分配器组:
 
-.. code-block:: c
-
    sys_mem_blocks_t *choice_fn(struct sys_multi_mem_blocks *group, void *cfg)
-   {
-       ...
-   }
 
-   SYS_MEM_BLOCKS_DEFINE(allocator0, 64, 4, 4);
+   {.. code-block:: c
+
+       ...
+
+   }   sys_mem_blocks_t *choice_fn(struct sys_multi_mem_blocks *group, void *cfg)
+
+   {
+
+   SYS_MEM_BLOCKS_DEFINE(allocator0, 64, 4, 4);       ...
+
+   SYS_MEM_BLOCKS_DEFINE(allocator1, 64, 4, 4);   }
+
+
+
+   static sys_multi_mem_blocks_t alloc_group;   SYS_MEM_BLOCKS_DEFINE(allocator0, 64, 4, 4);
+
    SYS_MEM_BLOCKS_DEFINE(allocator1, 64, 4, 4);
 
-   static sys_multi_mem_blocks_t alloc_group;
+   sys_multi_mem_blocks_init(&alloc_group, choice_fn);
+
+   sys_multi_mem_blocks_add_allocator(&alloc_group, &allocator0);   static sys_multi_mem_blocks_t alloc_group;
+
+   sys_multi_mem_blocks_add_allocator(&alloc_group, &allocator1);
 
    sys_multi_mem_blocks_init(&alloc_group, choice_fn);
-   sys_multi_mem_blocks_add_allocator(&alloc_group, &allocator0);
+
+要从组中分配和释放内存块：   sys_multi_mem_blocks_add_allocator(&alloc_group, &allocator0);
+
    sys_multi_mem_blocks_add_allocator(&alloc_group, &allocator1);
+
+.. code-block:: c
 
 要从组中分配和释放内存块:
 
-.. code-block:: c
-
    int ret;
-   uintptr_t blocks[1];
+
+   uintptr_t blocks[1];.. code-block:: c
+
    size_t blk_size;
 
-   ret = sys_multi_mem_blocks_alloc(&alloc_group, UINT_TO_POINTER(0),
+   int ret;
+
+   ret = sys_multi_mem_blocks_alloc(&alloc_group, UINT_TO_POINTER(0),   uintptr_t blocks[1];
+
+                                    1, blocks, &blk_size);   size_t blk_size;
+
+
+
+   ret = sys_multi_mem_blocks_free(&alloc_group, 1, blocks);   ret = sys_multi_mem_blocks_alloc(&alloc_group, UINT_TO_POINTER(0),
+
                                     1, blocks, &blk_size);
 
-   ret = sys_multi_mem_blocks_free(&alloc_group, 1, blocks);
-
 API 参考
+
+********   ret = sys_multi_mem_blocks_free(&alloc_group, 1, blocks);
+
+
+
+.. doxygengroup:: mem_blocks_apisAPI 参考
+
 ********
 
 .. doxygengroup:: mem_blocks_apis

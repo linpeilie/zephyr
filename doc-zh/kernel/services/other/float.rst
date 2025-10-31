@@ -1,316 +1,223 @@
 .. _float_v2:
 
-Floating Point Services
-#######################
+浮点服务
+########
 
-The kernel allows threads to use floating point registers on board
-configurations that support these registers.
+内核允许线程在支持这些寄存器的板卡配置上使用浮点寄存器 (floating point registers)。
 
 .. note::
-    Floating point services are currently available only for boards
-    based on ARM Cortex-M SoCs supporting the Floating Point Extension,
-    the Intel x86 architecture, the SPARC architecture and ARCv2 SoCs
-    supporting the Floating Point Extension. The services provided
-    are architecture specific.
+    浮点服务目前仅适用于支持浮点扩展 (Floating Point Extension) 的基于 ARM Cortex-M SoC 的板卡、
+    Intel x86 架构、SPARC 架构以及支持浮点扩展的 ARCv2 SoC。提供的服务是特定于架构的。
 
-    The kernel does not support the use of floating point registers by ISRs.
+    内核不支持 ISR 使用浮点寄存器。
 
 .. contents::
     :local:
     :depth: 2
 
-Concepts
-********
+概念
+****
 
-The kernel can be configured to provide only the floating point services
-required by an application. Three modes of operation are supported,
-which are described below. In addition, the kernel's support for the SSE
-registers can be included or omitted, as desired.
+可以将内核配置为仅提供应用程序所需的浮点服务。支持三种操作模式，如下所述。
+此外，可以根据需要包含或省略内核对 SSE 寄存器的支持。
 
-No FP registers mode
-====================
+无 FP 寄存器模式
+===============
 
-This mode is used when the application has no threads that use floating point
-registers. It is the kernel's default floating point services mode.
+当应用程序没有使用浮点寄存器的线程时使用此模式。这是内核的默认浮点服务模式。
 
-If a thread uses any floating point register,
-the kernel generates a fatal error condition and aborts the thread.
+如果线程使用任何浮点寄存器，内核会生成致命错误条件并中止该线程。
 
-Unshared FP registers mode
-==========================
+非共享 FP 寄存器模式
+===================
 
-This mode is used when the application has only a single thread
-that uses floating point registers.
+当应用程序只有一个使用浮点寄存器的线程时使用此模式。
 
-On x86 platforms, the kernel initializes the floating point registers so they can
-be used by any thread (initialization in skipped on ARM Cortex-M platforms and
-ARCv2 platforms). The floating point registers are left unchanged whenever a
-context switch occurs.
+在 x86 平台上，内核初始化浮点寄存器，以便任何线程都可以使用它们
+（在 ARM Cortex-M 平台和 ARCv2 平台上跳过初始化）。每当发生上下文切换时，浮点寄存器保持不变。
 
 .. note::
-    The behavior is undefined, if two or more threads attempt to use
-    the floating point registers, as the kernel does not attempt to detect
-    (or prevent) multiple threads from using these registers.
+    如果两个或更多线程尝试使用浮点寄存器，则行为未定义，因为内核不会尝试检测（或阻止）
+    多个线程使用这些寄存器。
 
-Shared FP registers mode
-========================
+共享 FP 寄存器模式
+=================
 
-This mode is used when the application has two or more threads that use
-floating point registers. Depending upon the underlying CPU architecture,
-the kernel supports one or more of the following thread sub-classes:
+当应用程序有两个或更多使用浮点寄存器的线程时使用此模式。根据底层 CPU 架构，
+内核支持以下一个或多个线程子类：
 
-* non-user: A thread that cannot use any floating point registers
+* non-user: 不能使用任何浮点寄存器的线程
 
-* FPU user: A thread that can use the standard floating point registers
+* FPU user: 可以使用标准浮点寄存器的线程
 
-* SSE user: A thread that can use both the standard floating point registers
-  and SSE registers
+* SSE user: 可以使用标准浮点寄存器和 SSE 寄存器的线程
 
-The kernel initializes and enables access to the floating point registers,
-so they can be used
-by any thread, then saves and restores these registers during
-context switches to ensure the computations performed by each FPU user
-or SSE user are not impacted by the computations performed by the other users.
+内核初始化并启用对浮点寄存器的访问，以便任何线程都可以使用它们，然后在上下文切换期间
+保存和恢复这些寄存器，以确保每个 FPU 用户或 SSE 用户执行的计算不受其他用户执行的计算的影响。
 
-ARM Cortex-M architecture (with the Floating Point Extension)
--------------------------------------------------------------
+ARM Cortex-M 架构（带浮点扩展）
+------------------------------
 
 .. note::
-    The Shared FP registers mode is the default Floating Point
-    Services mode in ARM Cortex-M.
+    共享 FP 寄存器模式是 ARM Cortex-M 中的默认浮点服务模式。
 
-On the ARM Cortex-M architecture with the Floating Point Extension, the kernel
-treats *all* threads as FPU users when shared FP registers mode is enabled.
-This means that any thread is allowed to access the floating point registers.
-The ARM kernel automatically detects that a given thread is using the floating
-point registers the first time the thread accesses them.
+在带有浮点扩展的 ARM Cortex-M 架构上，当启用共享 FP 寄存器模式时，
+内核将*所有*线程视为 FPU 用户。这意味着任何线程都被允许访问浮点寄存器。
+ARM 内核在给定线程第一次访问浮点寄存器时自动检测到该线程正在使用浮点寄存器。
 
-Pretag a thread that intends to use the FP registers by
-using one of the techniques listed below.
+使用以下列出的技术之一预标记打算使用 FP 寄存器的线程。
 
-* A statically-created ARM thread can be pretagged by passing the
-  :c:macro:`K_FP_REGS` option to :c:macro:`K_THREAD_DEFINE`.
+* 静态创建的 ARM 线程可以通过将 :c:macro:`K_FP_REGS` 选项传递给 :c:macro:`K_THREAD_DEFINE` 进行预标记。
 
-* A dynamically-created ARM thread can be pretagged by passing the
-  :c:macro:`K_FP_REGS` option to :c:func:`k_thread_create`.
+* 动态创建的 ARM 线程可以通过将 :c:macro:`K_FP_REGS` 选项传递给 :c:func:`k_thread_create` 进行预标记。
 
-Pretagging a thread with the :c:macro:`K_FP_REGS` option instructs the
-MPU-based stack protection mechanism to properly configure the size of
-the thread's guard region to always guarantee stack overflow detection,
-and enable lazy stacking for the given thread upon thread creation.
+使用 :c:macro:`K_FP_REGS` 选项预标记线程会指示基于 MPU 的栈保护机制正确配置线程的保护区域大小，
+以始终保证栈溢出检测，并在线程创建时为给定线程启用延迟堆栈 (lazy stacking)。
 
-During thread context switching the ARM kernel saves the *callee-saved*
-floating point registers, if the switched-out thread has been using them.
-Additionally, the *caller-saved* floating point registers are saved on
-the thread's stack. If the switched-in thread has been using the floating
-point registers, the kernel restores the *callee-saved* FP registers of
-the switched-in thread and the *caller-saved* FP context is restored from
-the thread's stack. Thus, the kernel does not save or restore the FP
-context of threads that are not using the FP registers.
+在线程上下文切换期间，如果切换出的线程一直在使用浮点寄存器，ARM 内核会保存*被调用者保存* (callee-saved)
+的浮点寄存器。此外，*调用者保存* (caller-saved) 的浮点寄存器会保存在线程的栈上。
+如果切换入的线程一直在使用浮点寄存器，内核会恢复切换入线程的*被调用者保存*的 FP 寄存器，
+*调用者保存*的 FP 上下文会从线程的栈中恢复。因此，内核不会保存或恢复未使用 FP 寄存器的线程的 FP 上下文。
 
-Each thread that intends to use the floating point registers must provide
-an extra 72 bytes of stack space where the callee-saved FP context can
-be saved.
+打算使用浮点寄存器的每个线程必须提供额外的 72 字节栈空间，其中可以保存被调用者保存的 FP 上下文。
 
-`Lazy Stacking
-<https://developer.arm.com/documentation/dai0298/a>`_
-is currently enabled in Zephyr applications on ARM Cortex-M
-architecture, minimizing interrupt latency, when the floating
-point context is active.
+在 ARM Cortex-M 架构上，Zephyr 应用程序中当前启用了
+`延迟堆栈 <https://developer.arm.com/documentation/dai0298/a>`_，
+在浮点上下文处于活动状态时最小化中断延迟。
 
-When the MPU-based stack protection mechanism is not enabled, lazy stacking
-is always active in the Zephyr application. When the MPU-based stack protection
-is enabled, the following rules apply with respect to lazy stacking:
+当未启用基于 MPU 的栈保护机制时，延迟堆栈在 Zephyr 应用程序中始终处于活动状态。
+当启用基于 MPU 的栈保护时，以下规则适用于延迟堆栈：
 
-* Lazy stacking is activated by default on threads that are pretagged with
-  :c:macro:`K_FP_REGS`
-* Lazy stacking is activated dynamically on threads that are not pretagged with
-  :c:macro:`K_FP_REGS`, as soon as the kernel detects that they are using the
-  floating point registers.
+* 默认情况下，在使用 :c:macro:`K_FP_REGS` 预标记的线程上激活延迟堆栈
+* 一旦内核检测到未使用 :c:macro:`K_FP_REGS` 预标记的线程正在使用浮点寄存器，
+  就会在这些线程上动态激活延迟堆栈。
 
+如果 ARM 线程不再需要使用浮点寄存器，它可以调用 :c:func:`k_float_disable`。
+这指示内核在线程上下文切换期间不保存或恢复其 FP 上下文。
 
-If an ARM thread does not require use of the floating point registers any
-more, it can call :c:func:`k_float_disable`. This instructs the kernel
-not to save or restore its FP context during thread context switching.
-
-ARM64 architecture
-------------------
+ARM64 架构
+----------
 
 .. note::
-    The Shared FP registers mode is the default Floating Point
-    Services mode on ARM64. The compiler is free to optimize code
-    using FP/SIMD registers, and library functions such as memcpy
-    are known to make use of them.
+    共享 FP 寄存器模式是 ARM64 上的默认浮点服务模式。编译器可以自由使用 FP/SIMD 寄存器优化代码，
+    并且已知库函数（如 memcpy）会使用它们。
 
-On the ARM64 (Aarch64) architecture the kernel treats each thread as a FPU
-user on a case-by-case basis. A "lazy save" algorithm is used during context
-switching which updates the floating point registers only when it is absolutely
-necessary. For example, the registers are *not* saved when switching from an
-FPU user to a non-user thread, and then back to the original FPU user.
+在 ARM64 (Aarch64) 架构上，内核根据具体情况将每个线程视为 FPU 用户。
+在上下文切换期间使用"延迟保存"算法，仅在绝对必要时才更新浮点寄存器。
+例如，当从 FPU 用户切换到非用户线程，然后再切换回原始 FPU 用户时，寄存器*不会*被保存。
 
-FPU register usage by ISRs is supported although not recommended. When an
-ISR uses floating point or SIMD registers, then the access is trapped, the
-current FPU user context is saved in the thread object and the ISR is resumed
-with interrupts disabled so to prevent another IRQ from interrupting the ISR
-and potentially requesting FPU usage. Because ISR don't have a persistent
-register context, there are no provision for saving an ISR's FPU context
-either, hence the IRQ disabling.
+支持 ISR 使用 FPU 寄存器，但不建议这样做。当 ISR 使用浮点或 SIMD 寄存器时，
+访问会被捕获，当前 FPU 用户上下文会保存在线程对象中，ISR 在禁用中断的情况下恢复，
+以防止另一个 IRQ 中断 ISR 并可能请求 FPU 使用。因为 ISR 没有持久寄存器上下文，
+所以也没有保存 ISR 的 FPU 上下文的规定，因此禁用了 IRQ。
 
-Each thread object becomes 512 bytes larger when Shared FP registers mode
-is enabled.
+当启用共享 FP 寄存器模式时，每个线程对象会变大 512 字节。
 
-ARCv2 architecture
-------------------
+ARCv2 架构
+----------
 
-On the ARCv2 architecture, the kernel treats each thread as a non-user
-or FPU user and the thread must be tagged by one of the
-following techniques.
+在 ARCv2 架构上，内核将每个线程视为非用户或 FPU 用户，线程必须通过以下技术之一进行标记。
 
-* A statically-created ARC thread can be tagged by passing the
-  :c:macro:`K_FP_REGS` option to :c:macro:`K_THREAD_DEFINE`.
+* 静态创建的 ARC 线程可以通过将 :c:macro:`K_FP_REGS` 选项传递给 :c:macro:`K_THREAD_DEFINE` 进行标记。
 
-* A dynamically-created ARC thread can be tagged by passing the
-  :c:macro:`K_FP_REGS` to :c:func:`k_thread_create`.
+* 动态创建的 ARC 线程可以通过将 :c:macro:`K_FP_REGS` 传递给 :c:func:`k_thread_create` 进行标记。
 
-If an ARC thread does not require use of the floating point registers any
-more, it can call :c:func:`k_float_disable`. This instructs the kernel
-not to save or restore its FP context during thread context switching.
+如果 ARC 线程不再需要使用浮点寄存器，它可以调用 :c:func:`k_float_disable`。
+这指示内核在线程上下文切换期间不保存或恢复其 FP 上下文。
 
-During thread context switching the ARC kernel saves the *callee-saved*
-floating point registers, if the switched-out thread has been using them.
-Additionally, the *caller-saved* floating point registers are saved on
-the thread's stack. If the switched-in thread has been using the floating
-point registers, the kernel restores the *callee-saved* FP registers of
-the switched-in thread and the *caller-saved* FP context is restored from
-the thread's stack. Thus, the kernel does not save or restore the FP
-context of threads that are not using the FP registers. An extra 16 bytes
-(single floating point hardware) or 32 bytes (double floating point hardware)
-of stack space is required to load and store floating point registers.
+在线程上下文切换期间，如果切换出的线程一直在使用浮点寄存器，ARC 内核会保存*被调用者保存*的浮点寄存器。
+此外，*调用者保存*的浮点寄存器会保存在线程的栈上。如果切换入的线程一直在使用浮点寄存器，
+内核会恢复切换入线程的*被调用者保存*的 FP 寄存器，*调用者保存*的 FP 上下文会从线程的栈中恢复。
+因此，内核不会保存或恢复未使用 FP 寄存器的线程的 FP 上下文。需要额外的 16 字节（单精度浮点硬件）
+或 32 字节（双精度浮点硬件）的栈空间来加载和存储浮点寄存器。
 
-RISC-V architecture
--------------------
+RISC-V 架构
+-----------
 
-On the RISC-V architecture the kernel treats each thread as an FPU
-user on a case-by-case basis with the FPU access allocated on demand.
-A "lazy save" algorithm is used during context switching which updates
-the floating point registers only when it is absolutely necessary.
-For example, the FPU registers are *not* saved when switching from an
-FPU user to a non-user thread (or an FPU user that doesn't touch the FPU
-during its scheduling slot), and then back to the original FPU user.
+在 RISC-V 架构上，内核根据具体情况将每个线程视为 FPU 用户，FPU 访问按需分配。
+在上下文切换期间使用"延迟保存"算法，仅在绝对必要时才更新浮点寄存器。
+例如，当从 FPU 用户切换到非用户线程（或在其调度时隙期间不接触 FPU 的 FPU 用户），
+然后再切换回原始 FPU 用户时，FPU 寄存器*不会*被保存。
 
-FPU register usage by ISRs is supported although not recommended. When an
-ISR uses floating point or SIMD registers, then the access is trapped, the
-current FPU user context is saved in the thread object and the ISR is resumed
-with interrupts disabled so to prevent another IRQ from interrupting the ISR
-and potentially requesting FPU usage. Because ISR don't have a persistent
-register context, there are no provision for saving an ISR's FPU context
-either, hence the IRQ disabling.
+支持 ISR 使用 FPU 寄存器，但不建议这样做。当 ISR 使用浮点或 SIMD 寄存器时，
+访问会被捕获，当前 FPU 用户上下文会保存在线程对象中，ISR 在禁用中断的情况下恢复，
+以防止另一个 IRQ 中断 ISR 并可能请求 FPU 使用。因为 ISR 没有持久寄存器上下文，
+所以也没有保存 ISR 的 FPU 上下文的规定，因此禁用了 IRQ。
 
-As an optimization, the FPU context is preemptively restored upon scheduling
-back an "active FPU user" thread that had its FPU context saved away due to
-FPU usage by another thread. Active FPU users are so designated when they
-make the FPU state "dirty" during their most recent scheduling slot before
-being scheduled out. So if a thread doesn't modify the FPU state within its
-scheduling slot and another thread claims the FPU for itself afterwards then
-that first thread will be subjected to the on-demand regime and won't have
-its FPU context restored until it attempts to access it again. But if that
-thread does modify the FPU before being scheduled out then it is likely to
-continue using it when scheduled back in and preemptively restoring its FPU
-context saves on the exception trap overhead that would occur otherwise.
+作为优化，当重新调度一个"活动 FPU 用户"线程时，该线程由于另一个线程使用 FPU 而保存了其 FPU 上下文，
+FPU 上下文会被抢先恢复。活动 FPU 用户在其最近的调度时隙期间在被调度出之前使 FPU 状态"脏"时被如此指定。
+因此，如果一个线程在其调度时隙内没有修改 FPU 状态，并且另一个线程随后声明 FPU 为自己所有，
+那么第一个线程将受到按需机制的影响，直到它再次尝试访问它才会恢复其 FPU 上下文。
+但是，如果该线程在被调度出之前确实修改了 FPU，那么它在重新调度时可能会继续使用它，
+抢先恢复其 FPU 上下文可以节省否则会发生的异常陷阱开销。
 
-Each thread object becomes 136 bytes (single-precision floating point
-hardware) or 264 bytes (double-precision floating point hardware) larger
-when Shared FP registers mode is enabled.
+当启用共享 FP 寄存器模式时，每个线程对象会变大 136 字节（单精度浮点硬件）
+或 264 字节（双精度浮点硬件）。
 
-SPARC architecture
-------------------
+SPARC 架构
+----------
 
-On the SPARC architecture, the kernel treats each thread as a non-user
-or FPU user and the thread must be tagged by one of the
-following techniques:
+在 SPARC 架构上，内核将每个线程视为非用户或 FPU 用户，线程必须通过以下技术之一进行标记：
 
-* A statically-created thread can be tagged by passing the
-  :c:macro:`K_FP_REGS` option to :c:macro:`K_THREAD_DEFINE`.
+* 静态创建的线程可以通过将 :c:macro:`K_FP_REGS` 选项传递给 :c:macro:`K_THREAD_DEFINE` 进行标记。
 
-* A dynamically-created thread can be tagged by passing the
-  :c:macro:`K_FP_REGS` to :c:func:`k_thread_create`.
+* 动态创建的线程可以通过将 :c:macro:`K_FP_REGS` 传递给 :c:func:`k_thread_create` 进行标记。
 
-During thread context switch at exit from interrupt handler, the SPARC
-kernel saves *all* floating point registers, if the FPU was enabled in
-the switched-out thread. Floating point registers are saved on the thread's
-stack. Floating point registers are restored when a thread context is restored
-iff they were saved at the context save. Saving and restoring of the floating
-point registers is synchronous and thus not lazy. The FPU is always disabled
-when an ISR is called (independent of :kconfig:option:`CONFIG_FPU_SHARING`).
+在从中断处理程序退出时的线程上下文切换期间，如果在切换出的线程中启用了 FPU，
+SPARC 内核会保存*所有*浮点寄存器。浮点寄存器保存在线程的栈上。
+当且仅当浮点寄存器在上下文保存时被保存，才会在恢复线程上下文时恢复它们。
+浮点寄存器的保存和恢复是同步的，因此不是延迟的。调用 ISR 时 FPU 始终被禁用
+（独立于 :kconfig:option:`CONFIG_FPU_SHARING`）。
 
-Floating point disabling with :c:func:`k_float_disable` is not implemented.
+未实现使用 :c:func:`k_float_disable` 禁用浮点。
 
-When :kconfig:option:`CONFIG_FPU_SHARING` is used, then 136 bytes of stack space
-is required for each FPU user thread to load and store floating point
-registers. No extra stack is required if :kconfig:option:`CONFIG_FPU_SHARING` is
-not used.
+使用 :kconfig:option:`CONFIG_FPU_SHARING` 时，每个 FPU 用户线程需要 136 字节的栈空间
+来加载和存储浮点寄存器。如果不使用 :kconfig:option:`CONFIG_FPU_SHARING`，则不需要额外的栈。
 
-x86 architecture
-----------------
+x86 架构
+--------
 
-On the x86 architecture the kernel treats each thread as a non-user,
-FPU user or SSE user on a case-by-case basis. A "lazy save" algorithm is used
-during context switching which updates the floating point registers only when
-it is absolutely necessary. For example, the registers are *not* saved when
-switching from an FPU user to a non-user thread, and then back to the original
-FPU user. The following table indicates the amount of additional stack space a
-thread must provide so the registers can be saved properly.
+在 x86 架构上，内核根据具体情况将每个线程视为非用户、FPU 用户或 SSE 用户。
+在上下文切换期间使用"延迟保存"算法，仅在绝对必要时才更新浮点寄存器。
+例如，当从 FPU 用户切换到非用户线程，然后再切换回原始 FPU 用户时，寄存器*不会*被保存。
+下表指示线程必须提供的额外栈空间量，以便可以正确保存寄存器。
 
 =========== =============== ==========================
-Thread type FP register use Extra stack space required
+线程类型    FP 寄存器使用   所需的额外栈空间
 =========== =============== ==========================
-cooperative any             0 bytes
-preemptive  none            0 bytes
-preemptive  FPU             108 bytes
-preemptive  SSE             464 bytes
+cooperative 任何            0 字节
+preemptive  无              0 字节
+preemptive  FPU             108 字节
+preemptive  SSE             464 字节
 =========== =============== ==========================
 
-The x86 kernel automatically detects that a given thread is using
-the floating point registers the first time the thread accesses them.
-The thread is tagged as an SSE user if the kernel has been configured
-to support the SSE registers, or as an FPU user if the SSE registers are
-not supported. If this would result in a thread that is an FPU user being
-tagged as an SSE user, or if the application wants to avoid the exception
-handling overhead involved in auto-tagging threads, it is possible to
-pretag a thread using one of the techniques listed below.
+x86 内核在给定线程第一次访问浮点寄存器时自动检测到该线程正在使用浮点寄存器。
+如果内核已配置为支持 SSE 寄存器，则线程被标记为 SSE 用户，如果不支持 SSE 寄存器，
+则标记为 FPU 用户。如果这会导致作为 FPU 用户的线程被标记为 SSE 用户，
+或者如果应用程序想要避免自动标记线程所涉及的异常处理开销，则可以使用以下列出的技术之一预标记线程。
 
-* A statically-created x86 thread can be pretagged by passing the
-  :c:macro:`K_FP_REGS` or :c:macro:`K_SSE_REGS` option to
-  :c:macro:`K_THREAD_DEFINE`.
+* 静态创建的 x86 线程可以通过将 :c:macro:`K_FP_REGS` 或 :c:macro:`K_SSE_REGS` 选项传递给
+  :c:macro:`K_THREAD_DEFINE` 进行预标记。
 
-* A dynamically-created x86 thread can be pretagged by passing the
-  :c:macro:`K_FP_REGS` or :c:macro:`K_SSE_REGS` option to
-  :c:func:`k_thread_create`.
+* 动态创建的 x86 线程可以通过将 :c:macro:`K_FP_REGS` 或 :c:macro:`K_SSE_REGS` 选项传递给
+  :c:func:`k_thread_create` 进行预标记。
 
-* An already-created x86 thread can pretag itself once it has started
-  by passing the :c:macro:`K_FP_REGS` or :c:macro:`K_SSE_REGS` option to
-  :c:func:`k_float_enable`.
+* 已创建的 x86 线程可以在启动后通过将 :c:macro:`K_FP_REGS` 或 :c:macro:`K_SSE_REGS` 选项传递给
+  :c:func:`k_float_enable` 来预标记自己。
 
-If an x86 thread uses the floating point registers infrequently it can call
-:c:func:`k_float_disable` to remove its tagging as an FPU user or SSE user.
-This eliminates the need for the kernel to take steps to preserve
-the contents of the floating point registers during context switches
-when there is no need to do so.
-When the thread again needs to use the floating point registers it can re-tag
-itself as an FPU user or SSE user by calling :c:func:`k_float_enable`.
+如果 x86 线程不经常使用浮点寄存器，它可以调用 :c:func:`k_float_disable` 来移除其作为 FPU 用户或 SSE 用户的标记。
+这消除了内核在上下文切换期间在不需要时采取步骤保留浮点寄存器内容的需要。
+当线程再次需要使用浮点寄存器时，它可以通过调用 :c:func:`k_float_enable` 将自己重新标记为 FPU 用户或 SSE 用户。
 
-Implementation
-**************
+实现
+****
 
-Performing Floating Point Arithmetic
-====================================
+执行浮点运算
+===========
 
-No special coding is required for a thread to use floating point arithmetic
-if the kernel is properly configured.
+如果内核配置正确，线程使用浮点运算不需要特殊编码。
 
-The following code shows how a routine can use floating point arithmetic
-to avoid overflow issues when computing the average of a series of integer
-values.
+以下代码显示了例程如何使用浮点运算来避免在计算一系列整数值的平均值时出现溢出问题。
 
 .. code-block:: c
 
@@ -329,29 +236,24 @@ values.
         return (int)((sum / num_values) + 0.5);
     }
 
-Suggested Uses
-**************
+建议用途
+********
 
-Use the kernel floating point services when an application needs to
-perform floating point operations.
+当应用程序需要执行浮点操作时，请使用内核浮点服务。
 
-Configuration Options
-*********************
+配置选项
+********
 
-To configure unshared FP registers mode, enable the :kconfig:option:`CONFIG_FPU`
-configuration option and leave the :kconfig:option:`CONFIG_FPU_SHARING` configuration
-option disabled.
+要配置非共享 FP 寄存器模式，请启用 :kconfig:option:`CONFIG_FPU` 配置选项，
+并将 :kconfig:option:`CONFIG_FPU_SHARING` 配置选项保持禁用状态。
 
-To configure shared FP registers mode, enable both the :kconfig:option:`CONFIG_FPU`
-configuration option and the :kconfig:option:`CONFIG_FPU_SHARING` configuration option.
-Also, ensure that any thread that uses the floating point registers has
-sufficient added stack space for saving floating point register values
-during context switches, as described above.
+要配置共享 FP 寄存器模式，请同时启用 :kconfig:option:`CONFIG_FPU` 配置选项
+和 :kconfig:option:`CONFIG_FPU_SHARING` 配置选项。此外，请确保任何使用浮点寄存器的线程
+都有足够的额外栈空间，用于在上下文切换期间保存浮点寄存器值，如上所述。
 
-For x86, use the :kconfig:option:`CONFIG_X86_SSE` configuration option to enable
-support for SSEx instructions.
+对于 x86，使用 :kconfig:option:`CONFIG_X86_SSE` 配置选项启用对 SSEx 指令的支持。
 
-API Reference
-*************
+API 参考
+********
 
 .. doxygengroup:: float_apis

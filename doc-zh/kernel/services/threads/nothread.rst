@@ -1,54 +1,48 @@
 .. _nothread:
 
-Operation without Threads
-#########################
+无线程操作
+##########
 
-Thread support is not necessary in some applications:
+在某些应用程序中不需要线程支持：
 
-* Bootloaders
-* Simple event-driven applications
-* Examples intended to demonstrate core functionality
+* 引导加载程序 (Bootloaders)
+* 简单的事件驱动应用程序
+* 旨在演示核心功能的示例
 
-Thread support can be disabled by setting
-:kconfig:option:`CONFIG_MULTITHREADING` to ``n``.  Since this configuration has
-a significant impact on Zephyr's functionality and testing of it has
-been limited, there are conditions on what can be expected to work in
-this configuration.
+可以通过将 :kconfig:option:`CONFIG_MULTITHREADING` 设置为 ``n`` 来禁用线程支持。
+由于此配置对 Zephyr 的功能有重大影响，并且对其的测试有限，因此对此配置中可以期望工作的内容有一定的条件。
 
-What Can be Expected to Work
-****************************
+可以期望工作的功能
+******************
 
-These core capabilities shall function correctly when
-:kconfig:option:`CONFIG_MULTITHREADING` is disabled:
+当 :kconfig:option:`CONFIG_MULTITHREADING` 被禁用时，这些核心功能应能正确运行：
 
-* The :ref:`build system <application>`
+* :ref:`构建系统 <application>`
 
-* The ability to boot the application to ``main()``
+* 将应用程序引导到 ``main()`` 的能力
 
-* :ref:`Interrupt management <interrupts_v2>`
+* :ref:`中断管理 <interrupts_v2>`
 
-* The system clock including :c:func:`k_uptime_get`
+* 系统时钟，包括 :c:func:`k_uptime_get`
 
-* Timers, i.e. :c:func:`k_timer`
+* 定时器 (Timers)，即 :c:func:`k_timer`
 
-* Non-sleeping delays e.g. :c:func:`k_busy_wait`.
+* 非睡眠延迟，例如 :c:func:`k_busy_wait`。
 
-* Sleeping :c:func:`k_cpu_idle`.
+* 睡眠 :c:func:`k_cpu_idle`。
 
-* Pre ``main()`` drivers and subsystems initialization e.g. :c:macro:`SYS_INIT`.
+* ``main()`` 之前的驱动程序和子系统初始化，例如 :c:macro:`SYS_INIT`。
 
 * :ref:`kernel_memory_management_api`
 
-* Specifically identified drivers in certain subsystems, listed below.
+* 某些子系统中特定标识的驱动程序，如下所列。
 
-The expectations above affect selection of other features; for example
-:kconfig:option:`CONFIG_SYS_CLOCK_EXISTS` cannot be set to ``n``.
+上述期望会影响其他功能的选择；例如 :kconfig:option:`CONFIG_SYS_CLOCK_EXISTS` 不能设置为 ``n``。
 
-What Cannot be Expected to Work
-*******************************
+不能期望工作的功能
+******************
 
-Functionality that will not work with :kconfig:option:`CONFIG_MULTITHREADING`
-includes majority of the kernel API:
+使用 :kconfig:option:`CONFIG_MULTITHREADING` 无法工作的功能包括大部分内核 API：
 
 * :ref:`threads_v2`
 
@@ -70,52 +64,40 @@ includes majority of the kernel API:
     :local:
     :depth: 1
 
-Subsystem Behavior Without Thread Support
-*****************************************
+没有线程支持的子系统行为
+************************
 
-The sections below list driver and functional subsystems that are
-expected to work to some degree when :kconfig:option:`CONFIG_MULTITHREADING` is
-disabled.  Subsystems that are not listed here should not be expected to
-work.
+以下各节列出了在禁用 :kconfig:option:`CONFIG_MULTITHREADING` 时预期在某种程度上工作的驱动程序和功能子系统。
+此处未列出的子系统不应期望能够工作。
 
-Some existing drivers within the listed subsystems do not work when
-threading is disabled, but are within scope based on their subsystem, or
-may be sufficiently isolated that supporting them on a particular
-platform is low-impact.  Enhancements to add support to existing
-capabilities that were not originally implemented to work with threads
-disabled will be considered.
+列出的子系统中的一些现有驱动程序在禁用线程时无法工作，但基于其子系统在范围内，
+或者可能足够隔离，以至于在特定平台上支持它们的影响较低。
+将考虑增强功能以向原本未实现为在禁用线程时工作的现有功能添加支持。
 
 Flash
 =====
 
-The :ref:`flash_api` is expected to work for all SoC flash peripheral
-drivers.  Bus-accessed devices like serial memories may not be
-supported.
+:ref:`flash_api` 预期对所有 SoC flash 外设驱动程序都有效。总线访问设备（如串行存储器）可能不受支持。
 
-*List/table of supported drivers to go here*
+*支持的驱动程序列表/表将在此处显示*
 
 GPIO
 ====
 
-The :ref:`gpio_api` is expected to work for all SoC GPIO peripheral
-drivers.  Bus-accessed devices like GPIO extenders may not be supported.
+:ref:`gpio_api` 预期对所有 SoC GPIO 外设驱动程序都有效。总线访问设备（如 GPIO 扩展器）可能不受支持。
 
-*List/table of supported drivers to go here*
+*支持的驱动程序列表/表将在此处显示*
 
 UART
 ====
 
-A subset of the :ref:`uart_api` is expected to work for all SoC UART
-peripheral drivers.
+:ref:`uart_api` 的一个子集预期对所有 SoC UART 外设驱动程序都有效。
 
-* Applications that select :kconfig:option:`CONFIG_UART_INTERRUPT_DRIVEN` may
-  work, depending on driver implementation.
+* 选择 :kconfig:option:`CONFIG_UART_INTERRUPT_DRIVEN` 的应用程序可能会工作，具体取决于驱动程序实现。
 
-* Applications that select :kconfig:option:`CONFIG_UART_ASYNC_API` may
-  work, depending on driver implementation.
+* 选择 :kconfig:option:`CONFIG_UART_ASYNC_API` 的应用程序可能会工作，具体取决于驱动程序实现。
 
-* Applications that do not select either :kconfig:option:`CONFIG_UART_ASYNC_API`
-  or :kconfig:option:`CONFIG_UART_INTERRUPT_DRIVEN` are expected to work.
+* 既不选择 :kconfig:option:`CONFIG_UART_ASYNC_API` 也不选择 :kconfig:option:`CONFIG_UART_INTERRUPT_DRIVEN`
+  的应用程序预期会工作。
 
-*List/table of supported drivers to go here, including which API options
-are supported*
+*支持的驱动程序列表/表将在此处显示，包括支持哪些 API 选项*

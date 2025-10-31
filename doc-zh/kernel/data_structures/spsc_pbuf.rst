@@ -1,17 +1,15 @@
 .. _spsc_pbuf:
 
-Single Producer Single Consumer Packet Buffer
-=============================================
+单生产者单消费者数据包缓冲区 (Single Producer Single Consumer Packet Buffer)
+==============================================================================
 
-A :dfn:`Single Producer Single Consumer Packet Buffer (SPSC_PBUF)` is a circular
-buffer, whose contents are stored in first-in-first-out order. Variable size
-packets are stored in the buffer. Packet buffer works under assumption that there
-is a single context that produces packets and a single context that consumes the
-data.
+:dfn:`单生产者单消费者数据包缓冲区 (SPSC_PBUF)` 是一个循环缓冲区，
+其内容按先进先出的顺序存储。可变大小的数据包存储在缓冲区中。
+数据包缓冲区在假设有单个生产数据包的上下文和单个消费数据的上下文的前提下工作。
 
-Implementation is focused on performance and memory footprint.
+实现侧重于性能和内存占用。
 
-Packets are added to the buffer using :c:func:`spsc_pbuf_write` which copies a
-data into the buffer. If the buffer is full error is returned.
+使用 :c:func:`spsc_pbuf_write` 将数据包添加到缓冲区，该函数将数据复制到缓冲区中。
+如果缓冲区已满，则返回错误。
 
-Packets are copied out of the buffer using :c:func:`spsc_pbuf_read`.
+使用 :c:func:`spsc_pbuf_read` 从缓冲区中复制出数据包。

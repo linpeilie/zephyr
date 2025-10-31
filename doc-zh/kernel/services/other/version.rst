@@ -1,11 +1,11 @@
 .. _version:
 
-Version
-#######
+版本
+####
 
-Kernel version handling and APIs related to kernel version being used.
+内核版本处理和与正在使用的内核版本相关的 API。
 
-API Reference
-**************
+API 参考
+********
 
 .. doxygengroup:: version_apis

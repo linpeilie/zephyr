@@ -2,7 +2,7 @@
 
 .. _kconfig-search:
 
-Kconfig Search
-==============
+Kconfig 搜索 (Kconfig Search)
+==============================
 
 .. kconfig:search::

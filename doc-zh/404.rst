@@ -2,8 +2,8 @@
 
 .. _page-not-found:
 
-Sorry, Page Not Found
-#####################
+抱歉，找不到页面 (Sorry, Page Not Found)
+##########################################
 
 .. image:: images/Zephyr-Kite-in-tree.png
    :align: right
@@ -11,30 +11,28 @@ Sorry, Page Not Found
 .. raw:: html
 
    <noscript>
-   Sorry, the page you requested was not found on this site.
+   抱歉，您请求的页面在此站点上未找到。
    </noscript>
    <script type="text/javaScript">
    <!--
    var strReferrer=document.referrer;
    if (strReferrer.length > 0) {
-      document.write("<p>Sorry, the page you requested: " +
+      document.write("<p>抱歉，您请求的页面：" +
       "<a href=\"" + strReferrer + "\">" +
-      strReferrer + "</a> was not found on this site.</p>");
+      strReferrer + "</a> 在此站点上未找到。</p>");
    } else {
-      document.write("<p>Sorry, the page you requested was not found on this site.</p>")
+      document.write("<p>抱歉，您请求的页面在此站点上未找到。</p>")
    }
    //-->
    </script>
 
-Please check the url for misspellings.
+请检查 URL 是否有拼写错误。
 
-It's also possible we've removed or renamed the page you're looking for.
+也有可能我们已删除或重命名了您正在查找的页面。
 
-Please try using the navigation links on the left of this page to navigate
-the major sections of our site, or use the search box.
+请尝试使用此页面左侧的导航链接浏览我们站点的主要部分，或使用搜索框。
 
-If you got this error by following a link, please let us know by creating an
-issue on `GitHub`_.
+如果您是通过点击链接而出现此错误，请通过在 `GitHub`_ 上创建问题告诉我们。
 
 .. _GitHub: https://github.com/zephyrproject-rtos/zephyr/issues
 

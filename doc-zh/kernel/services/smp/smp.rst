@@ -1,290 +1,190 @@
 .. _smp_arch:
 
-Symmetric Multiprocessing
-#########################
+对称多处理 (Symmetric Multiprocessing)
+######################################
 
-On multiprocessor architectures, Zephyr supports the use of multiple
-physical CPUs running Zephyr application code.  This support is
-"symmetric" in the sense that no specific CPU is treated specially by
-default.  Any processor is capable of running any Zephyr thread, with
-access to all standard Zephyr APIs supported.
+在多处理器架构上，Zephyr 支持使用多个物理 CPU 运行 Zephyr 应用程序代码。
+这种支持是"对称的" (symmetric)，因为默认情况下不会特别对待任何特定的 CPU。
+任何处理器都能够运行任何 Zephyr 线程，并可访问所有支持的标准 Zephyr API。
 
-No special application code needs to be written to take advantage of
-this feature.  If there are two Zephyr application threads runnable on
-a supported dual processor device, they will both run simultaneously.
+无需编写特殊的应用程序代码来利用此功能。如果在支持的双处理器设备上有两个 Zephyr 应用程序线程可运行，
+它们将同时运行。
 
-SMP configuration is controlled under the :kconfig:option:`CONFIG_SMP` kconfig
-variable.  This must be set to "y" to enable SMP features, otherwise
-a uniprocessor kernel will be built.  In general the platform default
-will have enabled this anywhere it's supported. When enabled, the
-number of physical CPUs available is visible at build time as
-:kconfig:option:`CONFIG_MP_MAX_NUM_CPUS`.  Likewise, the default for this will be the
-number of available CPUs on the platform and it is not expected that
-typical apps will change it.  But it is legal and supported to set
-this to a smaller (but obviously not larger) number for special
-purposes (e.g. for testing, or to reserve a physical CPU for running
-non-Zephyr code).
+SMP 配置通过 :kconfig:option:`CONFIG_SMP` kconfig 变量控制。必须将其设置为"y"以启用 SMP 功能，
+否则将构建单处理器内核。通常，平台默认值将在支持的任何地方启用此功能。启用后，
+可用的物理 CPU 数量在构建时可见为 :kconfig:option:`CONFIG_MP_MAX_NUM_CPUS`。
+同样，此默认值将是平台上可用 CPU 的数量，并且不期望典型应用程序会更改它。
+但是，出于特殊目的（例如，用于测试，或为运行非 Zephyr 代码预留物理 CPU），
+将其设置为较小（但显然不能更大）的数字是合法且受支持的。
 
-Synchronization
-***************
+同步 (Synchronization)
+**********************
 
-At the application level, core Zephyr IPC and synchronization
-primitives all behave identically under an SMP kernel.  For example
-semaphores used to implement blocking mutual exclusion continue to be
-a proper application choice.
+在应用程序级别，核心 Zephyr IPC 和同步原语在 SMP 内核下的行为都相同。
+例如，用于实现阻塞互斥的信号量仍然是正确的应用程序选择。
 
-At the lowest level, however, Zephyr code has often used the
-:c:func:`irq_lock`/:c:func:`irq_unlock` primitives to implement fine grained
-critical sections using interrupt masking.  These APIs continue to
-work via an emulation layer (see below), but the masking technique
-does not: the fact that your CPU will not be interrupted while you are
-in your critical section says nothing about whether a different CPU
-will be running simultaneously and be inspecting or modifying the same
-data!
+然而，在最低级别，Zephyr 代码通常使用 :c:func:`irq_lock`/:c:func:`irq_unlock`
+原语来使用中断屏蔽实现细粒度的临界区。这些 API 通过仿真层继续工作（见下文），
+但屏蔽技术不起作用：您的 CPU 在临界区内不会被中断这一事实并不意味着不同的 CPU
+不会同时运行并检查或修改相同的数据！
 
-Spinlocks
-=========
+自旋锁 (Spinlocks)
+==================
 
-SMP systems provide a more constrained :c:func:`k_spin_lock` primitive
-that not only masks interrupts locally, as done by :c:func:`irq_lock`, but
-also atomically validates that a shared lock variable has been
-modified before returning to the caller, "spinning" on the check if
-needed to wait for the other CPU to exit the lock.  The default Zephyr
-implementation of :c:func:`k_spin_lock` and :c:func:`k_spin_unlock` is built
-on top of the pre-existing :c:struct:`atomic_` layer (itself usually
-implemented using compiler intrinsics), though facilities exist for
-architectures to define their own for performance reasons.
+SMP 系统提供了一个更受限的 :c:func:`k_spin_lock` 原语，它不仅在本地屏蔽中断
+（如 :c:func:`irq_lock` 所做的那样），而且在返回给调用者之前原子地验证共享锁变量已被修改，
+如果需要等待其他 CPU 退出锁，则在检查上"旋转" (spinning)。Zephyr 的默认 :c:func:`k_spin_lock`
+和 :c:func:`k_spin_unlock` 实现是建立在现有的 :c:struct:`atomic_` 层之上的
+（它本身通常使用编译器内部函数实现），尽管存在允许架构出于性能原因定义自己的设施。
 
-One important difference between IRQ locks and spinlocks is that the
-earlier API was naturally recursive: the lock was global, so it was
-legal to acquire a nested lock inside of a critical section.
-Spinlocks are separable: you can have many locks for separate
-subsystems or data structures, preventing CPUs from contending on a
-single global resource.  But that means that spinlocks must not be
-used recursively.  Code that holds a specific lock must not try to
-re-acquire it or it will deadlock (it is perfectly legal to nest
-**distinct** spinlocks, however).  A validation layer is available to
-detect and report bugs like this.
+IRQ 锁和自旋锁之间的一个重要区别是，早期的 API 是自然递归的：锁是全局的，
+因此在临界区内获取嵌套锁是合法的。自旋锁是可分离的：您可以为单独的子系统或数据结构拥有许多锁，
+防止 CPU 在单个全局资源上竞争。但这意味着自旋锁不得递归使用。持有特定锁的代码不得尝试重新获取它，
+否则会死锁（但是嵌套**不同的**自旋锁是完全合法的）。可以使用验证层来检测和报告此类错误。
 
-When used on a uniprocessor system, the data component of the spinlock
-(the atomic lock variable) is unnecessary and elided.  Except for the
-recursive semantics above, spinlocks in single-CPU contexts produce
-identical code to legacy IRQ locks.  In fact the entirety of the
-Zephyr core kernel has now been ported to use spinlocks exclusively.
+在单处理器系统上使用时，自旋锁的数据组件（原子锁变量）是不必要的并且被省略。
+除了上述递归语义外，单 CPU 上下文中的自旋锁产生与传统 IRQ 锁相同的代码。
+实际上，整个 Zephyr 核心内核现在已移植为专门使用自旋锁。
 
-Legacy irq_lock() emulation
-===========================
+传统 irq_lock() 仿真 (Legacy irq_lock() emulation)
+===================================================
 
-For the benefit of applications written to the uniprocessor locking
-API, :c:func:`irq_lock` and :c:func:`irq_unlock` continue to work compatibly on
-SMP systems with identical semantics to their legacy versions.  They
-are implemented as a single global spinlock, with a nesting count and
-the ability to be atomically reacquired on context switch into locked
-threads.  The kernel will ensure that only one thread across all CPUs
-can hold the lock at any time, that it is released on context switch,
-and that it is re-acquired when necessary to restore the lock state
-when a thread is switched in.  Other CPUs will spin waiting for the
-release to happen.
+为了使用单处理器锁定 API 编写的应用程序受益，:c:func:`irq_lock` 和 :c:func:`irq_unlock`
+在 SMP 系统上继续以与其传统版本相同的语义兼容地工作。它们实现为单个全局自旋锁，
+具有嵌套计数和在上下文切换到锁定线程时原子重新获取的能力。内核将确保在任何时候只有一个跨所有 CPU 的线程
+可以持有锁，在上下文切换时释放它，并在必要时重新获取它以在切换线程时恢复锁状态。
+其他 CPU 将旋转等待释放发生。
 
-The overhead involved in this process has measurable performance
-impact, however.  Unlike uniprocessor apps, SMP apps using
-:c:func:`irq_lock` are not simply invoking a very short (often ~1
-instruction) interrupt masking operation.  That, and the fact that the
-IRQ lock is global, means that code expecting to be run in an SMP
-context should be using the spinlock API wherever possible.
+然而，此过程涉及的开销具有可测量的性能影响。与单处理器应用程序不同，
+使用 :c:func:`irq_lock` 的 SMP 应用程序不仅仅是调用非常短的（通常约 1 条指令）中断屏蔽操作。
+这一点，加上 IRQ 锁是全局的这一事实，意味着期望在 SMP 上下文中运行的代码应尽可能使用自旋锁 API。
 
-CPU Mask
-********
+CPU 掩码 (CPU Mask)
+*******************
 
-It is often desirable for real time applications to deliberately
-partition work across physical CPUs instead of relying solely on the
-kernel scheduler to decide on which threads to execute.  Zephyr
-provides an API, controlled by the :kconfig:option:`CONFIG_SCHED_CPU_MASK`
-kconfig variable, which can associate a specific set of CPUs with each
-thread, indicating on which CPUs it can run.
+对于实时应用程序来说，通常希望有意地在物理 CPU 之间分配工作，而不是仅仅依赖于内核调度器来决定
+在哪些线程上执行。Zephyr 提供了一个 API，由 :kconfig:option:`CONFIG_SCHED_CPU_MASK` kconfig 变量控制，
+可以将特定的 CPU 集与每个线程关联，指示它可以在哪些 CPU 上运行。
 
-By default, new threads can run on any CPU.  Calling
-:c:func:`k_thread_cpu_mask_disable` with a particular CPU ID will prevent
-that thread from running on that CPU in the future.  Likewise
-:c:func:`k_thread_cpu_mask_enable` will re-enable execution.  There are also
-:c:func:`k_thread_cpu_mask_clear` and :c:func:`k_thread_cpu_mask_enable_all` APIs
-available for convenience.  For obvious reasons, these APIs are
-illegal if called on a runnable thread.  The thread must be blocked or
-suspended, otherwise an ``-EINVAL`` will be returned.
+默认情况下，新线程可以在任何 CPU 上运行。使用特定 CPU ID 调用 :c:func:`k_thread_cpu_mask_disable`
+将阻止该线程将来在该 CPU 上运行。同样，:c:func:`k_thread_cpu_mask_enable` 将重新启用执行。
+还有 :c:func:`k_thread_cpu_mask_clear` 和 :c:func:`k_thread_cpu_mask_enable_all` API 可供方便使用。
+出于明显的原因，如果在可运行线程上调用这些 API，则是非法的。线程必须被阻塞或挂起，
+否则将返回 ``-EINVAL``。
 
-Note that when this feature is enabled, the scheduler algorithm
-involved in doing the per-CPU mask test requires that the list be
-traversed in full.  The kernel does not keep a per-CPU run queue.
-That means that the performance benefits from the
-:kconfig:option:`CONFIG_SCHED_SCALABLE` and :kconfig:option:`CONFIG_SCHED_MULTIQ`
-scheduler backends cannot be realized.  CPU mask processing is
-available only when :kconfig:option:`CONFIG_SCHED_SIMPLE` is the selected
-backend.  This requirement is enforced in the configuration layer.
+请注意，当启用此功能时，在执行每个 CPU 掩码测试时涉及的调度器算法需要完整遍历列表。
+内核不维护每个 CPU 的运行队列。这意味着无法实现来自 :kconfig:option:`CONFIG_SCHED_SCALABLE`
+和 :kconfig:option:`CONFIG_SCHED_MULTIQ` 调度器后端的性能优势。CPU 掩码处理仅在选择
+:kconfig:option:`CONFIG_SCHED_SIMPLE` 后端时可用。此要求在配置层强制执行。
 
-SMP Boot Process
-****************
+SMP 引导过程 (SMP Boot Process)
+*******************************
 
-A Zephyr SMP kernel begins boot identically to a uniprocessor kernel.
-Auxiliary CPUs begin in a disabled state in the architecture layer.
-All standard kernel initialization, including device initialization,
-happens on a single CPU before other CPUs are brought online.
+Zephyr SMP 内核的引导与单处理器内核完全相同。辅助 CPU 在架构层中以禁用状态开始。
+所有标准内核初始化（包括设备初始化）都在单个 CPU 上进行，然后再使其他 CPU 联机。
 
-Just before entering the application :c:func:`main` function, the kernel
-calls :c:func:`z_smp_init` to launch the SMP initialization process.  This
-enumerates over the configured CPUs, calling into the architecture
-layer using :c:func:`arch_cpu_start` for each one.  This function is
-passed a memory region to use as a stack on the foreign CPU (in
-practice it uses the area that will become that CPU's interrupt
-stack), the address of a local :c:func:`smp_init_top` callback function to
-run on that CPU, and a pointer to a "start flag" address which will be
-used as an atomic signal.
+在进入应用程序 :c:func:`main` 函数之前，内核调用 :c:func:`z_smp_init` 以启动 SMP 初始化过程。
+这会枚举配置的 CPU，为每个 CPU 使用 :c:func:`arch_cpu_start` 调用架构层。
+此函数传递一个内存区域以用作外部 CPU 上的堆栈（实际上它使用将成为该 CPU 的中断堆栈的区域）、
+要在该 CPU 上运行的本地 :c:func:`smp_init_top` 回调函数的地址，
+以及将用作原子信号的"启动标志"地址的指针。
 
-The local SMP initialization (:c:func:`smp_init_top`) on each CPU is then
-invoked by the architecture layer.  Note that interrupts are still
-masked at this point.  This routine is responsible for calling
-:c:func:`smp_timer_init` to set up any needed stat in the timer driver.  On
-many architectures the timer is a per-CPU device and needs to be
-configured specially on auxiliary CPUs.  Then it waits (spinning) for
-the atomic "start flag" to be released in the main thread, to
-guarantee that all SMP initialization is complete before any Zephyr
-application code runs, and finally calls :c:func:`z_swap` to transfer
-control to the appropriate runnable thread via the standard scheduler
-API.
+然后，架构层在每个 CPU 上调用本地 SMP 初始化 (:c:func:`smp_init_top`)。
+请注意，此时中断仍被屏蔽。此例程负责调用 :c:func:`smp_timer_init` 以在定时器驱动程序中设置任何需要的状态。
+在许多架构上，定时器是每个 CPU 的设备，需要在辅助 CPU 上进行特殊配置。
+然后它等待（旋转）主线程中释放的原子"启动标志"，以保证在任何 Zephyr 应用程序代码运行之前
+所有 SMP 初始化都已完成，最后调用 :c:func:`z_swap` 通过标准调度器 API
+将控制权转移到适当的可运行线程。
 
 .. figure:: smpinit.svg
    :align: center
    :alt: SMP Initialization
    :figclass: align-center
 
-   Example SMP initialization process, showing a configuration with
-   two CPUs and two app threads which begin operating simultaneously.
+   SMP 初始化过程示例，显示具有两个 CPU 和两个同时开始操作的应用程序线程的配置。
 
-Interprocessor Interrupts
-*************************
+处理器间中断 (Interprocessor Interrupts)
+*****************************************
 
-When running in multiprocessor environments, it is occasionally the
-case that state modified on the local CPU needs to be synchronously
-handled on a different processor.
+在多处理器环境中运行时，有时需要在本地 CPU 上修改的状态需要在不同的处理器上同步处理。
 
-One example is the Zephyr :c:func:`k_thread_abort` API, which cannot return
-until the thread that had been aborted is no longer runnable.  If it
-is currently running on another CPU, that becomes difficult to
-implement.
+一个例子是 Zephyr :c:func:`k_thread_abort` API，它在被中止的线程不再可运行之前无法返回。
+如果它当前正在另一个 CPU 上运行，则变得难以实现。
 
-Another is low power idle.  It is a firm requirement on many devices
-that system idle be implemented using a low-power mode with as many
-interrupts (including periodic timer interrupts) disabled or deferred
-as is possible.  If a CPU is in such a state, and on another CPU a
-thread becomes runnable, the idle CPU has no way to "wake up" to
-handle the newly-runnable load.
+另一个是低功耗空闲。在许多设备上，一个严格的要求是使用低功耗模式实现系统空闲，
+尽可能禁用或推迟尽可能多的中断（包括周期性定时器中断）。如果 CPU 处于这种状态，
+并且在另一个 CPU 上线程变为可运行，则空闲 CPU 无法"唤醒"以处理新的可运行负载。
 
-So where possible, Zephyr SMP architectures should implement an
-interprocessor interrupt.  The current framework is very simple: the
-architecture provides at least a :c:func:`arch_sched_broadcast_ipi` call,
-which when invoked will flag an interrupt on all CPUs (except the current one,
-though that is allowed behavior). If the architecture supports directed IPIs
-(see :kconfig:option:`CONFIG_ARCH_HAS_DIRECTED_IPIS`), then the
-architecture also provides a :c:func:`arch_sched_directed_ipi` call, which
-when invoked will flag an interrupt on the specified CPUs. When an interrupt is
-flagged on the CPUs, the :c:func:`z_sched_ipi` function implemented in the
-scheduler will get invoked on those CPUs. The expectation is that these
-APIs will evolve over time to encompass more functionality (e.g. cross-CPU
-calls), and that the scheduler-specific calls here will be implemented in
-terms of a more general framework.
+因此，在可能的情况下，Zephyr SMP 架构应实现处理器间中断。当前框架非常简单：
+架构至少提供 :c:func:`arch_sched_broadcast_ipi` 调用，调用时将在所有 CPU 上标记中断
+（当前 CPU 除外，尽管这是允许的行为）。如果架构支持定向 IPI
+（请参阅 :kconfig:option:`CONFIG_ARCH_HAS_DIRECTED_IPIS`），则架构还提供
+:c:func:`arch_sched_directed_ipi` 调用，调用时将在指定的 CPU 上标记中断。
+当在 CPU 上标记中断时，将在这些 CPU 上调用调度器中实现的 :c:func:`z_sched_ipi` 函数。
+期望这些 API 将随着时间的推移而发展以涵盖更多功能（例如，跨 CPU 调用），
+并且此处特定于调度器的调用将根据更通用的框架实现。
 
-Note that not all SMP architectures will have a usable IPI mechanism
-(either missing, or just undocumented/unimplemented).  In those cases
-Zephyr provides fallback behavior that is correct, but perhaps
-suboptimal.
+请注意，并非所有 SMP 架构都将具有可用的 IPI 机制（缺失，或只是未记录/未实现）。
+在这些情况下，Zephyr 提供正确但可能不是最优的回退行为。
 
-Using this, :c:func:`k_thread_abort` becomes only slightly more
-complicated in SMP: for the case where a thread is actually running on
-another CPU (we can detect this atomically inside the scheduler), we
-broadcast an IPI and spin, waiting for the thread to either become
-"DEAD" or for it to re-enter the queue (in which case we terminate it
-the same way we would have in uniprocessor mode).  Note that the
-"aborted" check happens on any interrupt exit, so there is no special
-handling needed in the IPI per se.  This allows us to implement a
-reasonable fallback when IPI is not available: we can simply spin,
-waiting until the foreign CPU receives any interrupt, though this may
-be a much longer time!
+使用此方法，:c:func:`k_thread_abort` 在 SMP 中仅变得稍微复杂一些：
+对于线程实际上在另一个 CPU 上运行的情况（我们可以在调度器内原子地检测到这一点），
+我们广播 IPI 并旋转，等待线程变为"DEAD"或重新进入队列（在这种情况下，
+我们以与单处理器模式相同的方式终止它）。请注意，"中止"检查发生在任何中断退出时，
+因此 IPI 本身不需要特殊处理。这允许我们在 IPI 不可用时实现合理的回退：
+我们可以简单地旋转，等待外部 CPU 接收任何中断，尽管这可能需要更长的时间！
 
-Likewise idle wakeups are trivially implementable with an empty IPI
-handler.  If a thread is added to an empty run queue (i.e. there may
-have been idle CPUs), we broadcast an IPI.  A foreign CPU will then be
-able to see the new thread when exiting from the interrupt and will
-switch to it if available.
+同样，空闲唤醒可以使用空 IPI 处理程序轻松实现。如果将线程添加到空运行队列
+（即可能有空闲 CPU），我们广播 IPI。然后外部 CPU 将能够在从中断退出时看到新线程，
+并在可用时切换到它。
 
-Without an IPI, however, a low power idle that requires an interrupt
-will not work to synchronously run new threads.  The workaround in
-that case is more invasive: Zephyr will **not** enter the system idle
-handler and will instead spin in its idle loop, testing the scheduler
-state at high frequency (not spinning on it though, as that would
-involve severe lock contention) for new threads.  The expectation is
-that power constrained SMP applications are always going to provide an
-IPI, and this code will only be used for testing purposes or on
-systems without power consumption requirements.
+但是，如果没有 IPI，则需要中断的低功耗空闲将无法同步运行新线程。
+在这种情况下的解决方法更具侵入性：Zephyr 将**不会**进入系统空闲处理程序，
+而是在其空闲循环中旋转，以高频率（但不是旋转在它上面，因为那会涉及严重的锁争用）
+测试调度器状态以查找新线程。期望是受功耗约束的 SMP 应用程序将始终提供 IPI，
+并且此代码将仅用于测试目的或没有功耗要求的系统上。
 
-IPI Cascades
-============
+IPI 级联 (IPI Cascades)
+=======================
 
-The kernel can not control the order in which IPIs are processed by the CPUs
-in the system. In general, this is not an issue and a single set of IPIs is
-sufficient to trigger a reschedule on the N CPUs that results with them
-scheduling the highest N priority ready threads to execute. When CPU masking
-is used, there may be more than one valid set of threads (not to be confused
-with an optimal set of threads) that can be scheduled on the N CPUs and a
-single set of IPIs may be insufficient to result in any of these valid sets.
+内核无法控制系统中 CPU 处理 IPI 的顺序。通常，这不是问题，一组 IPI 就足以在 N 个 CPU 上触发重新调度，
+从而使它们调度最高 N 个优先级的就绪线程执行。当使用 CPU 掩码时，可能有多个有效的线程集
+（不要与最优的线程集混淆）可以在 N 个 CPU 上调度，并且一组 IPI 可能不足以产生这些有效集中的任何一个。
 
 .. note::
-    When CPU masking is not in play, the optimal set of threads is the same
-    as the valid set of threads. However when CPU masking is in play, there
-    may be more than one valid set--one of which may be optimal.
+    当未使用 CPU 掩码时，最优的线程集与有效的线程集相同。但是，当使用 CPU 掩码时，
+    可能有多个有效集——其中一个可能是最优的。
 
-    To better illustrate the distinction, consider a 2-CPU system with ready
-    threads T1 and T2 at priorities 1 and 2 respectively. Let T2 be pinned to
-    CPU0 and T1 not be pinned. If CPU0 is executing T2 and CPU1 executing T1,
-    then this set is is both valid and optimal. However, if CPU0 is executing
-    T1 and CPU1 is idling, then this too would be valid though not optimal.
+    为了更好地说明区别，请考虑具有优先级分别为 1 和 2 的就绪线程 T1 和 T2 的 2-CPU 系统。
+    让 T2 固定到 CPU0，T1 未固定。如果 CPU0 正在执行 T2，CPU1 正在执行 T1，
+    则此集既有效又最优。但是，如果 CPU0 正在执行 T1，CPU1 正在空闲，则这也将是有效的，尽管不是最优的。
 
-In those cases where a single set of IPIs is not sufficient to generate a valid
-set, the resulting set of executing threads are expected to be close to a valid
-set, and subsequent IPIs can generally be expected to correct the situation
-soon. However, for cases where neither the approximation nor the delay are
-acceptable, enabling :kconfig:option:`CONFIG_SCHED_IPI_CASCADE` will allow the
-kernel to generate cascading IPIs until the kernel has selected a valid set of
-ready threads for the CPUs.
+在一组 IPI 不足以生成有效集的情况下，预期产生的执行线程集接近有效集，
+并且后续 IPI 通常可以预期很快纠正这种情况。但是，对于近似值和延迟都不可接受的情况，
+启用 :kconfig:option:`CONFIG_SCHED_IPI_CASCADE` 将允许内核生成级联 IPI，
+直到内核为 CPU 选择了有效的就绪线程集。
 
-There are three types of costs/penalties associated with the IPI cascades--and
-for these reasons they are disabled by default. The first is a cost incurred
-by the CPU producing the IPI when a new thread preempts the old thread as checks
-must be done to compare the old thread against the threads executing on the
-other CPUs. The second is a cost incurred by the CPUs receiving the IPIs as
-they must be processed. The third is the apparent sputtering of a thread as it
-"winks in" and then "winks out" due to cascades stemming from the
-aforementioned first cost.
+与 IPI 级联相关的成本/惩罚有三种类型——出于这些原因，它们默认是禁用的。
+第一种是当新线程抢占旧线程时产生 IPI 的 CPU 产生的成本，因为必须进行检查以将旧线程与在其他 CPU 上
+执行的线程进行比较。第二种是接收 IPI 的 CPU 产生的成本，因为它们必须被处理。
+第三种是线程的明显抖动，因为它由于源于上述第一种成本的级联而"闪烁进入"然后"闪烁出去"。
 
-IPI Work Items
-==============
+IPI 工作项 (IPI Work Items)
+===========================
 
-The kernel allows developers to execute functions on other CPUs at ISR level
-using one or more IPI work items. After IPI work items have been added to the
-specified CPUs' work queues using :c:func:`k_ipi_work_add`, the targeted CPUs
-will process them after receiving an IPI. Signaling an IPI is done by calling
-:c:func:`k_ipi_work_signal`. Waiting for an IPI work item to be completed by
-the targeted CPUs is done by calling :c:func:`k_ipi_work_wait`. Only a single
-waiter is permitted at a time.
+内核允许开发人员使用一个或多个 IPI 工作项在 ISR 级别的其他 CPU 上执行函数。
+使用 :c:func:`k_ipi_work_add` 将 IPI 工作项添加到指定 CPU 的工作队列后，
+目标 CPU 将在接收到 IPI 后处理它们。通过调用 :c:func:`k_ipi_work_signal` 来发出 IPI 信号。
+通过调用 :c:func:`k_ipi_work_wait` 等待目标 CPU 完成 IPI 工作项。一次仅允许一个等待者。
 
 .. note::
-    IPI work items will only be added to the IPI work queues of other CPUs. If
-    adding IPI work items at thread level, the developer must ensure that the
-    current thread does not change CPUs until after signaling the IPIs.
+    IPI 工作项只会添加到其他 CPU 的 IPI 工作队列中。如果在线程级别添加 IPI 工作项，
+    开发人员必须确保在发出 IPI 信号之前当前线程不会更改 CPU。
 
-Sample Use
-----------
+示例使用
+--------
 
-The following code outlines how to use IPI work items to update status
-information across a set of CPUs as a result of one CPU handling an ISR.
+以下代码概述了如何使用 IPI 工作项在一个 CPU 处理 ISR 的结果下更新一组 CPU 上的状态信息。
 
 .. code-block:: c
 
@@ -315,102 +215,66 @@ information across a set of CPUs as a result of one CPU handling an ISR.
     }
 
 
-SMP Kernel Internals
-********************
+SMP 内核内部机制 (SMP Kernel Internals)
+****************************************
 
-In general, Zephyr kernel code is SMP-agnostic and, like application
-code, will work correctly regardless of the number of CPUs available.
-But in a few areas there are notable changes in structure or behavior.
+通常，Zephyr 内核代码是 SMP 不可知的，并且像应用程序代码一样，无论可用 CPU 的数量如何，
+都能正确工作。但在少数领域中，结构或行为有显著变化。
 
+每个 CPU 的数据 (Per-CPU data)
+=============================
 
-Per-CPU data
-============
+核心内核数据的许多元素需要在 SMP 模式下为每个 CPU 实现。例如，``_current`` 线程指针显然需要反映
+本地正在运行的内容，因为有许多线程同时运行。同样，需要为每个物理 CPU 创建和分配内核提供的中断堆栈，
+以及用于检测 ISR 状态的中断嵌套计数。
 
-Many elements of the core kernel data need to be implemented for each
-CPU in SMP mode.  For example, the ``_current`` thread pointer obviously
-needs to reflect what is running locally, there are many threads
-running concurrently.  Likewise a kernel-provided interrupt stack
-needs to be created and assigned for each physical CPU, as does the
-interrupt nesting count used to detect ISR state.
+这些字段现在移动到 :c:struct:`_kernel` 结构中的单独 :c:struct:`_cpu` 实例中，
+该实例具有按 ID 索引的 ``cpus[]`` 数组。为尝试使用旧语法和汇编偏移量访问 ``cpus[0]`` 字段的
+传统单处理器代码提供了兼容性字段。
 
-These fields are now moved into a separate struct :c:struct:`_cpu` instance
-within the :c:struct:`_kernel` struct, which has a ``cpus[]`` array indexed by ID.
-Compatibility fields are provided for legacy uniprocessor code trying
-to access the fields of ``cpus[0]`` using the older syntax and assembly
-offsets.
+请注意，架构层的一个重要要求是，在内核上下文中时，指向此 CPU 结构的指针必须快速可用。
+期望 :c:func:`arch_curr_cpu` 将使用 CPU 提供的寄存器或寻址模式实现，该寄存器或寻址模式
+可以跨任意上下文切换或中断存储此值，并使其可用于任何内核模式代码。
 
-Note that an important requirement on the architecture layer is that
-the pointer to this CPU struct be available rapidly when in kernel
-context.  The expectation is that :c:func:`arch_curr_cpu` will be
-implemented using a CPU-provided register or addressing mode that can
-store this value across arbitrary context switches or interrupts and
-make it available to any kernel-mode code.
+类似地，在单处理器系统上，Zephyr 可以简单地在最低优先级创建全局"空闲线程"，
+在 SMP 中我们可能需要为每个 CPU 创建一个。这使得调度器中的内部谓词测试"_is_idle()"
+（这是热路径性能环境）比简单地测试线程指针与已知静态变量的相等性更复杂。
+在 SMP 模式下，空闲线程通过线程结构中的单独字段区分。
 
-Similarly, where on a uniprocessor system Zephyr could simply create a
-global "idle thread" at the lowest priority, in SMP we may need one
-for each CPU.  This makes the internal predicate test for "_is_idle()"
-in the scheduler, which is a hot path performance environment, more
-complicated than simply testing the thread pointer for equality with a
-known static variable.  In SMP mode, idle threads are distinguished by
-a separate field in the thread struct.
+基于切换的上下文切换 (Switch-based context switching)
+====================================================
 
-Switch-based context switching
-==============================
+传统的 Zephyr 上下文切换原语一直是 :c:func:`z_swap`。不幸的是，此函数不带参数指定要切换到的线程。
+期望一直是调度器在其状态最后修改时已经做出了抢占决定，并将产生的"下一个线程"指针缓存在
+架构上下文切换原语可以通过简单的结构偏移找到它的位置。该技术在 SMP 中不起作用，
+因为其他 CPU 可能自当前 CPU 上次退出调度器以来已修改调度器状态（例如：它可能已经在运行该缓存的线程！）。
 
-The traditional Zephyr context switch primitive has been :c:func:`z_swap`.
-Unfortunately, this function takes no argument specifying a thread to
-switch to.  The expectation has always been that the scheduler has
-already made its preemption decision when its state was last modified
-and cached the resulting "next thread" pointer in a location where
-architecture context switch primitives can find it via a simple struct
-offset.  That technique will not work in SMP, because the other CPU
-may have modified scheduler state since the current CPU last exited
-the scheduler (for example: it might already be running that cached
-thread!).
+相反，SMP"切换到"决定需要与交换调用同步进行，并且由于我们不希望每个架构的汇编代码处理调度器内部状态，
+Zephyr 需要 SMP 系统的稍低级别的上下文切换原语：:c:func:`arch_switch` 始终在屏蔽中断的情况下调用，
+并且恰好接受两个参数。第一个是它应该切换到的上下文的不透明（架构定义）句柄，
+第二个是指向此类句柄的指针，它应该在其中存储从正在切换出的线程产生的句柄。
+然后，内核在此原语之上实现可移植的 :c:func:`z_swap` 实现，该实现包括架构不需要理解的位置中的相关调度器逻辑。
 
-Instead, the SMP "switch to" decision needs to be made synchronously
-with the swap call, and as we don't want per-architecture assembly
-code to be handling scheduler internal state, Zephyr requires a
-somewhat lower-level context switch primitives for SMP systems:
-:c:func:`arch_switch` is always called with interrupts masked, and takes
-exactly two arguments.  The first is an opaque (architecture defined)
-handle to the context to which it should switch, and the second is a
-pointer to such a handle into which it should store the handle
-resulting from the thread that is being switched out.
-The kernel then implements a portable :c:func:`z_swap` implementation on top
-of this primitive which includes the relevant scheduler logic in a
-location where the architecture doesn't need to understand it.
+类似地，在中断退出时，基于切换的架构预期调用 :c:func:`z_get_next_switch_handle`
+以从调度器检索要运行的下一个线程。:c:func:`z_get_next_switch_handle` 的参数是中断线程的"句柄"，
+反映 :c:func:`arch_switch` 使用的相同不透明类型，或者如果该线程尚不能释放给调度器，则为 NULL。
+句柄值或 NULL 之间的选择取决于 CPU 中断模式的实现方式。
 
-Similarly, on interrupt exit, switch-based architectures are expected
-to call :c:func:`z_get_next_switch_handle` to retrieve the next thread to
-run from the scheduler. The argument to :c:func:`z_get_next_switch_handle`
-is either the interrupted thread's "handle" reflecting the same opaque type
-used by :c:func:`arch_switch`, or NULL if that thread cannot be released
-to the scheduler just yet. The choice between a handle value or NULL
-depends on the way CPU interrupt mode is implemented.
+具有大型 CPU 寄存器文件的架构通常仅在中断时在当前线程的堆栈上保留调用者保存的寄存器，
+以最小化中断延迟，并且仅在调用 :c:func:`arch_switch` 时保留被调用者保存的寄存器，
+以最小化上下文切换延迟。此类架构必须使用 NULL 作为 :c:func:`z_get_next_switch_handle` 的参数
+来确定是否有新线程要调度，如果是，则通过它们自己的 :c:func:`arch_switch` 或派生跟进，
+或者直接离开中断模式。在前一种情况下，在完全保存其上下文后，由该切换代码将从正在切换出的线程
+产生的句柄存储在该线程的"switch_handle"字段中。
 
-Architectures with a large CPU register file would typically preserve only
-the caller-saved registers on the current thread's stack when interrupted
-in order to minimize interrupt latency, and preserve the callee-saved
-registers only when :c:func:`arch_switch` is called to minimize context
-switching latency. Such architectures must use NULL as the argument to
-:c:func:`z_get_next_switch_handle` to determine if there is a new thread
-to schedule, and follow through with their own :c:func:`arch_switch` or
-derivative if so, or directly leave interrupt mode otherwise.
-In the former case it is up to that switch code to store the handle
-resulting from the thread that is being switched out in that thread's
-"switch_handle" field after its context has fully been saved.
+在进入中断模式时已经保留了整个线程状态的架构可以直接将该线程的句柄传递给
+:c:func:`z_get_next_switch_handle` 并一步完成。
 
-Architectures whose entry in interrupt mode already preserves the entire
-thread state may pass that thread's handle directly to
-:c:func:`z_get_next_switch_handle` and be done in one step.
+请注意，虽然 SMP 需要 :kconfig:option:`CONFIG_USE_SWITCH`，但反之则不成立。
+将 :kconfig:option:`CONFIG_SMP` 设置为 No 的单处理器架构仍可能决定使用 :c:func:`arch_switch`
+实现其上下文切换。
 
-Note that while SMP requires :kconfig:option:`CONFIG_USE_SWITCH`, the reverse is not
-true.  A uniprocessor architecture built with :kconfig:option:`CONFIG_SMP` set to No might
-still decide to implement its context switching using
-:c:func:`arch_switch`.
-
-API Reference
-**************
+API 参考
+********
 
 .. doxygengroup:: spinlock_apis

@@ -1,23 +1,19 @@
 .. _queues:
 
-Queues
-######
+队列 (Queues)
+#############
 
-A Queue in Zephyr is a kernel object that implements a traditional queue, allowing
-threads and ISRs to add and remove data items of any size. The queue is similar
-to a FIFO and serves as the underlying implementation for both :ref:`k_fifo
-<fifos_v2>` and :ref:`k_lifo <lifos_v2>`. For more information on usage see
-:ref:`k_fifo <fifos_v2>`.
+Zephyr 中的队列 (Queue) 是一个内核对象，实现了传统的队列，允许线程和 ISR 添加和移除任意大小的数据项。队列类似于 FIFO，并作为 :ref:`k_fifo <fifos_v2>` 和 :ref:`k_lifo <lifos_v2>` 的底层实现。有关用法的更多信息，请参阅 :ref:`k_fifo <fifos_v2>`。
 
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+********************************
 
-Related configuration options:
+相关配置选项：
 
-* None
+* 无
 
-API Reference
-*************
+API 参考 (API Reference)
+************************
 
 .. doxygengroup:: queue_apis

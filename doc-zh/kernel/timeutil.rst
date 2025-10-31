@@ -1,73 +1,62 @@
 .. _timeutil_api:
 
-Time Utilities
-##############
+时间工具 (Time Utilities)
+##########################
 
-Overview
-********
+概述 (Overview)
+****************
 
-:ref:`kernel_timing_uptime` in Zephyr is based on the a tick counter.  With
-the default :kconfig:option:`CONFIG_TICKLESS_KERNEL` this counter advances at a
-nominally constant rate from zero at the instant the system started. The POSIX
-equivalent to this counter is something like ``CLOCK_MONOTONIC`` or, in Linux,
-``CLOCK_MONOTONIC_RAW``.  :c:func:`k_uptime_get()` provides a millisecond
-representation of this time.
+Zephyr 中的 :ref:`kernel_timing_uptime` 基于滴答计数器。
+使用默认的 :kconfig:option:`CONFIG_TICKLESS_KERNEL`，此计数器从系统启动时刻的零开始
+以名义上恒定的速率前进。这个计数器的 POSIX 等效项类似于 ``CLOCK_MONOTONIC``，
+或者在 Linux 中是 ``CLOCK_MONOTONIC_RAW``。:c:func:`k_uptime_get()`
+提供此时间的毫秒表示。
 
-Applications often need to correlate the Zephyr internal time with external
-time scales used in daily life, such as local time or Coordinated Universal
-Time.  These systems interpret time in different ways and may have
-discontinuities due to `leap seconds <https://what-if.xkcd.com/26/>`__ and
-local time offsets like daylight saving time.
+应用程序通常需要将 Zephyr 内部时间与日常生活中使用的外部时间尺度相关联，
+例如本地时间或协调世界时 (Coordinated Universal Time)。这些系统以不同的方式解释时间，
+并且可能由于`闰秒 <https://what-if.xkcd.com/26/>`__和本地时间偏移（如夏令时）而存在不连续性。
 
-Because of these discontinuities, as well as significant inaccuracies in the
-clocks underlying the cycle counter, the offset between time estimated from
-the Zephyr clock and the actual time in a "real" civil time scale is not
-constant and can vary widely over the runtime of a Zephyr application.
+由于这些不连续性，以及周期计数器底层时钟的显著不准确性，
+从 Zephyr 时钟估计的时间与"真实"民用时间尺度中的实际时间之间的偏移不是恒定的，
+并且可以在 Zephyr 应用程序的运行时内广泛变化。
 
-The time utilities API supports:
+时间工具 API 支持：
 
-* :ref:`converting between time representations <timeutil_repr>`
-* :ref:`synchronizing and aligning time scales <timeutil_sync>`
-* :ref:`comparing, adding, and subtracting representations <timeutil_manip>`
+* :ref:`在时间表示之间转换 <timeutil_repr>`
+* :ref:`同步和对齐时间尺度 <timeutil_sync>`
+* :ref:`比较、添加和减法表示 <timeutil_manip>`
 
-For terminology and concepts that support these functions see
-:ref:`timeutil_concepts`.
+有关支持这些功能的术语和概念，请参见 :ref:`timeutil_concepts`。
 
-Time Utility APIs
-*****************
+时间工具 API (Time Utility APIs)
+**********************************
 
 .. _timeutil_repr:
 
-Representation Transformation
-=============================
+表示转换 (Representation Transformation)
+=========================================
 
-Time scale instants can be represented in multiple ways including:
+时间尺度瞬间可以用多种方式表示，包括：
 
-* Seconds since an epoch. POSIX representations of time in this form include
-  ``time_t`` and ``struct timespec``, which are generally interpreted as a
-  representation of `"UNIX Time"
-  <https://tools.ietf.org/html/rfc8536#section-2>`__.
+* 自纪元以来的秒数。此形式的时间的 POSIX 表示包括 ``time_t`` 和 ``struct timespec``，
+  它们通常被解释为 `"UNIX 时间" <https://tools.ietf.org/html/rfc8536#section-2>`__ 的表示。
 
-* Calendar time as a year, month, day, hour, minutes, and seconds relative to
-  an epoch. POSIX representations of time in this form include ``struct tm``.
+* 日历时间，作为相对于纪元的年、月、日、小时、分钟和秒。
+  此形式的时间的 POSIX 表示包括 ``struct tm``。
 
-Keep in mind that these are simply time representations that must be
-interpreted relative to a time scale which may be local time, UTC, or some
-other continuous or discontinuous scale.
+请记住，这些只是时间表示，必须相对于时间尺度进行解释，
+该时间尺度可能是本地时间、UTC 或其他一些连续或不连续的尺度。
 
-Some necessary transformations are available in standard C library
-routines. For example, ``time_t`` measuring seconds since the POSIX EPOCH is
-converted to ``struct tm`` representing calendar time with `gmtime()
-<https://pubs.opengroup.org/onlinepubs/9699919799/functions/gmtime.html>`__.
-Sub-second timestamps like ``struct timespec`` can also use this to produce
-the calendar time representation and deal with sub-second offsets separately.
+一些必要的转换可在标准 C 库例程中使用。例如，测量自 POSIX 纪元以来的秒数的 ``time_t``
+使用 `gmtime() <https://pubs.opengroup.org/onlinepubs/9699919799/functions/gmtime.html>`__
+转换为表示日历时间的 ``struct tm``。像 ``struct timespec`` 这样的亚秒时间戳也可以使用它
+来生成日历时间表示，并分别处理亚秒偏移。
 
-The inverse transformation is not standardized: APIs like ``mktime()`` expect
-information about time zones.  Zephyr provides this transformation with
-:c:func:`timeutil_timegm` and :c:func:`timeutil_timegm64`.
+逆转换不是标准化的：像 ``mktime()`` 这样的 API 期望有关时区的信息。
+Zephyr 使用 :c:func:`timeutil_timegm` 和 :c:func:`timeutil_timegm64` 提供此转换。
 
-To convert between ``struct timespec`` and ``k_timeout_t`` durations,
-use :c:func:`timespec_to_timeout` and :c:func:`timespec_from_timeout`.
+要在 ``struct timespec`` 和 ``k_timeout_t`` 持续时间之间转换，
+请使用 :c:func:`timespec_to_timeout` 和 :c:func:`timespec_from_timeout`。
 
 .. code-block:: c
 
@@ -84,83 +73,71 @@ use :c:func:`timespec_to_timeout` and :c:func:`timespec_from_timeout`.
 
 .. _timeutil_sync:
 
-Time Scale Synchronization
-==========================
+时间尺度同步 (Time Scale Synchronization)
+==========================================
 
-There are several factors that affect synchronizing time scales:
+有几个因素影响时间尺度的同步：
 
-* The rate of discrete instant representation change.  For example Zephyr
-  uptime is tracked in ticks which advance at events that nominally occur at
-  :kconfig:option:`CONFIG_SYS_CLOCK_TICKS_PER_SEC` Hertz, while an external time
-  source may provide data in whole or fractional seconds (e.g. microseconds).
-* The absolute offset required to align the two scales at a single instant.
-* The relative error between observable instants in each scale, required to
-  align multiple instants consistently.  For example a reference clock that's
-  conditioned by a 1-pulse-per-second GPS signal will be much more accurate
-  than a Zephyr system clock driven by a RC oscillator with a +/- 250 ppm
-  error.
+* 离散瞬间表示变化的速率。例如，Zephyr 正常运行时间以滴答为单位跟踪，
+  滴答在名义上以 :kconfig:option:`CONFIG_SYS_CLOCK_TICKS_PER_SEC` 赫兹发生的事件处前进，
+  而外部时间源可能以整秒或分数秒（例如微秒）提供数据。
+* 在单个瞬间对齐两个尺度所需的绝对偏移。
+* 每个尺度中可观察瞬间之间的相对误差，需要一致地对齐多个瞬间。
+  例如，由 1 脉冲/秒 GPS 信号调节的参考时钟将比由具有 +/- 250 ppm 误差的 RC 振荡器
+  驱动的 Zephyr 系统时钟准确得多。
 
-Synchronization or alignment between time scales is done with a multi-step
-process:
+时间尺度之间的同步或对齐通过多步过程完成：
 
-* An instant in a time scale is represented by an (unsigned) 64-bit integer,
-  assumed to advance at a fixed nominal rate.
-* :c:struct:`timeutil_sync_config` records the nominal rates of a reference
-  time scale/source (e.g. TAI) and a local time source
-  (e.g. :c:func:`k_uptime_ticks`).
-* :c:struct:`timeutil_sync_instant` records the representation of a single
-  instant in both the reference and local time scales.
-* :c:struct:`timeutil_sync_state` provides storage for an initial instant, a
-  recently received second observation, and a skew that can adjust for
-  relative errors in the actual rate of each time scale.
-* :c:func:`timeutil_sync_ref_from_local()` and
-  :c:func:`timeutil_sync_local_from_ref()` convert instants in one time scale
-  to another taking into account skew that can be estimated from the two
-  instances stored in the state structure by
-  :c:func:`timeutil_sync_estimate_skew`.
+* 时间尺度中的瞬间由（无符号）64 位整数表示，假设以固定的名义速率前进。
+* :c:struct:`timeutil_sync_config` 记录参考时间尺度/源（例如 TAI）
+  和本地时间源（例如 :c:func:`k_uptime_ticks`）的名义速率。
+* :c:struct:`timeutil_sync_instant` 记录参考和本地时间尺度中单个瞬间的表示。
+* :c:struct:`timeutil_sync_state` 为初始瞬间、最近接收的第二个观察以及可以调整每个时间尺度
+  的实际速率的相对误差的偏斜提供存储。
+* :c:func:`timeutil_sync_ref_from_local()` 和 :c:func:`timeutil_sync_local_from_ref()`
+  将一个时间尺度中的瞬间转换为另一个时间尺度，考虑到可以通过
+  :c:func:`timeutil_sync_estimate_skew` 从状态结构中存储的两个实例估计的偏斜。
 
 .. doxygengroup:: timeutil_sync_apis
 
 .. _timeutil_manip:
 
-``timespec`` Manipulation
-=========================
+``timespec`` 操作 (``timespec`` Manipulation)
+==============================================
 
-Checking the validity of a ``timespec`` can be done with :c:func:`timespec_is_valid`.
+可以使用 :c:func:`timespec_is_valid` 检查 ``timespec`` 的有效性。
 
 .. code-block:: c
 
     struct timespec ts = {
         .tv_sec = 0,
-        .tv_nsec = -1, /* out of range! */
+        .tv_nsec = -1, /* 超出范围！ */
     };
 
     if (!timespec_is_valid(&ts)) {
-        /* error-handing code */
+        /* 错误处理代码 */
     }
 
-In some cases, invalid ``timespec`` objects may be re-normalized using
-:c:func:`timespec_normalize`.
+在某些情况下，可以使用 :c:func:`timespec_normalize` 重新规范化无效的 ``timespec`` 对象。
 
 .. code-block:: c
 
     if (!timespec_normalize(&ts)) {
-        /* error-handling code */
+        /* 错误处理代码 */
     }
 
-    /* ts should be normalized */
+    /* ts 应该被规范化 */
     __ASSERT(timespec_is_valid(&ts) == true, "expected normalized timespec");
 
-It is possible to compare two ``timespec`` objects for equality using :c:func:`timespec_equal`.
+可以使用 :c:func:`timespec_equal` 比较两个 ``timespec`` 对象是否相等。
 
 .. code-block:: c
 
     if (timespec_equal(then, now)) {
-        /* time is up! */
+        /* 时间到了！ */
     }
 
-It is possible to compare and fully order (valid) ``timespec`` objects using
-:c:func:`timespec_compare`.
+可以使用 :c:func:`timespec_compare` 比较和完全排序（有效的）``timespec`` 对象。
 
 .. code-block:: c
 
@@ -178,28 +155,26 @@ It is possible to compare and fully order (valid) ``timespec`` objects using
         break;
     }
 
-It is possible to add, subtract, and negate ``timespec`` objects using
-:c:func:`timespec_add`, :c:func:`timespec_sub`, and :c:func:`timespec_negate`,
-respectively. Like :c:func:`timespec_normalize`, these functions will output
-a normalized ``timespec`` when doing so would not result in overflow.
-On success, these functions return ``true``. If overflow would occur, the
-functions return ``false``.
+可以使用 :c:func:`timespec_add`、:c:func:`timespec_sub` 和 :c:func:`timespec_negate`
+分别对 ``timespec`` 对象进行加法、减法和取反。与 :c:func:`timespec_normalize` 一样，
+这些函数在不会导致溢出的情况下将输出规范化的 ``timespec``。
+成功时，这些函数返回 ``true``。如果发生溢出，函数返回 ``false``。
 
 .. code-block:: c
 
     /* a += b */
     if (!timespec_add(&a, &b)) {
-        /* overflow */
+        /* 溢出 */
     }
 
     /* a -= b */
     if (!timespec_sub(&a, &b)) {
-        /* overflow */
+        /* 溢出 */
     }
 
     /* a = -a */
     if (!timespec_negate(&a)) {
-        /* overflow */
+        /* 溢出 */
     }
 
 .. doxygengroup:: timeutil_timespec_apis
@@ -207,157 +182,120 @@ functions return ``false``.
 
 .. _timeutil_concepts:
 
-Concepts Underlying Time Support in Zephyr
-******************************************
+Zephyr 中时间支持的基础概念 (Concepts Underlying Time Support in Zephyr)
+***************************************************************************
 
-Terms from `ISO/TC 154/WG 5 N0038
+来自 `ISO/TC 154/WG 5 N0038
 <https://www.loc.gov/standards/datetime/iso-tc154-wg5_n0038_iso_wd_8601-1_2016-02-16.pdf>`__
-(ISO/WD 8601-1) and elsewhere:
+(ISO/WD 8601-1) 和其他地方的术语：
 
-* A *time axis* is a representation of time as an ordered sequence of
-  instants.
-* A *time scale* is a way of representing an instant relative to an origin
-  that serves as the epoch.
-* A time scale is *monotonic* (increasing) if the representation of successive
-  time instants never decreases in value.
-* A time scale is *continuous* if the representation has no abrupt changes in
-  value, e.g. jumping forward or back when going between successive instants.
-* `Civil time <https://en.wikipedia.org/wiki/Civil_time>`__ generally refers
-  to time scales that legally defined by civil authorities, like local
-  governments, often to align local midnight to solar time.
+* *时间轴* (time axis) 是将时间表示为瞬间的有序序列。
+* *时间尺度* (time scale) 是相对于作为纪元的原点表示瞬间的一种方式。
+* 如果连续时间瞬间的表示值从不减少，则时间尺度是*单调* (monotonic)（递增）的。
+* 如果表示没有突然的值变化（例如，在连续瞬间之间来回跳跃），则时间尺度是*连续* (continuous) 的。
+* `民用时间 <https://en.wikipedia.org/wiki/Civil_time>`__ 通常指由民政当局
+  （如地方政府）合法定义的时间尺度，通常是为了使本地午夜与太阳时对齐。
 
-Relevant Time Scales
-====================
+相关时间尺度 (Relevant Time Scales)
+====================================
 
-`International Atomic Time
-<https://en.wikipedia.org/wiki/International_Atomic_Time>`__ (TAI) is a time
-scale based on averaging clocks that count in SI seconds. TAI is a monotonic
-and continuous time scale.
+`国际原子时 <https://en.wikipedia.org/wiki/International_Atomic_Time>`__ (TAI)
+是基于以 SI 秒计数的时钟平均值的时间尺度。TAI 是单调和连续的时间尺度。
 
-`Universal Time <https://en.wikipedia.org/wiki/Universal_Time>`__ (UT) is a
-time scale based on Earth’s rotation. UT is a discontinuous time scale as it
-requires occasional adjustments (`leap seconds
-<https://en.wikipedia.org/wiki/Leap_second>`__) to maintain alignment to
-changes in Earth’s rotation. Thus the difference between TAI and UT varies
-over time. There are several variants of UT, with `UTC
-<https://en.wikipedia.org/wiki/Coordinated_Universal_Time>`__ being the most
-common.
+`世界时 <https://en.wikipedia.org/wiki/Universal_Time>`__ (UT) 是基于地球自转的时间尺度。
+UT 是不连续的时间尺度，因为它需要偶尔调整（`闰秒 <https://en.wikipedia.org/wiki/Leap_second>`__）
+以保持与地球自转变化的对齐。因此，TAI 和 UT 之间的差异随时间变化。UT 有几个变体，
+其中 `UTC <https://en.wikipedia.org/wiki/Coordinated_Universal_Time>`__ 是最常见的。
 
-UT times are independent of location. UT is the basis for Standard Time
-(or "local time") which is the time at a particular location. Standard
-time has a fixed offset from UT at any given instant, primarily
-influenced by longitude, but the offset may be adjusted ("daylight
-saving time") to align standard time to the local solar time. In a sense
-local time is "more discontinuous" than UT.
+UT 时间独立于位置。UT 是标准时间（或"本地时间"）的基础，即特定位置的时间。
+标准时间在任何给定瞬间与 UT 具有固定偏移，主要受经度影响，
+但偏移可能会调整（"夏令时"）以将标准时间与当地太阳时对齐。
+从某种意义上说，本地时间"比 UT 更不连续"。
 
-`POSIX Time <https://tools.ietf.org/html/rfc8536#section-2>`__ is a time scale
-that counts seconds since the "POSIX epoch" at 1970-01-01T00:00:00Z (i.e. the
-start of 1970 UTC). `UNIX Time
-<https://tools.ietf.org/html/rfc8536#section-2>`__ is an extension of POSIX
-time using negative values to represent times before the POSIX epoch. Both of
-these scales assume that every day has exactly 86400 seconds. In normal use
-instants in these scales correspond to times in the UTC scale, so they inherit
-the discontinuity.
+`POSIX 时间 <https://tools.ietf.org/html/rfc8536#section-2>`__ 是一个时间尺度，
+从 1970-01-01T00:00:00Z（即 1970 UTC 开始）的"POSIX 纪元"开始计算秒数。
+`UNIX 时间 <https://tools.ietf.org/html/rfc8536#section-2>`__ 是 POSIX 时间的扩展，
+使用负值表示 POSIX 纪元之前的时间。这两个尺度都假设每天正好有 86400 秒。
+在正常使用中，这些尺度中的瞬间对应于 UTC 尺度中的时间，因此它们继承了不连续性。
 
-The continuous analogue is `UNIX Leap Time
-<https://tools.ietf.org/html/rfc8536#section-2>`__ which is UNIX time plus all
-leap-second corrections added after the POSIX epoch (when TAI-UTC was 8 s).
+连续类比是 `UNIX 闰秒时间 <https://tools.ietf.org/html/rfc8536#section-2>`__，
+它是 UNIX 时间加上 POSIX 纪元后添加的所有闰秒校正（当 TAI-UTC 为 8 秒时）。
 
-Example of Time Scale Differences
----------------------------------
+时间尺度差异示例 (Example of Time Scale Differences)
+------------------------------------------------------
 
-A positive leap second was introduced at the end of 2016, increasing the
-difference between TAI and UTC from 36 seconds to 37 seconds. There was
-no leap second introduced at the end of 1999, when the difference
-between TAI and UTC was only 32 seconds. The following table shows
-relevant civil and epoch times in several scales:
+2016 年底引入了一个正闰秒，将 TAI 和 UTC 之间的差异从 36 秒增加到 37 秒。
+1999 年底没有引入闰秒，当时 TAI 和 UTC 之间的差异仅为 32 秒。
+下表显示了几个尺度中的相关民用和纪元时间：
 
 ==================== ========== =================== ======= ==============
-UTC Date             UNIX time  TAI Date            TAI-UTC UNIX Leap Time
+UTC 日期             UNIX 时间  TAI 日期            TAI-UTC UNIX 闰秒时间
 ==================== ========== =================== ======= ==============
 1970-01-01T00:00:00Z 0          1970-01-01T00:00:08 +8      0
 1999-12-31T23:59:28Z 946684768  2000-01-01T00:00:00 +32     946684792
 1999-12-31T23:59:59Z 946684799  2000-01-01T00:00:31 +32     946684823
 2000-01-01T00:00:00Z 946684800  2000-01-01T00:00:32 +32     946684824
 2016-12-31T23:59:59Z 1483228799 2017-01-01T00:00:35 +36     1483228827
-2016-12-31T23:59:60Z undefined  2017-01-01T00:00:36 +36     1483228828
+2016-12-31T23:59:60Z 未定义     2017-01-01T00:00:36 +36     1483228828
 2017-01-01T00:00:00Z 1483228800 2017-01-01T00:00:37 +37     1483228829
 ==================== ========== =================== ======= ==============
 
-Functional Requirements
------------------------
+功能需求 (Functional Requirements)
+-----------------------------------
 
-The Zephyr tick counter has no concept of leap seconds or standard time
-offsets and is a continuous time scale. However it can be relatively
-inaccurate, with drifts as much as three minutes per hour (assuming an RC
-timer with 5% tolerance).
+Zephyr 滴答计数器没有闰秒或标准时间偏移的概念，是一个连续的时间尺度。
+但是，它可能相对不准确，假设 RC 定时器具有 5% 的容差，漂移可达每小时三分钟。
 
-There are two stages required to support conversion between Zephyr time and
-common human time scales:
+支持 Zephyr 时间和常见人类时间尺度之间的转换需要两个阶段：
 
-* Translation between the continuous but inaccurate Zephyr time scale and an
-  accurate external stable time scale;
-* Translation between the stable time scale and the (possibly discontinuous)
-  civil time scale.
+* 在连续但不准确的 Zephyr 时间尺度和准确的外部稳定时间尺度之间进行转换；
+* 在稳定时间尺度和（可能不连续的）民用时间尺度之间进行转换。
 
-The API around :c:func:`timeutil_sync_state_update()` supports the first step
-of converting between continuous time scales.
+围绕 :c:func:`timeutil_sync_state_update()` 的 API 支持在连续时间尺度之间转换的第一步。
 
-The second step requires external information including schedules of leap
-seconds and local time offset changes. This may be best provided by an
-external library, and is not currently part of the time utility APIs.
+第二步需要外部信息，包括闰秒和本地时间偏移变化的时间表。
+这最好由外部库提供，目前不是时间工具 API 的一部分。
 
-Selecting an External Source and Time Scale
--------------------------------------------
+选择外部源和时间尺度 (Selecting an External Source and Time Scale)
+--------------------------------------------------------------------
 
-If an application requires civil time accuracy within several seconds then UTC
-could be used as the stable time source. However, if the external source
-adjusts to a leap second there will be a discontinuity: the elapsed time
-between two observations taken at 1 Hz is not equal to the numeric difference
-between their timestamps.
+如果应用程序需要几秒钟内的民用时间精度，则可以使用 UTC 作为稳定的时间源。
+但是，如果外部源调整为闰秒，则会出现不连续性：以 1 Hz 采集的两个观察之间的经过时间
+不等于它们的时间戳之间的数值差异。
 
-For precise activities a continuous scale that is independent of local and
-solar adjustments simplifies things considerably. Suitable continuous scales
-include:
+对于精确活动，独立于本地和太阳调整的连续尺度会大大简化事情。合适的连续尺度包括：
 
-- GPS time: epoch of 1980-01-06T00:00:00Z, continuous following TAI with an
-  offset of TAI-GPS=19 s.
-- Bluetooth Mesh time: epoch of 2000-01-01T00:00:00Z, continuous following TAI
-  with an offset of -32.
-- UNIX Leap Time: epoch of 1970-01-01T00:00:00Z, continuous following TAI with
-  an offset of -8.
+- GPS 时间：1980-01-06T00:00:00Z 的纪元，连续跟随 TAI，偏移为 TAI-GPS=19 s。
+- 蓝牙网格时间：2000-01-01T00:00:00Z 的纪元，连续跟随 TAI，偏移为 -32。
+- UNIX 闰秒时间：1970-01-01T00:00:00Z 的纪元，连续跟随 TAI，偏移为 -8。
 
-Because C and Zephyr library functions support conversion between integral and
-calendar time representations using the UNIX epoch, UNIX Leap Time is an ideal
-choice for the external time scale.
+因为 C 和 Zephyr 库函数支持使用 UNIX 纪元在整数和日历时间表示之间进行转换，
+UNIX 闰秒时间是外部时间尺度的理想选择。
 
-The mechanism used to populate synchronization points is not relevant: it may
-involve reading from a local high-precision RTC peripheral, exchanging packets
-over a network using a protocol like NTP or PTP, or processing NMEA messages
-received a GPS with or without a 1pps signal.
+用于填充同步点的机制并不相关：它可能涉及从本地高精度 RTC 外设读取，
+使用 NTP 或 PTP 等协议通过网络交换数据包，或处理从 GPS 接收的 NMEA 消息
+（有或没有 1pps 信号）。
 
-``timespec`` Concepts
-=====================
+``timespec`` 概念 (``timespec`` Concepts)
+==========================================
 
-Originally from POSIX, ``struct timespec`` has been a part of the C standard
-since C11. The definition of ``struct timespec`` is as shown below.
+``struct timespec`` 最初来自 POSIX，自 C11 以来一直是 C 标准的一部分。
+``struct timespec`` 的定义如下所示。
 
 .. code-block:: c
 
    struct timespec {
-       time_t tv_sec;  /* seconds */
-       long   tv_nsec; /* nanoseconds */
+       time_t tv_sec;  /* 秒 */
+       long   tv_nsec; /* 纳秒 */
    };
 
 .. _note:
 
-    The C standard does not define the size of ``time_t``. However, Zephyr
-    uses 64-bits for ``time_t``. The ``long`` type is required to be at least
-    32-bits, but usually matches the word size of the architecture. Both
-    elements of ``struct timespec`` are signed integers. ``time_t`` is defined
-    to be 64-bits both for historical reasons and to be robust enough to
-    represent times in the future.
+    C 标准没有定义 ``time_t`` 的大小。但是，Zephyr 对 ``time_t`` 使用 64 位。
+    ``long`` 类型要求至少为 32 位，但通常与架构的字大小匹配。
+    ``struct timespec`` 的两个元素都是有符号整数。出于历史原因和足够强大以表示未来的时间，
+    ``time_t`` 被定义为 64 位。
 
-The ``tv_nsec`` field is only valid with values in the range ``[0, 999999999]``. The
-``tv_sec`` field is the number of seconds since the epoch. If ``struct timespec`` is
-used to express a difference, the ``tv_sec`` field may fall into a negative range.
+``tv_nsec`` 字段仅在 ``[0, 999999999]`` 范围内的值有效。
+``tv_sec`` 字段是自纪元以来的秒数。如果 ``struct timespec`` 用于表示差异，
+则 ``tv_sec`` 字段可能落入负范围。
