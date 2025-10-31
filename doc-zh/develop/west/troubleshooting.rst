@@ -1,94 +1,71 @@
 .. _west-troubleshooting:
 
-Troubleshooting West
-####################
+West 问题排查
+#############
 
-This page covers common issues with west and how to solve them.
+本页涵盖 west 的常见问题及其解决方法。
 
-``west update`` fetching failures
-*********************************
+``west update`` 获取失败
+***********************
 
-One good way to troubleshoot fetching issues is to run ``west update`` in
-verbose mode, like this:
+排查获取问题的一个好方法是以详细模式运行 ``west update``，如下所示：
 
 .. code-block:: shell
 
    west -v update
 
-The output includes Git commands run by west and their outputs. Look for
-something like this:
+输出包括 west 运行的 Git 命令及其输出。查找类似以下内容：
 
 .. code-block:: none
 
    === updating your_project (path/to/your/project):
    west.manifest: your_project: checking if cloned
-   [...other west.manifest logs...]
+   [...其他 west.manifest 日志...]
    --- your_project: fetching, need revision SOME_SHA
    west.manifest: running 'git fetch ... https://github.com/your-username/your_project ...' in /some/directory
 
-The ``git fetch`` command example in the last line above is what needs to
-succeed.
+上面最后一行的 ``git fetch`` 命令示例是需要成功的内容。
 
-One strategy is to go to ``/path/to/your/project``, copy/paste and run the entire
-``git fetch`` command, then debug from there using the documentation for your
-credential storage helper.
+一个策略是转到 ``/path/to/your/project``，复制/粘贴并运行整个 ``git fetch`` 命令，然后使用凭证存储助手的文档从那里进行调试。
 
-If you're behind a corporate firewall and may have proxy or other issues,
-``curl -v FETCH_URL`` (for HTTPS URLs) or ``ssh -v FETCH_URL`` (for SSH URLs)
-may be helpful.
+如果在公司防火墙后面，可能存在代理或其他问题，``curl -v FETCH_URL``（对于 HTTPS URL）或 ``ssh -v FETCH_URL``（对于 SSH URL）可能会有所帮助。
 
-If you can get the ``git fetch`` command to run successfully without prompting
-for a password when you run it directly, you will be able to run ``west
-update`` without entering your password in that same shell.
+如果在直接运行时可以使无需输入密码的情况下成功运行 ``git fetch`` 命令，则将能够在同一 shell 中无需输入密码的情况下运行 ``west update``。
 
-"'west' is not recognized as an internal or external command, operable program or batch file.'
-**********************************************************************************************
+"'west' 未被识别为内部或外部命令、可操作程序或批处理文件"
+************************************************************
 
-On Windows, this means that either west is not installed, or your :envvar:`PATH`
-environment variable does not contain the directory where pip installed
-:file:`west.exe`.
+在 Windows 上，这意味着 west 未安装，或 :envvar:`PATH` 环境变量不包含 pip 安装 :file:`west.exe` 的目录。
 
-First, make sure you've installed west; see :ref:`west-install`. Then try
-running ``west`` from a new ``cmd.exe`` window. If that still doesn't work,
-keep reading.
+首先，确保已安装 west；请参见 :ref:`west-install`。然后尝试从新的 ``cmd.exe`` 窗口运行 ``west``。如果仍然不起作用，请继续阅读。
 
-You need to find the directory containing :file:`west.exe`, then add it to your
-:envvar:`PATH`. (This :envvar:`PATH` change should have been done for you when
-you installed Python and pip, so ordinarily you should not need to follow these
-steps.)
+需要找到包含 :file:`west.exe` 的目录，然后将其添加到 :envvar:`PATH`。（在安装 Python 和 pip 时，此 :envvar:`PATH` 更改应该为您完成，因此通常不需要按照这些步骤操作。）
 
-Run this command in ``cmd.exe``::
+在 ``cmd.exe`` 中运行此命令::
 
   pip3 show west
 
-Then:
+然后：
 
-#. Look for a line in the output that looks like ``Location:
-   C:\foo\python\python38\lib\site-packages``. The exact location
-   will be different on your computer.
-#. Look for a file named ``west.exe`` in the ``scripts`` directory
-   ``C:\foo\python\python38\scripts``.
+#. 在输出中查找看起来像 ``Location: C:\foo\python\python38\lib\site-packages`` 的行。确切的位置在计算机上会有所不同。
+#. 在 ``scripts`` 目录 ``C:\foo\python\python38\scripts`` 中查找名为 ``west.exe`` 的文件。
 
    .. important::
 
-      Notice how ``lib\site-packages`` in the ``pip3 show`` output was changed
-      to ``scripts``!
-#. If you see ``west.exe`` in the ``scripts`` directory, add the full path to
-   ``scripts`` to your :envvar:`PATH` using a command like this::
+      注意在 ``pip3 show`` 输出中 ``lib\site-packages`` 如何更改为 ``scripts``！
+
+#. 如果在 ``scripts`` 目录中看到 ``west.exe``，请使用如下命令将 ``scripts`` 的完整路径添加到 :envvar:`PATH`::
 
      setx PATH "%PATH%;C:\foo\python\python38\scripts"
 
-   **Do not just copy/paste this command**. The ``scripts`` directory location
-   will be different on your system.
-#. Close your ``cmd.exe`` window and open a new one. You should be able to run
-   ``west``.
+   **不要仅复制/粘贴此命令**。``scripts`` 目录位置在系统上会有所不同。
 
-"invalid choice: 'build'" (or 'flash', etc.)
-********************************************
+#. 关闭 ``cmd.exe`` 窗口并打开一个新窗口。应该能够运行 ``west``。
 
-If you see an unexpected error like this when trying to run a Zephyr extension
-command (like :ref:`west flash <west-flashing>`, :ref:`west build
-<west-building>`, etc.):
+"invalid choice: 'build'"（或 'flash' 等）
+*****************************************
+
+如果在尝试运行 Zephyr 扩展命令（如 :ref:`west flash <west-flashing>`、:ref:`west build <west-building>` 等）时看到如下意外错误：
 
 .. code-block:: none
 
@@ -98,47 +75,39 @@ command (like :ref:`west flash <west-flashing>`, :ref:`west build
    $ west flash [...]
    west: error: argument <command>: invalid choice: 'flash' (choose from 'init', [...])
 
-The most likely cause is that you're running the command outside of a
-:ref:`west workspace <west-workspace>`. West needs to know where your workspace
-is to find :ref:`west-extensions`.
+最可能的原因是在 :ref:`west 工作区 <west-workspace>` 外运行命令。West 需要知道工作区的位置以查找 :ref:`west-extensions`。
 
-To fix this, you have two choices:
+要修复此问题，有两个选择：
 
-#. Run the command from inside a workspace (e.g. the :file:`zephyrproject`
-   directory you created when you :ref:`got started <getting_started>`).
+#. 从工作区内运行命令（例如，在 :ref:`入门 <getting_started>` 时创建的 :file:`zephyrproject` 目录）。
 
-   For example, create your build directory inside the workspace, or run ``west
-   flash --build-dir YOUR_BUILD_DIR`` from inside the workspace.
+   例如，在工作区内创建构建目录，或从工作区内运行 ``west flash --build-dir YOUR_BUILD_DIR``。
 
-#. Set the :envvar:`ZEPHYR_BASE` :ref:`environment variable <env_vars>` and re-run
-   the west extension command. If set, west will use :envvar:`ZEPHYR_BASE` to
-   find your workspace.
+#. 设置 :envvar:`ZEPHYR_BASE` :ref:`环境变量 <env_vars>` 并重新运行 west 扩展命令。如果设置，west 将使用 :envvar:`ZEPHYR_BASE` 查找工作区。
 
-If you're unsure whether a command is built-in or an extension, run ``west
-help`` from inside your workspace. The output prints extension commands
-separately, and looks like this for mainline Zephyr:
+如果不确定命令是内置命令还是扩展命令，请从工作区内运行 ``west help``。对于 mainline Zephyr，输出分别打印扩展命令，如下所示：
 
 .. code-block:: none
 
    $ west help
 
-   built-in commands for managing git repositories:
-     init:                 create a west workspace
+   用于管理 git 仓库的内置命令：
+     init:                 创建 west 工作区
      [...]
 
-   other built-in commands:
-     help:                 get help for west or a command
+   其他内置命令：
+     help:                 获取 west 或命令的帮助
      [...]
 
-   extension commands from project manifest (path: zephyr):
-     build:                compile a Zephyr application
-     flash:                flash and run a binary on a board
+   来自项目清单的扩展命令（路径：zephyr）：
+     build:                编译 Zephyr 应用
+     flash:                在开发板上刷写并运行二进制文件
      [...]
 
 "invalid choice: 'post-init'"
 *****************************
 
-If you see this error when running ``west init``:
+如果在运行 ``west init`` 时看到此错误：
 
 .. code-block:: none
 
@@ -146,19 +115,14 @@ If you see this error when running ``west init``:
    (choose from 'init', 'update', 'list', 'manifest', 'diff',
    'status', 'forall', 'config', 'selfupdate', 'help')
 
-Then you have an old version of west installed, and are trying to use it in a
-workspace that requires a more recent version.
+那么已安装的 west 版本较旧，并尝试在需要更新版本的工作区中使用它。
 
-The easiest way to resolve this issue is to upgrade west and retry as follows:
+解决此问题的最简单方法是按如下方式升级 west 并重试：
 
-#. Install the latest west with the ``-U`` option for ``pip3 install`` as shown
-   in :ref:`west-install`.
+#. 如 :ref:`west-install` 中所示，使用 ``pip3 install`` 的 ``-U`` 选项安装最新 west。
 
-#. Back up any contents of :file:`zephyrproject/.west/config` that you want to
-   save. (If you don't have any configuration options set, it's safe to skip
-   this step.)
+#. 备份要保存的 :file:`zephyrproject/.west/config` 的任何内容。（如果未设置任何配置选项，可以安全地跳过此步骤。）
 
-#. Completely remove the :file:`zephyrproject/.west` directory (if you don't,
-   you will get the "already in a workspace" error message discussed next).
+#. 完全删除 :file:`zephyrproject/.west` 目录（如果不删除，将获得下一个讨论的"already in a workspace"错误消息）。
 
-#. Run ``west init`` again.
+#. 再次运行 ``west init``。

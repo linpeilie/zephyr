@@ -1,106 +1,68 @@
 .. _feature-tracking:
 
-Feature Tracking
-#################
+功能跟踪 (Feature Tracking)
+############################
 
-For feature tracking we use Github labels to classify new features and
-enhancements. The following is the description of each category:
+对于功能跟踪,我们使用 Github 标签对新功能和增强进行分类。以下是每个类别的描述:
 
-Enhancement
-  Changes to existing features that are not considered a bug and would not
-  block a release. This is an incremental enhancement to a feature that already
-  exists in Zephyr.
+增强 (Enhancement)
+  对现有功能的更改,不被视为错误且不会阻止发布。这是对 Zephyr 中已存在功能的增量增强。
 
-Feature request
-  A request for the implementation or inclusion of a new unit of functionality
-  that is not part of any release plans yet, that has not been vetted, and needs
-  further discussion and details.
+功能请求 (Feature request)
+  请求实现或包含一个新的功能单元,该功能尚未成为任何发布计划的一部分,尚未经过审查,需要进一步讨论和细节。
 
-Feature
-  A committed and planned unit of functionality with a detailed design and
-  implementation proposal and an owner. Features must go through an RFC process
-  and must be vetted and discussed in the TSC before a target milestone is set.
+功能 (Feature)
+  一个已承诺和计划的功能单元,具有详细的设计和实现提案以及所有者。功能必须经过 RFC 流程,并且必须在设置目标里程碑之前在 TSC 中进行审查和讨论。
 
-Hardware Support
-  A request or plan to port an existing feature or enhancement to a particular
-  hardware platform. This ranges from porting Zephyr itself to a new
-  architecture, SoC or board to adding an implementation of a peripheral driver
-  API for an existing hardware platform.
+硬件支持 (Hardware Support)
+  将现有功能或增强移植到特定硬件平台的请求或计划。这包括从将 Zephyr 本身移植到新架构、SoC 或开发板,到为现有硬件平台添加外设驱动程序 API 的实现。
 
-Meta
-  A label to group other GitHub issues that are part of a single feature or unit
-  of work.
+元标签 (Meta)
+  用于对属于单个功能或工作单元的其他 GitHub 问题进行分组的标签。
 
-The following workflow should be used to process features:.
+应使用以下工作流程来处理功能:
 
-This is the formal way for asking for a new feature in Zephyr and indicating its
-importance to the project.  Often, the requester may have a readiness and
-willingness to drive implementation of the feature in an upcoming release, and
-should assign the request to themselves.
-If not though, an owner will be assigned after evaluation by the TSC.
-A feature request can also have a companion RFC with more details on the feature
-and a proposed design or implementation.
+这是在 Zephyr 中请求新功能并表明其对项目重要性的正式方式。通常,请求者可能已准备好并愿意推动在即将发布的版本中实现该功能,并应将请求分配给自己。
+但如果不是这样,在 TSC 评估后将分配一个所有者。
+功能请求还可以附带一个 RFC,其中包含有关功能的更多详细信息以及建议的设计或实现。
 
-- Label new features requests as ``feature-request``
-- The TSC discusses new ``feature-request`` items regularly and triages them.
-  Items are examined for similarity with existing features, how they fit with
-  the project goals and other timeline considerations. The priority is
-  determined as follows:
+- 将新功能请求标记为 ``feature-request``
+- TSC 定期讨论新的 ``feature-request`` 项目并对其进行分类。
+  检查项目与现有功能的相似性、它们如何适应项目目标和其他时间表考虑因素。优先级确定如下:
 
-  - High = Next milestone
-  - Medium = As soon as possible
-  - Low = Best effort
+  - 高 = 下一个里程碑
+  - 中 = 尽快
+  - 低 = 尽力而为
 
-- After the initial discussion and triaging, the label is moved from
-  ``feature-request`` to ``feature`` with the target milestone and an assignee.
+- 在初步讨论和分类之后,标签从 ``feature-request`` 更改为 ``feature``,并设置目标里程碑和受让人。
 
-All items marked as ``feature-request`` are non-binding and those without an
-assignee are open for grabs, meaning that they can be picked up and implemented
-by any project member or the community. You should contact an assigned owner if
-you'd like to discuss or contribute to that feature's implementation
+所有标记为 ``feature-request`` 的项目都是非约束性的,那些没有受让人的项目可供任何人认领,这意味着它们可以由任何项目成员或社区拾取和实现。如果您想讨论或为该功能的实现做出贡献,您应该联系指定的所有者
 
 
-Roadmap and Release Plans
-*************************
+路线图和发布计划 (Roadmap and Release Plans)
+*********************************************
 
-Project roadmaps and release plans are both important tools for the project, but
-they have very different purposes and should not be confused. A project roadmap
-communicates the high-level overview of a project's strategy, while a release
-plan is a tactical document designed to capture and track the features planned
-for upcoming releases.
+项目路线图和发布计划都是项目的重要工具,但它们有非常不同的目的,不应混淆。项目路线图传达项目战略的高层次概述,而发布计划是一个战术文档,旨在捕获和跟踪计划用于即将发布版本的功能。
 
-- The project roadmap communicates the why; a release plan details the what
-- A release plan spans only a few months; a product roadmap might cover a year
-  or more
+- 项目路线图传达原因;发布计划详细说明内容
+- 发布计划仅跨越几个月;产品路线图可能涵盖一年或更长时间
 
 
-Project Roadmap
-================
+项目路线图 (Project Roadmap)
+==============================
 
-The project roadmap should serve as a high-level, visual summary of the
-project's strategic objectives and expectations.
+项目路线图应作为项目战略目标和期望的高层次、可视化摘要。
 
-If built properly, the roadmap can be a valuable tool for several reasons. It
-can help the project present its plan in a compelling way to existing and new
-stakeholders, to help recruit new members and it can be a helpful resource the
-team and community can refer to throughout the project's development, to ensure
-they are still executing according to plan.
+如果构建得当,路线图可以成为一个有价值的工具,原因有几个。它可以帮助项目以引人注目的方式向现有和新的利益相关者展示其计划,以帮助招募新成员,并且它可以成为团队和社区在整个项目开发过程中可以参考的有用资源,以确保他们仍在按照计划执行。
 
-As such, the roadmap should contain only strategic-level details, major project
-themes, epics, and goals.
+因此,路线图应仅包含战略级别的详细信息、主要项目主题、史诗和目标。
 
 
-Release Plans
-==============
+发布计划 (Release Plans)
+=========================
 
-The release plan comes into play when the project roadmap's high-level strategy
-is translated into an actionable plan built on specific features, enhancements,
-and fixes that need to go into a specific release or milestone.
+当项目路线图的高层次战略转化为基于特定功能、增强和修复的可操作计划时,发布计划就会发挥作用,这些功能、增强和修复需要进入特定发布或里程碑。
 
-The release plan communicates those features and enhancements slated for your
-project' next release (or the next few releases). So it acts as more of a
-project plan, breaking the big ideas down into smaller projects the community
-and main stakeholders of the project can make progress on.
+发布计划传达为项目的下一个版本(或接下来的几个版本)计划的那些功能和增强。因此,它更像是一个项目计划,将大想法分解为社区和项目的主要利益相关者可以取得进展的较小项目。
 
-Items labeled as ``features`` are short or long term release items that shall
-have an assignee and a milestone set.
+标记为 ``features`` 的项目是短期或长期发布项目,应设置受让人和里程碑。

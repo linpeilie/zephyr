@@ -1,352 +1,255 @@
 .. _project_roles:
 
-TSC Project Roles
-*****************
+TSC 项目角色 (TSC Project Roles)
+*********************************
 
-Project Roles
-#############
+项目角色 (Project Roles)
+#########################
 
-TSC projects generally will involve *Maintainers*, *Collaborators*, and
-*Contributors*:
+TSC 项目通常涉及 *维护者 (Maintainers)*、*协作者 (Collaborators)* 和 *贡献者 (Contributors)*:
 
-**Maintainer**: lead Collaborators on an area identified by the TSC (e.g.
-Architecture, code subsystems, etc.). Maintainers shall also serve as the
-area’s representative on the TSC as needed. Maintainers may become voting
-members of the TSC under the guidelines stated in the project Charter.
+**维护者 (Maintainer)**: 在 TSC 确定的领域(例如架构、代码子系统等)中领导协作者。维护者还应根据需要担任该领域在 TSC 中的代表。维护者可以根据项目章程中规定的指导方针成为 TSC 的投票成员。
 
-**Collaborator**: A highly involved Contributor in one or more areas.
-May become a Maintainer with approval of existing TSC voting members.
+**协作者 (Collaborator)**: 在一个或多个领域高度参与的贡献者。经现有 TSC 投票成员批准后可以成为维护者。
 
-**Contributor**: anyone in the community that contributes code or
-documentation to the project. Contributors may become Collaborators
-by approval of the existing Collaborators and Maintainers of the
-particular code base areas or subsystems.
+**贡献者 (Contributor)**: 社区中为项目贡献代码或文档的任何人。贡献者可以通过特定代码库领域或子系统的现有协作者和维护者的批准成为协作者。
 
 
 .. _contributor:
 
-Contributor
-+++++++++++
+贡献者 (Contributor)
+++++++++++++++++++++
 
-A *Contributor* is a developer who wishes to contribute to the project,
-at any level.
+*贡献者 (Contributor)* 是希望在任何级别为项目做出贡献的开发人员。
 
-Contributors are granted the following rights and responsibilities:
+贡献者被授予以下权利和责任:
 
-* Right to contribute code, documentation, translations, artwork, etc.
-* Right to report defects (bugs) and suggestions for enhancement.
-* Right to participate in the process of reviewing contributions by others.
-* Right to initiate and participate in discussions in any communication
-  methods.
-* Right to approach any member of the community with matters they believe
-  to be important.
-* Right to participate in the feature development process.
-* Responsibility to abide by decisions, once made. They are welcome to
-  provide new, relevant information to reopen decisions.
-* Responsibility for issues and bugs introduced by one’s own contributions.
-* Responsibility to respect the rules of the community.
-* Responsibility to provide constructive advice whenever participating in
-  discussions and in the review of contributions.
-* Responsibility to follow the project’s code of conduct
+* 有权贡献代码、文档、翻译、艺术作品等。
+* 有权报告缺陷(bug)和改进建议。
+* 有权参与审查他人贡献的过程。
+* 有权在任何沟通方式中发起和参与讨论。
+* 有权就他们认为重要的事项与社区的任何成员接洽。
+* 有权参与功能开发过程。
+* 有责任遵守已做出的决定。欢迎他们提供新的相关信息以重新开启决定。
+* 有责任对自己贡献引入的问题和 bug 负责。
+* 有责任尊重社区的规则。
+* 有责任在参与讨论和审查贡献时提供建设性建议。
+* 有责任遵守项目的行为准则
   (https://github.com/zephyrproject-rtos/zephyr/blob/main/CODE_OF_CONDUCT.md)
 
-Contributors are initially only given `Read
-<https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-permission-levels-for-an-organization>`_
-access to the Zephyr GitHub repository. Specifically, at the Read access level,
-Contributors are not allowed to assign reviewers to their own pull requests. An
-automated process will assign reviewers. You may also share the pull request on
-the `Zephyr devel mailing list <https://lists.zephyrproject.org/g/devel>`_ or on
-the `Zephyr Discord Server <https://chat.zephyrproject.org>`_.
+贡献者最初只被授予对 Zephyr GitHub 仓库的 `读取权限 (Read)
+<https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-permission-levels-for-an-organization>`_。具体来说,在读取访问级别,贡献者不允许为自己的拉取请求分配审查者。自动化流程将分配审查者。您也可以在 `Zephyr 开发邮件列表 <https://lists.zephyrproject.org/g/devel>`_ 或 `Zephyr Discord 服务器 <https://chat.zephyrproject.org>`_ 上分享拉取请求。
 
-Contributors who show dedication and skill are granted the Triage permission
-level to the Zephyr GitHub repository.
+表现出奉献精神和技能的贡献者将被授予 Zephyr GitHub 仓库的 Triage 权限级别。
 
-You may nominate yourself, or another GitHub user, for promotion to the Triage
-permission level by creating a GitHub issue, using the :github:`nomination
-template <new?assignees=&labels=Role+Nomination&template=006_nomination.yml>`.
+您可以通过创建 GitHub 问题来提名自己或其他 GitHub 用户晋升到 Triage 权限级别,使用 :github:`提名模板 <new?assignees=&labels=Role+Nomination&template=006_nomination.yml>`。
 
-Contributors granted the Triage permission level are permitted to add reviewers
-to a pull request and can be added as a reviewer by other GitHub users.
-Contributor change requests or approval on pull requests are not counted with
-respect to accepting and merging a pull request. However, Contributors comments
-and requested changes should still be considered by the pull request author.
+被授予 Triage 权限级别的贡献者可以向拉取请求添加审查者,也可以被其他 GitHub 用户添加为审查者。贡献者对拉取请求的更改请求或批准不计入接受和合并拉取请求所需的计数。然而,拉取请求作者仍应考虑贡献者的评论和请求的更改。
 
-Zephyr Contributor Badge
-++++++++++++++++++++++++
+Zephyr 贡献者徽章 (Zephyr Contributor Badge)
+++++++++++++++++++++++++++++++++++++++++++++++
 
-When your first contribution to the Zephyr project gets merged, you'll become eligible to claim your
-Zephyr Contributor Badge. This digital badge can be displayed on your website, blog, social media
-profile, etc. It will allow you to showcase your involvement in the Zephyr project and help raise
-its awareness.
+当您对 Zephyr 项目的第一个贡献被合并时,您将有资格申领您的 Zephyr 贡献者徽章。这个数字徽章可以显示在您的网站、博客、社交媒体个人资料等上。它将让您展示对 Zephyr 项目的参与,并有助于提高其知名度。
 
-You may apply for your Contributor Badge by filling out the `Zephyr Contributor Badge form`_.
+您可以通过填写 `Zephyr 贡献者徽章表单`_ 来申请您的贡献者徽章。
 
 .. _collaborator:
 
-Collaborator
-++++++++++++
+协作者 (Collaborator)
+++++++++++++++++++++++
 
-A *Collaborator* is a Contributor who is also responsible for the maintenance
-of Zephyr source code. Their opinions weigh more when decisions are made, in a
-fully meritocratic fashion.
+*协作者 (Collaborator)* 是同时负责维护 Zephyr 源代码的贡献者。在做出决定时,他们的意见具有更大的权重,采用完全精英制的方式。
 
-Collaborators have the following rights and responsibilities,
-in addition to those listed for Contributors:
+协作者拥有以下权利和责任,这些是贡献者权利和责任之外的:
 
-* Right to set goals for the short and medium terms for the project being
-  maintained, alongside the Maintainer.
-* Responsibility to participate in the feature development process.
-* Responsibility to review relevant code changes within reasonable time.
-* Responsibility to ensure the quality of the code to expected levels.
-* Responsibility to participate in community discussions.
-* Responsibility to mentor new contributors when appropriate
-* Responsibility to participate in the quality verification and release
-  process, when those happen.
+* 有权与维护者一起为正在维护的项目设定短期和中期目标。
+* 有责任参与功能开发过程。
+* 有责任在合理时间内审查相关代码更改。
+* 有责任确保代码质量达到预期水平。
+* 有责任参与社区讨论。
+* 有责任在适当时指导新贡献者
+* 有责任在质量验证和发布过程发生时参与其中。
 
-Contributors are promoted to the Collaborator role by adding the GitHub user
-name to one or more ``collaborators`` sections of the :ref:`maintainers_file` in
-the Zephyr repository.
+贡献者通过将 GitHub 用户名添加到 Zephyr 仓库 :ref:`maintainers_file` 中的一个或多个 ``collaborators`` 部分来晋升为协作者角色。
 
-Collaborator change requests on pull requests should
-be addressed by the original submitter. In cases where the changes requested do
-not follow the :ref:`expectations <reviewer-expectations>` and the guidelines
-of the project or in cases of disagreement, it is the responsibility of the
-assignee to advance the review process and resolve any disagreements.
+协作者对拉取请求的更改请求应由原始提交者处理。如果请求的更改不遵循项目的 :ref:`期望 <reviewer-expectations>` 和指导方针,或在出现分歧的情况下,受让人有责任推进审查过程并解决任何分歧。
 
-Collaborator approval of pull requests are counted toward the minimum required
-approvals needed to merge a PR. Other criteria for merging may apply.
+协作者对拉取请求的批准会计入合并 PR 所需的最低批准数。可能适用其他合并标准。
 
 
 .. _maintainer:
 
-Maintainer
-++++++++++
+维护者 (Maintainer)
+++++++++++++++++++++
 
-A *Maintainer* is a Collaborator who is also responsible for knowing,
-directing and anticipating the needs of a given zephyr source code area.
+*维护者 (Maintainer)* 是同时负责了解、指导和预测给定 zephyr 源代码区域需求的协作者。
 
-Maintainers have the following rights and responsibilities,
-in addition to those listed for Contributors and Collaborators:
+维护者拥有以下权利和责任,这些是贡献者和协作者权利和责任之外的:
 
-* Right to set the overall architecture of the relevant subsystems or areas
-  of involvement.
-* Right to make decisions in the relevant subsystems or areas of involvement,
-  in conjunction with the collaborators and submitters.
-  See :ref:`pr_technical_escalation`.
-* Responsibility to convey the direction of the relevant subsystem or areas to
-  the TSC
-* Responsibility to ensure all contributions of the project have been reviewed
-  within reasonable time.
-* Responsibility to enforce the Code of Conduct. As leaders in the community,
-  maintainers are expected to be role models in upholding the project's code
-  of conduct and creating a welcoming and inclusive environment for everyone.
-* Responsibility to triage static analysis issues in their code area.
-  See :ref:`static_analysis`.
+* 有权设定相关子系统或参与领域的整体架构。
+* 有权与协作者和提交者一起在相关子系统或参与领域做出决定。
+  参见 :ref:`pr_technical_escalation`。
+* 有责任向 TSC 传达相关子系统或领域的方向
+* 有责任确保项目的所有贡献都在合理时间内得到审查。
+* 有责任执行行为准则。作为社区的领导者,维护者应该成为维护项目行为准则和为每个人创造友好包容环境的榜样。
+* 有责任对其代码区域中的静态分析问题进行分类。
+  参见 :ref:`static_analysis`。
 
-Contributors or Collaborators are promoted to the Maintainer role by adding the
-GitHub user name to one or more ``maintainers`` sections of the
-:ref:`maintainers_file` in the Zephyr repository. Candidates who are neither
-Contributors nor Collaborators must be approved by the TSC before they can
-assume the role of Maintainer.
+贡献者或协作者通过将 GitHub 用户名添加到 Zephyr 仓库 :ref:`maintainers_file` 中的一个或多个 ``maintainers`` 部分来晋升为维护者角色。既不是贡献者也不是协作者的候选人必须在担任维护者角色之前获得 TSC 的批准。
 
-Maintainer approval of pull requests are counted toward the minimum
-required approvals needed to merge a PR. Other criteria for merging may apply.
+维护者对拉取请求的批准会计入合并 PR 所需的最低批准数。可能适用其他合并标准。
 
-Role Retirement
-###############
+角色退休 (Role Retirement)
+###########################
 
-* Individuals elected to the following Project roles, including, Maintainer,
-  Release Engineering Team member, Release Manager, but are no longer engaged
-  in the project as described by the rights and responsibilities of that role,
-  may be requested by the TSC to retire from the role they are elected.
-* Such a request needs to be raised as a motion in the TSC and be
-  approved by the TSC voting members.
-  By approval of the TSC the individual is considered to be retired
-  from the role they have been elected.
-* The above applies to elected TSC Project roles that may be defined
-  in addition.
+* 被选举担任以下项目角色的个人,包括维护者、发布工程团队成员、发布经理,但不再按照该角色的权利和责任参与项目,TSC 可以要求他们从当选的角色中退休。
+* 此类请求需要作为动议在 TSC 中提出,并由 TSC 投票成员批准。
+  经 TSC 批准,该个人被视为从其当选的角色中退休。
+* 上述规定也适用于可能另外定义的当选 TSC 项目角色。
 
 
-Teams and Supporting Activities
-###############################
+团队和支持活动 (Teams and Supporting Activities)
+##################################################
 
-Assignee
-++++++++
+受让人 (Assignee)
+++++++++++++++++++
 
-An *Assignee* is one of the maintainers of a subsystem or code being changed.
-Assignees are set either automatically based on the code being changed or set
-by the other Maintainers, the Release Engineering team can set an assignee when
-the latter is not possible.
+*受让人 (Assignee)* 是正在更改的子系统或代码的维护者之一。受让人可以根据正在更改的代码自动设置,或由其他维护者设置,当后者不可能时,发布工程团队可以设置受让人。
 
-* Responsibility to drive the pull request to a mergeable state
-* Right to dismiss stale and unrelated reviews or reviews not following
-  :ref:`expectations <reviewer-expectations>` from reviewers and seek reviews
-  from additional maintainers, developers and contributors
-* Right to block pull requests from being merged until issues or changes
-  requested are addressed
-* Responsibility to re-assign a pull request if they are the original submitter
-  of the code
-* Solicit approvals from maintainers of the subsystems affected
-* Responsibility to drive the :ref:`pr_technical_escalation` process
+* 有责任推动拉取请求达到可合并状态
+* 有权驳回过时和不相关的审查,或不遵循来自审查者的 :ref:`期望 <reviewer-expectations>` 的审查,并从其他维护者、开发人员和贡献者那里寻求审查
+* 有权阻止拉取请求合并,直到解决问题或请求的更改
+* 如果他们是代码的原始提交者,有责任重新分配拉取请求
+* 征求受影响子系统维护者的批准
+* 有责任推动 :ref:`pr_technical_escalation` 过程
 
-Static Analysis Audit Team
-++++++++++++++++++++++++++
+静态分析审计团队 (Static Analysis Audit Team)
+++++++++++++++++++++++++++++++++++++++++++++++
 
-The Static Analysis Audit team works closely with the release engineering
-team to ensure that static analysis defects opened during a release
-cycle are properly addressed. The team has the following rights and
-responsibilities:
+静态分析审计团队与发布工程团队密切合作,以确保在发布周期内打开的静态分析缺陷得到妥善处理。该团队拥有以下权利和责任:
 
-* Right to revert any triage in a static analysis tool (e.g: Coverity)
-  that does not follow the project expectations.
-* Responsibility to inform code owners about improper classifications.
-* Responsibility to alert TSC if any issues are not adequately addressed by the
-  responsible code owners.
+* 有权还原静态分析工具(例如: Coverity)中不遵循项目期望的任何分类。
+* 有责任通知代码所有者不当的分类。
+* 如果负责的代码所有者没有充分解决任何问题,有责任提醒 TSC。
 
-Joining the Static Analysis Audit team
+加入静态分析审计团队
 
-* Contributors highly involved in the project with some expertise
-  in static analysis.
+* 在项目中高度参与并具有静态分析专业知识的贡献者。
 
 
 .. _release-engineering-team:
 
-Release Engineering Team
-++++++++++++++++++++++++
+发布工程团队 (Release Engineering Team)
+++++++++++++++++++++++++++++++++++++++++
 
-A team of active Maintainers involved in multiple areas.
+由参与多个领域的活跃维护者组成的团队。
 
-* The members of the Release Engineering team are expected to fill
-  the Release Manager role based on a defined cadence and selection process.
-* The cadence and selection process are defined by the Release Engineering
-  team and are approved by the TSC.
-* The team reports directly into the TSC.
+* 发布工程团队的成员预计将根据定义的节奏和选择流程担任发布经理角色。
+* 节奏和选择流程由发布工程团队定义,并由 TSC 批准。
+* 该团队直接向 TSC 报告。
 
-Release Engineering team has the following rights and responsibilities:
+发布工程团队拥有以下权利和责任:
 
-* Right to merge code changes to the zephyr tree following the project rules.
-* Right to revert any changes that have broken the code base
-* Right to close any stale changes after <N> months of no activity
-* Responsibility to take directions from the TSC and follow them.
-* Responsibility to coordinate code merges with maintainers.
-* Responsibility to merge all contributions regardless of their
-  origin and area if they have been approved by the respective
-  maintainers and follow the merge criteria of a change.
-* Responsibility to keep the Zephyr code base in a working and passing state
-  (as per CI)
+* 有权遵循项目规则将代码更改合并到 zephyr 树中。
+* 有权还原任何破坏代码库的更改
+* 有权在 <N> 个月没有活动后关闭任何过时的更改
+* 有责任接受 TSC 的指示并遵循它们。
+* 有责任与维护者协调代码合并。
+* 如果贡献已被相应维护者批准并遵循更改的合并标准,有责任合并所有贡献,无论其来源和领域如何。
+* 有责任保持 Zephyr 代码库处于工作和通过状态(根据 CI)
 
-Joining the Release Engineering team
+加入发布工程团队
 
-* Maintainers highly involved in the project may be nominated
-  by a TSC voting member to join the Release Engineering team.
-  Nominees may become members of the team by approval of the
-  existing TSC voting members.
-* To ensure a functional Release Engineering team the TSC shall
-  periodically review the team’s followed processes,
-  the appropriate size, and the membership
-  composition (ensure, for example, that team members are
-  geographically distributed across multiple locations and
-  time-zones).
+* 在项目中高度参与的维护者可以由 TSC 投票成员提名加入发布工程团队。
+  提名人可以通过现有 TSC 投票成员的批准成为团队成员。
+* 为确保功能性的发布工程团队,TSC 应定期审查团队遵循的流程、适当的规模和成员组成(例如,确保团队成员在多个地点和时区进行地理分布)。
 
 
-Release Manager
-+++++++++++++++
+发布经理 (Release Manager)
+++++++++++++++++++++++++++++
 
-A *Maintainer* responsible for driving a specific release to
-completion following the milestones and the roadmap of the
-project for this specific release.
+*发布经理 (Release Manager)* 是负责根据项目的里程碑和路线图推动特定版本完成的 *维护者*。
 
-* TSC has to approve a release manager.
+* TSC 必须批准发布经理。
 
-A Release Manager is a member of the Release Engineering team and has
-the rights and responsibilities of that team in addition to
-the following:
+发布经理是发布工程团队的成员,除了该团队的权利和责任外,还具有以下权利和责任:
 
-* Right to manage and coordinate all code merges after the
-  code freeze milestone (M3, see `program management overview <https://wiki.zephyrproject.org/Program-Management>`_.)
-* Responsibility to drive and coordinate the triaging process
-  for the release
-* Responsibility to create the release notes of the release
-* Responsibility to notify all stakeholders of the project,
-  including the community at large about the status of the
-  release in a timely manner.
-* Responsibility to coordinate with QA and validation and
-  verify changes either directly or through QA before major
-  changes and major milestones.
+* 有权在代码冻结里程碑(M3,参见 `项目管理概述 <https://wiki.zephyrproject.org/Program-Management>`_)之后管理和协调所有代码合并。
+* 有责任推动和协调发布的分类过程
+* 有责任创建发布的发布说明
+* 有责任及时通知项目的所有利益相关者,包括广大社区关于发布状态的信息。
+* 有责任与 QA 和验证进行协调,并在重大更改和重大里程碑之前直接或通过 QA 验证更改。
 
-Roles / Permissions
-+++++++++++++++++++
+角色 / 权限 (Roles / Permissions)
+++++++++++++++++++++++++++++++++++
 
-.. table:: Project Roles vs GitHub Permissions
+.. table:: 项目角色与 GitHub 权限 (Project Roles vs GitHub Permissions)
     :widths: 20 20 10 10 10 10 10
     :align: center
 
     ================ =================== =========== ================ =========== =========== ============
           ..             ..               **Admin**  **Merge Rights**   Member      Owner     Collaborator
     ---------------- ------------------- ----------- ---------------- ----------- ----------- ------------
-    Main Roles       Contributor                                                                 x
+    主要角色         贡献者                                                                       x
+    (Main Roles)
+    (Contributor)
     ---------------- ------------------- ----------- ---------------- ----------- ----------- ------------
-        ..           Collaborator                                       x
+        ..           协作者                                             x
+                    (Collaborator)
     ---------------- ------------------- ----------- ---------------- ----------- ----------- ------------
-        ..           Maintainer                                         x
-    Supportive Roles QA/Validation                                      x                        x
+        ..           维护者                                             x
+                    (Maintainer)
+    支持角色         QA/验证                                            x                        x
+    (Supportive      (QA/Validation)
+    Roles)
         ..           DevOps                   **x**
-        ..           System Admin             **x**                                      x
-        ..           Release Engineering                 **x**          x
+        ..           系统管理员               **x**                                      x
+                    (System Admin)
+        ..           发布工程                            **x**          x
+                    (Release Engineering)
 
     ================ =================== =========== ================ =========== =========== ============
 
 
 .. _maintainers_file:
 
-MAINTAINERS File
-################
+MAINTAINERS 文件 (MAINTAINERS File)
+####################################
 
-Generic guidelines for deciding and filling in the Maintainers' list
+决定和填写维护者列表的一般指导方针
 
-* We should keep the granularity of code maintainership at a manageable level
-* We should be looking for maintainers for areas of code that
-  are orphaned (i.e. without an explicit maintainer)
+* 我们应该将代码维护权限的粒度保持在可管理的级别
+* 我们应该为孤立的代码区域(即没有明确维护者的区域)寻找维护者
 
-  * Un-maintained areas should be indicated clearly in the MAINTAINERS file
+  * 未维护的区域应在 MAINTAINERS 文件中明确指出
 
-* All submitted pull requests should have an assignee
-* We Introduce an area/subsystem hierarchy to address the above point
+* 所有提交的拉取请求都应该有一个受让人
+* 我们引入区域/子系统层次结构来解决上述问题
 
-  * Parent-area maintainer should be acting as default substitute/fallback
-    assignee for un-maintained sub-areas
-  * Area maintainer gets precedence over parent-area maintainer
+  * 父区域维护者应充当未维护子区域的默认替代/后备受让人
+  * 区域维护者优先于父区域维护者
 
-* Pull requests may be re-assigned if this is needed or more appropriate
+* 如果需要或更合适,拉取请求可以重新分配
 
-  * Re-assigned by original assignee
+  * 由原始受让人重新分配
 
-* In general, updates to the MAINTAINERS file should be
-  in a standalone commit alongside other changes introducing new files and
-  directories to the tree.
-* Major changes to the file, including the addition of new areas with new maintainers
-  should come in as standalone pull requests and require TSC review.
-* If additional review by the TSC is required, the maintainers of the file
-  should send the requested changes to the TSC and give members of the TSC two
-  (2) days to object to any of the changes to maintainership of areas or the
-  addition of new maintainers or areas.
-* Path, collaborator and name changes do not require a review by the TSC.
-* Addition of new areas without a maintainer do not require review by the TSC.
-* The MAINTAINERS file itself shall have a maintainer
-* Architectures, core components, sub-systems, samples, tests
+* 一般来说,对 MAINTAINERS 文件的更新应该与引入新文件和目录到树中的其他更改一起作为独立提交。
+* 对文件的重大更改,包括添加具有新维护者的新区域,应作为独立的拉取请求提出,并需要 TSC 审查。
+* 如果需要 TSC 的额外审查,文件的维护者应将请求的更改发送给 TSC,并给 TSC 成员两(2)天时间对区域维护权限的任何更改或新维护者或区域的添加提出异议。
+* 路径、协作者和名称更改不需要 TSC 审查。
+* 添加没有维护者的新区域不需要 TSC 审查。
+* MAINTAINERS 文件本身应该有一个维护者
+* 架构、核心组件、子系统、示例、测试
 
-  * Each area shall have an explicit maintainer
+  * 每个区域都应有一个明确的维护者
 
-* Boards (incl relevant samples, tests), SoCs (incl DTS)
-  * May have a maintainer, shall have a higher-level platform maintainer
-* Drivers
+* 开发板(包括相关示例、测试)、SoC(包括 DTS)
+  * 可以有维护者,应该有更高级别的平台维护者
+* 驱动程序
 
-  * Shall have a driver-area (and API) maintainer
-  * Could have individual driver implementation
-    maintainers but preferably collaborator/contributors
-  * In the above case, platform-specific PRs may be
-    re-assigned to respective collaborator/contributor of driver
-    implementation
+  * 应该有驱动程序区域(和 API)维护者
+  * 可以有单独的驱动程序实现维护者,但最好是协作者/贡献者
+  * 在上述情况下,平台特定的 PR 可以重新分配给驱动程序实现的相应协作者/贡献者
 
 
 .. _Zephyr Contributor Badge form: https://forms.gle/oCw9iAPLhUsHTapc8

@@ -1,57 +1,51 @@
 .. _lora_api:
 .. _lorawan_api:
 
-LoRa and LoRaWAN
-################
+LoRa 和 LoRaWAN
+###############
 
-Overview
-********
+概述
+****
 
-LoRa (abbrev. for Long Range) is a proprietary low-power wireless
-communication protocol developed by the `Semtech Corporation`_.
+LoRa（长距离的缩写）是由 `Semtech 公司`_ 开发的专有低功耗无线通信协议。
 
-LoRa acts as the physical layer (PHY) based on the chirp spread spectrum
-(CSS) modulation technique.
+LoRa 充当基于啾声扩展频谱 (CSS) 调制技术的物理层 (PHY)。
 
-LoRaWAN (for Long Range Wide Area Network) defines a networking layer
-on top of the LoRa PHY.
+LoRaWAN（长距离广域网）在 LoRa PHY 之上定义了网络层。
 
-Zephyr provides APIs for LoRa to send raw data packets directly over the
-wireless interface as well as APIs for LoRaWAN to connect the end device
-to the internet through a gateway.
+Zephyr 为 LoRa 提供了 API，以直接在无线接口上发送原始数据包，
+以及用于 LoRaWAN 的 API，以通过网关将终端设备连接到互联网。
 
-The Zephyr implementation is based on Semtech's `LoRaMac-node library`_, which
-is included as a Zephyr module.
+Zephyr 实现基于 Semtech 的 `LoRaMac-node 库`_，该库作为 Zephyr 模块包含。
 
 .. note::
 
-        ``LoRaMac-node`` has been deprecated by Semtech in favor of
-        `LoRa Basics Modem`_. Porting the Zephyr API's to use
-        ``LoRa Basics Modem`` as the backend is in progress.
+        ``LoRaMac-node`` 已被 Semtech 弃用，取而代之是
+        `LoRa Basics 调制解调器`_。将 Zephyr API 移植以使用
+        ``LoRa Basics 调制解调器`` 作为后端的工作正在进行中。
 
-        Currently, only the base LoRa API is supported for the SX1261, SX1262,
-        SX1272 and SX1276 chipsets through
-        :kconfig:option:`CONFIG_LORA_MODULE_BACKEND_LORA_BASICS_MODEM`.
+        目前，仅通过
+        :kconfig:option:`CONFIG_LORA_MODULE_BACKEND_LORA_BASICS_MODEM`
+        为 SX1261、SX1262、SX1272 和 SX1276 芯片组支持基本 LoRa API。
 
 
-The LoRaWAN specification is published by the `LoRa Alliance`_.
+LoRaWAN 规范由 `LoRa 联盟`_ 发布。
 
-.. _`Semtech Corporation`: https://www.semtech.com/
+.. _`Semtech 公司`: https://www.semtech.com/
 
-.. _`LoRaMac-node library`: https://github.com/Lora-net/LoRaMac-node
+.. _`LoRaMac-node 库`: https://github.com/Lora-net/LoRaMac-node
 
-.. _`LoRa Basics Modem`: https://github.com/Lora-net/SWL2001
+.. _`LoRa Basics 调制解调器`: https://github.com/Lora-net/SWL2001
 
-.. _`LoRa Alliance`: https://lora-alliance.org/
+.. _`LoRa 联盟`: https://lora-alliance.org/
 
-Configuration Options
-*********************
+配置选项
+*******
 
 LoRa PHY
 ========
 
-Related configuration options can be found under
-:zephyr_file:`drivers/lora/Kconfig`.
+相关配置选项可在 :zephyr_file:`drivers/lora/Kconfig` 下找到。
 
 * :kconfig:option:`CONFIG_LORA`
 
@@ -62,8 +56,7 @@ Related configuration options can be found under
 LoRaWAN
 =======
 
-Related configuration options can be found under
-:zephyr_file:`subsys/lorawan/Kconfig`.
+相关配置选项可在 :zephyr_file:`subsys/lorawan/Kconfig` 下找到。
 
 * :kconfig:option:`CONFIG_LORAWAN`
 
@@ -89,8 +82,9 @@ Related configuration options can be found under
 
 * :kconfig:option:`CONFIG_LORAMAC_REGION_RU864`
 
-API Reference
-*************
+
+API 参考
+*******
 
 LoRa PHY
 ========

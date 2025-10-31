@@ -1,5 +1,49 @@
 .. _rfcs:
 
+提案与 RFC (Proposals and RFCs)
+###############################
+
+许多变更（包括缺陷修复与文档改进）可以通过常规的 GitHub Pull Request 工作流实现并评审。
+
+但也有不少变更“影响较大 (substantial)”，需要经历设计流程，并在项目相关方之间达成共识。
+
+“RFC（request for comments，请求评审）”流程旨在为新特性进入项目提供一致且可控的路径。
+
+当你计划对 Zephyr 或其文档进行“影响较大”的变更时，贡献者与项目相关方应考虑采用此流程。以下是适合使用 RFC 的一些示例：
+
+- 引入会扩展 API 表面的新特性，且如果直接发布需要通过特性开关 (feature flag) 控制；
+- 修改现有的稳定 API；
+- 移除已作为 Zephyr 一部分发布过的功能；
+- 引入新的惯用用法或约定，即便它们本身不直接修改 Zephyr 代码。
+
+RFC 过程是一个绝佳机会：让更多人能在提案成为 Zephyr 一部分之前提前审阅。很多看似“显而易见”的提案，在更广泛的关注与讨论之后往往能得到明显改进。
+
+RFC 也有助于在设计阶段就鼓励围绕拟议特性展开讨论，并在设计仍易于调整时，就将重要约束纳入设计，而不是等到实现完成之后。
+
+对于“重大特性 (Major Feature)”，请先创建一个 issue，概述你的提案以便讨论。这样也便于我们更好地协调工作、避免重复劳动，并帮助你以更容易被项目接受的方式来打磨改动。提供以下信息有助于更快获得处理：
+
+  * 提案概览 (Overview of the Proposal)
+  * 动机或使用场景 (Motivation for or Use Case)
+  * 设计细节 (Design Details)
+  * 备选方案 (Alternatives)
+  * 测试策略 (Test Strategy)
+
+某些变更或贡献不需要 RFC，但其合理性与细节仍应写入 Pull Request：
+
+- 对既有、成熟子系统的小幅增强与修改；
+- 表述调整、重组或重构；
+- 警告的新增或移除；
+- 在既有子系统中新增开发板、SoC 或驱动；
+- …
+
+该流程本身是：创建一个带有 :ref:`RFC 标签 <gh_labels>` 的 GitHub issue，充分记录你的提案。建议使用 `RFC form`_，以便遵循大家熟悉的模板。
+
+与 Pull Request 一样，当存在分歧或尚未有足够意见以推动前进时，RFC 也可能需要在 `Zephyr 会议`_ 的语境中进行讨论以推动其进展。请确保为其添加恰当的标签，或将其加入相应的 GitHub project，以便在下一次会议中审阅。
+
+.. _`RFC form`: https://github.com/zephyrproject-rtos/zephyr/issues/new?template=003_rfc-proposal.yml
+.. _`Zephyr meetings`: https://github.com/zephyrproject-rtos/zephyr/wiki/Zephyr-Committee-and-Working-Groups
+.. _rfcs:
+
 Proposals and RFCs
 ##################
 

@@ -1,119 +1,86 @@
-TSC Working Groups
-******************
+TSC 工作组 (TSC Working Groups)
+********************************
 
-Overview
-########
+概述 (Overview)
+###############
 
-The TSC, at its discretion, may establish working groups or subcommittees to
-serve as focused teams dedicated to specific technical areas, initiatives, or
-tasks.
+TSC 可以酌情建立工作组或小组委员会,作为专注于特定技术领域、倡议或任务的专门团队。
 
-Membership
-##########
+成员资格 (Membership)
+######################
 
-Working Group Membership Eligibility
-++++++++++++++++++++++++++++++++++++
+工作组成员资格要求 (Working Group Membership Eligibility)
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Each Working group (WG) shall determine its own membership eligibility, in
-  consultation with the TSC.
-- Each working group shall have a team of members who are actively involved
-  in its activities and decision-making processes.
-- It is expected that WG membership shall be **open to all** Zephyr project
-  :ref:`Collaborators <collaborator>`; however, working groups may impose
-  restrictions such as the number of participants from a single company.
-- All TSC members are eligible to join a working group as members, part of
-  the responsibilities being a TSC member.
-- The minimal number of members may vary depending on the complexity of the
-  tasks and the breadth of expertise required to address them effectively.
-- A working group should aim to have at least five to seven members to
-  ensure diversity of perspectives, collaboration, and continuity.
-- The structure of each working group within the Zephyr Project should be
-  designed to ensure effectiveness, productivity, and inclusivity. While the
-  optimal size of a working group can vary depending on the specific context and
-  scope of its activities.
-- Participation in WG meetings and discussions is open to all project
-  :ref:`contributors <contributor>`.
+- 每个工作组 (WG) 应在与 TSC 协商后确定自己的成员资格要求。
+- 每个工作组应有一支积极参与其活动和决策过程的成员团队。
+- 预期 WG 成员资格应 **向所有** Zephyr 项目 :ref:`协作者 <collaborator>` **开放**;但是,工作组可能会施加限制,例如来自单个公司的参与者数量。
+- 所有 TSC 成员都有资格作为成员加入工作组,这是作为 TSC 成员的职责之一。
+- 最少成员数量可能因任务的复杂性和有效解决它们所需的专业知识的广度而异。
+- 工作组应力求至少有五到七名成员,以确保观点的多样性、协作和连续性。
+- Zephyr 项目中每个工作组的结构应旨在确保有效性、生产力和包容性。虽然工作组的最佳规模可能因其活动的具体背景和范围而异。
+- 项目 :ref:`贡献者 <contributor>` 都可以参与 WG 会议和讨论。
 
-Working Group Chair / Co-chair
-++++++++++++++++++++++++++++++
+工作组主席 / 副主席 (Working Group Chair / Co-chair)
++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Each working group may elect a Chair and optionally a Co-Chair who is
-responsible for leading meetings and representing the working group to the TSC.
+每个工作组可以选举一名主席和可选的副主席,负责主持会议并向 TSC 代表工作组。
 
-Working Group Chair / Co-Chair Elections
-++++++++++++++++++++++++++++++++++++++++
+工作组主席 / 副主席选举 (Working Group Chair / Co-Chair Elections)
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- The Chair and Co-Chair shall be elected by the members of the working group
-- Any member of the working group has the right to nominate themselves for the
-  chair/co-chair positions.
-- The term for the chair/co-chair is one year
-- If a chair/co-chair resigns from the position before the end of the term, a
-  vote is to be held to elect a new chair/co-chair.
+- 主席和副主席应由工作组成员选举
+- 工作组的任何成员都有权提名自己担任主席/副主席职位。
+- 主席/副主席的任期为一年
+- 如果主席/副主席在任期结束前辞职,将举行投票选举新的主席/副主席。
 
-Working Group Voter Eligibility
-+++++++++++++++++++++++++++++++
+工作组投票资格 (Working Group Voter Eligibility)
+++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Voting for a Chair or Co-Chair is open to the members of the working group.
-- Only 1 working group member from each company may vote in the election.
-- The Chair and Co-Chair shall be members of the working group.
+- 主席或副主席的投票向工作组成员开放。
+- 每个公司只有 1 名工作组成员可以在选举中投票。
+- 主席和副主席应是工作组的成员。
 
-Working Group Election Confirmation
-++++++++++++++++++++++++++++++++++++
+工作组选举确认 (Working Group Election Confirmation)
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- The elected Chair (and/or Co-Chair) is submitted to the TSC for confirmation.
-- The TSC decides to accept the outcome or requests a new voting.
+- 当选的主席(和/或副主席)应提交给 TSC 确认。
+- TSC 决定接受结果或要求重新投票。
 
-Advisory role
-#############
+咨询角色 (Advisory role)
+#########################
 
-- Working Groups are advisory in nature. They provide advice to the projects and
-  to the TSC.
-- Working groups operate on a rough consensus basis. If the working group is
-  unable to reach consensus on what advice to offer, the working group Chair
-  shall raise the issue with the TSC or the relevant committee (Safety and
-  Security), where a formal vote can be taken, or advise the project that the
-  working group cannot reach consensus.
-- Working groups shall keep track of discussions and record any votes,
-  decisions, or recommendations made and share results with the community and
-  the TSC.
-- Working group meetings and offline discussions shall be captured in a
-  standalone document with all supporting details such as attendance, quorum,
-  actions to be taken, and next steps.
-- Decisions made within a working group are non-binding and are only considered
-  ratified after communicating decisions and outcomes to the TSC.
-- Lacking any objections from the TSC within 1 week after the communication or
-  report of any results, decisions of a working group are considered confirmed
-  and ratified.
+- 工作组本质上是咨询性的。他们为项目和 TSC 提供建议。
+- 工作组基于粗略共识运作。如果工作组无法就提供的建议达成共识,工作组主席应向 TSC 或相关委员会(安全与安保)提出问题,在那里可以进行正式投票,或建议项目工作组无法达成共识。
+- 工作组应跟踪讨论并记录所做的任何投票、决定或建议,并与社区和 TSC 分享结果。
+- 工作组会议和离线讨论应在独立文档中捕获,包含所有支持细节,例如出席情况、法定人数、要采取的行动和后续步骤。
+- 工作组内做出的决定不具约束力,只有在将决定和结果传达给 TSC 后才被视为批准。
+- 如果在沟通或报告任何结果后 1 周内 TSC 没有提出任何异议,则工作组的决定被视为已确认和批准。
 
-TSC Working Group Lifecycle
-###########################
+TSC 工作组生命周期 (TSC Working Group Lifecycle)
+##################################################
 
-Creation of a TSC working group
-+++++++++++++++++++++++++++++++
+创建 TSC 工作组 (Creation of a TSC working group)
+++++++++++++++++++++++++++++++++++++++++++++++++++
 
-In order to create a TSC working group, a TSC member shall make a proposal to
-the TSC (via TSC email list) that shall cover at least the following:
+为了创建 TSC 工作组,TSC 成员应向 TSC 提出提案(通过 TSC 电子邮件列表),该提案应至少涵盖以下内容:
 
-- TSC working group name.
-- TSC working group purpose
-- TSC working group expected deliverables
-- TSC working group starting participants with at least one TSC member acting as
-  a sponsor.
-- Optionally TSC working group definition of done
+- TSC 工作组名称。
+- TSC 工作组目的
+- TSC 工作组预期交付成果
+- TSC 工作组起始参与者,至少有一名 TSC 成员担任发起人。
+- 可选的 TSC 工作组完成定义
 
-Update of a TSC working group
-+++++++++++++++++++++++++++++
+更新 TSC 工作组 (Update of a TSC working group)
++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The TSC can modify a TSC working group via a TSC decision. To request such a
-modification, a request is made to the TSC email list.
+TSC 可以通过 TSC 决定修改 TSC 工作组。要请求此类修改,应向 TSC 电子邮件列表提出请求。
 
-Conclusion of a TSC working group
-+++++++++++++++++++++++++++++++++
+结束 TSC 工作组 (Conclusion of a TSC working group)
+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The TSC decides the termination of the TSC working group in accordance with the
-TSC decision procedure. The submission of a request to terminate the TSC working
-group should cover:
+TSC 根据 TSC 决策程序决定终止 TSC 工作组。提交终止 TSC 工作组的请求应包括:
 
-- TSC working group name
-- TSC working group deliveries
-- Motivation for termination of the TSC working group
+- TSC 工作组名称
+- TSC 工作组交付成果
+- 终止 TSC 工作组的动机

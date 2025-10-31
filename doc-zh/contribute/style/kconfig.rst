@@ -1,37 +1,31 @@
 .. _kconfig_style:
 
-Kconfig Style Guidelines
-########################
+Kconfig 样式指南 (Kconfig Style Guidelines)
+###########################################
 
-This document provides style guidelines for writing Kconfig files in the Zephyr
-project. Following these guidelines ensures consistency and readability across
-the codebase, making it easier for developers to understand and maintain
-configuration options.
+本文档为在 Zephyr 项目中编写 Kconfig 文件提供样式指南。遵循这些指南可确保整个代码库
+的一致性和可读性,使开发人员更容易理解和维护配置选项。
 
-The following sections provide guidelines with examples to illustrate
-proper Kconfig formatting and naming conventions.
+以下各部分通过示例提供指南以说明适当的 Kconfig 格式和命名约定。
 
 
-Basic Formatting Rules
-**********************
+基本格式规则 (Basic Formatting Rules)
+***********************************
 
-When writing Kconfig files, follow these basic formatting rules:
+编写 Kconfig 文件时,请遵循以下基本格式规则:
 
-* **Line length**: Keep lines to 100 columns or fewer.
-* **Indentation**: Use tabs for indentation, except for ``help`` entry text
-  which should be placed at one tab plus two extra spaces.
-* **Spacing**: Leave a single empty line between option declarations.
-* **Comments**: Format comments as ``# Comment`` rather than ``#Comment``.
-* **Conditional blocks**: Insert an empty line before/after each top-level
-  ``if`` and ``endif`` statement.
+* **行长度**: 将行保持在 100 列或更少。
+* **缩进**: 使用制表符进行缩进,除了应该放在一个制表符加两个额外空格处的 ``help`` 条目文本。
+* **间距**: 在选项声明之间留一个空行。
+* **注释**: 将注释格式化为 ``# Comment`` 而不是 ``#Comment``。
+* **条件块**: 在每个顶级 ``if`` 和 ``endif`` 语句之前/之后插入一个空行。
 
-For guidance on using statements like ``select``, see
-:ref:`kconfig_tips_and_tricks` for more information.
+有关使用 ``select`` 等语句的指导,请参阅 :ref:`kconfig_tips_and_tricks` 了解更多信息。
 
-Symbol Naming and Structure
-***************************
+符号命名和结构 (Symbol Naming and Structure)
+*****************************************
 
-The following examples demonstrate proper Kconfig symbol naming and structure:
+以下示例演示了适当的 Kconfig 符号命名和结构:
 
 .. literalinclude:: kconfig_demo_simple.txt
    :language: kconfig
@@ -42,87 +36,73 @@ The following examples demonstrate proper Kconfig symbol naming and structure:
    :start-after: start-after-here
 
 
-Naming Conventions
-******************
+命名约定 (Naming Conventions)
+****************************
 
-* As a general rule, symbols concerning the same component should be distinct
-  from other symbols. This can usually be accomplished by using a common
-  prefix. This prefix can be a simple keyword or, as in the case for drivers,
-  several keywords for more precision.
+* 通常,涉及同一组件的符号应该与其他符号不同。这通常可以通过使用公共前缀来实现。
+  此前缀可以是简单关键字,或者如驱动程序一样,是多个关键字以获得更高精度。
 
-* A common prefix usually indicates the subsystem or component the symbol
-  belongs to.
+* 公共前缀通常表示符号所属的子系统或组件。
 
-* An enabling symbol name should consist of keywords to provide the context
-  of the symbol in a scope from most general to most specific
-  (e.g. *Driver Type* -> *Driver Name*).
+* 启用符号名称应由关键字组成,以提供符号在从最常见到最特定的范围中的上下文
+  (例如 *驱动程序类型* -> *驱动程序名称*)。
 
-* The prompt for an enabling symbol should use the same logic as the symbol
-  name itself but use the keywords in reversed order.
+* 启用符号的提示应使用与符号名称本身相同的逻辑,但按相反顺序使用关键字。
 
-   * Adhering to this style makes searching for symbols easier in the UI
-     because one can filter by a scope keyword.
+   * 遵守此风格使在 UI 中搜索符号更容易,因为可以按范围关键字进行过滤。
 
-* When the enabling symbol is dependent on a devicetree node, consider
-  depending on the automatically created ``DT_HAS_<node>_ENABLED`` symbol.
+* 当启用符号依赖于设备树节点时,考虑依赖自动创建的 ``DT_HAS_<node>_ENABLED`` 符号。
 
-The specific formats by subtree:
+各子树的具体格式:
 
-* **Drivers (/drivers)**: Use the format ``{Driver Type}_{Driver Name}`` for
-  symbols and ``{Driver Name} {Driver Type} driver`` for prompts.
+* **驱动程序 (/drivers)**: 对符号使用格式 ``{驱动程序类型}_{驱动程序名称}`,
+  对提示使用 ``{驱动程序名称} {驱动程序类型} driver``。
 
-* **Sensors (/drivers/sensors)**: Use the format ``SENSOR_{Sensor Name}`` for symbols
-  and ``{Sensor Name} {Sensor Type} sensor driver`` for prompts.
+* **传感器 (/drivers/sensors)**: 对符号使用格式 ``SENSOR_{传感器名称}`,
+  对提示使用 ``{传感器名称} {传感器类型} sensor driver``。
 
-* **Architecture (/arch)**: Many symbols are shared across architectures. Before
-  creating new symbols, check if similar ones already exist in other
-  architectures.
+* **架构 (/arch)**: 许多符号在架构中共享。创建新符号之前,检查其他架构中是否已存在相似的符号。
 
-Examples
-========
+示例 (Examples)
+==============
 
 .. note::
 
-   The following examples only show the symbol and prompt lines for brevity.
+   以下示例仅出于简洁起见显示符号和提示行。
 
-**Driver Examples:**
+**驱动程序示例:**
 
 .. literalinclude:: kconfig_example_driver.txt
    :language: kconfig
    :start-after: start-after-here
 
-**Sensor Examples:**
+**传感器示例:**
 
 .. literalinclude:: kconfig_example_sensor.txt
    :language: kconfig
    :start-after: start-after-here
 
-Configuration Symbol Organization
-*********************************
+配置符号组织 (Configuration Symbol Organization)
+**********************************************
 
-When a feature uses config symbols to configure its behavior:
+当功能使用配置符号来配置其行为时:
 
-* Use ``menuconfig`` instead of ``config`` to define the enabling feature
-  (even when the config symbol has no prompt).
+* 使用 ``menuconfig`` 而不是 ``config`` 来定义启用功能(即使配置符号没有提示)。
 
-* Encapsulate the config symbols in an ``if`` statement to declare their
-  dependency on the enabling symbol (this automatically groups these
-  symbols under the enabling symbol in the UI).
+* 将配置符号封装在 ``if`` 语句中以声明它们对启用符号的依赖
+  (这会自动将这些符号分组在 UI 中启用符号下)。
 
-* Prefix the config symbol with the enabling symbol's name for scope and
-  context.
+* 使用启用符号的名称作为配置符号的前缀以获得范围和上下文。
 
-* In the prompt of the config symbol, describe what the symbol configures
-  without repeating the scope keywords, because the grouping in the UI
-  provides this context.
+* 在配置符号的提示中,描述符号配置的内容,而不重复范围关键字,
+  因为 UI 中的分组提供了此上下文。
 
-File Organization
-*****************
+文件组织 (File Organization)
+***************************
 
-When organizing Kconfig files:
+组织 Kconfig 文件时:
 
-* Keep the Kconfig file close to the source files it configures.
+* 保持 Kconfig 文件接近它配置的源文件。
 
-* When dealing with large Kconfig files (e.g. with many config symbols),
-  consider grouping (some of) them into a separate file and import it using the
-  ``source`` directive to improve readability.
+* 处理大型 Kconfig 文件时(例如具有许多配置符号),考虑将(某些)它们分组到单独的文件中
+  并使用 ``source`` 指令导入它以提高可读性。

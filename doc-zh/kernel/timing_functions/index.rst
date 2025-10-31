@@ -1,53 +1,45 @@
 .. _timing_functions:
 
-Executing Time Functions
-########################
+执行时间函数
+############
 
-The timing functions can be used to obtain execution time of
-a section of code to aid in analysis and optimization.
+时间函数可用于获取代码部分的执行时间，以辅助分析和优化。
 
-Please note that the timing functions may use a different timer
-than the default kernel timer, where the timer being used is
-specified by architecture, SoC or board configuration.
+请注意，时间函数可能使用与默认内核定时器不同的定时器，其中使用的定时器
+由体系结构、SoC 或开发板配置指定。
 
-Configuration
-*************
+配置
+****
 
-To allow using the timing functions, :kconfig:option:`CONFIG_TIMING_FUNCTIONS`
-needs to be enabled.
+要允许使用时间函数，需要启用 :kconfig:option:`CONFIG_TIMING_FUNCTIONS`。
 
-Usage
-*****
+用法
+****
 
-To gather timing information:
+要收集时间信息：
 
-1. Call :c:func:`timing_init` to initialize the timer.
+1. 调用 :c:func:`timing_init` 来初始化定时器。
 
-2. Call :c:func:`timing_start` to signal the start of gathering of
-   timing information. This usually starts the timer.
+2. 调用 :c:func:`timing_start` 来指示收集时间信息的开始。
+   这通常启动定时器。
 
-3. Call :c:func:`timing_counter_get` to mark the start of code
-   execution.
+3. 调用 :c:func:`timing_counter_get` 来标记代码执行的开始。
 
-4. Call :c:func:`timing_counter_get` to mark the end of code
-   execution.
+4. 调用 :c:func:`timing_counter_get` 来标记代码执行的结束。
 
-5. Call :c:func:`timing_cycles_get` to get the number of timer cycles
-   between start and end of code execution.
+5. 调用 :c:func:`timing_cycles_get` 来获取代码执行开始和结束之间的定时器周期数。
 
-6. Call :c:func:`timing_cycles_to_ns` with total number of cycles
-   to convert number of cycles to nanoseconds.
+6. 调用 :c:func:`timing_cycles_to_ns` 来将周期数转换为纳秒。
 
-7. Repeat from step 3 to gather timing information for other
-   blocks of code.
+7. 重复步骤 3 到步骤 5 来收集其他代码块的时间信息。
 
-8. Call :c:func:`timing_stop` to signal the end of gathering of
-   timing information. This usually stops the timer.
+8. 调用 :c:func:`timing_stop` 来指示收集时间信息的结束。
+   这通常停止定时器。
 
-Example
--------
+示例
+----
 
-This shows an example on how to use the timing functions:
+这显示了如何使用时间函数的示例：
 
 .. code-block:: c
 
@@ -74,8 +66,8 @@ This shows an example on how to use the timing functions:
        timing_stop();
    }
 
-API documentation
-*****************
+API 文档
+*******
 
 .. doxygengroup:: timing_api
 .. doxygengroup:: timing_api_arch

@@ -1,32 +1,25 @@
 .. _west-aliases:
 
-West aliases
-############
+West 别名
+########
 
-West allows to add alias commands to the local, global or system configuration files.
-These aliases make it easy to add shortcuts for frequently used, or hard to memorize
-commands for ease of development.
+West 允许向本地、全局或系统配置文件添加别名命令。这些别名可以轻松添加快捷方式以应对频繁使用或难以记忆的命令，便于开发。
 
-Similar to how ``git`` aliases work, the alias command is replaced with the alias'
-full text and parsed as a new shell argument list (using the Python function
-`shlex.split()`_ internally to split the value). This enables adding argument
-parameters as they were passed to the original command. Spaces are considered
-argument separators; use proper escaping if arguments shouldn't be split.
+类似于 ``git`` 别名的工作方式，别名命令被替换为别名的完整文本，并解析为新的 shell 参数列表（内部使用 Python 函数 `shlex.split()`_ 来分割值）。这使得可以添加参数参数，就像它们被传递到原始命令一样。空格被视为参数分隔符；如果参数不应被分割，请使用适当的转义。
 
 .. _shlex.split(): https://docs.python.org/3/library/shlex.html#shlex.split
 
-To add a new alias simply call the ``west config`` command:
+要添加新别名，只需调用 ``west config`` 命令：
 
 .. code-block:: shell
 
    west config alias.mylist "list -f '{name} {revision}'"
 
-To list aliases, use :samp:`west help {some_alias}`.
+要列出别名，请使用 :samp:`west help {some_alias}`。
 
-Recursive aliases are allowed as an alias command can contain other aliases, effectively
-building more complex but easy-to-remember commands.
+允许递归别名，因为别名命令可以包含其他别名，有效地构建更复杂但容易记忆的命令。
 
-It is possible to override an existing command, for example to pass default arguments:
+可以覆盖现有命令，例如传递默认参数：
 
 .. code-block:: shell
 
@@ -34,35 +27,31 @@ It is possible to override an existing command, for example to pass default argu
 
 .. warning::
 
-   Overriding/shadowing other or built-in commands is an advanced use case, it can lead to
-   strange side-effects and should be done with great care.
+   覆盖/遮蔽其他或内置命令是一个高级用例，可能导致奇怪的副作用，应谨慎进行。
 
-Examples
---------
+示例
+----
 
-Add ``west run`` and ``west menuconfig`` shortcuts to your global configuration to
-call ``west build`` with the corresponding CMake targets:
+向全局配置添加 ``west run`` 和 ``west menuconfig`` 快捷方式以调用 ``west build`` 及相应的 CMake 目标：
 
 .. code-block:: shell
 
    west config --global alias.run "build --pristine=never --target run"
    west config --global alias.menuconfig "build --pristine=never --target menuconfig"
 
-Create an alias for the sample you are actively developing with additional options:
+为正在积极开发的示例创建别名，包含其他选项：
 
 .. code-block:: shell
 
    west config alias.sample "build -b native_sim samples/hello_world -t run -- -DCONFIG_ASSERT=y"
 
-Override ``west update`` to check a local cache:
+覆盖 ``west update`` 以检查本地缓存：
 
 .. code-block:: shell
 
    west config alias.update "update --path-cache $HOME/.cache/zephyrproject"
 
-Automatically exclude the 32-bit native simulator target when running :ref:`Twister
-<twister_script>` via west. This is especially useful when running on hosts systems without a 32-bit
-host C library (i.e. Linux/AArch64):
+运行 :ref:`Twister <twister_script>` 时自动排除 32 位本机模拟器目标（通过 west）。这在没有 32 位主机 C 库的主机系统上运行时特别有用（如 Linux/AArch64）：
 
 .. code-block:: shell
 

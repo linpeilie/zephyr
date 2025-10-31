@@ -1,75 +1,68 @@
 .. _west-install:
 
-Installing west
-###############
+安装 west
+########
 
-West is written in Python 3 and distributed through `PyPI`_.
-Use :file:`pip3` to install or upgrade west:
+West 使用 Python 3 编写，通过 `PyPI`_ 发布。
+使用 :file:`pip3` 来安装或升级 west：
 
-On Linux::
+在 Linux 上::
 
   pip3 install --user -U west
 
-On Windows and macOS::
+在 Windows 和 macOS 上::
 
   pip3 install -U west
 
 .. note::
-   See :ref:`python-pip` for additional clarification on using the
-   ``--user`` switch.
+   有关使用 ``--user`` 开关的其他说明，请参见 :ref:`python-pip`。
 
-Afterwards, you can run ``pip3 show -f west`` for information on where the west
-binary and related files were installed.
+之后，你可以运行 ``pip3 show -f west`` 来获取有关 west 二进制文件和相关文件的安装位置的信息。
 
-Once west is installed, you can use it to :ref:`clone the Zephyr repositories
-<clone-zephyr>`.
+west 安装后，你可以使用它来 :ref:`克隆 Zephyr 仓库 <clone-zephyr>`。
 
 .. _west-struct:
 
-Structure
-*********
+结构
+****
 
-West's code is distributed via PyPI in a Python package named ``west``.
-This distribution includes a launcher executable, which is also named
-``west`` (or ``west.exe`` on Windows).
+West 的代码通过 PyPI 以名为 ``west`` 的 Python 包的形式发布。
+此发行版包括一个启动器可执行文件，也称为 ``west``（在 Windows 上为 ``west.exe``）。
 
-When west is installed, the launcher is placed by :file:`pip3` somewhere in
-the user's filesystem (exactly where depends on the operating system, but
-should be on the ``PATH`` :ref:`environment variable <env_vars>`). This
-launcher is the command-line entry point to running both built-in commands
-like ``west init``, ``west update``, along with any extensions discovered
-in the workspace.
+安装 west 后，启动器由 :file:`pip3` 放置在用户的文件系统的某处
+（确切位置取决于操作系统，但应该在 ``PATH`` :ref:`环境变量 <env_vars>` 上）。
+此启动器是运行内置命令（如 ``west init``、``west update``）
+以及在工作区中发现的任何扩展的命令行入口点。
 
-In addition to its command-line interface, you can also use west's Python
-APIs directly. See :ref:`west-apis` for details.
+除了命令行界面外，你还可以直接使用 west 的 Python API。
+有关详细信息，请参见 :ref:`west-apis`。
 
 .. _west-shell-completion:
 
-Enabling shell completion
-*************************
+启用 shell 补全
+***************
 
-West currently supports shell completion in the following shells:
+West 目前在以下 shell 中支持 shell 补全：
 
 * bash
 * zsh
 * fish
-* powershell (board qualifiers only)
+* powershell (仅限开发板限定符)
 
-In order to enable shell completion, you will need to obtain the corresponding
-completion script and have it sourced.
-Using the completion scripts:
+为了启用 shell 补全，你需要获取相应的补全脚本并将其源化。
+使用补全脚本：
 
 .. tabs::
 
   .. group-tab:: bash
 
-    *One-time setup*:
+    *一次性设置*：
 
     .. code-block:: bash
 
       source <(west completion bash)
 
-    *Permanent setup*:
+    *永久设置*：
 
     .. code-block:: bash
 
@@ -83,7 +76,7 @@ Using the completion scripts:
 
       source <(west completion zsh)
 
-    *Permanent setup*:
+    *永久设置*：
 
     .. code-block:: zsh
 
@@ -91,13 +84,13 @@ Using the completion scripts:
 
   .. group-tab:: fish
 
-    *One-time setup*:
+    *一次性设置*：
 
     .. code-block:: fish
 
       west completion fish | source
 
-    *Permanent setup*:
+    *永久设置*：
 
     .. code-block:: fish
 
@@ -105,13 +98,13 @@ Using the completion scripts:
 
   .. group-tab:: powershell
 
-    *One-time setup*:
+    *一次性设置*：
 
     .. code-block:: powershell
 
       west completion powershell | Out-String | Invoke-Expression
 
-    *Permanent setup*:
+    *永久设置*：
 
     .. code-block:: powershell
 

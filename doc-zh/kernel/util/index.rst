@@ -1,9 +1,8 @@
 .. _util_api:
 
-Utilities
-#########
+工具函数
+#######
 
-This page contains reference documentation for ``<sys/util.h>``, which provides
-miscellaneous utility functions and macros.
+此页面包含 ``<sys/util.h>`` 的参考文档，该文档提供了各种实用函数和宏。
 
 .. doxygengroup:: sys-util

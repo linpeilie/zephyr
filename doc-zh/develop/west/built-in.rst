@@ -1,82 +1,74 @@
 .. _west-built-in-cmds:
 
-Built-in commands
-#################
+内置命令
+#######
 
-This page describes west's built-in commands, some of which were introduced in
-:ref:`west-basics`, in more detail.
+此页面更详细地描述了 west 的内置命令，其中一些在 :ref:`west-basics` 中介绍过。
 
-Some commands are related to Git commands with the same name, but operate
-on the entire workspace. For example, ``west diff`` shows local changes in
-multiple Git repositories in the workspace.
+某些命令与相同名称的 Git 命令相关，但在整个工作区上运行。
+例如，``west diff`` 显示工作区中多个 Git 仓库中的本地更改。
 
-Some commands take projects as arguments. These arguments can be project
-names as specified in the manifest file, or (as a fallback) paths to them
-on the local file system. Omitting project arguments to commands which
-accept them (such as ``west list``, ``west forall``, etc.) usually defaults
-to using all projects in the manifest file plus the manifest repository
-itself.
+某些命令将项目作为参数。这些参数可以是在清单文件中指定的项目名称，
+或者（作为备选方案）是文件系统中的路径。省略接受项目参数的命令
+（如 ``west list``、``west forall`` 等）通常默认为使用清单文件中的所有项目
+加上清单仓库本身。
 
-For additional help, run ``west <command> -h`` (e.g. ``west init -h``).
+有关其他帮助，请运行 ``west <command> -h``（例如 ``west init -h``）。
 
 .. _west-init:
 
 west init
 *********
 
-This command creates a west workspace. It can be used in two ways:
+此命令创建 west 工作区。它可以用两种方式使用：
 
-1. Cloning a new manifest repository from a remote URL
-2. Creating a workspace around an existing local manifest repository
+1. 从远程 URL 克隆新的清单仓库
+2. 围绕现有的本地清单仓库创建工作区
 
-**Option 1**: to clone a new manifest repository from a remote URL, use:
+**选项 1**: 从远程 URL 克隆新的清单仓库，使用：
 
 .. code-block:: none
 
    west init [-m URL] [--mr REVISION] [--mf FILE] [directory]
 
-The new workspace is created in the given :file:`directory`, creating a new
-:file:`.west` inside this directory. You can give the manifest URL using
-the ``-m`` switch, the initial revision to check out using ``--mr``, and
-the location of the manifest file within the repository using ``--mf``.
+新的工作区在给定的 :file:`directory` 中创建，在该目录内创建新的 :file:`.west`。
+你可以使用 ``-m`` 开关给出清单 URL，使用 ``--mr`` 给出初始修订版本进行检查，
+并使用 ``--mf`` 给出仓库内清单文件的位置。
 
-For example, running:
+例如，运行：
 
 .. code-block:: shell
 
    west init -m https://github.com/zephyrproject-rtos/zephyr --mr v1.14.0 zp
 
-would clone the upstream official zephyr repository into :file:`zp/zephyr`,
-and check out the ``v1.14.0`` release. This command creates
-:file:`zp/.west`, and set the ``manifest.path`` :ref:`configuration option
-<west-config>` to ``zephyr`` to record the location of the manifest
-repository in the workspace. The default manifest file location is used.
+会将上游官方 zephyr 仓库克隆到 :file:`zp/zephyr`，
+并检查出 ``v1.14.0`` 发布版本。此命令创建 :file:`zp/.west`，
+并将 ``manifest.path`` :ref:`配置选项 <west-config>` 设置为 ``zephyr``
+以记录工作区中清单仓库的位置。使用默认清单文件位置。
 
-The ``-m`` option defaults to ``https://github.com/zephyrproject-rtos/zephyr``.
-The ``--mf`` option defaults to ``west.yml``. Since west v0.10.1, west will use
-the default branch in the manifest repository unless the ``--mr`` option
-is used to override it. (In prior versions, ``--mr`` defaulted to ``master``.)
+``-m`` 选项默认为 ``https://github.com/zephyrproject-rtos/zephyr``。
+``--mf`` 选项默认为 ``west.yml``。从 west v0.10.1 开始，west 将使用
+清单仓库中的默认分支，除非使用 ``--mr`` 选项覆盖它。
+（在早期版本中，``--mr`` 默认为 ``master``。）
 
-If no ``directory`` is given, the current working directory is used.
+如果未给出 ``directory``，则使用当前工作目录。
 
-**Option 2**: to create a workspace around an existing local manifest
-repository, use:
+**选项 2**: 围绕现有的本地清单仓库创建工作区，使用：
 
 .. code-block:: none
 
    west init -l [--mf FILE] directory
 
-This creates :file:`.west` **next to** :file:`directory` in the file
-system, and sets ``manifest.path`` to ``directory``.
+这在文件系统中的 :file:`directory` **旁边** 创建 :file:`.west`，
+并将 ``manifest.path`` 设置为 ``directory``。
 
-As above, ``--mf`` defaults to ``west.yml``.
+如上所述，``--mf`` 默认为 ``west.yml``。
 
-**Reconfiguring the workspace**:
+**重新配置工作区**：
 
-If you change your mind later, you are free to change ``manifest.path`` and
-``manifest.file`` using :ref:`west-config-cmd` after running ``west init``.
-Just be sure to run ``west update`` afterwards to update your workspace to
-match the new manifest file.
+如果你稍后改变主意，你可以在运行 ``west init`` 后自由更改 ``manifest.path`` 
+和 ``manifest.file``，使用 :ref:`west-config-cmd`。
+只需确保之后运行 ``west update`` 以更新你的工作区以匹配新的清单文件。
 
 .. _west-update:
 
@@ -88,186 +80,163 @@ west update
    west update [-f {always,smart}] [-k] [-r]
                [--group-filter FILTER] [--stats] [PROJECT ...]
 
-**Which projects are updated:**
+**更新哪些项目：**
 
-By default, this command parses the manifest file, usually
-:file:`west.yml`, and updates each project specified there.
-If your manifest uses :ref:`project groups <west-manifest-groups>`, then
-only the active projects are updated.
+默认情况下，此命令解析清单文件（通常是 :file:`west.yml`），
+并更新那里指定的每个项目。如果你的清单使用 :ref:`项目组 <west-manifest-groups>`，
+则仅更新活跃项目。
 
-To operate on a subset of projects only, give ``PROJECT`` argument(s). Each
-``PROJECT`` is either a project name as given in the manifest file, or a
-path that points to the project within the workspace. If you specify
-projects explicitly, they are updated regardless of whether they are active.
+要仅在项目子集上运行，给出 ``PROJECT`` 参数。每个 ``PROJECT`` 
+可以是清单文件中给出的项目名称，或指向工作区内项目的路径。
+如果你明确指定项目，无论它们是否活跃都会更新。
 
-**Project update procedure:**
+**项目更新过程：**
 
-For each project that is updated, this command:
+对于要更新的每个项目，此命令：
 
-#. Initializes a local Git repository for the project in the workspace, if
-   it does not already exist
-#. Inspects the project's ``revision`` field in the manifest, and fetches
-   it from the remote if it is not already available locally
-#. Sets the project's :ref:`manifest-rev <west-manifest-rev>` branch to the
-   commit specified by the revision in the previous step
-#. Checks out ``manifest-rev`` in the local working copy as a `detached
-   HEAD <https://git-scm.com/docs/git-checkout#_detached_head>`_
-#. If the manifest file specifies a :ref:`submodules
-   <west-manifest-submodules>` key for the project, recursively updates
-   the project's submodules as described below.
+#. 如果不存在，为工作区中的项目初始化本地 Git 仓库
+#. 检查清单中项目的 ``revision`` 字段，如果本地不可用，则从远程获取
+#. 将项目的 :ref:`manifest-rev <west-manifest-rev>` 分支设置为
+   上一步中修订版本指定的提交
+#. 在本地工作副本中检查 ``manifest-rev`` 作为
+   `分离的 HEAD <https://git-scm.com/docs/git-checkout#_detached_head>`_
+#. 如果清单文件为项目指定了 :ref:`submodules <west-manifest-submodules>` 键，
+   按照下面的描述递归更新项目的子模块。
 
-To avoid unnecessary fetches, ``west update`` will not fetch project
-``revision`` values which are Git SHAs or tags that are already available
-locally. This is the behavior when the ``-f`` (``--fetch``) option has its
-default value, ``smart``. To force this command to fetch from project remotes
-even if the revisions appear to be available locally, either use ``-f always``
-or set the ``update.fetch`` :ref:`configuration option <west-config>` to
-``always``. SHAs may be given as unique prefixes as long as they are acceptable
-to Git [#fetchall]_.
+为了避免不必要的获取，``west update`` 不会获取已在本地可用的 Git SHA 或标记的项目 
+``revision`` 值。这是当 ``-f``（``--fetch``）选项具有其默认值 ``smart`` 时的行为。
+要强制此命令即使修订版本似乎在本地可用也从项目远程获取，
+请使用 ``-f always`` 或将 ``update.fetch`` :ref:`配置选项 <west-config>` 
+设置为 ``always``。只要 SHA 对 Git 是可接受的，它们可以作为唯一前缀给出 [#fetchall]_。
 
-If the project ``revision`` is a Git ref that is neither a tag nor a SHA (i.e.
-if the project is tracking a branch), ``west update`` always fetches,
-regardless of ``-f`` and ``update.fetch``.
+如果项目 ``revision`` 是既不是标记也不是 SHA 的 Git 引用
+（即，如果项目跟踪分支），``west update`` 总是获取，
+无论 ``-f`` 和 ``update.fetch``。
 
-Some branch names might look like short SHAs, like ``deadbeef``. West treats
-these like SHAs. You can disambiguate by prefixing the ``revision`` value with
-``refs/heads/``, e.g. ``revision: refs/heads/deadbeef``.
+某些分支名称可能看起来像短 SHA，如 ``deadbeef``。West 将其视为 SHA。
+你可以通过用 ``refs/heads/`` 前缀 ``revision`` 值来消除歧义，
+例如 ``revision: refs/heads/deadbeef``。
 
-For safety, ``west update`` uses ``git checkout --detach`` to check out a
-detached ``HEAD`` at the manifest revision for each updated project,
-leaving behind any branches which were already checked out. This is
-typically a safe operation that will not modify any of your local branches.
+为了安全起见，``west update`` 使用 ``git checkout --detach`` 
+在每个更新的项目的清单修订版本处检查分离的 ``HEAD``，
+留下任何已经检出的分支。这通常是一个安全的操作，
+不会修改你的任何本地分支。
 
-However, if you had added some local commits onto a previously detached
-``HEAD`` checked out by west, then git will warn you that you've left
-behind some commits which are no longer referred to by any branch. These
-may be garbage-collected and lost at some point in the future. To avoid
-this if you have local commits in the project, make sure you have a local
-branch checked out before running ``west update``.
+但是，如果你在 west 检出的之前分离的 ``HEAD`` 上添加了一些本地提交，
+那么 git 会警告你已留下一些不再被任何分支引用的提交。
+这些可能在未来的某个时刻被垃圾收集和丢失。如果项目中有本地提交，
+请确保在运行 ``west update`` 之前检出本地分支，以避免这种情况。
 
-If you would rather rebase any locally checked out branches instead, use
-the ``-r`` (``--rebase``) option.
+如果你想让任何检出的本地分支都被变基，请使用 ``-r``（``--rebase``）选项。
 
-If you would like ``west update`` to keep local branches checked out as
-long as they point to commits that are descendants of the new
-``manifest-rev``, use the ``-k`` (``--keep-descendants``) option.
+如果你想让 ``west update`` 保持本地分支检出，只要它们指向新的
+``manifest-rev`` 的后代提交，请使用 ``-k``（``--keep-descendants``）选项。
 
 .. note::
 
-   ``west update --rebase`` will fail in projects that have git conflicts
-   between your branch and new commits brought in by the manifest. You
-   should immediately resolve these conflicts as you usually do with
-   ``git``, or you can use ``git -C <project_path> rebase --abort`` to
-   ignore incoming changes for the moment.
+   ``west update --rebase`` 在项目中失败的情况下会发生 git 冲突
+   在你的分支和清单引入的新提交之间。你应该立即解决这些冲突，
+   就像你通常使用 ``git`` 一样，或者你可以使用 
+   ``git -C <project_path> rebase --abort`` 来暂时忽略传入的更改。
 
-   With a clean working tree, a plain ``west update`` never fails
-   because it does not try to hold on to your commits and simply
-   leaves them aside.
+   使用干净的工作树，简单的 ``west update`` 永远不会失败，
+   因为它不会尝试保留你的提交，只是将其搁置。
 
-   ``west update --keep-descendants`` offers an intermediate option that
-   never fails either but does not treat all projects the same:
+   ``west update --keep-descendants`` 提供了一个中间选项，
+   也永远不会失败但不会对所有项目一视同仁：
 
-   - in projects where your branch diverged from the incoming commits, it
-     does not even try to rebase and leaves your branches behind just like a
-     plain ``west update`` does;
-   - in all other projects where no rebase or merge is needed it keeps
-     your branches in place.
+   - 在你的分支与传入提交不同的项目中，它甚至不会尝试变基
+     并像简单的 ``west update`` 那样将你的分支留下；
+   - 在所有其他不需要变基或合并的项目中，它保持你的分支就位。
 
-**One-time project group manipulation:**
+**一次性项目组操作：**
 
-The ``--group-filter`` option can be used to change which project groups
-are enabled or disabled for the duration of a single ``west update`` command.
-See :ref:`west-manifest-groups` for details on the project group feature.
+``--group-filter`` 选项可用于更改在单个 ``west update`` 命令期间
+启用或禁用哪些项目组。有关项目组功能的详细信息，请参见 :ref:`west-manifest-groups`。
 
-The ``west update`` command behaves as if the ``--group-filter`` option's
-value were appended to the ``manifest.group-filter``
-:ref:`configuration option <west-config-index>`.
+``west update`` 命令的行为就像 ``--group-filter`` 选项的值
+被附加到 ``manifest.group-filter`` :ref:`配置选项 <west-config-index>` 一样。
 
-For example, running ``west update --group-filter=+foo,-bar`` would behave
-the same way as if you had temporarily appended the string ``"+foo,-bar"``
-to the value of ``manifest.group-filter``, run ``west update``, then restored
-``manifest.group-filter`` to its original value.
+例如，运行 ``west update --group-filter=+foo,-bar`` 的行为
+与你临时将字符串 ``"+foo,-bar"`` 附加到 ``manifest.group-filter`` 
+的值，运行 ``west update``，然后将 ``manifest.group-filter`` 
+恢复到其原始值的方式相同。
 
-Note that using the syntax ``--group-filter=VALUE`` instead of
-``--group-filter VALUE`` avoids issues parsing command line options
-if you just want to disable a single group, e.g. ``--group-filter=-bar``.
+注意使用语法 ``--group-filter=VALUE`` 而不是 ``--group-filter VALUE`` 
+可以避免如果你只想禁用单个组（例如 ``--group-filter=-bar``）时解析命令行选项的问题。
 
-**Submodule update procedure:**
+**子模块更新过程：**
 
-If a project in the manifest has a ``submodules`` key, the submodules are
-updated as follows, depending on the value of the ``submodules`` key.
+如果清单中的项目有 ``submodules`` 键，子模块将按如下方式进行更新，
+具体取决于 ``submodules`` 键的值。
 
-If the project has ``submodules: true``, west first synchronizes the project's
-submodules with:
+如果项目有 ``submodules: true``，west 首先将项目的子模块与以下内容同步：
 
 .. code-block::
 
    git submodule sync --recursive
 
-West then runs one of the following in the project repository, depending on
-whether you run ``west update`` with the ``--rebase`` option or without it:
+然后 West 在项目仓库中运行以下命令之一，具体取决于
+你是否使用 ``--rebase`` 选项运行 ``west update``：
 
 .. code-block::
 
-   # without --rebase, e.g. "west update":
+   # 不使用 --rebase，例如 "west update":
    git submodule update --init --checkout --recursive
 
-   # with --rebase, e.g. "west update --rebase":
+   # 使用 --rebase，例如 "west update --rebase":
    git submodule update --init --rebase --recursive
 
-Otherwise, the project has ``submodules: <list-of-submodules>``. In this
-case, west synchronizes the project's submodules with:
+否则，项目有 ``submodules: <list-of-submodules>``。在这种情况下，
+west 将项目的子模块与以下内容同步：
 
 .. code-block::
 
    git submodule sync --recursive -- <submodule-path>
 
-Then it updates each submodule in the list as follows, depending on whether you
-run ``west update`` with the ``--rebase`` option or without it:
+然后它根据你是否使用 ``--rebase`` 选项运行 ``west update``
+按如下方式更新列表中的每个子模块：
 
 .. code-block::
 
-   # without --rebase, e.g. "west update":
+   # 不使用 --rebase，例如 "west update":
    git submodule update --init --checkout --recursive <submodule-path>
 
-   # with --rebase, e.g. "west update --rebase":
+   # 使用 --rebase，例如 "west update --rebase":
    git submodule update --init --rebase --recursive <submodule-path>
 
-The ``git submodule sync`` commands are skipped if the
-``update.sync-submodules`` :ref:`west-config` option is false.
+如果 ``update.sync-submodules`` :ref:`west-config` 选项为 false，
+则跳过 ``git submodule sync`` 命令。
 
 .. _west-built-in-misc:
 
-Other project commands
-**********************
+其他项目命令
+***********
 
-West has a few more commands for managing the projects in the
-workspace, which are summarized here. Run ``west <command> -h`` for
-detailed help.
+West 有一些管理工作区中项目的命令，此处总结如下。
+运行 ``west <command> -h`` 获取详细帮助。
 
-- ``west compare``: compare the state of the workspace against the manifest
-- ``west diff``: run ``git diff`` in local project repositories
-- ``west forall``: run an arbitrary command in local project repositories
-- ``west grep``: search for patterns in local project repositories
-- ``west list``: print a line of information about each project in the
-  manifest, according to a format string
-- ``west manifest``: manage the manifest file. See :ref:`west-manifest-cmd`.
-- ``west status``: run ``git status`` in local project repositories
+- ``west compare``: 比较工作区的状态与清单
+- ``west diff``: 在本地项目仓库中运行 ``git diff``
+- ``west forall``: 在本地项目仓库中运行任意命令
+- ``west grep``: 在本地项目仓库中搜索模式
+- ``west list``: 根据格式字符串打印清单中每个项目的一行信息
+- ``west manifest``: 管理清单文件。参见 :ref:`west-manifest-cmd`。
+- ``west status``: 在本地项目仓库中运行 ``git status``
 
-Other built-in commands
-***********************
+其他内置命令
+*************
 
-Finally, here is a summary of other built-in commands.
+最后，这里是其他内置命令的摘要。
 
-- ``west config``: get or set :ref:`configuration options <west-config>`
-- ``west topdir``: print the top level directory of the west workspace
-- ``west help``: get help about a command, or print information about all
-  commands in the workspace, including :ref:`west-extensions`
+- ``west config``: 获取或设置 :ref:`配置选项 <west-config>`
+- ``west topdir``: 打印 west 工作区的顶级目录
+- ``west help``: 获取关于命令的帮助，或打印有关工作区中所有命令的信息，
+  包括 :ref:`west-extensions`
 
-.. rubric:: Footnotes
+.. rubric:: 脚注
 
 .. [#fetchall]
 
-   West may fetch all refs from the Git server when given a SHA as a revision.
-   This is because some Git servers have historically not allowed fetching
-   SHAs directly.
+   当给定 SHA 作为修订版本时，West 可能会从 Git 服务器获取所有 ref。
+   这是因为一些 Git 服务器历来不允许直接获取 SHA。

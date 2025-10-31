@@ -1,242 +1,177 @@
-Technical Steering Committee (TSC)
-**********************************
+技术指导委员会 (Technical Steering Committee, TSC)
+**************************************************
 
-TSC Member Role
-###############
+TSC 成员角色 (TSC Member Role)
+###############################
 
-The TSC role and its responsibilities is defined in the `Zephyr project charter`_.
+TSC 角色及其职责在 `Zephyr 项目章程`_ 中定义。
 
-Membership
-++++++++++
+成员资格 (Membership)
+++++++++++++++++++++++
 
-A TSC member plays a pivotal role in shaping the technical direction of the
-Zephyr Project. TSC members work collaboratively with other TSC members,
-contributors, and stakeholders to ensure the project's success and
-sustainability.
+TSC 成员在塑造 Zephyr 项目的技术方向方面发挥着关键作用。TSC 成员与其他 TSC 成员、贡献者和利益相关者合作,确保项目的成功和可持续性。
 
-By fulfilling the rights and responsibilities below, TSC members contribute to
-the overall success and growth of the Zephyr Project, ensuring that it remains a
-vibrant and thriving open-source community for years to come.
+通过履行以下权利和责任,TSC 成员为 Zephyr 项目的整体成功和发展做出贡献,确保它在未来多年仍然是一个充满活力和繁荣的开源社区。
 
 
-Rights
-------
+权利 (Rights)
+-------------
 
-Decision Making
-  Participate in key decisions related to the project's technical direction,
-  including architectural changes, feature additions, and release planning.
+决策 (Decision Making)
+  参与与项目技术方向相关的关键决策,包括架构更改、功能添加和发布计划。
 
-Voting
-  Exercise voting rights on important matters discussed within the TSC,
-  including feature proposals, code contributions, and community initiatives.
+投票 (Voting)
+  对 TSC 内讨论的重要事项行使投票权,包括功能提案、代码贡献和社区倡议。
 
-Access
-  Gain access to relevant project repositories, documentation, and communication
-  channels to stay informed and contribute effectively.
+访问权限 (Access)
+  访问相关项目仓库、文档和通信渠道,以保持知情并有效贡献。
 
-Leadership
-  Take on leadership roles within working groups or subcommittees dedicated to
-  specific technical areas or initiatives.
+领导力 (Leadership)
+  在专门针对特定技术领域或倡议的工作组或小组委员会中担任领导角色。
 
-Representation
-  Act as a representative of the broader Zephyr community, advocating for the
-  interests of contributors, users, and stakeholders.
+代表性 (Representation)
+  作为更广泛的 Zephyr 社区的代表,倡导贡献者、用户和利益相关者的利益。
 
-Responsibilities
-----------------
-TSC members are expected to fulfill the following responsibilities, though it is
-not mandatory to fulfill all:
+责任 (Responsibilities)
+-----------------------
+TSC 成员应履行以下责任,尽管不强制履行所有责任:
 
-Technical Oversight
-  Provide guidance and oversight on technical matters, ensuring alignment with
-  project goals, standards, and best practices through active participation as
-  core members in working groups and committees.
+技术监督 (Technical Oversight)
+  提供技术事务的指导和监督,通过作为工作组和委员会的核心成员积极参与,确保与项目目标、标准和最佳实践保持一致。
 
-Code Review
-  Participate in code reviews to maintain code quality, consistency, and
-  compatibility with project standards.
+代码审查 (Code Review)
+  参与代码审查以维护代码质量、一致性和与项目标准的兼容性。
 
-Community Engagement
-  Engage with the community through forums, mailing lists, conferences, and
-  other channels to foster collaboration, address concerns, and gather feedback.
+社区参与 (Community Engagement)
+  通过论坛、邮件列表、会议和其他渠道与社区互动,以促进协作、解决问题和收集反馈。
 
-Documentation
-  Contribute to the development and maintenance of project documentation,
-  including technical guides, API references, and best practices.
+文档 (Documentation)
+  为项目文档的开发和维护做出贡献,包括技术指南、API 参考和最佳实践。
 
-Release Management
-  Collaborate with the release manager and other stakeholders to plan and
-  coordinate project releases, ensuring timely delivery and quality assurance.
+发布管理 (Release Management)
+  与发布经理和其他利益相关者合作,计划和协调项目发布,确保及时交付和质量保证。
 
-Contributor Support
-  Support and mentor new contributors, helping them navigate the project's
-  codebase, processes, and community norms.
+贡献者支持 (Contributor Support)
+  支持和指导新贡献者,帮助他们导航项目的代码库、流程和社区规范。
 
-Issue Triage
-  Assist in triaging and prioritizing issues reported by users and contributors,
-  facilitating timely resolution and communication.
+问题分类 (Issue Triage)
+  协助对用户和贡献者报告的问题进行分类和优先级排序,促进及时解决和沟通。
 
-Compliance and Licensing
-  Ensure compliance with project licensing requirements and open-source best
-  practices, addressing any licensing-related issues that may arise.
+合规性和许可 (Compliance and Licensing)
+  确保符合项目许可要求和开源最佳实践,解决可能出现的任何许可相关问题。
 
-Conflict Resolution
-  Facilitate constructive discussions and resolution of technical disagreements
-  or conflicts within the community, promoting a healthy and inclusive
-  environment.
+冲突解决 (Conflict Resolution)
+  促进社区内技术分歧或冲突的建设性讨论和解决,促进健康和包容性的环境。
 
-Continuous Improvement
-  Continuously seek opportunities to improve project governance, processes, and
-  infrastructure, driving innovation and sustainability.
+持续改进 (Continuous Improvement)
+  不断寻求改进项目治理、流程和基础设施的机会,推动创新和可持续性。
 
 
-Appointed TSC Members
-+++++++++++++++++++++
+任命的 TSC 成员 (Appointed TSC Members)
+++++++++++++++++++++++++++++++++++++++++
 
-See `Zephyr project charter`_ for more details.
+有关更多详细信息,请参阅 `Zephyr 项目章程`_。
 
-- Appointed TSC members have no term limits besides the term of their employment
-  at the organization they represent or their organization's membership in the
-  Zephyr Project.
-- Appointed TSC members can select an Alternate from the same organization.
+- 任命的 TSC 成员除了在他们所代表的组织的雇佣期限或其组织在 Zephyr 项目中的成员资格期限外,没有任期限制。
+- 任命的 TSC 成员可以从同一组织选择一个候补成员。
 
-Elected TSC Members
-+++++++++++++++++++
+选举的 TSC 成员 (Elected TSC Members)
++++++++++++++++++++++++++++++++++++++++
 
-Per the `Zephyr project charter`_, TSC members can nominate representatives from
-the technical community at the rate of no more than one per quarter.
+根据 `Zephyr 项目章程`_,TSC 成员可以从技术社区中提名代表,每季度不超过一名。
 
-- Majority vote is required to confirm a candidate.
-- Once elected, a TSC member serves for 2 years.
-- Elected TSC members do not have the right to appoint an Alternate.
-- To ensure continuity of the TSC, at the end of the 2 year term, the TSC is
-  required to reconfirm the membership of elected members. If the elected member
-  declines a new term or if the TSC fails to reconfirm the term, the seat will
-  be open for new nominations.
-- If an elected TSC member resigns before the end of the 2 year term, their spot
-  will be open for new members outside of the quarterly nomination limit. The
-  elected member will serve a 2 year term.
-- The TSC has the right to terminate elected members who become inactive and are
-  not fulfilling the responsibilities of TSC members as described in this
-  document.
-- The number of elected members shall not exceed 20% of the total of appointed
-  members.
-- Existing TSC members who were elected before May 2024 shall be re-confirmed
-  after completing the 2 year term since they were first elected.
+- 需要多数票才能确认候选人。
+- 一旦当选,TSC 成员任期 2 年。
+- 选举的 TSC 成员无权任命候补成员。
+- 为确保 TSC 的连续性,在 2 年任期结束时,TSC 需要重新确认选举成员的成员资格。如果选举成员拒绝新任期或 TSC 未能重新确认任期,该席位将开放给新提名。
+- 如果选举的 TSC 成员在 2 年任期结束前辞职,他们的位置将在季度提名限制之外向新成员开放。选举成员将任职 2 年。
+- TSC 有权终止不活跃且未履行本文档中描述的 TSC 成员职责的选举成员。
+- 选举成员的数量不得超过任命成员总数的 20%。
+- 2024 年 5 月之前选举的现有 TSC 成员应在自首次选举以来完成 2 年任期后重新确认。
 
-Suspensions
-+++++++++++
+暂停 (Suspensions)
+++++++++++++++++++
 
-As noted under Section 8b of the Project Charter, voting rights for a
-representative who misses three consecutive meetings are subject to suspension
-and suspended representatives do not count towards the quorum requirement.
+如项目章程第 8b 节所述,连续缺席三次会议的代表的投票权将被暂停,暂停的代表不计入法定人数要求。
 
-A representative’s suspension will end and voting rights be restored at the start
-of the next attended meeting. The TSC enforces the suspension policy for voting
-members who miss three consecutive TSC weekly meetings.
+代表的暂停将在下次参加会议开始时结束并恢复投票权。TSC 对连续缺席三次 TSC 每周会议的投票成员执行暂停政策。
 
-Multi-day meetings (F2F events) are counted as "one" meeting. The TSC voted on
-February 16, 2022 to discontinue default enforcement of the suspension policy.
-The TSC voted on January 18, 2023 to re-enact default enforcement of the
-suspension policy.
+多日会议(面对面活动)计为"一次"会议。TSC 于 2022 年 2 月 16 日投票决定停止默认执行暂停政策。
+TSC 于 2023 年 1 月 18 日投票决定重新实施暂停政策的默认执行。
 
-Notice of suspension will be sent to representatives who miss three consecutive
-meetings, noting that rights will be restored upon next attendance of a TSC
-meeting.
+将向连续缺席三次会议的代表发送暂停通知,注明权利将在下次参加 TSC 会议时恢复。
 
 .. note::
 
-   As per Section 4b of the Project Charter, Platinum and Silver
-   Members may choose to opt out of a voting seat on the TSC.
+   根据项目章程第 4b 节,白金和白银成员可以选择退出 TSC 上的投票席位。
 
-   Members who opt out and then wish to reclaim their seat later will have their
-   voting rights restored at the start of the second consecutive meeting
-   attended following notification to the TSC Chair.
+   选择退出然后希望稍后收回席位的成员,在通知 TSC 主席后参加的第二次连续会议开始时将恢复其投票权。
 
 
-Voting
-++++++
+投票 (Voting)
++++++++++++++
 
-Voting in the Zephyr Project is defined under Section 8 of the Project Charter.
+Zephyr 项目中的投票在项目章程第 8 节下定义。
 
-Additional points of clarity / TSC interpretation have been added below. The
-Governing Board may opt to update the Charter to include the below
-refinements. Until then, additional clarifications (if/where needed) will be
-discussed in the Process Working Group, and approved in the TSC.
+下面添加了额外的澄清要点 / TSC 解释。管理委员会可以选择更新章程以包括以下细化。在此之前,将在流程工作组中讨论额外的澄清(如果/在需要时),并在 TSC 中批准。
 
-- TSC In-Meeting Voting For items requesting an in-meeting vote of the Zephyr
-  Technical Steering Committee (TSC), assuming quorum requirements have been
-  met, the default voting mechanism will be a verbal motion to determine if
-  there is general consensus.
-- If there are no objections to a motion being brought forward, general
-  consensus is assumed and the motion passes.
-- Should there be any objections raised, the vote will move to email, and be
-  executed using the Voting Guidelines outlined in Section 8 of the Project
-  Charter.
-- Should a motion be deemed urgent by the TSC Chair, and assuming quorum
-  requirements have been met, the Chair may call for a roll call vote
-  in-meeting.
+- TSC 会议内投票 对于请求 Zephyr 技术指导委员会 (TSC) 会议内投票的项目,假设满足法定人数要求,默认投票机制将是口头动议以确定是否存在普遍共识。
+- 如果对提出的动议没有异议,则假定存在普遍共识,动议通过。
+- 如果提出任何异议,投票将转移到电子邮件,并使用项目章程第 8 节中概述的投票指南执行。
+- 如果 TSC 主席认为动议紧急,并且假设满足法定人数要求,主席可以在会议内要求点名投票。
 
-Voting Options
---------------
+投票选项 (Voting Options)
+--------------------------
 
-- Voting Options are:
+- 投票选项包括:
 
-  - "Yes",
-  - "No" or
-  - "Abstain"
+  - "是 (Yes)",
+  - "否 (No)" 或
+  - "弃权 (Abstain)"
 
-Abstention
-----------
+弃权 (Abstention)
+-----------------
 
-Abstentions do not count in tallying the vote negatively or positively; when
-members abstain, they are in effect attending only to contribute to a quorum.
+弃权在统计投票时不计为负面或正面;当成员弃权时,他们实际上只是为了贡献法定人数而参加。
 
-Abstentions do not impact the number of votes needed to decide a vote.
+弃权不影响决定投票所需的票数。
 
-Quorum
-------
+法定人数 (Quorum)
+------------------
 
-Quorum for TSC meetings shall require 60% of the voting representatives... (ref
-8b of the Charter)
+TSC 会议的法定人数应要求 60% 的投票代表...(参考章程第 8b 节)
 
-Decisions
----------
+决策 (Decisions)
+-----------------
 
-Decisions by vote shall be based on a majority vote, provided that at least
-sixty percent (60%) of the **TSC** representatives must be either
-present or participating electronically or by written action in order to
-conduct a valid vote. (ref 8c of the Charter)
+通过投票作出的决定应基于多数票,前提是至少百分之六十 (60%) 的 **TSC** 代表必须亲自或通过电子方式或书面行动参与才能进行有效投票。(参考章程第 8c 节)
 
-Example A:
+示例 A:
 
-   40 eligible TSC voters. 3 abstain from a vote on a motion. 12 vote Yes. 11 vote
-   No.
+   40 名合格的 TSC 投票者。3 人对动议弃权。12 人投赞成票。11 人投反对票。
 
-   Quorum reached: 26 votes cast (quorum = 60% of 40 = 24)
-   Majority vote: 12 Yes vs. 11 No. Yes wins.
-   Motion adopted.
+   达到法定人数: 26 票(法定人数 = 60% × 40 = 24)
+   多数票: 12 票赞成 vs. 11 票反对。赞成票获胜。
+   动议通过。
 
-Example B:
+示例 B:
 
-   40 eligible TSC voters. 5 abstain from a vote on a motion. 12 vote Yes. 6
-   vote No. Quorum reached? 23 votes cast (quorum = 60% of 40 = 24)
+   40 名合格的 TSC 投票者。5 人对动议弃权。12 人投赞成票。6 人投反对票。
+   达到法定人数? 23 票(法定人数 = 60% × 40 = 24)
 
-   Vote is not valid. Quorum not reached.
+   投票无效。未达到法定人数。
 
-Example C:
+示例 C:
 
-   40 eligible TSC voters. 21 abstain from a vote on a motion. 2 vote Yes. 1 votes
-   No. Quorum reached? 24 votes cast (quorum = 60% of 40 = 24)
+   40 名合格的 TSC 投票者。21 人对动议弃权。2 人投赞成票。1 人投反对票。
+   达到法定人数? 24 票(法定人数 = 60% × 40 = 24)
 
-   Majority vote: 2 Yes vs. 1 No. Yes wins.
+   多数票: 2 票赞成 vs. 1 票反对。赞成票获胜。
 
-Immutable Votes
-+++++++++++++++
+不可变投票 (Immutable Votes)
+++++++++++++++++++++++++++++
 
-Votes are considered immutable once cast. A voter may not change their vote,
-once cast, between the time a Motion is brought forth and the time at which
-results are announced.
+投票一旦投出即被视为不可变。投票者不得在提出动议和宣布结果之间的时间内更改其投票。
 
 .. _Zephyr project charter:
    https://www.zephyrproject.org/wp-content/uploads/2023/08/LF-Zephyr-Charter-2023.08.21.pdf

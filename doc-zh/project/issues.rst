@@ -1,36 +1,27 @@
 .. _bug_reporting:
 
-Bug Reporting
-##############
+错误报告 (Bug Reporting)
+#########################
 
-To maintain traceability and relation between proposals, changes, features, and
-issues, it is recommended to cross-reference source code commits with the
-relevant GitHub issues and vice versa.
-Any changes that originate from a tracked feature or issue should contain a
-reference to the feature by mentioning the corresponding issue or pull-request
-identifiers.
+为了维护提案、更改、功能和问题之间的可追溯性和关系,建议将源代码提交与相关的 GitHub 问题交叉引用,反之亦然。
+源自跟踪功能或问题的任何更改都应包含对功能的引用,方法是提及相应的问题或拉取请求标识符。
 
-At any time it should be possible to establish the origin of a change and the
-reason behind it by following the references in the code.
+任何时候都应该可以通过跟踪代码中的引用来确定更改的来源及其背后的原因。
 
-Reporting a regression issue
-****************************
+报告回归问题 (Reporting a regression issue)
+*******************************************
 
-It could happen that the issue being reported is identified as a regression,
-as the use case is known to be working on earlier commit or release.
-In this case, providing directly the guilty commit when submitting the bug
-gains a lot of time in the eventual bug fixing.
+可能会发生所报告的问题被识别为回归,因为已知用例在早期提交或版本中是可以工作的。
+在这种情况下,在提交错误时直接提供有问题的提交可以在最终的错误修复中节省大量时间。
 
-To identify the commit causing the regression, several methods could be used,
-but tree bisecting method is an efficient one that doesn't require deep code
-expertise and can be used by every one.
+要识别导致回归的提交,可以使用几种方法,但树二分法是一种高效的方法,不需要深入的代码专业知识,每个人都可以使用。
 
-For this, `git bisect`_ is the recommended tool.
+为此,推荐使用 `git bisect`_ 工具。
 
-Recommendations on the process:
+关于该过程的建议:
 
-* Run ``west update`` on each bisection step.
-* Once the bisection is over and a culprit identified, verify manually the result.
+* 在每个二分步骤上运行 ``west update``。
+* 一旦二分结束并识别出罪魁祸首,手动验证结果。
 
 .. _git bisect:
    https://git-scm.com/docs/git-bisect

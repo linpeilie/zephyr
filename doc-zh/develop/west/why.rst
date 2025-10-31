@@ -1,120 +1,92 @@
 .. _west-history:
 
-History and Motivation
-######################
+历史和动机
+##########
 
-West was added to the Zephyr project to fulfill two fundamental requirements:
+West 被添加到 Zephyr 项目以满足两个基本要求：
 
-* The ability to work with multiple Git repositories
-* The ability to provide an extensible and user-friendly command-line interface
-  for basic Zephyr workflows
+* 能够与多个 Git 仓库一起工作
+* 为基本 Zephyr 工作流程提供可扩展且用户友好的命令行界面的能力
 
-During the development of west, a set of :ref:`west-design-constraints` were
-identified to avoid the common pitfalls of tools of this kind.
+在 west 的开发过程中，确定了一组 :ref:`west-design-constraints` 以避免此类工具的常见陷阱。
 
-Requirements
-************
+需求
+****
 
-Although the motivation behind splitting the Zephyr codebase into multiple
-repositories is outside of the scope of this page, the fundamental requirements,
-along with a clear justification of the choice not to use existing tools and
-instead develop a new one, do belong here.
+虽然将 Zephyr 代码库分割为多个仓库的动机超出了本页的范围，
+基本需求以及不使用现有工具而是开发新工具的明确理由是合适的。
 
-The basic requirements are:
+基本需求是：
 
-* **R1**: Keep externally maintained code in separately maintained repositories
-  outside of the main zephyr repository, without requiring users to manually
-  clone each of the external repositories
-* **R2**: Provide a tool that both Zephyr users and distributors can make use of
-  to benefit from and extend
-* **R3**: Allow users and downstream distributions to override or remove
-  repositories without having to make changes to the zephyr repository
-* **R4**: Support both continuous tracking and commit-based (bisectable) project
-  updating
+* **R1**: 在主 zephyr 仓库之外的单独维护的仓库中保持外部维护的代码，
+  而不需要用户手动克隆每个外部仓库
+* **R2**: 提供一个 Zephyr 用户和发行版都可以使用以受益和扩展的工具
+* **R3**: 允许用户和下游发行版覆盖或移除仓库，而无需对 zephyr 仓库进行更改
+* **R4**: 支持连续跟踪和基于提交（可分割）的项目更新
 
+自定义工具的理由
+*****************
 
-Rationale for a custom tool
-***************************
+West 的某些功能类似于由
+`Git 子模块 <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_ 和
+Google 的 `repo <https://gerrit.googlesource.com/git-repo/>`_ 提供的功能。
 
-Some of west's features are similar to those provided by
-`Git Submodules <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_ and
-Google's `repo <https://gerrit.googlesource.com/git-repo/>`_.
-
-Existing tools were considered during west's initial design and development.
-None were found suitable for Zephyr's requirements. In particular, these were
-examined in detail:
+在 west 的初始设计和开发过程中考虑了现有工具。
+没有发现任何适合 Zephyr 需求的。特别是，这些被详细审查了：
 
 * Google repo
 
-  - Does not cleanly support using zephyr as the manifest repository (**R4**)
-  - Python 2 only
-  - Does not play well with Windows
-  - Assumes Gerrit is used for code review
+  - 不能干净地支持使用 zephyr 作为清单仓库 (**R4**)
+  - 仅 Python 2
+  - 在 Windows 上表现不佳
+  - 假设使用 Gerrit 进行代码审查
 
-* Git submodules
+* Git 子模块
 
-  - Does not fully support **R1**, since the externally maintained repositories
-    would still need to be inside the main zephyr Git tree
-  - Does not support **R3**, since downstream copies would need to either
-    delete or replace submodule definitions
-  - Does not support continuous tracking of the latest ``HEAD`` in external
-    repositories (**R4**)
-  - Requires hardcoding of the paths/locations of the external repositories
+  - 不完全支持 **R1**，因为外部维护的仓库仍然需要在主 zephyr Git 树内
+  - 不支持 **R3**，因为下游副本需要删除或替换子模块定义
+  - 不支持外部仓库中最新 ``HEAD`` 的连续跟踪 (**R4**)
+  - 需要硬编码外部仓库的路径/位置
 
-Multiple Git Repositories
-*************************
+多个 Git 仓库
+*************
 
-Zephyr intends to provide all required building blocks needed to deploy complex
-IoT applications. This in turn means that the Zephyr project is much more than
-an RTOS kernel, and is instead a collection of components that work together.
-In this context, there are a few reasons to work with multiple Git
-repositories in a standardized manner within the project:
+Zephyr 旨在提供部署复杂 IoT 应用程序所需的所有构建块。
+IoT 应用程序。这反过来意味着 Zephyr 项目远不止是 RTOS 内核，而是相互配合的组件集合。
+在这种情况下，在项目中以标准化方式与多个 Git 仓库一起工作有几个原因：
 
-* Clean separation of Zephyr original code and imported projects and libraries
-* Avoidance of license incompatibilities between original and imported code
-* Reduction in size and scope of the core Zephyr codebase, with additional
-  repositories containing optional components instead of being imported
-  directly into the tree
-* Safety and security certifications
-* Enforcement of modularization of the components
-* Out-of-tree development based on subsets of the supported boards and SoCs
+* Zephyr 原始代码和导入项目和库的清晰分离
+* 避免原始代码和导入代码之间的许可证不兼容
+* 减少核心 Zephyr 代码库的大小和范围，其他仓库包含可选组件而不是直接导入树中
+* 安全和安保认证
+* 强制执行组件的模块化
+* 基于支持的开发板和 SoC 子集的树外开发
 
-See :ref:`west-basics` for information on how west workspaces manage multiple
-git repositories.
+有关 west 工作区如何管理多个 git 仓库的信息，请参见 :ref:`west-basics`。
 
 .. _west-design-constraints:
 
-Design Constraints
-******************
+设计约束
+*******
 
-West is:
+West 是：
 
-- **Optional**: it is always *possible* to drop back to "raw"
-  command-line tools, i.e. use Zephyr without using west (although west itself
-  might need to be installed and accessible to the build system). It may not
-  always be *convenient* to do so, however. (If all of west's features
-  were already conveniently available, there would be no reason to
-  develop it.)
+- **可选的**: 总是*可能*退回到"原始"命令行工具，即使用 Zephyr 而不使用 west
+  （尽管 west 本身可能需要安装并可访问构建系统）。但这可能并不总是*方便*。
+  （如果 west 的所有功能都已方便可用，就没有理由开发它。）
 
-- **Compatible with CMake**: building, flashing and debugging, and
-  emulator support will always remain compatible with direct use of
-  CMake.
+- **与 CMake 兼容**: 构建、刷新和调试以及模拟器支持将始终保持与直接使用 CMake 的兼容性。
 
-- **Cross-platform**: West is written in Python 3, and works on all
-  platforms supported by Zephyr.
+- **跨平台**: West 使用 Python 3 编写，在 Zephyr 支持的所有平台上都能工作。
 
-- **Usable as a Library**: whenever possible, west features are
-  implemented as libraries that can be used standalone in other
-  programs, along with separate command line interfaces that wrap
-  them.  West itself is a Python package named ``west``; its libraries
-  are implemented as subpackages.
+- **可作为库使用**: 只要可能，west 功能就被实现为可在其他程序中独立使用的库，
+  以及包装它们的单独命令行界面。West 本身是一个名为 ``west`` 的 Python 包；
+  其库被实现为子包。
 
-- **Conservative about features**: no features will be accepted without
-  strong and compelling motivation.
+- **对功能保守**: 如果没有强大和令人信服的动机，将不接受任何功能。
 
-- **Clearly specified**: West's behavior in cases where it wraps other
-  commands is clearly specified and documented. This enables
-  interoperability with third party tools, and means Zephyr developers
-  can always find out what is happening "under the hood" when using west.
+- **清楚地指定**: 在 West 包装其他命令的情况下，West 的行为是清楚地指定和记录的。
+  这使得与第三方工具的互操作性成为可能，意味着 Zephyr 开发者总是可以找出
+  使用 west 时"幕后"发生的事情。
 
 See :github:`Zephyr issue #6205 <6205>` and for more details and discussion.

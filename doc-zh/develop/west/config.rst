@@ -1,17 +1,14 @@
 .. _west-config:
 
-Configuration
-#############
+配置
+####
 
-This page documents west's configuration file system, the ``west config``
-command, and configuration options used by built-in commands. For API
-documentation on the ``west.configuration`` module, see
-:ref:`west-apis-configuration`.
+本页记录了 west 的配置文件系统、``west config`` 命令以及内置命令使用的配置选项。有关 ``west.configuration`` 模块的 API 文档，请参见 :ref:`west-apis-configuration`。
 
-West Configuration Files
-------------------------
+West 配置文件
+-------------
 
-West's configuration file syntax is INI-like; here is an example file:
+West 的配置文件语法类似于 INI 格式；以下是一个示例文件：
 
 .. code-block:: ini
 
@@ -21,93 +18,64 @@ West's configuration file syntax is INI-like; here is an example file:
    [zephyr]
    base = zephyr
 
-Above, the ``manifest`` section has option ``path`` set to ``zephyr``. Another
-way to say the same thing is that ``manifest.path`` is ``zephyr`` in this file.
+上面，``manifest`` 部分有选项 ``path`` 设置为 ``zephyr``。另一种说法是 ``manifest.path`` 在此文件中是 ``zephyr``。
 
-There are three types of configuration file:
+配置文件有三种类型：
 
-1. **System**: Settings in this file affect west's behavior for every user
-   logged in to the computer. Its location depends on the platform:
+1. **系统配置**：此文件中的设置影响登录到计算机的每个用户 west 的行为。其位置取决于平台：
 
    - Linux: :file:`/etc/westconfig`
    - macOS: :file:`/usr/local/etc/westconfig`
    - Windows: :file:`%PROGRAMDATA%\\west\\config`
 
-2. **Global** (per user): Settings in this file affect how west behaves when
-   run by a particular user on the computer.
+2. **全局配置**（每个用户）：此文件中的设置影响特定用户在计算机上运行 west 时的行为。
 
-   - All platforms: the default is :file:`.westconfig` in the user's home
-     directory.
-   - Linux note: if the environment variable ``XDG_CONFIG_HOME`` is set,
-     then :file:`$XDG_CONFIG_HOME/west/config` is used.
-   - Windows note: the following environment variables are tested to find the
-     home directory: ``%HOME%``, then ``%USERPROFILE%``, then a
-     combination of ``%HOMEDRIVE%`` and ``%HOMEPATH%``.
+   - 所有平台：默认值是用户主目录中的 :file:`.westconfig`。
+   - Linux 注意：如果设置了环境变量 ``XDG_CONFIG_HOME``，则使用 :file:`$XDG_CONFIG_HOME/west/config`。
+   - Windows 注意：测试以下环境变量以查找主目录：``%HOME%``，然后是 ``%USERPROFILE%``，然后是 ``%HOMEDRIVE%`` 和 ``%HOMEPATH%`` 的组合。
 
-3. **Local**: Settings in this file affect west's behavior for the
-   current :term:`west workspace`. The file is :file:`.west/config`, relative
-   to the workspace's root directory.
+3. **本地配置**：此文件中的设置影响当前 :term:`west 工作区` 的 west 行为。该文件是 :file:`.west/config`，相对于工作区的根目录。
 
-A setting in a file which appears lower down on this list overrides an earlier
-setting. For example, if ``color.ui`` is ``true`` in the system's configuration
-file, but ``false`` in the workspace's, then the final value is
-``false``. Similarly, settings in the user configuration file override system
-settings, and so on.
+此列表中较低位置出现的文件中的设置会覆盖较早的设置。例如，如果系统配置文件中的 ``color.ui`` 是 ``true``，但工作区的是 ``false``，则最终值是 ``false``。类似地，用户配置文件中的设置覆盖系统设置，以此类推。
 
 .. _west-config-cmd:
 
 west config
 -----------
 
-The built-in ``config`` command can be used to get and set configuration
-values. You can pass ``west config`` the options ``--system``, ``--global``, or
-``--local`` to specify which configuration file to use. Only one of these can
-be used at a time. If none is given, then writes default to ``--local``, and
-reads show the final value after applying overrides.
+内置 ``config`` 命令可用于获取和设置配置值。可以向 ``west config`` 传递选项 ``--system``、``--global`` 或 ``--local`` 以指定要使用的配置文件。其中只有一个可以同时使用。如果没有给定，则写入默认为 ``--local``，读取显示应用覆盖后的最终值。
 
-Some examples for common uses follow; run ``west config -h`` for detailed help,
-and see :ref:`west-config-index` for more details on built-in options.
+以下是常见用途的一些示例；运行 ``west config -h`` 获取详细帮助，有关内置选项的更多详细信息，请参见 :ref:`west-config-index`。
 
-To set ``manifest.path`` to :file:`some-other-manifest`:
+要将 ``manifest.path`` 设置为 :file:`some-other-manifest`：
 
 .. code-block:: console
 
    west config manifest.path some-other-manifest
 
-Doing the above means that commands like ``west update`` will look for the
-:term:`west manifest` inside the :file:`some-other-manifest` directory
-(relative to the workspace root directory) instead of the directory given to
-``west init``, so be careful!
+这样做意味着 ``west update`` 之类的命令将在 :file:`some-other-manifest` 目录内（相对于工作区根目录）而不是给予 ``west init`` 的目录中查找 :term:`west 清单`，所以要小心！
 
-To read ``zephyr.base``, the value which will be used as ``ZEPHYR_BASE`` if it
-is unset in the calling environment (also relative to the workspace root):
+要读取 ``zephyr.base``，即如果在调用环境中未设置时将用作 ``ZEPHYR_BASE`` 的值（也相对于工作区根目录）：
 
 .. code-block:: console
 
    west config zephyr.base
 
-You can switch to another zephyr repository without changing ``manifest.path``
--- and thus the behavior of commands like ``west update`` -- using:
+可以在不改变 ``manifest.path`` 的情况下切换到另一个 zephyr 仓库，因此不会改变 ``west update`` 之类命令的行为，使用：
 
 .. code-block:: console
 
    west config zephyr.base some-other-zephyr
 
-This can be useful if you use commands like ``git worktree`` to create your own
-zephyr directories, and want commands like ``west build`` to use them instead
-of the zephyr repository specified in the manifest. (You can go back to using
-the directory in the upstream manifest by running ``west config zephyr.base
-zephyr``.)
+如果使用 ``git worktree`` 之类的命令创建自己的 zephyr 目录，并希望 ``west build`` 之类的命令使用它们而不是清单中指定的 zephyr 仓库，这会很有用。（可以通过运行 ``west config zephyr.base zephyr`` 回到使用上游清单中的目录。）
 
-To set ``color.ui`` to ``false`` in the global (user-wide) configuration file,
-so that west will no longer print colored output for that user when run in any
-workspace:
+要在全局（用户范围）配置文件中将 ``color.ui`` 设置为 ``false``，以便该用户在任何工作区中运行 west 时将不再输出彩色输出：
 
 .. code-block:: console
 
    west config --global color.ui false
 
-To undo the above change:
+要撤销上述更改：
 
 .. code-block:: console
 
@@ -115,112 +83,70 @@ To undo the above change:
 
 .. _west-config-index:
 
-Built-in Configuration Options
-------------------------------
+内置配置选项
+-----------
 
-The following table documents configuration options supported by west's
-built-in commands. Configuration options supported by Zephyr's extension
-commands are documented in the pages for those commands.
+下表记录了 west 内置命令支持的配置选项。Zephyr 扩展命令支持的配置选项记录在这些命令的页面中。
 
-.. NOTE: docs authors: keep this table sorted by section, then option.
+.. NOTE: 文档作者：按部分然后选项保持此表排序。
 
 .. list-table::
    :widths: 10 30
    :header-rows: 1
 
-   * - Option
-     - Description
+   * - 选项
+     - 描述
    * - :samp:`alias.{ALIAS}`
-     - String. If non-empty the ``<ALIAS>`` can be used as a west command.
-       See :ref:`west-aliases`.
+     - 字符串。如果非空，则 ``<ALIAS>`` 可用作 west 命令。参见 :ref:`west-aliases`。
    * - ``color.ui``
-     - Boolean. If ``true`` (the default), then west output is colorized when
-       stdout is a terminal.
+     - 布尔值。如果为 ``true``（默认值），则当标准输出是终端时，west 输出被着色。
    * - ``commands.allow_extensions``
-     - Boolean, default ``true``, disables :ref:`west-extensions` if ``false``
+     - 布尔值，默认 ``true``，如果为 ``false`` 则禁用 :ref:`west-extensions`
    * - ``grep.color``
-     - String, default empty. Set this to ``never`` to disable ``west grep``
-       color output. If set, ``west grep`` passes the value to the grep tool's
-       ``--color`` option.
+     - 字符串，默认为空。将其设置为 ``never`` 以禁用 ``west grep`` 颜色输出。如果设置，``west grep`` 将该值传递给 grep 工具的 ``--color`` 选项。
    * - ``grep.tool``
-     - String, one of ``"git-grep"`` (default), ``"ripgrep"``, or ``"grep"``.
-       The grep tool that ``west grep`` should use.
+     - 字符串，``"git-grep"``（默认）、``"ripgrep"`` 或 ``"grep"`` 之一。``west grep`` 应使用的 grep 工具。
    * - ``grep.<TOOL>-args``
-     - String, default empty. The ``<TOOL>`` part is a pattern that can be any
-       ``grep.tool`` value, so ``grep.ripgrep-args`` is an example
-       configuration option. If set, arguments that ``west grep`` should pass
-       to the corresponding grep tool. Run ``west help grep`` for details.
+     - 字符串，默认为空。``<TOOL>`` 部分是可以是任何 ``grep.tool`` 值的模式，所以 ``grep.ripgrep-args`` 是一个配置选项示例。如果设置，``west grep`` 应传递给相应 grep 工具的参数。运行 ``west help grep`` 获取详细信息。
    * - ``grep.<TOOL>-path``
-     - String, default empty. The ``<TOOL>`` part is a pattern that can be any
-       ``grep.tool`` value, so ``grep.ripgrep-path`` is an example
-       configuration option. The path to the corresponding tool that ``west
-       grep`` should use instead of searching for the command. Run ``west help
-       grep`` for details.
+     - 字符串，默认为空。``<TOOL>`` 部分是可以是任何 ``grep.tool`` 值的模式，所以 ``grep.ripgrep-path`` 是一个配置选项示例。west grep 应使用的相应工具的路径，而不是搜索命令。运行 ``west help grep`` 获取详细信息。
    * - ``manifest.file``
-     - String, default ``west.yml``. Relative path from the manifest repository
-       root directory to the manifest file used by ``west init`` and other
-       commands which parse the manifest.
+     - 字符串，默认值为 ``west.yml``。从清单仓库根目录到 ``west init`` 和其他解析清单的命令使用的清单文件的相对路径。
    * - ``manifest.group-filter``
-     - String, default empty. A comma-separated list of project groups to
-       enable and disable within the workspace. Prefix enabled groups with
-       ``+`` and disabled groups with ``-``. For example, the value
-       ``"+foo,-bar"`` enables group ``foo`` and disables ``bar``. See
-       :ref:`west-manifest-groups`.
+     - 字符串，默认为空。工作区内要启用和禁用的项目组的逗号分隔列表。在启用的组前加 ``+`` 前缀，在禁用的组前加 ``-`` 前缀。例如，值 ``"+foo,-bar"`` 启用组 ``foo`` 并禁用 ``bar``。参见 :ref:`west-manifest-groups`。
    * - ``manifest.path``
-     - String, relative path from the :term:`west workspace` root directory
-       to the manifest repository used by ``west update`` and other commands
-       which parse the manifest. Set locally by ``west init``.
+     - 字符串，从 :term:`west 工作区` 根目录到 ``west update`` 和其他解析清单的命令使用的清单仓库的相对路径。由 ``west init`` 在本地设置。
    * - ``manifest.project-filter``
-     - Comma-separated list of strings.
+     - 字符串的逗号分隔列表。
 
-       The option's value is a comma-separated list of regular expressions,
-       each prefixed with ``+`` or ``-``, like this:
+       该选项的值是逗号分隔的正则表达式列表，每个前缀为 ``+`` 或 ``-``，如下所示：
 
        .. code-block:: none
 
           +re1,-re2,-re3
 
-       Project names are matched against each regular expression (``re1``,
-       ``re2``, ``re3``, ...) in the list, in order. If the entire project name
-       matches the regular expression, that element of the list either
-       deactivates or activates the project. The project is deactivated if the
-       element begins with ``-``. The project is activated if the element
-       begins with ``+``. (Project names cannot contain ``,`` if this option is
-       used, so the regular expressions do not need to contain a literal ``,``
-       character.)
+       项目名称与列表中的每个正则表达式（``re1``、``re2``、``re3``、...）匹配，按顺序。如果整个项目名称与正则表达式匹配，该列表元素要么停用要么激活项目。如果元素以 ``-`` 开头，则项目被停用。如果元素以 ``+`` 开头，则项目被激活。（如果使用此选项，项目名称不能包含 ``,``，所以正则表达式不需要包含文字 ``,`` 字符。）
 
-       If a project's name matches multiple regular expressions in the list,
-       the result from the last regular expression is used. For example,
-       if ``manifest.project-filter`` is:
+       如果项目的名称与列表中的多个正则表达式匹配，则使用最后一个正则表达式的结果。例如，如果 ``manifest.project-filter`` 是：
 
        .. code-block:: none
 
           -hal_.*,+hal_foo
 
-       Then a project named ``hal_bar`` is inactive, but a project named
-       ``hal_foo`` is active.
+       则名为 ``hal_bar`` 的项目是不活跃的，但名为 ``hal_foo`` 的项目是活跃的。
 
-       If a project is made inactive or active by a list element, the project
-       is active or not regardless of whether any or all of its groups are
-       disabled. (This is currently the only way to make a project that has no
-       groups inactive.)
+       如果项目被列表元素变为不活跃或活跃，则无论其任何或所有组是否被禁用，项目都是活跃或不活跃的。（这目前是使没有组的项目不活跃的唯一方法。）
 
-       Otherwise, i.e. if a project does not match any regular expressions in
-       the list, it is active or inactive according to the usual rules related
-       to its groups (see :ref:`west-project-group-examples` for examples in
-       that case).
+       否则，即如果项目与列表中的任何正则表达式都不匹配，则根据与其组相关的常规规则它是活跃或不活跃的（有关该情况下的示例，请参见 :ref:`west-project-group-examples`）。
 
-       Within an element of a ``manifest.project-filter`` list, leading and
-       trailing whitespace are ignored. That means these example values
-       are equivalent:
+       在 ``manifest.project-filter`` 列表的元素内，前导和尾随空格被忽略。这意味着这些示例值是等效的：
 
        .. code-block:: none
 
           +foo,-bar
           +foo , -bar
 
-       Any empty elements are ignored. That means these example values are
-       equivalent:
+       任何空元素都被忽略。这意味着这些示例值是等效的：
 
        .. code-block:: none
 
@@ -228,36 +154,18 @@ commands are documented in the pages for those commands.
            +foo,-bar
 
    * - ``update.auto-cache``
-     - String. If non-empty, ``west update`` will use its value as the
-       ``--auto-cache`` option's value if not given on the command line.
+     - 字符串。如果非空，``west update`` 将在命令行上未给定时使用其值作为 ``--auto-cache`` 选项的值。
    * - ``update.fetch``
-     - String, one of ``"smart"`` (the default behavior starting in v0.6.1) or
-       ``"always"`` (the previous behavior). If set to ``"smart"``, the
-       :ref:`west-update` command will skip fetching
-       from project remotes when those projects' revisions in the manifest file
-       are SHAs or tags which are already available locally. The ``"always"``
-       behavior is to unconditionally fetch from the remote.
+     - 字符串，``"smart"``（从 v0.6.1 开始的默认行为）或 ``"always"``（之前的行为）之一。如果设置为 ``"smart"``，:ref:`west-update` 命令将跳过从项目远程获取那些项目在清单文件中的修订版本是已本地可用的 SHA 或标签的情况。``"always"`` 行为是无条件从远程获取。
    * - ``update.name-cache``
-     - String. If non-empty, ``west update`` will use its value as the
-       ``--name-cache`` option's value if not given on the command line.
+     - 字符串。如果非空，``west update`` 将在命令行上未给定时使用其值作为 ``--name-cache`` 选项的值。
    * - ``update.narrow``
-     - Boolean. If ``true``, ``west update`` behaves as if ``--narrow`` was
-       given on the command line. The default is ``false``.
+     - 布尔值。如果为 ``true``，``west update`` 的行为就像在命令行上给定了 ``--narrow`` 一样。默认值是 ``false``。
    * - ``update.path-cache``
-     - String. If non-empty, ``west update`` will use its value as the
-       ``--path-cache`` option's value if not given on the command line.
+     - 字符串。如果非空，``west update`` 将在命令行上未给定时使用其值作为 ``--path-cache`` 选项的值。
    * - ``update.sync-submodules``
-     - Boolean. If ``true`` (the default), :ref:`west-update` will synchronize
-       Git submodules before updating them.
+     - 布尔值。如果为 ``true``（默认值），:ref:`west-update` 将在更新子模块之前同步 Git 子模块。
    * - ``zephyr.base``
-     - String, default value to set for the :envvar:`ZEPHYR_BASE` environment
-       variable while the west command is running. By default, this is set to
-       the path to the manifest project with path :file:`zephyr` (if there is
-       one) during ``west init``. If the variable is already set, then this
-       setting is ignored unless ``zephyr.base-prefer`` is ``"configfile"``.
+     - 字符串，为 :envvar:`ZEPHYR_BASE` 环境变量设置的默认值，当 west 命令运行时。默认情况下，这在 ``west init`` 期间设置为清单项目的路径，其路径为 :file:`zephyr`（如果存在）。如果变量已设置，则此设置被忽略，除非 ``zephyr.base-prefer`` 是 ``"configfile"``。
    * - ``zephyr.base-prefer``
-     - String, one the values ``"env"`` and ``"configfile"``. If set to
-       ``"env"`` (the default), setting :envvar:`ZEPHYR_BASE` in the calling
-       environment overrides the value of the ``zephyr.base`` configuration
-       option. If set to ``"configfile"``, the configuration option wins
-       instead.
+     - 字符串，值为 ``"env"`` 和 ``"configfile"`` 之一。如果设置为 ``"env"``（默认值），在调用环境中设置 :envvar:`ZEPHYR_BASE` 会覆盖 ``zephyr.base`` 配置选项的值。如果设置为 ``"configfile"``，配置选项会赢取。

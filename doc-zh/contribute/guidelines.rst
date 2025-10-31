@@ -1,5 +1,723 @@
 .. _contribute_guidelines:
 
+贡献指南 (Contribution Guidelines)
+###############################
+
+作为一个开源项目，我们欢迎并鼓励社区直接向项目提交补丁 (patch)。在协作式开源环境中，统一的提交标准与方法有助于降低活跃开发社区可能带来的混乱。
+
+本文档介绍如何参与项目讨论、记录缺陷 (bug) 与改进需求 (enhancement requests)，以及如何向项目提交补丁，以便你的修改能更快地被接受并合入代码库。
+
+
+先决条件 (Prerequisites)
+**********************
+
+.. _Zephyr Project website: https://zephyrproject.org
+
+作为贡献者，你需要熟悉 Zephyr 项目本身，了解如何按照 `Zephyr Project website`_ 中的说明进行配置、安装与使用，以及如何按照 Zephyr 的 :ref:`getting_started` 搭建开发环境。
+
+你应当熟悉常见的开发者工具，例如 Git 与 CMake，以及诸如 GitHub 等平台。
+
+如果你尚未注册，请在 https://github.com 创建一个免费的 GitHub 账号，并在开发环境中安装好 Git 工具。
+
+.. note::
+   Zephyr 的开发流程支持三大主流操作系统 (Linux、macOS 与 Windows)，但下文中的某些工具仅在 Linux 与 macOS 上可用。在 Windows 上，你无需本地运行这些工具，而是依赖使用 GitHub Actions 的持续集成 (Continuous Integration, CI) 服务：当你提交 Pull Request (PR) 时，它会在 GitHub 上自动执行。你可以在 PR 会话列表底部的工作流详情链接中查看失败结果。更多信息见 `Continuous Integration`_。
+
+
+.. _licensing_requirements:
+
+许可 (Licensing)
+***************
+
+许可对开源项目至关重要，它能够确保软件持续以作者期望的条款对外提供。
+
+.. _Apache 2.0 license:
+   https://github.com/zephyrproject-rtos/zephyr/blob/main/LICENSE
+
+.. _GitHub repo: https://github.com/zephyrproject-rtos/zephyr
+
+Zephyr 采用 `Apache 2.0 license`_（参见项目 `GitHub repo`_ 中的 LICENSE 文件），在开放贡献与自由使用之间取得平衡。Apache 2.0 是一种宽松 (permissive) 的开源许可，允许你自由使用、修改、分发并销售包含 Apache 2.0 许可软件的自有产品。（更多背景可参考 `Why choose Apache 2.0 licensing`_ 与 `Top 10 Apache License Questions Answered`_ 等文章。）
+
+.. _Why choose Apache 2.0 licensing:
+   https://www.zephyrproject.org/faqs/#1571346989065-9216c551-f523
+
+.. _Top 10 Apache License Questions Answered:
+   https://www.whitesourcesoftware.com/whitesource-blog/top-10-apache-license-questions-answered/
+
+许可证明确了版权持有者授予开发者的权利。贡献者应充分理解并同意这些许可权利。有时，版权持有者并非贡献者本人，例如当贡献者以公司名义开展工作时。
+
+使用其他许可的组件 (Components using other Licenses)
+==============================================
+
+Zephyr 项目中有一些引入或复用的组件使用其他许可，详见 :ref:`Zephyr_Licensing`。
+
+将其他项目中使用非 Apache 2.0 许可的代码引入 Zephyr，需要充分评估其上下文，并获得 Zephyr 管理委员会批准。
+
+通过仔细审查潜在的贡献，并对所贡献的代码强制执行 :ref:`DCO`，我们可以确保 Zephyr 社区基于 Zephyr Project 开发产品时无需担忧专利或版权问题。
+
+关于引入组件的贡献与评审流程，参见 :ref:`external-contributions`。
+
+.. only:: latex
+
+   .. toctree::
+      :maxdepth: 1
+
+      ../LICENSING.rst
+
+.. _copyright:
+
+版权与许可声明 (Copyright and License Notices)
+=========================================
+
+Zephyr 采用 SPDX/REUSE 风格的文件头。在每个文件开头加入机器可读的版权声明与许可证标识，以便工具识别（例如使用 `REUSE tool`_ 的 :ref:`west spdx <west-spdx>`）。
+
+Zephyr 项目遵循 Linux Foundation 的版权声明 `Community Best Practice`_，因此推荐使用如下版权声明：
+
+.. code-block:: none
+
+   SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+
+并在其后附上许可证标识：
+
+.. code-block:: none
+
+   SPDX-License-Identifier: Apache-2.0
+
+实践建议：
+
+- 将以上两行置于文件最顶部，并使用该文件语言原生的注释语法。
+- 如果你贡献了大量原创内容，*可以* 为你本人或你的组织额外添加一行说明。
+
+.. _Community Best Practice:
+   https://www.linuxfoundation.org/blog/copyright-notices-in-open-source-software-projects/
+
+.. _REUSE tool:
+   https://github.com/fsfe/reuse-tool
+
+.. _DCO:
+
+开发者来源证明 (Developer Certification of Origin, DCO)
+*****************************************************
+
+为尽力确保许可条款得到遵守，Zephyr 项目要求遵循开发者来源证明 (DCO) 流程。
+
+DCO 是附加在每位开发者每次贡献上的声明。在该贡献的提交信息 (commit message) 中（本文稍后将详细说明），开发者只需添加一行 ``Signed-off-by``，即表示同意 DCO。
+
+当开发者提交补丁时，即承诺其有权按照许可证提交该补丁。DCO 协议内容如下，亦可在 https://developercertificate.org/ 查阅。
+
+.. code-block:: none
+
+    Developer's Certificate of Origin 1.1
+
+    By making a contribution to this project, I certify that:
+
+    (a) The contribution was created in whole or in part by me and I
+        have the right to submit it under the open source license
+        indicated in the file; or
+
+    (b) The contribution is based upon previous work that, to the
+        best of my knowledge, is covered under an appropriate open
+        source license and I have the right under that license to
+        submit that work with modifications, whether created in whole
+        or in part by me, under the same open source license (unless
+        I am permitted to submit under a different license), as
+        Indicated in the file; or
+
+    (c) The contribution was provided directly to me by some other
+        person who certified (a), (b) or (c) and I have not modified
+        it.
+
+    (d) I understand and agree that this project and the contribution
+        are public and that a record of the contribution (including
+        all personal information I submit with it, including my
+        sign-off) is maintained indefinitely and may be redistributed
+        consistent with this project or the open source license(s)
+        involved.
+
+DCO 签署 (DCO Sign-Off)
+======================
+
+在 DCO 中，“签署 (sign-off)”是指在每个提交日志中加入一行 "Signed-off-by:"。其格式必须如下所示::
+
+   Signed-off-by: Your Name <your.email@example.com>
+
+在你的提交中，请将：
+
+- ``Your Name`` 替换为你的法定姓名（不允许使用化名、黑客昵称或团队名称）。
+- ``your.email@example.com`` 替换为你用于撰写提交的真实邮箱地址。不允许使用伪造或匿名邮箱地址，例如 ``you-id+your-username@users.noreply.github.com``。该邮箱必须与提交作者邮箱一致（不一致会导致 CI 失败）。
+
+你可以通过 ``git commit -s`` 自动在提交正文中添加 Signed-off-by: 行。可参考 Zephyr 仓库历史中的其他提交。有关在 Git 中配置用户名与邮箱的说明，见 :ref:`git_setup`。
+
+附加要求：
+
+- 如果你修改了他人创建的既有提交，必须在不移除原有 Signed-off-by 行的前提下，额外加入你自己的 Signed-off-by 行。
+
+
+源码树结构 (Source Tree Structure)
+*******************************
+
+要克隆 Zephyr 主仓库，请参见 :ref:`get_the_code`。
+
+本节介绍主仓库的源码树结构。除 Zephyr 内核本身外，你还会找到技术文档、示例代码、受支持开发板的配置、以及子系统测试的源码。以上内容均欢迎开发者贡献与增强。
+
+理解 Zephyr 源码树有助于你定位与某特定 Zephyr 特性相关的代码。
+
+在源码树顶层，有若干重要文件：
+
+:file:`CMakeLists.txt`
+    顶层 CMake 构建系统文件，包含构建 Zephyr 所需的大量逻辑。
+
+:file:`Kconfig`
+    顶层 Kconfig 文件，其会引用顶层目录中的 :file:`Kconfig.zephyr`。
+
+    详细的 Kconfig 文档见手册中的 :ref:`Kconfig 章节 <kconfig>`。
+
+:file:`west.yml`
+    :ref:`west` 清单，列出了由 west 命令行工具管理的外部仓库。
+
+Zephyr 源码树还包含以下顶层目录，每个目录下可能有一到多个层级的子目录，此处不再一一展开：
+
+:file:`arch`
+    与特定体系结构 (architecture) 和片上系统 (SoC) 相关的内核代码。
+    每种受支持的体系结构（例如 x86、ARM）都有独立子目录，且包含下面这些区域的子目录：
+
+    * 该体系结构专属的内核源文件
+    * 该体系结构专属的、用于内部 API 的头文件
+
+:file:`soc`
+    SoC 相关的代码与配置文件。
+
+:file:`boards`
+    开发板相关的代码与配置文件。
+
+:file:`doc`
+    Zephyr 技术文档的源文件及用于生成 https://docs.zephyrproject.org 网站内容的工具。
+
+:file:`drivers`
+    设备驱动代码。
+
+:file:`dts`
+    用于描述非可枚举 (non-discoverable) 的板级硬件细节的 :ref:`devicetree <dt-guide>` 源文件。
+
+:file:`include`
+    公共 API 的头文件，:file:`lib` 下定义的除外。
+
+:file:`kernel`
+    与体系结构无关的内核代码。
+
+:file:`lib`
+    库代码，包括最小化的标准 C 库。
+
+:file:`misc`
+    其他不属于上述任何顶层目录的杂项代码。
+
+:file:`samples`
+    用于演示 Zephyr 各类特性的示例应用程序。
+
+:file:`scripts`
+    构建与测试 Zephyr 应用所用的各种脚本与文件。
+
+:file:`cmake`
+    构建 Zephyr 所需的其他构建脚本。
+
+:file:`subsys`
+    Zephyr 的各子系统，包括：
+
+    * USB 设备栈代码
+    * 网络相关代码（包括 Bluetooth 栈与网络栈）
+    * 文件系统代码
+    * Bluetooth 主机与控制器
+
+:file:`tests`
+    Zephyr 功能的测试代码与基准测试。
+
+:file:`share`
+    与体系结构无关的额外数据。目前包含 Zephyr 的 CMake 包。
+
+
+Pull Request 与 Issue (Pull Requests and Issues)
+*********************************************
+
+.. _Zephyr Project Issues: https://github.com/zephyrproject-rtos/zephyr/issues
+
+.. _open pull requests: https://github.com/zephyrproject-rtos/zephyr/pulls
+
+.. _Zephyr devel mailing list: https://lists.zephyrproject.org/g/devel
+
+.. _Zephyr Discord Server: https://chat.zephyrproject.org
+
+在着手修复某个问题之前，请先在 `Zephyr Project Issues`_ 中查看是否已有相关报告。你也可以在 `Zephyr devel mailing list`_（或 `Zephyr Discord Server`_）发起讨论，了解他人对该问题（以及你的拟议方案）的看法。也许会有人遇到过同样的问题，或对改动与新增功能有类似想法。欢迎在 `Zephyr devel mailing list`_ 发送邮件，向社区介绍并讨论你的想法。
+
+在提交新 Issue 之前先搜索现有或相关条目是个好习惯。当你提交 Issue（缺陷或特性请求）后，分诊 (triage) 团队通常会在数个工作日内进行审查并给出反馈。
+
+你可以在 GitHub 上查看所有 `open pull requests`_，以及打开的 `Zephyr Project Issues`_。
+
+
+Git 设置 (Git Setup)
+*******************
+
+我们需要知道你是谁、如何联系你。请在 Git 安装中设置 ``user.name``（你的全名）与 ``user.email``（你的邮箱地址）。
+
+例如，若你的名字为 ``Zephyr Developer``、邮箱地址为 ``z.developer@example.com``：
+
+.. code-block:: console
+
+   git config --global user.name "Zephyr Developer"
+
+   git config --global user.email "z.developer@example.com"
+
+.. note::
+   ``user.name`` 必须是你的法定全名（最少包含名与姓），不能使用化名或黑客昵称。Git 配置中的邮箱地址必须与用于签署提交的邮箱一致；若不一致，CI 将判定你的 PR 失败。
+
+   如计划通过 Github.com 的网页界面编辑提交，请确保你在 GitHub 个人资料中的 ``email address`` 与 ``name`` 也与 Git 配置（``user.name`` 与 ``user.email``）保持一致。
+
+
+Pull Request 指南 (Pull Request Guidelines)
+***************************************
+当你创建新 Pull Request 时，请遵循以下指南，以确保符合 Zephyr 标准并加速评审流程。
+
+如有疑问，建议先在 Zephyr 仓库中查找现有 PR。利用搜索过滤与标签，定位与你拟议改动类似的 PR。
+
+.. note::
+   GitHub 默认代码界面使用 4 个字符的制表符宽度。但 Zephyr 遵循 `Linux kernel coding style`_，其约定为 8 个字符的制表符。
+
+   为与其他开发者保持一致的代码视图，请前往 `user preferences on GitHub`_ 将 Tab 宽度修改为 8。
+
+.. _Linux kernel coding style:
+   https://kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+.. _user preferences on GitHub:
+   https://github.com/settings/appearance
+
+.. _commit-guidelines:
+
+提交信息指南 (Commit Message Guidelines)
+=====================================
+
+通过 Git 提交 (commit) 变更。每个提交应包含描述变更的“提交信息 (commit message)”。合格的提交信息应类似如下：
+
+.. code-block:: none
+
+   [area]: [summary of change]
+
+   [Commit message body (must be non-empty)]
+
+   Signed-off-by: [Your Full Name] <[your.email@address]>
+
+请将上例中方括号 (``[like this]``) 内的文本替换为与你提交相符的内容。
+
+下面是一个良好的提交信息示例。
+
+.. code-block:: none
+
+   drivers: sensor: abcd1234: fix bus I/O error handling
+
+   The abcd1234 sensor driver is failing to check the flags field in
+   the response packet from the device which signals that an error
+   occurred. This can lead to reading invalid data from the response
+   buffer. Fix it by checking the flag and adding an error path.
+
+   Signed-off-by: Zephyr Developer <z.developer@example.com>
+
+[area]: [summary of change]
+---------------------------
+
+这一行称为提交的“标题 (title)”。标题必须：
+
+* 单行
+* 少于 72 个字符
+* 后面紧跟一个完全空白的行
+
+[area]
+  ``[area]`` 前缀通常用于指示所修改的代码区域；若影响范围更广，也可用于标识更大的上下文。
+
+  示例：
+
+  * ``doc: ...`` 文档改动
+  * ``drivers: foo:`` 修改 ``foo`` 驱动
+  * ``Bluetooth: Shell:`` 修改 Bluetooth shell
+  * ``net: ethernet:`` 与以太网相关的网络改动
+  * ``dts:`` 全树 Devicetree 改动
+  * ``style:`` 代码风格改动
+
+  如果不确定如何填写，可对你修改的 ``FILE`` 运行 ``git log FILE``，参考之前修改该文件的提交作为灵感。
+
+[summary of change]
+  ``[summary of change]`` 应简要描述你做了什么。例如：
+
+  * ``doc: update wiki references to new site``
+  * ``drivers: sensor: sensor_shell: fix channel name collision``
+
+提交信息正文 (Commit Message Body)
+-------------------------------
+
+.. warning::
+
+   提交信息正文不能为空。即使是很小的改动，也请包含有意义的说明；否则你的 PR 会在 CI 检查中失败。
+
+正文应说明变更做了什么以及为何需要它。务必具体，诸如 ``"Fixes stuff"`` 之类的描述会被拒绝。可视需要包括以下内容：
+
+* 该变更做了“什么”
+* 你“为什么”选择这种方式
+* 你的“假设”是什么
+* 你如何确认它有效——例如，你运行了哪些测试
+
+提交信息中的每一行通常不应超过 75 个字符。更长的行请主动换行；包含长 URL、邮箱等可例外。
+
+有关已接受提交信息的示例，可参考 Zephyr GitHub 的 `changelog <https://github.com/zephyrproject-rtos/zephyr/commits/main>`__。
+
+
+Signed-off-by: ...
+------------------
+
+.. tip::
+
+   你应当已经完成 :ref:`git_setup`。使用 ``git commit -s`` 创建提交，可基于上述信息自动添加 Signed-off-by 行。
+
+出于开源许可原因，你的提交必须包含如下格式的 Signed-off-by 行：
+
+.. code-block:: none
+
+   Signed-off-by: [Your Full Name] <[your.email@address]>
+
+例如，若你的全名为 ``Zephyr Developer``，邮箱为 ``z.developer@example.com``：
+
+.. code-block:: none
+
+   Signed-off-by: Zephyr Developer <z.developer@example.com>
+
+这表示你已亲自确认你的变更符合 :ref:`DCO`。因此必须使用你的法定姓名，不允许使用化名或“黑客别名”。
+
+你的姓名与邮箱必须与 Git 提交中 ``Author:`` 字段一致。
+
+关于贡献者与评审者的更多期望，请参见 :ref:`contributor-expectations`。
+
+添加链接 (Adding Links)
+----------------------
+
+.. _GitHub references:
+   https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/autolinked-references-and-urls
+
+如果你的变更针对某个具体的 GitHub issue，请在 PR 描述中按照如下格式添加引用：
+
+.. code-block:: none
+
+   Fixes zephyrproject-rtos/zephyr#[issue number]
+
+对于 Zephyr 项目自身的 PR，也可使用简写形式，例如：
+
+.. code-block:: none
+
+   Fixes #[issue number]
+
+将 [issue number] 替换为相关 GitHub issue 编号。例如：
+
+.. code-block:: none
+
+   Fixes zephyrproject-rtos/zephyr#1234
+
+上述语法可确保在 PR 合并时自动关闭对应 issue。为避免歧义，尤其在涉及多个仓库时，请尽量写出完整仓库路径（zephyrproject-rtos/zephyr）。
+
+提交信息中也可使用同样格式。
+
+若需链接额外外部资源——例如相关 issue、数据手册 (datasheet) 或技术参考手册 (TRM)——请使用 ``Link:`` 标签：
+
+.. code-block:: none
+
+   Link: https://github.com/zephyrproject-rtos/zephyr/issues/<issue number>
+
+.. _Continuous Integration:
+
+持续集成 (Continuous Integration, CI)
+=================================
+
+Zephyr 项目针对每个 Pull Request (PR) 都会运行持续集成 (CI) 系统，以验证以下方面：
+
+* Git 提交格式
+* 代码风格 (Coding Style)
+* 面向多体系结构与开发板的 Twister 构建
+* 文档构建（用于验证任何文档变更）
+
+CI 基于 GitHub Actions 运行，并使用与 `CI Tests`_ 一节所述相同的工具。在合并 PR 之前，CI 结果必须为绿色，即“所有检查均通过 (All checks have passed)”。CI 会在 PR 创建时运行，并在每次提交后再次运行。
+
+你可在 GitHub PR 页面底部（评审状态下方）查看 CI 的当前状态。根据结果你会看到：
+
+* "All checks have passed"
+* "All checks have failed"
+
+如 CI 失败，可点击失败信息下方的 “Details” 链接前往 ``GitHub Actions`` 查看结果。在该摘要页面中会展示包含各类构建的表格；点击失败（非绿色）的那一行即可查看是哪项构建或测试失败。
+
+.. _CI Tests:
+
+本地运行 CI 测试 (Running CI Tests Locally)
+=======================================
+
+.. _check_compliance_py:
+
+check_compliance.py
+-------------------
+
+``check_compliance.py`` 脚本可用于评估代码是否符合 Zephyr 既定的指南与最佳实践。它充当多个工具的封装器，运行诸如 linter、formatter 等各类检查。
+
+建议开发者在创建新 PR 前先在本地运行该脚本，验证自己的改动：
+
+.. code-block:: bash
+
+   ./scripts/ci/check_compliance.py -c <commit range>
+
+.. note::
+   在 Windows 上，如果尚未将 .pl 扩展名与应用程序关联，那么首次在未指定解释器的情况下运行 .pl 文件时，Windows 会询问使用哪个应用打开 Perl 文件。请将默认应用设置为 Strawberry Perl。其可执行文件默认安装在 ``C:\Strawberry\perl\bin\perl.exe``。
+
+twister
+-------
+
+.. note::
+   twister 仅在 Linux 上获得完整支持；在 Windows 与 macOS 上，并非所有目标设备上的测试执行都受支持。
+
+如果你认为你的改动可能会破坏某些测试，可以先以草稿 (draft) PR 的形式提交，让项目 CI 自动为你运行 :ref:`twister_script`。
+
+如果有测试失败，你可以从 CI 运行日志中查看如何在本地复现，例如：
+
+.. code-block:: bash
+
+   west twister -p native_sim -s tests/drivers/build_all/sensor/drivers.sensor.generic_test
+
+.. _static_analysis:
+
+静态代码分析 (Static Code Analysis)
+********************************
+
+Coverity Scan 是一个面向开源项目的免费静态代码分析服务，基于 Coverity 的商业产品，能够分析 C、C++ 与 Java 代码。
+
+Coverity 的静态分析不会实际运行代码，而是通过抽象解释来推断代码的控制流与数据流，能够遍历程序可能采取的所有路径。例如，它能理解 malloc() 返回的内存应在之后使用 free() 释放，并沿分支与函数调用跟踪，检查所有可能路径是否都释放了内存。分析器能够检测各类问题，如资源泄漏（内存、文件描述符）、NULL 解引用、use-after-free、未检查的返回值、死代码、缓冲区溢出、整数溢出、未初始化变量等。
+
+分析结果可在 `Coverity Scan <https://scan.coverity.com/projects/zephyr>`_ 网站查看。访问结果需要你自行创建账号。在 Zephyr 项目页面选择 “Add me to project” 以加入项目，新的成员需由管理员批准。
+
+Zephyr 代码库的静态分析每两周进行一次。对于静态分析工具发现的问题，会自动在 GitHub 上创建 issue，并沿用（或等效映射）工具最初设定的优先级。
+
+为确保问责与高效解决，这些问题将分配给相应维护者（maintainer）。
+
+一个由静态分析、代码质量与软件安全等领域成员组成的专门团队，会持续保障静态分析流程的有效性，并核实识别问题得到及时分类 (triage) 与解决。
+
+工作流程 (Workflow)
+==================
+
+如果分析 Coverity 报告后判断为误报 (False positive)，请将分类设为 "False positive" 或 "Intentional"，操作设为 "Ignore"，所有者 (owner) 设为你本人账号，并添加评论说明为何认定为误报或有意为之。
+
+在 Zephyr 仓库中更新相关 GitHub issue 的详情，仅在上述步骤已在扫描服务网站完成后再关闭 issue。若代码中问题仍然存在，而你既未修复、也未在扫描服务侧忽略该条目，则该 issue 将被自动重新打开。
+
+
+贡献工作流 (Contribution Workflow)
+*******************************
+
+我们鼓励的一条通用实践是：进行小而可控的改动。这将简化评审，使合并与变基更容易，并让变更历史清晰干净。
+
+在为 Zephyr 项目做贡献时，请尽量详细说明你的改动，及时更新相关文档，并在提交前充分测试你的更改。
+
+Zephyr 开发者通常结合命令行 Git 与浏览器与 GitHub 交互来完成工作。正如 Git 一贯的风格，完成任务的方式不止一种。下面介绍一种典型工作流：
+
+.. _Create a Fork of Zephyr:
+   https://github.com/zephyrproject-rtos/zephyr#fork-destination-box
+
+#. `Create a Fork of Zephyr`_
+   到你在 GitHub 的个人账号下。（在 Zephyr 仓库页面右上角点击 fork 按钮。）
+
+#. 在开发电脑上，切换到你 :ref:`obtained the code <get_the_code>` 时创建的 :file:`zephyr` 目录::
+
+     cd zephyrproject/zephyr
+
+   将默认指向 `upstream repository <https://github.com/zephyrproject-rtos/zephyr>`_ 的远端由 ``origin`` 重命名为 ``upstream``::
+
+     git remote rename origin upstream
+
+   将你刚刚创建的 fork 添加为远端，并命名为 ``origin``::
+
+     git remote add origin https://github.com/<your github id>/zephyr
+
+   验证远端仓库::
+
+     git remote -v
+
+   输出应类似::
+
+     origin   https://github.com/<your github id>/zephyr (fetch)
+     origin   https://github.com/<your github id>/zephyr (push)
+     upstream https://github.com/zephyrproject-rtos/zephyr (fetch)
+     upstream https://github.com/zephyrproject-rtos/zephyr (push)
+
+#. 基于 ``main`` 创建用于你改动的主题分支 (topic branch)（若针对某个 issue，建议在分支名中包含其编号）::
+
+     git checkout main
+     git checkout -b fix_comment_typo
+
+   某些 Zephyr 子系统会基于非 ``main`` 的分支开发，因此你可能需要在检出时指定该分支::
+
+     git checkout -b fix_out_of_date_patch origin/net
+
+#. 修改代码，本地测试，不断迭代……（也请参考上一章关于 `twister`_ 的说明）。
+
+#. 当一切就绪，开始 PR 流程，首先添加改动的文件::
+
+     git add [file(s) that changed, add -p if you want to be more specific]
+
+   你可以通过以下命令查看尚未暂存 (staged) 的文件::
+
+     git status
+
+#. 确认将要提交的改动符合预期::
+
+     git diff --cached
+
+#. 将改动提交到本地仓库::
+
+     git commit -s
+
+   ``-s`` 选项会自动在提交信息中添加 ``Signed-off-by:``。没有这行表明你同意 :ref:`DCO` 的提交会被拒绝。有关提交信息撰写的具体规范，见 :ref:`commit-guidelines`。
+
+#. 将包含改动的主题分支推送到你个人账号的 fork::
+
+     git push origin fix_comment_typo
+
+#. 打开浏览器进入你的 fork 仓库，点击你刚完成的分支上的 ``Compare & pull request`` 按钮以创建 PR。
+
+#. 检查 PR 的改动，确认你是向 ``main`` 分支创建 PR。标题与描述应来自你的提交信息。
+
+#. 机器人将基于仓库的 MAINTAINERS 文件分配一个或多个建议评审者。若你是项目成员，也可以此时添加更多评审者。
+
+#. 点击提交按钮，PR 发送并等待评审。评审期间会有邮件通知；你也可以在 https://github.com/zephyrproject-rtos/zephyr/pulls 查看。
+
+#. 在等待 PR 被接受和合并期间，你可以创建另一个分支处理其他问题。（务必基于 ``main`` 创建新分支，而不是之前的分支。）::
+
+     git checkout main
+     git checkout -b fix_another_issue
+
+   接下来可按上面相同流程在该新主题分支上开展工作。
+
+#. 如果评审者要求你修改补丁，可使用交互式 rebase 来修正。在你的开发仓库中::
+
+     git rebase -i <offending-commit-id>^
+
+   在交互式 rebase 编辑器中，将需要修改的提交（如你的 PR 中包含多个提交）对应的 ``pick`` 改为 ``edit``，或直接删除该行以丢弃该提交。随后修改文件以解决评审中提出的问题。
+
+   与之前一样，检查并测试你的改动。准备好后继续提交流程::
+
+     git add [file(s)]
+     git rebase --continue
+
+   如需更新提交说明，更新后继续::
+
+     git push --force origin fix_comment_typo
+
+   通过强制推送 (force push) 更新，你的原 PR 会被相应更新，无需重新创建 PR。
+
+#. 推送更新后，在 PR 页面检查是否存在合并冲突。如有，请在本地进行 rebase::
+
+      git fetch --all
+      git rebase --ignore-whitespace upstream/main
+
+   ``--ignore-whitespace`` 选项可阻止 ``git apply``（由 rebase 调用）修改空白字符。解决冲突后再次推送::
+
+      git push --force origin fix_comment_typo
+
+   .. note:: 在 GitHub 之外，修订提交并强制推送是常见且 Zephyr 推荐的评审模式，但它并非 GitHub 主推的模式。强制推送可能带来一些意外行为，例如除最后一次外无法使用 “View Changes” 按钮（GitHub 会提示找不到旧提交），也并非总能比较“最近一次被评审的版本”与“最新提交的版本”。当重写历史时，GitHub 只保证能访问到最新版本。
+
+#. 如果 CI 失败，你需要按上述方式修改代码并通过 rebase 修订提交以修复问题。更多 CI 相关信息见 `Continuous Integration`_。
+
+.. _contribution_tips:
+
+贡献小贴士 (Contribution Tips)
+==========================
+
+以下小贴士可改进并加速 PR 的评审流程。遵循它们，你的 PR 更可能获得关注，并更早准备好合入：
+
+.. _git-rebase:
+   https://git-scm.com/docs/git-rebase#Documentation/git-rebase.txt---keep-base
+
+#. 推送后续改动时，使用 `git-rebase`_ 的 ``--keep-base`` 选项
+#. 在 PR 页面确认改动仍可无冲突合并
+#. 确保 PR 标题清晰描述修复或新增的内容
+#. 确保 PR 描述 (body) 详细说明提交内容
+#. 确保在 PR 描述中引用了所修复的 issue
+#. 提交后尽快关注早期 CI 结果，发现问题及时修复
+#. 1-2 小时后回看 PR，确认所有 CI 检查均为绿色
+#. 如果被请求修改并已提交新改动，记得在 GitHub 界面点击 “Re-request review” 以通知提出修改请求的人
+
+识别贡献来源 (Identifying Contribution Origin)
+==========================================
+
+向代码树添加新文件时，请在提交信息中详细说明文件的来源、归属 (attribution) 与预期用途。如果文件为 Zephyr 原创，提交信息应包含如下内容（未提供 Origin 标签时默认视为 "Original"）::
+
+      Origin: Original
+
+若文件是 :ref:`从外部项目引入 <external-contributions>`，提交信息必须包含原项目详情、项目位置、该文件的原始提交 SHA 以及引入目的。
+
+例如，本地维护的引入副本::
+
+      Origin: Contiki OS
+      License: BSD 3-Clause
+      URL: https://www.contiki-os.org/
+      commit: 853207acfdc6549b10eb3e44504b1a75ae1ad63a
+      Purpose: Introduction of networking stack.
+
+再例如，在模块仓库中由外部维护的引入副本::
+
+      Origin: Tiny Crypt
+      License: BSD 3-Clause
+      URL: https://github.com/01org/tinycrypt
+      commit: 08ded7f21529c39e5133688ffb93a9d0c94e5c6e
+      Purpose: Introduction of TinyCrypt
+
+对外部模块的贡献 (Contributions to External Modules)
+***********************************************
+
+关于贡献 :ref:`新模块 <submitting_new_modules>` 以及向 :ref:`已有模块 <changes_to_existing_module>` 提交变更，请遵循 :ref:`modules` 一节中的指南。
+
+.. _treewide-changes:
+
+全树范围更改 (Treewide Changes)
+****************************
+
+本节描述“全树范围更改 (treewide changes)”这类贡献及其附加要求。由于其影响范围较大，这些要求旨在提高此类变更在评审与用户侧的可见度。
+
+定义与决策 (Definition and Decision Making)
+=======================================
+
+所谓 *treewide change*，是指对 Zephyr API、编码实践或其他开发要求的任何更改，这些更改要么意味着需要在整个 zephyr 源码仓库中进行相应调整，要么可合理预期将对大量基于 Zephyr 的外部源码产生类似影响。
+
+该定义并非严格形式化，因为判断某项变更是否属于 treewide 往往具有主观性，且可能依赖附加上下文。
+
+项目维护者应当基于良好判断、以 Zephyr 开发者体验为优先，来决定某项拟议变更是否属于 treewide。若长期存在分歧，可由 Zephyr 项目的技术指导委员会 (Technical Steering Committee, TSC) 决议，但请避免过早上升到 TSC。
+
+Treewide 更改的要求 (Requirements for Treewide Changes)
+===================================================
+
+- zephyr 仓库必须为属于 treewide 的 issue 或 PR 打上 'treewide' GitHub 标签
+- 在合并与该变更相关的任何 PR 之前，提出 treewide 更改的人必须创建一个 `RFC issue
+  <https://github.com/zephyrproject-rtos/zephyr/issues/new?assignees=&labels=RFC&template=003_rfc-proposal.yml>`_，详述变更内容、动机与影响等。
+- 项目的 `Architecture Working Group (WG)
+  <https://github.com/zephyrproject-rtos/zephyr/wiki/Architecture-Working-Group>`_ 必须将该 issue 纳入议程，并在相关 PR 合并前讨论是否接受该变更（若 WG 无法达成一致，可上升至 TSC）。
+- 架构 WG 必须为每个 treewide 更改指定合并相关 PR 的流程，包括对影响特定子系统的 PR 所需的附加审批与评审时间要求等。
+- 在合并与该变更相关的任何 PR 之前，若 RFC 已被架构 WG 接受，提议者必须向 devel@lists.zephyrproject.org 发送邮件说明。
+
+示例 (Examples)
+==============
+
+以往的部分 treewide 更改示例：
+
+- 弃用 :ref:`Logging API <logging_api>` v1 并引入 v2（见提交 `262cc55609
+  <https://github.com/zephyrproject-rtos/zephyr/commit/262cc55609b73ea61b5f999c6c6daaba20bc5240>`_）
+- 移除对旧版 :ref:`dt-bindings` 语法的支持（`6bf761fc0a
+  <https://github.com/zephyrproject-rtos/zephyr/commit/6bf761fc0a2811b037abec0c963d60b00c452acb>`_）
+
+注意：在保留旧版本支持的同时新增广泛使用 API 的新版本，不属于 treewide 更改；但弃用与移除此类 API 则属于 treewide 更改。
+
+专用驱动的要求 (Specialized driver requirements)
+********************************************
+
+独立设备 (standalone device) 的驱动在可能情况下应尽量使用 Zephyr 的总线 API（SPI、I2C 等），以便该设备可与任意厂商、任意实现了兼容总线的 SoC 配合使用。
+
+若由于某一 SoC 系列具备专用加速器，导致使用 Zephyr API 无法达到全部性能，则可以为该 SoC 系列提供专用路径来扩展对外设的支持。但驱动仍必须为其他所有 SoC 提供常规路径（通过 Zephyr API）。每一项例外都必须经架构 WG 批准，以便进行验证，并有机会从中总结与改进。
+.. _contribute_guidelines:
+
 Contribution Guidelines
 #######################
 

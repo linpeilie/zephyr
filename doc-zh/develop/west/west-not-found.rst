@@ -9,8 +9,7 @@
 .. _west-apis-manifest:
 .. _west-apis-util:
 
-West APIs
-#########
+West API
+########
 
-The west APIs are not documented since either west was missing or the zephyr
-repository was not initialized using west during the documentation build.
+West API 未被记录，因为 west 丢失或 zephyr 仓库在文档构建期间未使用 west 初始化。

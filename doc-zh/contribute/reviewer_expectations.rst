@@ -1,73 +1,53 @@
 .. _reviewer-expectations:
 
-Reviewer Expectations
-#####################
+审查者期望 (Reviewer Expectations)
+###############################
 
-- Be respectful when commenting on PRs. Refer to the Zephyr `Code of Conduct`_
-  for more details.
+- 在 PR 上发表评论时要尊重。详见 Zephyr `行为守则 (Code of Conduct)`_。
 
-- The Zephyr Project recognizes that reviewers and maintainers have limited
-  bandwidth. As a reviewer, prioritize review requests in the following order:
+- Zephyr 项目认识到审查者和维护者带宽有限。作为审查者,按以下顺序优先处理审查请求:
 
-    #. PRs related to items in the `Zephyr Release Plan`_ or those targeting
-       the next release during the stabilization period (after RC1).
-    #. PRs where the reviewer has requested blocking changes.
-    #. PRs assigned to the reviewer as the area maintainer.
-    #. All other PRs.
+    #. 与 `Zephyr 发布计划 (Zephyr Release Plan)`_ 中的项目相关或针对稳定期间下一个发布
+       (RC1 之后)的 PR。
+    #. 审查者已请求阻滞性更改的 PR。
+    #. 分配给审查者为区域维护者的 PR。
+    #. 所有其他 PR。
 
-- Reviewers shall strive to advance the PR to a mergeable state with their
-  feedback and engagement with the PR author.
+- 审查者应努力通过他们的反馈和与 PR 作者的参与将 PR 推进到可合并状态。
 
-- Try to provide feedback on the entire PR in one shot. This provides the
-  contributor an opportunity to address all comments in the next PR update.
+- 尽量在一次提供对整个 PR 的反馈。这为贡献者提供在下一次 PR 更新中解决所有评论的机会。
 
-- Partial reviews are permitted, but the reviewer must add a comment indicating
-  what portion of the PR they reviewed. Examples of useful partial reviews
-  include:
+- 允许部分审查,但审查者必须添加评论指示他们审查的 PR 部分。有用的部分审查示例包括:
 
-  - Domain specific reviews (e.g. Devicetree).
-  - Code style changes that impact the readability of the PR.
-  - Reviewing commits separately when the requested changes cascade into the
-    later commits.
+  - 领域特定审查(例如设备树)。
+  - 影响 PR 可读性的代码风格更改。
+  - 当请求的更改级联到后来提交时分别审查提交。
 
-- Avoid increasing scope of the PR by requesting new features, especially when
-  there is a corresponding :ref:`RFC <rfcs>` associated with the PR. Instead,
-  reviewers should add suggestions as a comment to the :ref:`RFC <rfcs>`. This
-  also encourages more collaboration as it is easier for multiple contributors
-  to work on a feature once the minimum implementation has merged.
+- 避免通过请求新功能扩展 PR 范围,特别是当有相应的 :ref:`RFC <rfcs>` 与 PR 关联时。
+  相反,审查者应将建议作为评论添加到 :ref:`RFC <rfcs>`。这也促进了更多的协作,
+  因为一旦最小实现已合并,更容易为多个贡献者在功能上工作。
 
-- When using the "Request Changes" option, mark trivial, non-functional,
-  requests as "Non-blocking" in the comment. Reviewers should approve PRs once
-  only non-blocking changes remain. The PR author has discretion as to whether
-  they address all non-blocking comments. PR authors should acknowledge every
-  review comment in some way, even if it's just with an emoticon.
+- 使用"Request Changes"(请求更改)选项时,在评论中标记琐碎的、非功能性的请求为"Non-blocking"(非阻滞性)。
+  一旦仅保留非阻滞性更改,审查者应批准 PR。PR 作者有权决定是否解决所有非阻滞性评论。
+  PR 作者应以某种方式确认每个审查评论,即使只是用一个表情符号。
 
-- Style changes that the reviewer disagrees with but that are not documented as
-  part of the project can be pointed out as non-blocking, but cannot constitute
-  a reason for a request for changes. The reviewer can optionally correct any
-  potential inconsistencies in the tree, document the new guidelines or rules,
-  and then enforce them as part of the review.
+- 审查者不同意但未记录为项目一部分的风格更改可以指出为非阻滞性,但不能构成更改请求的理由。
+  审查者可以选择更正树中的任何潜在不一致,记录新指南或规则,然后在审查中强制执行。
 
-- Whenever requesting style related changes, reviewers should be able to point
-  out the corresponding guideline, rule or rationale in the project's
-  documentation.  This does not apply to certain types of requests for changes,
-  notably those specific to the changes being submitted (e.g. the use of a
-  particular data structure or the choice of locking primitives).
+- 每当请求风格相关的更改时,审查者应该能够指出项目文档中相应的指南、规则或基本原理。
+  这不适用于某些类型的更改请求,特别是特定于提交的更改(例如特定数据结构的使用或
+  锁定原语的选择)。
 
-- Reviewers shall be *clear* about what changes they are requesting when the
-  "Request Changes" option is used. Requested changes shall be in the scope of
-  the PR in question and following the contribution and style guidelines of the
-  project. Furthermore, reviewers must be able to point back to the exact issues
-  in the PR that triggered a request for changes.
+- 使用"Request Changes"(请求更改)选项时,审查者应该 *清楚* 关于他们请求的更改。
+  请求的更改应在 PR 问题的范围内,并遵循项目的贡献和风格指南。此外,审查者必须能够
+  指回触发更改请求的 PR 中的确切问题。
 
-- Reviewers should not request changes for issues which are automatically
-  caught by CI, as this causes the pull request to remain blocked even after CI
-  failures have been addressed and may unnecessarily delay it from being merged.
+- 审查者不应请求更改由 CI 自动捕获的问题,因为这会导致拉取请求即使在 CI 故障已解决后
+  仍然阻滞,并可能不必要地延迟从被合并。
 
-- Reviewers shall not close a PR due to technical or structural disagreement.
-  If requested changes cannot be resolved within the review process, the
-  :ref:`pr_technical_escalation` path shall be used for any potential resolution
-  path, which may include closing the PR.
+- 审查者不应由于技术或结构分歧而关闭 PR。如果无法在审查流程中解决请求的更改,
+  :ref:`pr_technical_escalation` 路径应用于任何潜在的解决方案路径,
+  其中可能包括关闭 PR。
 
 .. _Code of Conduct: https://github.com/zephyrproject-rtos/zephyr/blob/main/CODE_OF_CONDUCT.md
 

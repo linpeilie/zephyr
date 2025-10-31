@@ -1,36 +1,35 @@
 .. _python_style:
 
-Python Style Guidelines
-#######################
+Python 样式指南 (Python Style Guidelines)
+##########################################
 
-Python should be formatted in a `PEP 8`_ compliant manner. Zephyr uses the `ruff formatter`_
-to achieve this. This opinionated formatter aims for consistency, generality, readability and
-reducing git diffs.
+Python 应该按照 `PEP 8`_ 的合规方式进行格式化。Zephyr 使用 `ruff 格式化工具 (ruff formatter)`_
+来实现这一点。这个自以为是的格式化工具旨在实现一致性、通用性、可读性和减少 git diffs。
 
-To apply the formatter, run:
+要应用格式化工具,请运行:
 
 .. code-block:: shell
 
    ruff check --select I --fix <file> # Sort imports
    ruff format <file>
 
-Ruff configuration
-******************
+Ruff 配置 (Ruff configuration)
+****************************
 
-A small set of options is applied on top of the defaults:
+在默认值之上应用一小组选项:
 
-* Line length of 100 columns or fewer.
-* Both single ``'`` and double ``"`` quote styles are allowed.
-* Line endings will be converted to ``\n``. The default line ending on Unix.
+* 行长度为 100 列或更少。
+* 单引号 ``'`` 和双引号 ``"`` 引用风格都是允许的。
+* 行尾将转换为 ``\n``。Unix 上的默认行尾。
 
-Excluded files
-**************
+被排除的文件 (Excluded files)
+****************************
 
-The formatter is enforced in CI, but only for newly added Python files, because the project already
-had a large Python codebase when this was introduced.
-The :zephyr_file:`.ruff-excludes.toml` file has a ``[format]`` section where all the files that are
-currently excluded are listed. It is encouraged for contributors, when changing an excluded file,
-to remove it from the list and format it in a separate commit.
+格式化工具在 CI 中被强制执行,但仅对新添加的 Python 文件,
+因为在引入此工具时项目已经有很大的 Python 代码库。
+:zephyr_file:`.ruff-excludes.toml` 文件有一个 ``[format]`` 部分,
+其中列出了当前被排除的所有文件。建议贡献者在更改被排除的文件时,
+将其从列表中删除并在单独的提交中对其进行格式化。
 
 .. _PEP 8:
    https://peps.python.org/pep-0008/

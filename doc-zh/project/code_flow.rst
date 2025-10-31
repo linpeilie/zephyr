@@ -1,65 +1,44 @@
 .. _code-flow-and-branches:
 
-Code Flow and Branches
-######################
+代码流和分支 (Code Flow and Branches)
+######################################
 
-Introduction
-************
+介绍 (Introduction)
+*******************
 
-The zephyr Git repository has three types of branches:
+Zephyr Git 仓库有三种类型的分支:
 
-main
-  Which contains the latest state of development
+main (主分支)
+  包含开发的最新状态
 
-collab-\*
-  Collaboration branches that are used for shared development
-  of new features to be introduced into the main branch when ready. Creating a new
-  collaboration branch requires a justification and TSC approval. Collaboration branches
-  shall be based off the main branch and any changes developed in the collab
-  branch shall target the main development branch. For released versions of
-  Zephyr, the introduction of fixes and new features, if approved by the TSC,
-  shall be done using backport pull requests.
+collab-\* (协作分支)
+  协作分支用于共享新功能的开发,当准备就绪时引入主分支。创建新的协作分支需要理由和 TSC 批准。协作分支应基于主分支,在协作分支中开发的任何更改都应针对主开发分支。对于 Zephyr 的已发布版本,如果获得 TSC 批准,应使用反向移植拉取请求引入修复和新功能。
 
-vx.y-branch
-  Branches which track maintenance releases based on a major
-  release
+vx.y-branch (版本分支)
+  基于主要版本跟踪维护版本的分支
 
-Development in collaboration branches before features go to mainline allows teams to
-work independently on a subsystem or a feature, improves efficiency and
-turnaround time, and encourages collaboration and streamlines communication
-between developers.
+在功能进入主线之前在协作分支中开发,允许团队独立地在子系统或功能上工作,提高效率和周转时间,并鼓励协作和简化开发人员之间的沟通。
 
-Changes submitted to a collaboration branch can evolve and improve
-incrementally in a branch, before they are submitted to the mainline tree for
-final integration.
+提交到协作分支的更改可以在分支中逐步发展和改进,然后再提交到主线树进行最终集成。
 
-By dedicating an isolated branch to complex features, it's
-possible to initiate in-depth discussions around new additions before
-integrating them into the official project.
+通过为复杂功能专门分配一个独立的分支,可以在将新增内容集成到正式项目之前进行深入讨论。
 
-Collaboration branches are ephemeral and shall be removed once the collaboration work
-has been completed. When a branch is requested, the proposal should include the
-following:
+协作分支是临时的,一旦协作工作完成就应该删除。当请求分支时,建议应包括以下内容:
 
-* Define exit criteria for merging the collaboration branch changes back into the main branch.
-* Define a timeline for the expected life cycle of the branch. It is
-  recommended to select a Zephyr release to set the timeline. Extensions to
-  this timeline requires TSC approval.
+* 定义将协作分支更改合并回主分支的退出标准。
+* 定义分支预期生命周期的时间表。建议选择 Zephyr 版本来设定时间表。此时间表的延期需要 TSC 批准。
 
-Roles and Responsibilities
-**************************
+角色和职责 (Roles and Responsibilities)
+****************************************
 
-Collaboration branch owners have the following responsibilities:
+协作分支所有者具有以下职责:
 
-- Use the infrastructure and tools provided by the project (GitHub, Git)
-- All changes to collaboration branches shall come in form of github pull requests.
-- Force pushing a collaboration branch is only allowed when rebasing against the main branch.
-- Review changes coming from team members and request review from branch owners
-  when submitting changes.
-- Keep the branch in sync with upstream and update on a regular basis.
-- Push changes frequently to upstream using the following methods:
+- 使用项目提供的基础设施和工具 (GitHub, Git)
+- 对协作分支的所有更改都应以 GitHub 拉取请求的形式提交。
+- 仅在针对主分支进行变基时才允许强制推送协作分支。
+- 审查来自团队成员的更改,并在提交更改时请求分支所有者审查。
+- 使分支与上游保持同步并定期更新。
+- 使用以下方法频繁地将更改推送到上游:
 
-  - GitHub pull requests: for example, when reviews have not been done in the local
-    branch (one-man branch).
-  - Merge requests: When a set of changes has been done in a local branch and
-    has been reviewed and tested in a collaboration branch.
+  - GitHub 拉取请求: 例如,当在本地分支中尚未完成审查时(单人分支)。
+  - 合并请求: 当在本地分支中完成了一组更改并已在协作分支中审查和测试时。

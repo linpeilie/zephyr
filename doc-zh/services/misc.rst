@@ -1,14 +1,14 @@
 .. _misc_api:
 
-Miscellaneous
+杂项 (Miscellaneous)
 #############
 
 .. comment
-   not documenting
+   不包含文档
    .. doxygengroup:: checksum
    .. doxygengroup:: structured_data
 
-Checksum APIs
+校验和API (Checksum APIs)
 *************
 
 CRC
@@ -16,7 +16,7 @@ CRC
 
 .. doxygengroup:: crc
 
-Structured Data APIs
+结构化数据API (Structured Data APIs)
 ********************
 
 JSON
@@ -27,23 +27,19 @@ JSON
 JWT
 ===
 
-JSON Web Tokens (JWT) are an open, industry standard [RFC
-7519](https://tools.ietf.org/html/rfc7519) method for representing
-claims securely between two parties.  Although JWT is fairly flexible,
-this API is limited to creating the simplistic tokens needed to
-authenticate with the Google Core IoT infrastructure.
+JSON Web令牌 (JSON Web Tokens, JWT) 是一种开放的工业标准 [RFC
+7519](https://tools.ietf.org/html/rfc7519) 方法，用于在两方之间安全地表示声明 (claims)。尽管JWT相当灵活，但此API仅限于创建与Google Core IoT基础设施进行身份验证所需的简单令牌。
 
 .. doxygengroup:: jwt
 
-Identifier APIs
+标识符API (Identifier APIs)
 ***************
 
 UUID
 ====
 
-Universally Unique Identifiers (UUID), also known as Globally Unique
-IDentifiers (GUIDs) are an open, industry standard [RFC
-9562](https://tools.ietf.org/html/rfc9562) 128 bits long identifiers
-intended to guarantee uniqueness across space and time.
+通用唯一标识符 (Universally Unique Identifiers, UUID)，也称为全局唯一标识符 (Globally Unique
+IDentifiers, GUIDs)，是一种开放的工业标准 [RFC
+9562](https://tools.ietf.org/html/rfc9562) 128位长标识符，旨在保证跨时空的唯一性。
 
 .. doxygengroup:: uuid

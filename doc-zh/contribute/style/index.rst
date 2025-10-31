@@ -1,118 +1,234 @@
-.. _coding_style:
+.. _coding_style:.. _coding_style:
 
 
-Coding Style Guidelines
+
+编码风格指南 (Coding Style Guidelines)
+
+########################################Coding Style Guidelines
+
 #######################
 
 .. toctree::
+
+   :maxdepth: 1.. toctree::
+
    :maxdepth: 1
 
    naming.rst
-   code.rst
-   cmake.rst
-   devicetree.rst
-   kconfig.rst
+
+   code.rst   naming.rst
+
+   cmake.rst   code.rst
+
+   devicetree.rst   cmake.rst
+
+   kconfig.rst   devicetree.rst
+
+   python.rst   kconfig.rst
+
    python.rst
 
 
-Style Tools
+
+样式工具 (Style Tools)
+
+********************Style Tools
+
 ***********
 
 Checkpatch
+
+==========Checkpatch
+
 ==========
 
+Linux 内核 GPL 许可的工具 ``checkpatch`` 用于检查代码风格的一致性。
+
 The Linux kernel GPL-licensed tool ``checkpatch`` is used to check
-coding style conformity.
+
+.. note::coding style conformity.
+
+   checkpatch 目前在 Windows 上不能运行。
 
 .. note::
-   checkpatch does not currently run on Windows.
+
+Checkpatch 在 scripts 目录中可用。要在提交代码时调用它,请使文件    checkpatch does not currently run on Windows.
+
+*$ZEPHYR_BASE/.git/hooks/pre-commit* 可执行,并编辑它以包含:
 
 Checkpatch is available in the scripts directory. To invoke it when committing
-code, make the file *$ZEPHYR_BASE/.git/hooks/pre-commit* executable and edit
+
+.. code-block:: bashcode, make the file *$ZEPHYR_BASE/.git/hooks/pre-commit* executable and edit
+
 it to contain:
 
-.. code-block:: bash
-
     #!/bin/sh
-    set -e exec
+
+    set -e exec.. code-block:: bash
+
     exec git diff --cached | ${ZEPHYR_BASE}/scripts/checkpatch.pl -
 
-Instead of running checkpatch at each commit, you may prefer to run it only
-before pushing on zephyr repo. To do this, make the file
-*$ZEPHYR_BASE/.git/hooks/pre-push* executable and edit it to contain:
-
-.. code-block:: bash
-
     #!/bin/sh
+
+与其在每次提交时运行 checkpatch,你可能更喜欢仅在推送到 zephyr 存储库之前运行它。    set -e exec
+
+为此,请使文件 *$ZEPHYR_BASE/.git/hooks/pre-push* 可执行,并编辑它以包含:    exec git diff --cached | ${ZEPHYR_BASE}/scripts/checkpatch.pl -
+
+
+
+.. code-block:: bashInstead of running checkpatch at each commit, you may prefer to run it only
+
+before pushing on zephyr repo. To do this, make the file
+
+    #!/bin/sh*$ZEPHYR_BASE/.git/hooks/pre-push* executable and edit it to contain:
+
     remote="$1"
-    url="$2"
 
-    z40=0000000000000000000000000000000000000000
+    url="$2".. code-block:: bash
 
-    echo "Run push hook"
 
-    while read local_ref local_sha remote_ref remote_sha
+
+    z40=0000000000000000000000000000000000000000    #!/bin/sh
+
+    remote="$1"
+
+    echo "Run push hook"    url="$2"
+
+
+
+    while read local_ref local_sha remote_ref remote_sha    z40=0000000000000000000000000000000000000000
+
     do
-        args="$remote $url $local_ref $local_sha $remote_ref $remote_sha"
-        exec ${ZEPHYR_BASE}/scripts/series-push-hook.sh $args
-    done
 
-    exit 0
+        args="$remote $url $local_ref $local_sha $remote_ref $remote_sha"    echo "Run push hook"
+
+        exec ${ZEPHYR_BASE}/scripts/series-push-hook.sh $args
+
+    done    while read local_ref local_sha remote_ref remote_sha
+
+    do
+
+    exit 0        args="$remote $url $local_ref $local_sha $remote_ref $remote_sha"
+
+        exec ${ZEPHYR_BASE}/scripts/series-push-hook.sh $args
+
+如果你想覆盖 checkpatch 的判定并尽管有报告的问题而推送分支,可以在 git push 命令中添加选项 --no-verify。    done
+
+
+
+运行 ``checkpatch`` 的另一种方式是使用 :ref:`check_compliance_py` 脚本,    exit 0
+
+它执行额外的样式和合规性相关检查。
 
 If you want to override checkpatch verdict and push you branch despite reported
-issues, you can add option --no-verify to the git push command.
+
+clang-formatissues, you can add option --no-verify to the git push command.
+
+============
 
 A different way for running ``checkpatch`` is by using :ref:`check_compliance_py`
-script, which does additional style and compliance related checks.
 
-clang-format
-============
+`clang-format 工具 <https://clang.llvm.org/docs/ClangFormat.html>`_ 可以帮助script, which does additional style and compliance related checks.
 
-The `clang-format tool <https://clang.llvm.org/docs/ClangFormat.html>`_ can
+快速将大量新源代码重新格式化为我们的 `编码风格指南 (Coding Style Guidelines)`_
+
+标准,以及存储库中提供的 ``.clang-format`` 配置文件。``clang-format`` clang-format
+
+与大多数编辑器都集成很好,但你也可以像这样手动运行它:============
+
+
+
+.. code-block:: bashThe `clang-format tool <https://clang.llvm.org/docs/ClangFormat.html>`_ can
+
 be helpful to quickly reformat large amounts of new source code to our
-`Coding Style Guidelines`_ standards together with the ``.clang-format`` configuration file
+
+   clang-format -i my_source_file.c`Coding Style Guidelines`_ standards together with the ``.clang-format`` configuration file
+
 provided in the repository. ``clang-format`` is well integrated into most
-editors, but you can also run it manually like this:
 
-.. code-block:: bash
+``clang-format`` 是 LLVM 的一部分,可以从项目的 `发布页面 (releases page)editors, but you can also run it manually like this:
 
-   clang-format -i my_source_file.c
+<https://github.com/llvm/llvm-project/releases>`_ 下载。
 
-``clang-format`` is part of LLVM, which can be downloaded from the project
+请注意,如果你是 Linux 用户,``clang-format`` 很可能作为软件包在你的发行版存储库中可用。.. code-block:: bash
+
+
+
+当 `编码风格指南 (Coding Style Guidelines)`_ 与代码格式化工具生成的格式之间存在差异时,   clang-format -i my_source_file.c
+
+`编码风格指南 (Coding Style Guidelines)`_ 优先。如果格式化工具和指南之间存在歧义,
+
+维护者可能会决定应该采用哪种风格。``clang-format`` is part of LLVM, which can be downloaded from the project
+
 `releases page <https://github.com/llvm/llvm-project/releases>`_. Note that if
-you are a Linux user, ``clang-format`` will likely be available as a package in
-your distribution repositories.
 
-When there are differences between the `Coding Style Guidelines`_ guidelines and the
-formatting generated by code formatting tools, the `Coding Style Guidelines`_ guidelines
-take precedence. If there is ambiguity between formatting tools and the
+dts-linteryou are a Linux user, ``clang-format`` will likely be available as a package in
+
+============your distribution repositories.
+
+
+
+`dts-linter <https://www.npmjs.com/package/dts-linter>`_ 可以帮助快速将When there are differences between the `Coding Style Guidelines`_ guidelines and the
+
+大量设备树文件重新格式化为我们的 `编码风格指南 (Coding Style Guidelines)`_ 标准。formatting generated by code formatting tools, the `Coding Style Guidelines`_ guidelines
+
+你也可以像这样手动运行它:take precedence. If there is ambiguity between formatting tools and the
+
 guidelines, maintainers may decide which style should be adopted.
 
-dts-linter
+对于单个文件
+
+.. code-block:: bashdts-linter
+
 ============
 
-The `dts-linter <https://www.npmjs.com/package/dts-linter>`_ can be helpful
+   npx dts-linter --format --file board.dts --file board_pinctrl.dtsi --patchFile diff.patch
+
+   git apply diff.patchThe `dts-linter <https://www.npmjs.com/package/dts-linter>`_ can be helpful
+
 to quickly reformat large amounts of devicetree files to our `Coding Style Guidelines`_
-standards. You can also run it manually like this:
+
+你可以省略 ``--file``,这将格式化调用命令所在目录下的所有文件。standards. You can also run it manually like this:
+
+或者也可以传递 ``--cwd`` 来设置工具应该查找文件的基目录。此选项也用于使补丁文件中的路径相对。
 
 For individual files
+
+你也可以原位修复.. code-block:: bash
+
 .. code-block:: bash
 
    npx dts-linter --format --file board.dts --file board_pinctrl.dtsi --patchFile diff.patch
-   git apply diff.patch
+
+   npx dts-linter --formatFixAll   git apply diff.patch
+
+
 
 You can omit ``--file`` and this will format all files under the directory where the command
-has been called. Alternatively ``--cwd`` can also be passed set the base dir where the tool
-should look for files. This option is also used to make the paths relative in the patch file.
 
-You can also fix in place with
-.. code-block:: bash
+编辑器集成 (Editor Integration)has been called. Alternatively ``--cwd`` can also be passed set the base dir where the tool
 
-   npx dts-linter --formatFixAll
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~should look for files. This option is also used to make the paths relative in the patch file.
 
 
-Editor Integration
-~~~~~~~~~~~~~~~~~~
+
+* 针对 VS Code: 从 `VS Code 市场 (VS Code Marketplace) You can also fix in place with
+
+  <https://marketplace.visualstudio.com/items?itemName=KyleMicallefBonnici.dts-lsp>`_ .. code-block:: bash
+
+  或 `Open VSIX <https://open-vsx.org/extension/KyleMicallefBonnici/dts-lsp>`_ 安装扩展
+
+* 针对其他具有 LSP Client 支持的编辑器: 使用 devicetree 语言服务器    npx dts-linter --formatFixAll
+
+  `devicetree-language-server <https://www.npmjs.com/package/devicetree-language-server>`_
+
+
+
+确保遵循 `设备树样式指南 (Devicetree Style Guidelines) Editor Integration
+
+<https://docs.zephyrproject.org/latest/contribute/style/devicetree.html>`_ ~~~~~~~~~~~~~~~~~~
+
+要求来正确配置编辑器。
 
 * For VS Code: Install the extension from the `VS Code Marketplace <https://marketplace.visualstudio.com/items?itemName=KyleMicallefBonnici.dts-lsp>`_ or `Open VSIX <https://open-vsx.org/extension/KyleMicallefBonnici/dts-lsp>`_
 * For other editors with LSP Client support: Use the devicetree-language-server `devicetree-language-server <https://www.npmjs.com/package/devicetree-language-server>`_

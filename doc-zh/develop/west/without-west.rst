@@ -1,56 +1,47 @@
 .. _no-west:
 
-Using Zephyr without west
-#########################
+不使用 west 的情况下使用 Zephyr
+###############################
 
-This page provides information on using Zephyr without west. This is
-not recommended for beginners due to the extra effort involved. In
-particular, you will have to do work "by hand" to replace these
-features:
+此页面提供了有关在不使用 west 的情况下使用 Zephyr 的信息。
+由于涉及的额外工作，不建议初学者使用。特别是，你必须"手动"完成这些功能的工作：
 
-- cloning the additional source code repositories used by Zephyr in
-  addition to the main zephyr repository, and keeping them up to date
-- specifying the locations of these repositories to the Zephyr build
-  system
-- flashing and debugging without understanding detailed usage of the
-  relevant host tools
+- 克隆 Zephyr 使用的其他源代码仓库（除了主 zephyr 仓库）并保持它们是最新的
+- 向 Zephyr 构建系统指定这些仓库的位置
+- 在不理解相关主机工具的详细使用的情况下刷新和调试
 
 .. note::
 
-   If you have previously installed west and want to stop using it,
-   uninstall it first:
+   如果你之前安装了 west 并想停止使用它，请先卸载它：
 
    .. code-block:: console
 
       pip3 uninstall west
 
-   Otherwise, Zephyr's build system will find it and may try to use
-   it.
+   否则，Zephyr 的构建系统会找到它并可能尝试使用它。
 
-Getting the Source
-------------------
+获取源代码
+---------
 
-In addition to downloading the zephyr source code repository itself,
-you will need to manually clone the additional projects listed in the
-:term:`west manifest` file inside that repository.
+除了下载 zephyr 源代码仓库本身外，你还需要手动克隆该仓库内的
+:term:`west manifest` 文件中列出的其他项目。
 
 .. code-block:: console
 
    mkdir zephyrproject
    cd zephyrproject
    git clone https://github.com/zephyrproject-rtos/zephyr
-   # clone additional repositories listed in zephyr/west.yml,
-   # and check out the specified revisions as well.
+   # 克隆 zephyr/west.yml 中列出的其他仓库，
+   # 并检查指定的修订版本。
 
-As you pull changes in the zephyr repository, you will also need to
-maintain those additional repositories, adding new ones as necessary
-and keeping existing ones up to date at the latest revisions.
+当你在 zephyr 仓库中拉取更改时，你还需要维护这些其他仓库，
+根据需要添加新的仓库并将现有的更新到最新的修订版本。
 
-Building applications
----------------------
+构建应用程序
+-----------
 
-You can build a Zephyr application using CMake and Ninja (or make) directly
-without west installed if you specify any modules manually.
+如果你手动指定任何模块，你可以直接使用 CMake 和 Ninja（或 make）
+来构建 Zephyr 应用程序，而不需要安装 west。
 
 .. zephyr-app-commands::
    :zephyr-app: samples/hello_world
@@ -59,43 +50,38 @@ without west installed if you specify any modules manually.
    :gen-args: -DZEPHYR_MODULES=module1;module2;...
    :compact:
 
-When building with west installed, the Zephyr build system will use it to set
-:ref:`ZEPHYR_MODULES <important-build-vars>`.
+安装 west 后，Zephyr 构建系统将使用它来设置 :ref:`ZEPHYR_MODULES <important-build-vars>`。
 
-If you don't have west installed and your application does not need any of
-these repositories, the build will still work.
+如果你没有安装 west 且你的应用程序不需要任何这些仓库，构建仍然会工作。
 
-If you don't have west installed and your application *does* need one
-of these repositories, you must set :makevar:`ZEPHYR_MODULES`
-yourself as shown above.
+如果你没有安装 west 且你的应用程序*确实*需要这些仓库之一，
+你必须自己设置 :makevar:`ZEPHYR_MODULES`，如上所示。
 
-See :ref:`modules` for more details.
+有关更多详细信息，请参见 :ref:`modules`。
 
-Similarly, if your application requires binary blobs and you are not using
-west, you will need to download and place those blobs in the right places
-instead of using ``west blobs``. See :ref:`bin-blobs` for more details.
+类似地，如果你的应用程序需要二进制 blob 且你不使用 west，
+你将需要下载这些 blob 并将其放置在正确的位置，而不是使用 ``west blobs``。
+有关更多详细信息，请参见 :ref:`bin-blobs`。
 
-Flashing and Debugging
-----------------------
+刷新和调试
+---------
 
-Running build system targets like ``ninja flash``, ``ninja debug``,
-etc. is just a call to the corresponding :ref:`west command
-<west-build-flash-debug>`. For example, ``ninja flash`` calls ``west
-flash``\ [#wbninja]_. If you don't have west installed on your system, running
-those targets will fail. You can of course still flash and debug using
-any :ref:`flash-debug-host-tools` which work for your board (and which those
-west commands wrap).
+运行构建系统目标（如 ``ninja flash``、``ninja debug`` 等）
+只是对相应 :ref:`west 命令 <west-build-flash-debug>` 的调用。
+例如，``ninja flash`` 调用 ``west flash`` [#wbninja]_。
+如果你的系统上没有安装 west，运行这些目标将失败。
+当然，你仍然可以使用任何 :ref:`flash-debug-host-tools`
+对你的开发板有效的方式进行刷新和调试（这些 west 命令都是包装的）。
 
-If you want to use these build system targets but do not want to
-install west on your system using ``pip``, it is possible to do so
-by manually creating a :term:`west workspace`:
+如果你想使用这些构建系统目标但不想在你的系统上使用 ``pip`` 安装 west，
+可以通过手动创建 :term:`west workspace` 来实现：
 
 .. code-block:: console
 
-   # cd into zephyrproject if not already there
+   # 如果还没有在 zephyrproject 中，进入 zephyrproject
    git clone https://github.com/zephyrproject-rtos/west.git .west/west
 
-Then create a file :file:`.west/config` with the following contents:
+然后创建一个文件 :file:`.west/config`，内容如下：
 
 .. code-block:: none
 
@@ -105,24 +91,21 @@ Then create a file :file:`.west/config` with the following contents:
    [zephyr]
    base = zephyr
 
-After that, and in order for ``ninja`` to be able to invoke ``west``
-to flash and debug, you must specify the west directory. This can be
-done by setting the environment variable ``WEST_DIR`` to point to
-:file:`zephyrproject/.west/west` before running CMake to set up a
-build directory.
+之后，为了让 ``ninja`` 能够调用 ``west`` 来刷新和调试，
+你必须指定 west 目录。这可以通过设置环境变量 ``WEST_DIR``
+指向 :file:`zephyrproject/.west/west` 在运行 CMake 来设置构建目录之前来完成。
 
-.. rubric:: Footnotes
+.. rubric:: 脚注
 
 .. [#wbninja]
 
-   Note that ``west build`` invokes ``ninja``, among other
-   tools. There's no recursive invocation of either ``west`` or
-   ``ninja`` involved by default, however, as ``west build`` does not
-   invoke ``ninja flash``, ``debug``, etc. The one exception is if you
-   specifically run one of these build system targets with a command
-   line like ``west build -t flash``. In that case, west is run twice:
-   once for ``west build``, and in a subprocess, again for ``west
-   flash``. Even in this case, ``ninja`` is only run once, as ``ninja
-   flash``. This is because these build system targets depend on an
-   up to date build of the Zephyr application, so it's compiled before
-   ``west flash`` is run.
+   注意 ``west build`` 调用 ``ninja`` 以及其他工具。
+   但默认情况下不涉及 ``west`` 或 ``ninja`` 的递归调用，
+   因为 ``west build`` 不调用 ``ninja flash``、``debug`` 等。
+   唯一的例外是你特别运行其中一个构建系统目标，
+   使用 ``west build -t flash`` 这样的命令行。
+   在这种情况下，west 运行两次：一次用于 ``west build``，
+   在子进程中再次用于 ``west flash``。
+   即使在这种情况下，``ninja`` 也只运行一次，
+   作为 ``ninja flash``。这是因为这些构建系统目标依赖于
+   Zephyr 应用程序的最新构建，所以在 ``west flash`` 运行之前进行编译。

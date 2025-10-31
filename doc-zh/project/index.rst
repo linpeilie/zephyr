@@ -1,46 +1,90 @@
-.. _development_model:.. _development_model:
+.. _development_model:.. _development_model:.. _development_model:
 
 
+
+项目和治理 (Project and Governance)
+
+##################################
 
 项目和治理Project and Governance
 
-##############################################
+
+
+.. toctree::##############################################
+
+   :maxdepth: 1
 
 
 
+   tsc
+
+   project_roles.rst
+
+   working_groups
+
+   release_process.. toctree::.. toctree::
+
+   proposals
+
+   code_flow   :maxdepth: 1   :maxdepth: 1
+
+   dev_env_and_tools
+
+   issues
+
+   communication
+
+   documentation   tsc   tsc
 
 
-.. toctree::.. toctree::
-
-   :maxdepth: 1   :maxdepth: 1
-
-
-
-   tsc   tsc
 
    project_roles.rst   project_roles.rst
 
-   working_groups   working_groups
 
-   release_process   release_process
+
+Zephyr 项目使用 GitHub **Issues** 来追踪功能、增强和错误报告的开发流程工作流,   working_groups   working_groups
+
+以及使用 GitHub **Pull Requests** (PR) 来提交和审查更改。Zephyr 社区成员共同合作
+
+审查这些 Issue 和 PR,通过其定期发布来管理 Zephyr 的功能增强和质量改进,   release_process   release_process
+
+如 `程序管理概述 (program management overview) <https://wiki.zephyrproject.org/Program-Management>`_ 中所述。
 
    proposals   proposals
 
-   code_flow   code_flow
+我们只能通过要求社区和贡献者及时进行审查、反馈和回复来管理 Issue 和 PR 的数量,
 
-   dev_env_and_tools   dev_env_and_tools
+无论是针对初始提交还是后续问题和澄清。了解项目的 :ref:`开发流程和工具 (development processes and tools) <dev-environment-and-tools>`   code_flow   code_flow
 
-   issues   issues
+和关于 :ref:`审查时间表 (review timelines) <review_time>` 的具体情况,
+
+以了解项目对我们活跃开发人员社区的目标和指南。   dev_env_and_tools   dev_env_and_tools
+
+
+
+:ref:`project_roles` 详细描述了 Zephyr 项目角色以及与开发流程工作流相关的权限。   issues   issues
+
+
 
    communication   communication
 
-   documentation   documentation
+术语 (Terminology)
+
+*****************   documentation   documentation
 
 
 
+- 主线 (mainline): 核心功能和核心功能正在开发的主树。
 
+- 子系统/功能分支 (subsystem/feature branch): 是同一存储库中的分支。
 
+  在我们的情况下,当引用不在同一存储库中的分支时,我们也将使用术语分支,
 
+  这些是共享相同历史的存储库副本。
+
+- 上游 (upstream): 源代码所基于的父分支。这是你从中拉取和推送到的分支,基本上是你的上游。
+
+- LTS: 长期支持 (Long Term Support)
 
 Zephyr项目使用GitHub **Issues**来跟踪功能、增强和错误报告，The Zephyr project defines a development process workflow using GitHub
 
