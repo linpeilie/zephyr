@@ -1,101 +1,72 @@
 .. _device_model_api:
 
-Device Driver Model
-###################
+设备驱动模型
+############
 
-Introduction
-************
-The Zephyr kernel supports a variety of device drivers. Whether a
-driver is available depends on the board and the driver.
+简介
+****
+Zephyr 内核支持多种设备驱动。某个驱动是否可用取决于所用的开发板与对应驱动本身。
 
-The Zephyr device model provides a consistent device model for configuring the
-drivers that are part of a system. The device model is responsible
-for initializing all the drivers configured into the system.
+Zephyr 的设备模型提供了统一一致的方式来配置系统中的各类驱动，并负责在启动时初始化所有已配置的驱动。
 
-Each type of driver (e.g. UART, SPI, I2C) is supported by a generic type API.
+每类驱动（例如 UART、SPI、I2C）都通过对应的通用 API 进行支持。
 
-In this model the driver fills in the pointer to the structure containing the
-function pointers to its API functions during driver initialization. These
-structures are placed into the RAM section in initialization level order.
+在该模型中，驱动会在初始化期间将其 API 函数的函数指针填入包含函数指针的结构体中。按照初始化等级顺序，这些结构被放置到 RAM 的相应段中。
 
 .. image:: device_driver_model.svg
    :width: 40%
    :align: center
-   :alt: Device Driver Model
+   :alt: 设备驱动模型
 
-Standard Drivers
-****************
+标准驱动
+********
 
-Device drivers which are present on all supported board configurations
-are listed below.
+所有受支持的板级配置都会包含以下设备驱动：
 
-* **Interrupt controller**: This device driver is used by the kernel's
-  interrupt management subsystem.
-
-* **Timer**: This device driver is used by the kernel's system clock and
-  hardware clock subsystem.
-
-* **Serial communication**: This device driver is used by the kernel's
-  system console subsystem.
-
-* **Entropy**: This device driver provides a source of entropy numbers
-  for the random number generator subsystem.
+* **中断控制器**：供内核的中断管理子系统使用。
+* **定时器**：供内核的系统时钟与硬件时钟子系统使用。
+* **串行通信**：供内核的系统控制台子系统使用。
+* **熵源（Entropy）**：为随机数生成器子系统提供熵数来源。
 
   .. important::
 
-    Use the :ref:`random API functions <random_api>` for random
-    values. :ref:`Entropy functions <entropy_api>` should not be
-    directly used as a random number generator source as some hardware
-    implementations are designed to be an entropy seed source for random
-    number generators and will not provide cryptographically secure
-    random number streams.
+     获取随机值请使用 :ref:`随机数 API <random_api>`。:ref:`熵源函数 <entropy_api>` 不应被直接用作随机数生成器来源，因为部分硬件实现仅设计为随机数生成器的熵种子来源，无法提供密码学意义上安全的随机数流。
 
-Synchronous Calls
-*****************
+同步调用
+********
 
-Zephyr provides a set of device drivers for multiple boards. Each driver
-should support an interrupt-based implementation, rather than polling, unless
-the specific hardware does not provide any interrupt.
+Zephyr 为多种开发板提供了成套的设备驱动。除非特定硬件不支持中断，否则每个驱动都应优先采用基于中断的实现，而非轮询。
 
-High-level calls accessed through device-specific APIs, such as
-:file:`i2c.h` or :file:`spi.h`, are usually intended as synchronous. Thus,
-these calls should be blocking.
+通过设备专用 API（如 :file:`i2c.h`、:file:`spi.h`）提供的高层调用通常被设计为同步语义，因此这些调用应为阻塞式。
 
 .. _device_driver_api:
 
-Driver APIs
-***********
+驱动 API
+*********
 
-The following APIs for device drivers are provided by :file:`device.h`. The APIs
-are intended for use in device drivers only and should not be used in
-applications.
+下述设备驱动相关 API 由 :file:`device.h` 提供。这些 API 仅面向驱动内部使用，不应在应用中直接调用。
 
 :c:macro:`DEVICE_DEFINE()`
-   Create device object and related data structures including setting it
-   up for boot-time initialization.
+   创建设备对象及相关数据结构，并设置其在引导阶段初始化。
 
 :c:macro:`DEVICE_NAME_GET()`
-   Converts a device identifier to the global identifier for a device
-   object.
+   将设备标识符转换为对应设备对象的全局标识符。
 
 :c:macro:`DEVICE_GET()`
-   Obtain a pointer to a device object by name.
+   通过名称获取设备对象指针。
 
 :c:macro:`DEVICE_DECLARE()`
-   Declare a device object.  Use this when you need a forward reference
-   to a device that has not yet been defined.
+   声明设备对象。当需要对尚未定义的设备进行前向引用时使用。
 
 :c:macro:`DEVICE_API()`
-   Wrap a driver API declaration to assign it to its respective linker section.
+   包装驱动 API 声明并将其放入对应的链接器段。
 
 .. _device_struct:
 
-Driver Data Structures
-**********************
+驱动数据结构
+************
 
-The device initialization macros populate some data structures at build time
-which are
-split into read-only and runtime-mutable parts. At a high level we have:
+设备初始化相关的宏会在构建阶段填充部分数据结构，并划分为只读部分与运行期可变部分。高层结构如下：
 
 .. code-block:: C
 
@@ -106,31 +77,21 @@ split into read-only and runtime-mutable parts. At a high level we have:
 	void * const data;
   };
 
-The ``config`` member is for read-only configuration data set at build time. For
-example, base memory mapped IO addresses, IRQ line numbers, or other fixed
-physical characteristics of the device. This is the ``config`` pointer
-passed to ``DEVICE_DEFINE()`` and related macros.
+``config`` 成员用于保存构建期设置的只读配置信息，例如 MMIO 基地址、IRQ 号或设备的其他固定物理特征。这就是传递给 ``DEVICE_DEFINE()`` 及相关宏的 ``config`` 指针。
 
-The ``data`` struct is kept in RAM, and is used by the driver for
-per-instance runtime housekeeping. For example, it may contain reference counts,
-semaphores, scratch buffers, etc.
+``data`` 结构存放于 RAM，由驱动用于单实例的运行期维护，例如引用计数、信号量、临时缓冲等。
 
-The ``api`` struct maps generic subsystem APIs to the device-specific
-implementations in the driver. It is typically read-only and populated at
-build time. The next section describes this in more detail.
+``api`` 结构将通用子系统 API 映射到驱动中的设备特定实现。该结构通常为只读，并在构建期填充。下一节将作进一步说明。
 
 
-Subsystems and API Structures
-*****************************
+子系统与 API 结构
+*****************
 
-Most drivers will be implementing a device-independent subsystem API.
-Applications can simply program to that generic API, and application
-code is not specific to any particular driver implementation.
+多数驱动会实现与具体设备无关的子系统 API。应用只需面向该通用 API 编程，从而避免与具体驱动实现绑定。
 
-If all driver API instances are assigned to their respective API linker section
-use :c:macro:`DEVICE_API_IS()` to verify the API's type.
+如果所有驱动 API 实例都被放入各自的 API 链接段，可使用 :c:macro:`DEVICE_API_IS()` 校验 API 的类型。
 
-A subsystem API definition typically looks like this:
+一个典型的子系统 API 定义如下：
 
 .. code-block:: C
 
@@ -152,9 +113,7 @@ A subsystem API definition typically looks like this:
         DEVICE_API_GET(subsystem, dev)->do_that(dev, baz);
   }
 
-A driver implementing a particular subsystem will define the real implementation
-of these APIs, and populate an instance of subsystem_driver_api structure using
-the :c:macro:`DEVICE_API()` wrapper:
+实现某个子系统的驱动会提供这些 API 的实际实现，并使用 :c:macro:`DEVICE_API()` 包装后，填充一个 subsystem_driver_api 结构实例：
 
 .. code-block:: C
 
@@ -173,43 +132,33 @@ the :c:macro:`DEVICE_API()` wrapper:
         .do_that = my_driver_do_that,
   };
 
-The driver would then pass ``my_driver_api_funcs`` as the ``api`` argument to
-``DEVICE_DEFINE()``.
+随后，驱动会将 ``my_driver_api_funcs`` 作为 ``DEVICE_DEFINE()`` 的 ``api`` 参数传入。
 
 .. note::
 
-        Since pointers to the API functions are referenced in the ``api``
-        struct, they will always be included in the binary even if unused;
-        ``gc-sections`` linker option will always see at least one reference to
-        them. Providing for link-time size optimizations with driver APIs in
-        most cases requires that the optional feature be controlled by a
-        Kconfig option.
+        由于 ``api`` 结构中持有 API 函数的指针，这些函数即使未被使用，也会被链接进二进制；链接器选项 ``gc-sections`` 总能看到至少一次引用。若希望通过链接期优化缩小体积，通常需要用 Kconfig 选项控制这些可选特性。
 
-Device-Specific API Extensions
-******************************
+设备特定 API 扩展
+******************
 
-Some devices can be cast as an instance of a driver subsystem such as GPIO,
-but provide additional functionality that cannot be exposed through the
-standard API.  These devices combine subsystem operations with
-device-specific APIs, described in a device-specific header.
+有些设备可被抽象为某个子系统（如 GPIO）的一个实例，但同时又提供标准 API 无法覆盖的额外能力。此时设备会将子系统操作与其设备特定的 API 结合，相关 API 通常在设备专用头文件中声明。
 
-A device-specific API definition typically looks like this:
+一个设备特定 API 的定义通常如下：
 
 .. code-block:: C
 
    #include <zephyr/drivers/subsystem.h>
 
-   /* When extensions need not be invoked from user mode threads */
+   /* 当扩展无需从用户态线程调用时 */
    int specific_do_that(const struct device *dev, int foo);
 
-   /* When extensions must be invokable from user mode threads */
+   /* 当扩展需要可由用户态线程调用时 */
    __syscall int specific_from_user(const struct device *dev, int bar);
 
-   /* Only needed when extensions include syscalls */
+   /* 仅当扩展包含系统调用时需要 */
    #include <zephyr/syscalls/specific.h>
 
-A driver implementing extensions to the subsystem will define the real
-implementation of both the subsystem API and the specific APIs:
+为子系统提供扩展的驱动将同时实现子系统 API 与这些特定 API：
 
 .. code-block:: C
 
@@ -224,13 +173,13 @@ implementation of both the subsystem API and the specific APIs:
       ...
    };
 
-   /* supervisor-only API is globally visible */
+   /* 仅特权态可用的 API 为全局可见 */
    int specific_do_that(const struct device *dev, int foo)
    {
       ...
    }
 
-   /* syscall API passes through a translation */
+   /* 系统调用 API 通过封装进行传递 */
    int z_impl_specific_from_user(const struct device *dev, int bar)
    {
       ...
@@ -243,36 +192,26 @@ implementation of both the subsystem API and the specific APIs:
    int z_vrfy_specific_from_user(const struct device *dev, int bar)
    {
        K_OOPS(K_SYSCALL_SPECIFIC_DRIVER(dev, K_OBJ_DRIVER_GENERIC, &api));
-       return z_impl_specific_do_that(dev, bar)
+      return z_impl_specific_do_that(dev, bar);
    }
 
    #include <zephyr/syscalls/specific_from_user_mrsh.c>
 
    #endif /* CONFIG_USERSPACE */
 
-Applications use the device through both the subsystem and specific
-APIs.
+应用可同时通过子系统 API 与设备特定 API 来使用该设备。
 
 .. note::
-   Public API for device-specific extensions should be prefixed with the
-   compatible for the device to which it applies.  For example, if
-   adding special functions to support the Maxim DS3231 the identifier
-   fragment ``specific`` in the examples above would be ``maxim_ds3231``.
+   设备特定扩展的公共 API 应以前缀标识其适用设备的 compatible。比如为 Maxim DS3231 提供专用函数时，上述示例中的标识片段 ``specific`` 应替换为 ``maxim_ds3231``。
 
-Single Driver, Multiple Instances
-*********************************
+单个驱动的多实例
+******************
 
-Some drivers may be instantiated multiple times in a given system. For example
-there can be multiple GPIO banks, or multiple UARTS. Each instance of the driver
-will have a different ``config`` struct and ``data`` struct.
+某些驱动在一个系统中可能会被多次实例化。例如可能存在多个 GPIO 组或多个 UART。每个驱动实例有各自不同的 ``config`` 与 ``data`` 结构。
 
-Configuring interrupts for multiple drivers instances is a special case. If each
-instance needs to configure a different interrupt line, this can be accomplished
-through the use of per-instance configuration functions, since the parameters
-to ``IRQ_CONNECT()`` need to be resolvable at build time.
+为多个驱动实例配置中断是一个特殊情形：若每个实例需要配置不同的中断线，则可通过“每实例配置函数”来实现，因为传给 ``IRQ_CONNECT()`` 的参数必须在构建期即可解析。
 
-For example, let's say we need to configure two instances of ``my_driver``, each
-with a different interrupt line. In ``drivers/subsystem/subsystem_my_driver.h``:
+例如，需要为两个 ``my_driver`` 实例配置不同的中断线，可在 ``drivers/subsystem/subsystem_my_driver.h`` 中：
 
 .. code-block:: C
 
@@ -283,13 +222,13 @@ with a different interrupt line. In ``drivers/subsystem/subsystem_my_driver.h``:
         my_driver_config_irq_t config_func;
   };
 
-In the implementation of the common init function:
+在公共 init 函数的实现中：
 
 .. code-block:: C
 
   void my_driver_isr(const struct device *dev)
   {
-        /* Handle interrupt */
+        /* 处理中断 */
         ...
   }
 
@@ -299,7 +238,7 @@ In the implementation of the common init function:
 
         DEVICE_MMIO_MAP(dev, K_MEM_CACHE_NONE);
 
-        /* Do other initialization stuff */
+        /* 进行其他初始化动作 */
         ...
 
         config->config_func(dev);
@@ -307,7 +246,7 @@ In the implementation of the common init function:
         return 0;
   }
 
-Then when the particular instance is declared:
+随后在声明具体实例时：
 
 .. code-block:: C
 
@@ -334,56 +273,30 @@ Then when the particular instance is declared:
 
   #endif /* CONFIG_MY_DRIVER_0 */
 
-Note the use of ``DEVICE_DECLARE()`` to avoid a circular dependency on providing
-the IRQ handler argument and the definition of the device itself.
+注意这里使用了 ``DEVICE_DECLARE()``，以避免在提供 IRQ 处理函数参数与设备自身定义之间产生循环依赖。
 
-Initialization Levels
-*********************
+初始化等级
+**********
 
-Drivers may depend on other drivers being initialized first, or require
-the use of kernel services. :c:func:`DEVICE_DEFINE()` and related APIs
-allow the user to specify at what time during the boot sequence the init
-function will be executed. Any driver will specify one of three
-initialization levels:
+驱动可能依赖其他驱动先被初始化，或需要使用内核服务。:c:func:`DEVICE_DEFINE()` 及相关 API 允许指定初始化函数在引导序列中的执行时机。任何驱动都应选择以下三个初始化等级之一：
 
 ``PRE_KERNEL_1``
-        Used for devices that have no dependencies, such as those that rely
-        solely on hardware present in the processor/SOC. These devices cannot
-        use any kernel services during configuration, since the kernel services are
-        not yet available. The interrupt subsystem will be configured however
-        so it's OK to set up interrupts. Init functions at this level run on the
-        interrupt stack.
+        适用于无依赖的设备，例如只依赖处理器/SoC 上硬件的设备。此等级配置阶段无法使用任何内核服务（尚不可用）。但中断子系统会完成配置，因此可以设置中断。该等级的初始化函数在中断栈上运行。
 
 ``PRE_KERNEL_2``
-        Used for devices that rely on the initialization of devices initialized
-        as part of the ``PRE_KERNEL_1`` level. These devices cannot use any kernel
-        services during configuration, since the kernel services are not yet
-        available. Init functions at this level run on the interrupt stack.
+        适用于依赖 ``PRE_KERNEL_1`` 等级初始化完成的设备。此等级配置阶段同样无法使用内核服务。该等级的初始化函数在中断栈上运行。
 
 ``POST_KERNEL``
-        Used for devices that require kernel services during configuration.
-        Init functions at this level run in context of the kernel main task.
+        适用于在配置期间需要内核服务的设备。该等级的初始化函数在内核主任务上下文中运行。
 
-Within each initialization level you may specify a priority level, relative to
-other devices in the same initialization level. The priority level is specified
-as an integer value in the range 0 to 999; lower values indicate earlier
-initialization.  The priority level must be a decimal integer literal without
-leading zeroes or sign (e.g. 32), or an equivalent symbolic name (e.g.
-``\#define MY_INIT_PRIO 32``); symbolic expressions are *not* permitted (e.g.
-``CONFIG_KERNEL_INIT_PRIORITY_DEFAULT + 5``).
+在每个初始化等级内，还可以指定相对于同等级其他设备的优先级。优先级为 0 到 999 的整数，数值越小表示越早初始化。优先级必须为不带前导零和符号的十进制整数字面量（例如 32），或等价的符号名称（例如 ``#define MY_INIT_PRIO 32``）；不允许使用表达式（例如 ``CONFIG_KERNEL_INIT_PRIORITY_DEFAULT + 5``）。
 
-Drivers and other system utilities can determine whether startup is
-still in pre-kernel states by using the :c:func:`k_is_pre_kernel`
-function.
+驱动及其他系统工具可以通过 :c:func:`k_is_pre_kernel` 判断启动是否仍处于 pre-kernel 阶段。
 
-Deferred initialization
-***********************
+延迟初始化
+**********
 
-Initialization of devices can also be deferred to a later time. In this case,
-the device is not automatically initialized by Zephyr at boot time. Instead,
-the device is initialized when the application calls :c:func:`device_init`.
-To defer a device driver initialization, add the property ``zephyr,deferred-init``
-to the associated device node in the DTS file. For example:
+设备初始化也可以被延后执行。在这种情况下，设备不会在 Zephyr 启动时自动初始化，而是在应用调用 :c:func:`device_init` 时才进行初始化。若需延后某个设备驱动的初始化，可在对应 DTS 设备节点上添加属性 ``zephyr,deferred-init``。例如：
 
 .. code-block:: devicetree
 
@@ -394,82 +307,52 @@ to the associated device node in the DTS file. For example:
            };
    };
 
-System Drivers
+系统级驱动
+**********
+
+在某些场景，你只需要在启动时运行一个函数。此时可使用 :c:macro:`SYS_INIT`。该宏不接收任何配置或运行期数据结构，且无法在后续通过名称获取设备指针。初始化等级与优先级的策略与设备驱动保持一致。
+
+检查初始化序列
 **************
 
-In some cases you may just need to run a function at boot. For such cases, the
-:c:macro:`SYS_INIT` can be used. This macro does not take any config or runtime
-data structures and there isn't a way to later get a device pointer by name. The
-same device policies for initialization level and priority apply.
+使用 :c:macro:`DEVICE_DEFINE`（或其变体）与 :c:macro:`SYS_INIT` 声明的设备驱动会在启动时被处理，并按照指定的等级与优先级顺序调用对应的初始化函数。
 
-Inspecting the initialization sequence
-**************************************
+有时需要查看链接器最终生成的初始化调用序列。可以使用 ``initlevels`` 这个 CMake 目标，例如执行 ``west build -t initlevels``。
 
-Device drivers declared with :c:macro:`DEVICE_DEFINE` (or any variations of it)
-and :c:macro:`SYS_INIT` are processed at boot time and the corresponding
-initialization functions are called sequentially according to their specified
-level and priority.
+错误处理
+********
 
-Sometimes it's useful to inspect the final sequence of initialization function
-call as produced by the linker. To do that, use the ``initlevels`` CMake
-target, for example ``west build -t initlevels``.
+通常建议优先使用 ``__ASSERT()`` 宏，而不是传播返回值，除非这是运行过程中预期会出现的失败（例如存储设备写满）。对于错误参数、编程失误、一致性检查、不可恢复的异常等情况，应通过断言处理。
 
-Error handling
-**************
-
-In general, it's best to use ``__ASSERT()`` macros instead of
-propagating return values unless the failure is expected to occur
-during the normal course of operation (such as a storage device
-full). Bad parameters, programming errors, consistency checks,
-pathological/unrecoverable failures, etc., should be handled by
-assertions.
-
-When it is appropriate to return error conditions for the caller to
-check, 0 should be returned on success and a POSIX :file:`errno.h` code
-returned on failure.  See
+当确有必要将错误条件返回给调用方时，成功返回 0，失败返回 POSIX :file:`errno.h` 中的错误码。详见：
 https://github.com/zephyrproject-rtos/zephyr/wiki/Naming-Conventions#return-codes
-for details about this.
 
-Memory Mapping
-**************
+内存映射
+********
 
-On some systems, the linear address of peripheral memory-mapped I/O (MMIO)
-regions cannot be known at build time:
+在某些系统上，外设 MMIO（内存映射 I/O）的线性地址无法在构建期确定：
 
-- The I/O ranges must be probed at runtime from the bus, such as with
-  PCI express
-- A memory management unit (MMU) is active, and the physical address of
-  the MMIO range must be mapped into the page tables at some virtual
-  memory location determined by the kernel.
+- 需要在运行期通过总线（如 PCIe）探测 I/O 范围；
+- 系统启用了 MMU，MMIO 的物理地址需要由内核映射到页表中的某个虚拟地址。
 
-These systems must maintain storage for the MMIO range within RAM and
-establish the mapping within the driver's init function. Other systems
-do not care about this and can use MMIO physical addresses directly from
-DTS and do not need any RAM-based storage for it.
+这类系统需要在 RAM 中为 MMIO 区域保留存储，并在驱动的初始化函数中建立映射。其他系统则可直接使用来自 DTS 的 MMIO 物理地址，无需任何 RAM 存储。
 
-For drivers that may need to deal with this situation, a set of
-APIs under the DEVICE_MMIO scope are defined, along with a mapping function
-:c:func:`device_map`.
+为可能遇到此类情况的驱动，提供了 DEVICE_MMIO 作用域下的一组 API，以及映射函数 :c:func:`device_map`。
 
-Device Model Drivers with one MMIO region
-=========================================
+单个 MMIO 区域的设备模型驱动
+==============================
 
-The simplest case is for drivers which need to maintain one MMIO region.
-These drivers will need to use the ``DEVICE_MMIO_ROM`` and
-``DEVICE_MMIO_RAM`` macros in the definitions for their ``config_info``
-and ``driver_data`` structures, with initialization of the ``config_info``
-from DTS using ``DEVICE_MMIO_ROM_INIT``. A call to ``DEVICE_MMIO_MAP()``
-is made within the init function:
+最简单的情形是驱动仅需要维护一个 MMIO 区域。此时需在 ``config_info`` 与 ``driver_data`` 结构的定义中分别使用 ``DEVICE_MMIO_ROM`` 与 ``DEVICE_MMIO_RAM`` 宏，并通过 ``DEVICE_MMIO_ROM_INIT`` 从 DTS 初始化 ``config_info``。在 init 函数中调用 ``DEVICE_MMIO_MAP()``：
 
 .. code-block:: C
 
    struct my_driver_config {
-      DEVICE_MMIO_ROM; /* Must be first */
+      DEVICE_MMIO_ROM; /* 必须置于首位 */
       ...
    }
 
    struct my_driver_dev_data {
-      DEVICE_MMIO_RAM; /* Must be first */
+      DEVICE_MMIO_RAM; /* 必须置于首位 */
       ...
    }
 
@@ -488,42 +371,34 @@ is made within the init function:
    int my_driver_some_function(const struct device *dev)
    {
       ...
-      /* Write some data to the MMIO region */
+      /* 向 MMIO 区域写入数据 */
       sys_write32(0xDEADBEEF, DEVICE_MMIO_GET(dev));
       ...
    }
 
-The particular expansion of these macros depends on configuration. On
-a device with no MMU or PCI-e, ``DEVICE_MMIO_MAP`` and
-``DEVICE_MMIO_RAM`` expand to nothing.
+这些宏的具体展开取决于配置。在没有 MMU 或 PCIe 的设备上，``DEVICE_MMIO_MAP`` 与 ``DEVICE_MMIO_RAM`` 将不产生实际代码。
 
-Device Model Drivers with multiple MMIO regions
-===============================================
+具有多个 MMIO 区域的设备模型驱动
+================================
 
-Some drivers may have multiple MMIO regions. In addition, some drivers
-may already be implementing a form of inheritance which requires some other
-data to be placed first in the  ``config_info`` and ``driver_data``
-structures.
+有些驱动可能拥有多个 MMIO 区域。另外，有些驱动已经实现了类似“继承”的结构，需要在 ``config_info`` 与 ``driver_data`` 结构中将其他数据放在更前位置。
 
-This can be managed with the ``DEVICE_MMIO_NAMED`` variant macros. These
-require that ``DEV_CFG()`` and ``DEV_DATA()`` macros be defined to obtain
-a properly typed pointer to the driver's config_info or dev_data structs.
-For example:
+可以使用 ``DEVICE_MMIO_NAMED`` 系列宏来处理。这需要定义 ``DEV_CFG()`` 与 ``DEV_DATA()`` 宏，以便获得类型正确的 config_info 或 dev_data 指针。例如：
 
 .. code-block:: C
 
    struct my_driver_config {
       ...
-    	DEVICE_MMIO_NAMED_ROM(corge);
-   	DEVICE_MMIO_NAMED_ROM(grault);
+	DEVICE_MMIO_NAMED_ROM(corge);
+	DEVICE_MMIO_NAMED_ROM(grault);
       ...
    }
 
    struct my_driver_dev_data {
-  	   ...
-   	DEVICE_MMIO_NAMED_RAM(corge);
-   	DEVICE_MMIO_NAMED_RAM(grault);
-   	...
+	   ...
+	DEVICE_MMIO_NAMED_RAM(corge);
+	DEVICE_MMIO_NAMED_RAM(grault);
+	...
    }
 
    #define DEV_CFG(_dev) \
@@ -550,17 +425,16 @@ For example:
    int my_driver_some_function(const struct device *dev)
    {
       ...
-      /* Write some data to the MMIO regions */
+      /* 向多个 MMIO 区域写入数据 */
       sys_write32(0xDEADBEEF, DEVICE_MMIO_GET(dev, grault));
       sys_write32(0xF0CCAC1A, DEVICE_MMIO_GET(dev, corge));
       ...
    }
 
-Device Model Drivers with multiple MMIO regions in the same DT node
-===================================================================
+同一 DT 节点下具有多个 MMIO 区域的设备模型驱动
+=============================================
 
-Some drivers may have multiple MMIO regions defined into the same DT device
-node using the ``reg-names`` property to differentiate them, for example:
+有些驱动会在同一 DT 设备节点下定义多个 MMIO 区域，并通过 ``reg-names`` 属性加以区分，例如：
 
 .. code-block:: devicetree
 
@@ -574,9 +448,7 @@ node using the ``reg-names`` property to differentiate them, for example:
            };
    };
 
-This can be managed as seen in the previous section but this time using the
-``DEVICE_MMIO_NAMED_ROM_INIT_BY_NAME`` macro instead. So the only difference
-would be in the driver config struct:
+此情形与上一节类似，但需要改用 ``DEVICE_MMIO_NAMED_ROM_INIT_BY_NAME`` 宏。也就是说，差异仅出现在驱动配置结构中：
 
 .. code-block:: C
 
@@ -587,15 +459,12 @@ would be in the driver config struct:
       ...
    }
 
-Drivers that do not use Zephyr Device Model
-===========================================
+不使用 Zephyr 设备模型的驱动
+============================
 
-Some drivers or driver-like code may not use Zephyr's device model,
-and alternative storage must be arranged for the MMIO data. An
-example of this are timer drivers, or interrupt controller code.
+某些驱动或类驱动代码可能不使用 Zephyr 的设备模型，此时必须为 MMIO 数据安排替代性存储。例如定时器驱动或中断控制器代码。
 
-This can be managed with the ``DEVICE_MMIO_TOPLEVEL`` set of macros,
-for example:
+可以使用 ``DEVICE_MMIO_TOPLEVEL`` 宏族来处理，例如：
 
 .. code-block:: C
 
@@ -614,12 +483,10 @@ for example:
       ...
    }
 
-Drivers that do not use DTS
-===========================
+不使用 DTS 的驱动
+=================
 
-Some drivers may not obtain the MMIO physical address from DTS, such as
-is the case with PCI-E. In this case the :c:func:`device_map` function
-may be used directly:
+有些驱动（如 PCIe 场景）不会从 DTS 获取 MMIO 物理地址。此时可直接使用 :c:func:`device_map`：
 
 .. code-block:: C
 
@@ -633,9 +500,9 @@ may be used directly:
       ...
    }
 
-For these cases, DEVICE_MMIO_ROM directives may be omitted.
+对于这类情况，可省略 DEVICE_MMIO_ROM 相关指示。
 
-API Reference
-**************
+API 参考
+********
 
 .. doxygengroup:: device_model

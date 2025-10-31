@@ -1,14 +1,11 @@
 .. _usermode_api:
 
-User Mode
-#########
+用户态（User Mode）
+##################
 
-Zephyr offers the capability to run threads at a reduced privilege level
-which we call user mode. The current implementation is designed for devices
-with MPU hardware.
+Zephyr 支持以降低的特权级运行线程，这被称为“用户态（user mode）”。当前实现主要针对具备 MPU 硬件的设备设计。
 
-For details on creating threads that run in user mode, please see
-:ref:`lifecycle_v2`.
+如何创建在用户态运行的线程，请参见 :ref:`lifecycle_v2`。
 
 .. toctree::
     :maxdepth: 2

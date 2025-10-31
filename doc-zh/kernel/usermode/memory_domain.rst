@@ -1,216 +1,102 @@
 .. _memory_domain:
 
-Memory Protection Design
-########################
+内存保护设计
+############
 
-Zephyr's memory protection design is geared towards microcontrollers with MPU
-(Memory Protection Unit) hardware. We do support some architectures, such as x86,
-which have a paged MMU (Memory Management Unit), but in that case the MMU is
-used like an MPU with an identity page table.
+Zephyr 的内存保护设计主要面向带有 MPU（内存保护单元）的微控制器。我们也支持部分具有分页 MMU（内存管理单元）的架构（如 x86），但在这种情况下，MMU 以“恒等页表”的方式被当作 MPU 使用。
 
-All of the discussion below will be using MPU terminology; systems with MMUs
-can be considered to have an MPU with an unlimited number of programmable
-regions.
+下文统一采用 MPU 术语进行描述；具备 MMU 的系统可等效理解为“拥有无限可编程区域数量的 MPU”。
 
-There are a few different levels on how memory access is configured when
-Zephyr memory protection features are enabled, which we will describe here:
+启用 Zephyr 的内存保护功能后，内存访问的配置可分多层进行，主要包括：
 
-Boot Time Memory Configuration
-******************************
-
-This is the configuration of the MPU after the kernel has started up. It should
-contain the following:
-
-- Any configuration of memory regions which need to have special caching or
-  write-back policies for basic hardware and driver function. Note that most
-  MPUs have the concept of a default memory access policy map, which can be
-  enabled as a "background" mapping for any area of memory that doesn't
-  have an MPU region configuring it. It is strongly recommended to use this
-  to maximize the number of available MPU regions for the end user. On
-  ARMv7-M/ARMv8-M this is called the System Address Map, other CPUs may
-  have similar capabilities. See :ref:`mem_mgmt_api` for information on
-  how to annotate the system map in the device tree.
-
-- A read-only, executable region or regions for program text and ro-data, that
-  is accessible to user mode. This could be further sub-divided into a
-  read-only region for ro-data, and a read-only, executable region for text, but
-  this will require an additional MPU region. This is required so that
-  threads running in user mode can read ro-data and fetch instructions.
-
-- Depending on configuration, user-accessible read-write regions to support
-  extra features like GCOV, HEP, etc.
-
-Assuming there is a background map which allows supervisor mode to access any
-memory it needs, and regions are defined which grant user mode access to
-text/ro-data, this is sufficient for the boot time configuration.
-
-Hardware Stack Overflow
-***********************
-
-:kconfig:option:`CONFIG_HW_STACK_PROTECTION` is an optional feature which detects stack
-buffer overflows when the system is running in supervisor mode. This
-catches issues when the entire stack buffer has overflowed, and not
-individual stack frames, use compiler-assisted :kconfig:option:`CONFIG_STACK_CANARIES`
-for that.
-
-Like any crash in supervisor mode, no guarantees can be made about the overall
-health of the system after a supervisor mode stack overflow, and any instances
-of this should be treated as a serious error. However it's still very useful to
-know when these overflows happen, as without robust detection logic the system
-will either crash in mysterious ways or behave in an undefined manner when the
-stack buffer overflows.
-
-Some systems implement this feature by creating at runtime a 'guard' MPU region
-which is set to be read-only and is at either the beginning or immediately
-preceding the supervisor mode stack buffer.  If the stack overflows an
-exception will be generated.
-
-This feature is optional and is not required to catch stack overflows in user
-mode; disabling this may free 1-2 MPU regions depending on the MPU design.
-
-Other systems may have dedicated CPU support for catching stack overflows
-and no extra MPU regions will be required.
-
-Thread Stack
-************
-
-Any thread running in user mode will need access to its own stack buffer.
-On context switch into a user mode thread, a dedicated MPU region or MMU
-page table entries will be programmed with the bounds of the stack buffer.
-A thread exceeding its stack buffer will start pushing data onto memory
-it doesn't have access to and a memory access violation exception will be
-generated.
-
-Note that user threads have access to the stacks of other user threads in
-the same memory domain. This is the minimum required for architectures to
-support memory domains. Architecture can further restrict access to stacks
-so each user thread only has access to its own stack if such architecture
-advertises this capability via
-:kconfig:option:`CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_ISOLATED_STACKS`.
-This behavior is enabled by default if supported and can be selectively
-disabled via :kconfig:option:`CONFIG_MEM_DOMAIN_ISOLATED_STACKS` if
-architecture supports both operating modes. However, some architectures
-may decide to enable this all the time, and thus this option cannot be
-disabled. Regardless of these kconfigs, user threads cannot access
-the stacks of other user threads outside of their memory domains.
-
-Thread Resource Pools
-*********************
-
-A small subset of kernel APIs, invoked as system calls, require heap memory
-allocations. This memory is used only by the kernel and is not accessible
-directly by user mode. In order to use these system calls, invoking threads
-must assign themselves to a resource pool, which is a :c:struct:`k_heap`
-object. Memory is drawn from a thread's resource pool using
-:c:func:`z_thread_malloc` and freed with :c:func:`k_free`.
-
-The APIs which use resource pools are as follows, with any alternatives
-noted for users who do not want heap allocations within their application:
-
- - :c:func:`k_stack_alloc_init` sets up a k_stack with its storage
-   buffer allocated out of a resource pool instead of a buffer provided by the
-   user. An alternative is to declare k_stacks that are automatically
-   initialized at boot with :c:macro:`K_STACK_DEFINE()`, or to initialize the
-   k_stack in supervisor mode with :c:func:`k_stack_init`.
-
- - :c:func:`k_msgq_alloc_init` sets up a k_msgq object with its
-   storage buffer allocated out of a resource pool instead of a buffer provided
-   by the user. An alternative is to declare a k_msgq that is automatically
-   initialized at boot with :c:macro:`K_MSGQ_DEFINE()`, or to initialize the
-   k_msgq in supervisor mode with :c:func:`k_msgq_init`.
-
- - :c:func:`k_poll` when invoked from user mode, needs to make a kernel-side
-   copy of the provided events array while waiting for an event. This copy is
-   freed when :c:func:`k_poll` returns for any reason.
-
- - :c:func:`k_queue_alloc_prepend` and :c:func:`k_queue_alloc_append`
-   allocate a container structure to place the data in, since the internal
-   bookkeeping information that defines the queue cannot be placed in the
-   memory provided by the user.
-
- - :c:func:`k_object_alloc` allows for entire kernel objects to be
-   dynamically allocated at runtime and a usable pointer to them returned to
-   the caller.
-
-The relevant API is :c:func:`k_thread_heap_assign` which assigns
-a k_heap to draw these allocations from for the target thread.
-
-If the system heap is enabled, then the system heap may be used with
-:c:func:`k_thread_system_pool_assign`, but it is preferable for different
-logical applications running on the system to have their own pools.
-
-Memory Domains
+引导期内存配置
 **************
 
-The kernel ensures that any user thread will have access to its own stack
-buffer, plus program text and read-only data. The memory domain APIs are the
-way to grant access to additional blocks of memory to a user thread.
+这是内核启动后对 MPU 的初始配置，应包含：
 
-Conceptually, a memory domain is a collection of some number of memory
-partitions. The maximum number of memory partitions in a domain
-is limited by the number of available MPU regions. This is why it is important
-to minimize the number of boot-time MPU regions.
+- 对部分内存区域进行特殊缓存/回写策略的配置，以满足基础硬件与驱动的需求。注意，大多数 MPU 提供默认内存访问策略映射的概念，可作为“背景”映射启用，用于那些没有被显式 MPU 区域覆盖的内存。强烈建议启用背景映射，以最大化留给最终应用使用的 MPU 区域数量。在 ARMv7-M/ARMv8-M 上，这称为 System Address Map；其他 CPU 也可能有类似能力。参见 :ref:`mem_mgmt_api` 了解如何在设备树中标注系统映射。
 
-Memory domains are *not* intended to control access to memory from supervisor
-mode. In some cases this may be unavoidable; for example some architectures do
-not allow for the definition of regions which are read-only to user mode but
-read-write to supervisor mode. A great deal of care must be taken when working
-with such regions to not unintentionally cause the kernel to crash when
-accessing such a region. Any attempt to use memory domain APIs to control
-supervisor mode access is at best undefined behavior; supervisor mode access
-policy is only intended to be controlled by boot-time memory regions.
+- 为程序文本与 ro-data 配置用户态可访问的只读（文本还需可执行）区域。也可进一步将 ro-data 与文本分别放入不同的只读/只读可执行区域，但这会多消耗一个 MPU 区域。用户态线程需要能够读取 ro-data 并取指执行。
 
-Memory domain APIs are only available to supervisor mode. The only control
-user mode has over memory domains is that any user thread's child threads
-will automatically become members of the parent's domain.
+- 视配置而定，提供用户可访问的读写区域以支持 GCOV、HEP 等额外特性。
 
-All threads are members of a memory domain, including supervisor threads
-(even though this has no implications on their memory access). There is a
-default domain ``k_mem_domain_default`` which will be assigned to threads if
-they have not been specifically assigned to a domain, or inherited a memory
-domain membership from their parent thread. The main thread starts as a
-member of the default domain.
+若已启用允许特权态访问任意内存的背景映射，并定义了授予用户态访问文本/ro-data 的区域，则上述内容即可满足引导期配置的基本需求。
 
-Memory Partitions
-=================
+硬件栈溢出
+**********
 
-Each memory partition consists of a memory address, a size,
-and access attributes. It is intended that memory partitions are used to
-control access to system memory. Defining memory partitions are subject
-to the following constraints:
+:kconfig:option:`CONFIG_HW_STACK_PROTECTION` 是一个可选特性，用于在系统处于特权态运行时检测栈缓冲溢出。该特性检测的是整个栈缓冲的溢出，而非单个栈帧；后者可使用编译器辅助的 :kconfig:option:`CONFIG_STACK_CANARIES`。
 
-- The partition must represent a memory region that can be programmed by
-  the underlying memory management hardware, and needs to conform to any
-  underlying hardware constraints. For example, many MPU-based systems require
-  that partitions be sized to some power of two, and aligned to their own
-  size. For MMU-based systems, the partition must be aligned to a page and
-  the size some multiple of the page size.
+与其他特权态崩溃类似，特权态栈溢出后无法保证系统整体健康性，因此应视为严重错误。不过，及时获知发生了溢出仍然非常有价值；若缺乏稳健的检测逻辑，栈溢出会导致系统以难以捉摸的方式崩溃或进入未定义行为。
 
-- Partitions within the same memory domain may not overlap each other. There is
-  no notion of precedence among partitions within a memory domain.  Partitions
-  within a memory domain are assumed to have a higher precedence than any
-  boot-time memory regions, however whether a memory domain partition can
-  overlap a boot-time memory region is architecture specific.
+某些系统通过在运行期创建一个只读的“守护”MPU 区域来实现该特性，该区域位于特权态栈缓冲的开始处或紧邻其前方；当栈溢出时会触发异常。
 
-- The same partition may be specified in multiple memory domains. For example
-  there may be a shared memory area that multiple domains grant access to.
+该特性对检测用户态栈溢出并非必需；禁用它可视 MPU 设计释放 1-2 个 MPU 区域。
 
-- Care must be taken in determining what memory to expose in a partition.
-  It is not appropriate to provide direct user mode access to any memory
-  containing private kernel data.
+也有系统由 CPU 提供专用的栈溢出检测支持，无需额外 MPU 区域。
 
-- Memory domain partitions are intended to control access to system RAM.
-  Configuration of memory partitions which do not correspond to RAM
-  may not be supported by the architecture; this is true for MMU-based systems.
+线程栈
+******
 
-There are two ways to define memory partitions: either manually or
-automatically.
+任何在用户态运行的线程都需要访问其自身的栈缓冲。在切换到用户态线程的上下文时，会为该线程配置一个专用的 MPU 区域或 MMU 页表项，边界即为其栈缓冲范围。若线程越界使用栈缓冲，会向其无权访问的内存写入数据，从而触发内存访问违规异常。
 
-Manual Memory Partitions
-------------------------
+注意：同一内存域中的用户线程可以访问彼此的栈。这是架构支持内存域的最低要求。架构可以进一步限制对栈的访问，使每个用户线程仅能访问自己的栈；若某架构支持该能力，可通过 :kconfig:option:`CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_ISOLATED_STACKS` 进行声明。若支持，该行为默认启用；若架构同时支持两种模式，可通过 :kconfig:option:`CONFIG_MEM_DOMAIN_ISOLATED_STACKS` 选择性禁用。然而，部分架构可能始终强制启用该行为，此时该选项无法禁用。无论这些 Kconfig 如何设定，用户线程都不能访问其内存域之外的其他用户线程的栈。
 
-The following code declares a global array ``buf``, and then declares
-a read-write partition for it which may be added to a domain:
+线程资源池
+**********
+
+少量以系统调用形式暴露的内核 API 需要进行堆内存分配。这些内存仅供内核使用，用户态无法直接访问。要使用这类系统调用，调用线程必须先为自身指定资源池（:c:struct:`k_heap` 对象）。内存通过 :c:func:`z_thread_malloc` 从线程的资源池中分配，并通过 :c:func:`k_free` 释放。
+
+使用资源池的 API 如下；对于不希望在应用中使用堆分配的场景，也给出了可选方案：
+
+ - :c:func:`k_stack_alloc_init` 用来自资源池的存储缓冲初始化 k_stack，而不是使用用户提供的缓冲。可替代方案：使用 :c:macro:`K_STACK_DEFINE()` 在引导期自动初始化，或在特权态下调用 :c:func:`k_stack_init` 初始化。
+
+ - :c:func:`k_msgq_alloc_init` 用来自资源池的存储缓冲初始化 k_msgq。可替代方案：使用 :c:macro:`K_MSGQ_DEFINE()` 在引导期自动初始化，或在特权态下调用 :c:func:`k_msgq_init` 初始化。
+
+ - :c:func:`k_poll` 在用户态调用时，需要在内核侧为事件数组创建一个副本用于等待事件；无论因何返回，该副本都会被释放。
+
+ - :c:func:`k_queue_alloc_prepend` 与 :c:func:`k_queue_alloc_append` 会为入队数据分配一个容器结构，因为用于描述队列的内部簿记信息不能放在用户提供的内存中。
+
+ - :c:func:`k_object_alloc` 允许在运行期动态分配整个内核对象，并返回可用指针给调用者。
+
+相关 API 为 :c:func:`k_thread_heap_assign`，用于为目标线程指定用于上述分配的 k_heap。
+
+若启用了系统堆，可通过 :c:func:`k_thread_system_pool_assign` 使用系统堆。但更推荐为系统上不同的逻辑应用分别定义自身的资源池。
+
+内存域（Memory Domains）
+***********************
+
+内核确保任一用户线程可访问其自身的栈缓冲，以及程序文本与只读数据。若需为用户线程授予更多内存访问权限，应使用内存域 API。
+
+概念上，内存域是若干个内存分区（partition）的集合。一个域内最多可包含的分区数量受限于可用的 MPU 区域数量，因此应尽量减少引导期消耗的 MPU 区域。
+
+内存域并非用于控制特权态的内存访问。在部分架构上这可能难以避免：例如某些架构不允许定义“用户态只读而特权态可读写”的区域。使用此类区域时需格外谨慎，避免在访问时无意导致内核崩溃。试图通过内存域 API 控制特权态访问，至多属于未定义行为；特权态访问策略仅应由引导期内存区域配置来控制。
+
+内存域 API 只对特权态可用。用户态对内存域唯一的影响是：任一用户线程的子线程将自动加入其父线程所属的内存域。
+
+所有线程都是某个内存域的成员，包括特权线程（尽管对其内存访问没有影响）。存在一个默认域 ``k_mem_domain_default``：若线程没有被显式指定到某个域，或未从父线程继承域成员关系，则将加入默认域。主线程从默认域成员开始运行。
+
+内存分区（Memory Partitions）
+============================
+
+每个内存分区由起始地址、大小与访问属性组成。内存分区用于控制对系统内存的访问。定义分区需要满足以下约束：
+
+- 分区必须表示一个可由底层内存管理硬件编程的内存区域，并符合其约束。例如，许多 MPU 系统要求分区的大小为 2 的幂，并按其自身大小对齐。对 MMU 系统，分区必须按页对齐，大小为页大小的整数倍。
+
+- 同一内存域内的分区不能互相重叠。内存域内的分区不存在“优先级”的概念。内存域内的分区通常被认为优先于任何引导期内存区域；但分区是否可以与引导期内存区域重叠取决于具体架构。
+
+- 同一个分区可以出现在多个内存域中。例如多个内存域可能都授予访问同一段共享内存。
+
+- 谨慎选择在分区中暴露的内存区域。不应向用户态直接开放包含内核私有数据的任何内存。
+
+- 内存域分区旨在控制对系统 RAM 的访问。对非 RAM 的区域进行内存分区配置可能不受架构支持；对 MMU 系统尤其如此。
+
+分区可通过两种方式定义：手动或自动。
+
+手动内存分区
+------------
+
+如下代码声明了一个全局数组 ``buf``，并为其声明了一个可读写的分区，可加入到内存域：
 
 .. code-block:: c
 
@@ -219,118 +105,83 @@ a read-write partition for it which may be added to a domain:
     K_MEM_PARTITION_DEFINE(my_partition, buf, sizeof(buf),
                            K_MEM_PARTITION_P_RW_U_RW);
 
-This does not scale particularly well when we are trying to contain multiple
-objects spread out across several C files into a single partition.
+当我们希望将分散在多个 C 文件中的多个对象纳入同一分区时，此方式可扩展性较差。
 
-Automatic Memory Partitions
----------------------------
+自动内存分区
+------------
 
-Automatic memory partitions are created by the build system. All globals
-which need to be placed inside a partition are tagged with their destination
-partition. The build system will then coalesce all of these into a single
-contiguous block of memory, zero any BSS variables at boot, and define
-a memory partition of appropriate base address and size which contains all
-the tagged data.
+自动内存分区由构建系统创建。所有需要置入分区的全局变量会被标注目标分区；构建系统随后把它们聚合为单个连续内存块，在引导时为 BSS 变量清零，并据此定义一个具有合适基地址与大小、容纳所有被标注数据的内存分区。
 
 .. figure:: auto_mem_domain.png
-   :alt: Automatic Memory Domain build flow
+   :alt: 自动内存域构建流程
    :align: center
 
-   Automatic Memory Domain build flow
+   自动内存域构建流程
 
-Automatic memory partitions are only configured as read-write
-regions. They are defined with :c:macro:`K_APPMEM_PARTITION_DEFINE()`.
-Global variables are then routed to this partition using
-:c:macro:`K_APP_DMEM()` for initialized data and :c:macro:`K_APP_BMEM()` for
-BSS.
+自动内存分区仅配置为读写区域。使用 :c:macro:`K_APPMEM_PARTITION_DEFINE()` 定义。已初始化的数据使用 :c:macro:`K_APP_DMEM()` 路由到该分区，BSS 数据使用 :c:macro:`K_APP_BMEM()`。
 
 .. code-block:: c
 
     #include <zephyr/app_memory/app_memdomain.h>
 
-    /* Declare a k_mem_partition "my_partition" that is read-write to
-     * user mode. Note that we do not specify a base address or size.
+    /* 声明一个对用户态读写的 k_mem_partition“my_partition”。
+     * 注意这里不指定基地址与大小。
      */
     K_APPMEM_PARTITION_DEFINE(my_partition);
 
-    /* The global variable var1 will be inside the bounds of my_partition
-     * and be initialized with 37 at boot.
-     */
+    /* 全局变量 var1 将位于 my_partition 内，且在引导时被初始化为 37。*/
     K_APP_DMEM(my_partition) int var1 = 37;
 
-    /* The global variable var2 will be inside the bounds of my_partition
-     * and be zeroed at boot size K_APP_BMEM() was used, indicating a BSS
-     * variable.
+    /* 全局变量 var2 将位于 my_partition 内，且在引导时被清零，
+     * 因为使用了 K_APP_BMEM()，表明其为 BSS 变量。
      */
     K_APP_BMEM(my_partition) int var2;
 
-The build system will ensure that the base address of ``my_partition`` will
-be properly aligned, and the total size of the region conforms to the memory
-management hardware requirements, adding padding if necessary.
+构建系统会确保 ``my_partition`` 的基地址满足对齐要求，总大小满足内存管理硬件约束，必要时添加填充（padding）。
 
-If multiple partitions are being created, a variadic preprocessor macro can be
-used as provided in ``app_macro_support.h``:
+若需要创建多个分区，可使用 ``app_macro_support.h`` 中提供的变参预处理宏：
 
 .. code-block:: c
 
     FOR_EACH(K_APPMEM_PARTITION_DEFINE, part0, part1, part2);
 
-Automatic Partitions for Static Library Globals
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+静态库全局的自动分区
+~~~~~~~~~~~~~~~~~~~~~~
 
-The build-time logic for setting up automatic memory partitions is in
-``scripts/build/gen_app_partitions.py``. If a static library is linked into Zephyr,
-it is possible to route all the globals in that library to a specific
-memory partition with the ``--library`` argument.
+设置自动内存分区的构建逻辑位于 ``scripts/build/gen_app_partitions.py``。若将某个静态库链接进 Zephyr，可通过 ``--library`` 参数把该库中的所有全局变量路由到特定分区。
 
-For example, if the Newlib C library is enabled, the Newlib globals all need
-to be placed in ``z_libc_partition``. The invocation of the script in the
-top-level ``CMakeLists.txt`` adds the following:
+例如启用了 Newlib C 库时，Newlib 的全局变量需放入 ``z_libc_partition``。在顶层 ``CMakeLists.txt`` 中对脚本的调用会加入如下参数：
 
 .. code-block:: none
 
     gen_app_partitions.py ... --library libc.a z_libc_partition ..
 
-For pre-compiled libraries there is no support for expressing this in the
-project-level configuration or build files; the toplevel ``CMakeLists.txt`` must
-be edited.
+对于预编译库，无法在项目级配置或构建文件中表达该需求；必须修改顶层 ``CMakeLists.txt``。
 
-For Zephyr libraries created using ``zephyr_library`` or ``zephyr_library_named``
-the ``zephyr_library_app_memory`` function can be used to specify the memory
-partition where all globals in the library should be placed.
+对于使用 ``zephyr_library`` 或 ``zephyr_library_named`` 创建的 Zephyr 库，可用 ``zephyr_library_app_memory`` 指定该库中所有全局变量应放入的内存分区。
 
 .. _memory_domain_predefined_partitions:
 
-Pre-defined Memory Partitions
------------------------------
+预定义内存分区
+--------------
 
-There are a few memory partitions which are pre-defined by the system:
+系统预定义了若干分区：
 
- - ``z_malloc_partition`` - This partition contains the system-wide pool of
-   memory used by libc malloc(). Due to possible starvation issues, it is
-   not recommended to draw heap memory from a global pool, instead
-   it is better to define various sys_heap objects and assign them
-   to specific memory domains.
+ - ``z_malloc_partition`` - libc malloc() 使用的系统级内存池所在分区。考虑到潜在的“饿死”问题，不推荐从全局池获取堆内存；更好的做法是定义多个 sys_heap 对象并将它们分配给特定内存域。
 
- - ``z_libc_partition`` - Contains globals required by the C library and runtime.
-   Required when using either the Minimal C library or the Newlib C Library.
-   Required when :kconfig:option:`CONFIG_STACK_CANARIES` is enabled.
+ - ``z_libc_partition`` - 包含 C 库与运行时需要的全局变量。使用 Minimal C 库或 Newlib C 库时需要该分区；启用 :kconfig:option:`CONFIG_STACK_CANARIES` 时也需要。
 
-Library-specific partitions are listed in ``include/app_memory/partitions.h``.
-For example, to use the MBEDTLS library from user mode, the
-``k_mbedtls_partition`` must be added to the domain.
+各库专属的分区在 ``include/app_memory/partitions.h`` 中列出。例如要在用户态使用 MBEDTLS 库，需要将 ``k_mbedtls_partition`` 加入相应内存域。
 
-Memory Domain Usage
-===================
+内存域使用方法
+==============
 
-Create a Memory Domain
-----------------------
+创建内存域
+----------
 
-A memory domain is defined using a variable of type
-:c:struct:`k_mem_domain`. It must then be initialized by calling
-:c:func:`k_mem_domain_init`.
+使用 :c:struct:`k_mem_domain` 定义内存域变量，随后调用 :c:func:`k_mem_domain_init` 初始化。
 
-The following code defines and initializes an empty memory domain.
+如下示例定义并初始化一个空的内存域：
 
 .. code-block:: c
 
@@ -338,17 +189,16 @@ The following code defines and initializes an empty memory domain.
 
     k_mem_domain_init(&app0_domain, 0, NULL);
 
-Add Memory Partitions into a Memory Domain
-------------------------------------------
+向内存域添加分区
+----------------
 
-There are two ways to add memory partitions into a memory domain.
+向内存域添加分区有两种方式。
 
-This first code sample shows how to add memory partitions while creating
-a memory domain.
+第一种是在创建内存域时一次性添加分区：
 
 .. code-block:: c
 
-    /* the start address of the MPU region needs to align with its size */
+    /* MPU 区域的起始地址需要按其大小对齐 */
     uint8_t __aligned(32) app0_buf[32];
     uint8_t __aligned(32) app1_buf[32];
 
@@ -365,12 +215,11 @@ a memory domain.
 
     k_mem_domain_init(&app0_domain, ARRAY_SIZE(app0_parts), app0_parts);
 
-This second code sample shows how to add memory partitions into an initialized
-memory domain one by one.
+第二种是在内存域初始化后逐个添加分区：
 
 .. code-block:: c
 
-    /* the start address of the MPU region needs to align with its size */
+    /* MPU 区域的起始地址需要按其大小对齐 */
     uint8_t __aligned(32) app0_buf[32];
     uint8_t __aligned(32) app1_buf[32];
 
@@ -384,72 +233,59 @@ memory domain one by one.
     k_mem_domain_add_partition(&app0_domain, &app0_part1);
 
 .. note::
-    The maximum number of memory partitions is limited by the maximum
-    number of MPU regions or the maximum number of MMU tables.
+    可配置的最大内存分区数量受可用 MPU 区域上限或可用 MMU 表项上限约束。
 
-Memory Domain Assignment
-------------------------
+内存域成员分配
+--------------
 
-Any thread may join a memory domain, and any memory domain may have multiple
-threads assigned to it. Threads are assigned to memory domains with an API
-call:
+任意线程都可以加入某个内存域；一个内存域也可以包含多个线程。通过如下 API 将线程分配到内存域：
 
 .. code-block:: c
 
     k_mem_domain_add_thread(&app0_domain, app_thread_id);
 
-If the thread was already a member of some other domain (including the
-default domain), it will be removed from it in favor of the new one.
+若该线程已经属于其他内存域（包括默认域），则会从原域移除并加入新域。
 
-In addition, if a thread is a member of a memory domain, and it creates a
-child thread, that thread will belong to the domain as well.
+此外，若某线程属于某内存域，则其创建的子线程也会属于该内存域。
 
-Remove a Memory Partition from a Memory Domain
-----------------------------------------------
+从内存域移除分区
+----------------
 
-The following code shows how to remove a memory partition from a memory
-domain.
+如下示例演示如何从内存域中移除一个分区：
 
 .. code-block:: c
 
     k_mem_domain_remove_partition(&app0_domain, &app0_part1);
 
-The k_mem_domain_remove_partition() API finds the memory partition
-that matches the given parameter and removes that partition from the
-memory domain.
+``k_mem_domain_remove_partition()`` 会找到与所给参数匹配的分区，并将其从内存域中移除。
 
-Available Partition Attributes
-------------------------------
+可用的分区属性
+--------------
 
-When defining a partition, we need to set access permission attributes
-to the partition. Since the access control of memory partitions relies on
-either an MPU or MMU, the available partition attributes would be architecture
-dependent.
+定义分区时，需要为其设置访问权限属性。由于分区访问控制依赖 MPU 或 MMU，可用的属性与架构相关。
 
-The complete list of available partition attributes for a specific architecture
-is found in the architecture-specific include file
-``include/zephyr/arch/<arch name>/arch.h``, (for example, ``include/zehpyr/arch/arm/arch.h``.)
-Some examples of partition attributes are:
+针对具体架构的分区属性完整列表可在对应架构头文件中找到：
+``include/zephyr/arch/<arch name>/arch.h``（例如 ``include/zephyr/arch/arm/arch.h``）。部分示例如下：
 
 .. code-block:: c
 
-    /* Denote partition is privileged read/write, unprivileged read/write */
+    /* 表示特权读写、非特权读写 */
     K_MEM_PARTITION_P_RW_U_RW
-    /* Denote partition is privileged read/write, unprivileged read-only */
+    /* 表示特权读写、非特权只读 */
     K_MEM_PARTITION_P_RW_U_RO
 
-In almost all cases ``K_MEM_PARTITION_P_RW_U_RW`` is the right choice.
+在几乎所有场合，``K_MEM_PARTITION_P_RW_U_RW`` 都是合适的选择。
 
-Configuration Options
-*********************
+配置选项
+********
 
-Related configuration options:
+相关配置项：
 
 * :kconfig:option:`CONFIG_MAX_DOMAIN_PARTITIONS`
 
-API Reference
-*************
+API 参考
+********
 
-The following memory domain APIs are provided by :zephyr_file:`include/zephyr/kernel.h`:
+以下内存域 API 由 :zephyr_file:`include/zephyr/kernel.h` 提供：
 
 .. doxygengroup:: mem_domain_apis

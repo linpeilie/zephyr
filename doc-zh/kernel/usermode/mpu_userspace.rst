@@ -1,25 +1,12 @@
 .. _mpu_userspace:
 
-MPU Backed Userspace
-####################
+基于 MPU 的用户空间
+###################
 
-The MPU backed userspace implementation requires the creation of a secondary
-set of stacks.  These stacks exist in a 1:1 relationship with each thread stack
-defined in the system.  The privileged stacks are created as a part of the
-build process.
+基于 MPU 的用户空间实现需要为每个线程栈创建一组配套的“特权栈”。这些栈与系统中定义的每个线程栈形成 1:1 的对应关系，特权栈在构建流程中生成。
 
-A post-build script :ref:`gen_kobject_list.py` scans the generated
-ELF file and finds all of the thread stack objects.  A set of privileged
-stacks, a lookup table, and a set of helper functions are created and added
-to the image.
+构建后脚本 :ref:`gen_kobject_list.py` 会扫描生成的 ELF 文件，找到所有线程栈对象，并为其生成一组特权栈、查找表以及辅助函数并打包到镜像中。
 
-During the process of dropping a thread to user mode, the privileged stack
-information is filled in and later used by the swap and system call
-infrastructure to configure the MPU regions properly for the thread stack and
-guard (if applicable).
+当线程降级为用户态时，会填充对应的特权栈信息，随后上下文切换与系统调用框架会据此为该线程的栈与（如适用的）栈保护正确配置 MPU 区域。
 
-During system calls, the user mode thread's access to the system call and the
-passed-in parameters are all validated.  The user mode thread is then elevated
-to privileged mode, the stack is switched to use the privileged stack, and the
-call is made to the specified kernel API.  On return from the kernel API,  the
-thread is set back to user mode and the stack is restored to the user stack.
+在系统调用期间，首先会校验用户态线程对该系统调用及其入参的访问合法性；随后将线程临时提升到特权态，切换到使用特权栈，并调用指定的内核 API。内核 API 返回后，线程恢复为用户态，并恢复使用用户栈。

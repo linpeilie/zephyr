@@ -1,100 +1,94 @@
 .. _emulators:
 
-Zephyr's device emulators/simulators
-####################################
+Zephyr 设备仿真器/模拟器
+#########################
 
-Overview
-========
+概述
+====
 
-Zephyr includes in its codebase a set of device emulators/simulators.
-With this we refer to SW components which are built together with the embedded SW
-and present themselves as devices of a given class to the rest of the system.
+Zephyr 代码库包含一组设备仿真器/模拟器。它们是与嵌入式软件一同构建的软组件，
+在系统中以某类设备的形式对外呈现。
 
-These device emulators/simulators can be built for any target which has sufficient RAM and flash,
-even if some may have extra functionality which is only available in some targets.
-
-.. note::
-
-   | Zephyr also includes and uses many other types of simulators/emulators, including CPU and
-     platform simulators, radio simulators, and several build targets which allow running the
-     embedded code in the development host.
-   | Some of Zephyr communication controllers/drivers include also either loopback modes or loopback
-     devices.
-   | This page does not cover any of these.
+这些设备仿真器/模拟器可在任何具备足够 RAM 与 Flash 的目标上构建，
+尽管其中一些额外功能可能仅在部分目标上可用。
 
 .. note::
-   Drivers which are specific to some platform, like for example the
-   :ref:`native_sim specific drivers <native_sim_peripherals>` which
-   emulate a peripheral class by connecting to host APIs are not covered by this page.
+
+   | Zephyr 还包含并使用了许多其它类型的模拟器/仿真器，例如 CPU 与平台模拟器、
+     射频模拟器，以及允许在开发主机上运行嵌入式代码的若干构建目标。
+   | 部分通信控制器/驱动也包含环回模式或环回设备。
+   | 本页不涵盖以上内容。
+
+.. note::
+   针对特定平台的驱动（如 :ref:`native_sim specific drivers <native_sim_peripherals>`），
+   通过连接宿主机 API 来模拟外设类别的，不在本页范围内。
 
 
-Available Emulators
-===================
+可用仿真器
+==========
 
-**ADC emulator**
-  * A fake driver which pretends to be actual ADC, and can be used for testing higher-level API
-    for ADC devices.
-  * Main Kconfig option: :kconfig:option:`CONFIG_ADC_EMUL`
-  * DT binding: :dtcompatible:`zephyr,adc-emul`
+**ADC 仿真器**
+  * 伪造的 ADC 驱动，可用于测试更高层的 ADC 设备 API。
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_ADC_EMUL`
+  * 设备树绑定：:dtcompatible:`zephyr,adc-emul`
 
-**DMA emulator**
-  * Emulated DMA controller
-  * Main Kconfig option: :kconfig:option:`CONFIG_DMA_EMUL`
-  * DT binding: :dtcompatible:`zephyr,dma-emul`
+**DMA 仿真器**
+  * 模拟的 DMA 控制器
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_DMA_EMUL`
+  * 设备树绑定：:dtcompatible:`zephyr,dma-emul`
 
-**EEPROM emulator**
-  * Emulate an EEPROM on a flash partition
-  * Main Kconfig option: :kconfig:option:`CONFIG_EEPROM_EMULATOR`
-  * DT binding: :dtcompatible:`zephyr,emu-eeprom`
+**EEPROM 仿真器**
+  * 在某个 Flash 分区上模拟 EEPROM
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_EEPROM_EMULATOR`
+  * 设备树绑定：:dtcompatible:`zephyr,emu-eeprom`
 
 .. _emul_eeprom_simu_brief:
 
-**EEPROM simulator**
-  * Emulate an EEPROM on RAM
-  * Main Kconfig option: :kconfig:option:`CONFIG_EEPROM_SIMULATOR`
-  * DT binding: :dtcompatible:`zephyr,sim-eeprom`
-  * Note: For :zephyr:board:`native targets <native_sim>` it is also possible to keep the content
-    as a file on the host filesystem.
+**EEPROM 模拟器**
+  * 在 RAM 上模拟 EEPROM
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_EEPROM_SIMULATOR`
+  * 设备树绑定：:dtcompatible:`zephyr,sim-eeprom`
+  * 说明：对于 :zephyr:board:`native 目标 <native_sim>`，也可将内容保存在宿主机文件系统文件中。
 
-**External bus and bus connected peripheral emulators**
-  * :ref:`Documentation <bus_emul>`
-  * Allow emulating external buses like I2C or SPI and peripherals connected to them.
+**外部总线及其外设仿真器**
+  * :ref:`文档 <bus_emul>`
+  * 支持模拟 I2C、SPI 等外部总线及其挂接的外设。
 
 .. _emul_flash_simu_brief:
 
-**Flash simulator**
-  * Emulate a flash on RAM
-  * Main Kconfig option: :kconfig:option:`CONFIG_FLASH_SIMULATOR`
-  * DT binding: :dtcompatible:`zephyr,sim-flash`
-  * Note: For native targets it is also possible to keep the content as a file on the host
-    filesystem. Check :ref:`the native_sim flash simulator section <nsim_per_flash_simu>`.
+**Flash 模拟器**
+  * 在 RAM 上模拟 Flash
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_FLASH_SIMULATOR`
+  * 设备树绑定：:dtcompatible:`zephyr,sim-flash`
+  * 说明：对于 native 目标，也可将内容保存在宿主机文件系统文件中，参见
+    :ref:`native_sim 的 Flash 模拟器 <nsim_per_flash_simu>`。
 
-**GPIO emulator**
-  * Emulated GPIO controllers which can be driven from SW
-  * Main Kconfig option: :kconfig:option:`CONFIG_GPIO_EMUL`
-  * DT binding: :dtcompatible:`zephyr,gpio-emul`
+**GPIO 仿真器**
+  * 可由软件驱动的 GPIO 控制器仿真
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_GPIO_EMUL`
+  * 设备树绑定：:dtcompatible:`zephyr,gpio-emul`
 
-**I2C emulator**
-  * Emulated I2C bus. See :ref:`bus emulators <bus_emul>`.
-  * Main Kconfig option: :kconfig:option:`CONFIG_I2C_EMUL`
-  * DT binding: :dtcompatible:`zephyr,i2c-emul-controller`
+**I2C 仿真器**
+  * I2C 总线仿真，见 :ref:`总线仿真器 <bus_emul>`。
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_I2C_EMUL`
+  * 设备树绑定：:dtcompatible:`zephyr,i2c-emul-controller`
 
-**RTC emulator**
-  * Emulated RTC peripheral. See :ref:`RTC emulated device section <rtc_api_emul_dev>`
-  * Main Kconfig option: :kconfig:option:`CONFIG_RTC_EMUL`
-  * DT binding: :dtcompatible:`zephyr,rtc-emul`
+**RTC 仿真器**
+  * RTC 外设仿真，见 :ref:`RTC 仿真设备章节 <rtc_api_emul_dev>`
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_RTC_EMUL`
+  * 设备树绑定：:dtcompatible:`zephyr,rtc-emul`
 
-**SPI emulator**
-  * Emulated SPI bus. See :ref:`bus emulators <bus_emul>`.
-  * Main Kconfig option: :kconfig:option:`CONFIG_SPI_EMUL`
-  * DT binding: :dtcompatible:`zephyr,spi-emul-controller`
+**SPI 仿真器**
+  * SPI 总线仿真，见 :ref:`总线仿真器 <bus_emul>`。
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_SPI_EMUL`
+  * 设备树绑定：:dtcompatible:`zephyr,spi-emul-controller`
 
-**MSPI emulator**
-  * Emulated MSPI bus. See :ref:`bus emulators <bus_emul>`.
-  * Main Kconfig option: :kconfig:option:`CONFIG_MSPI_EMUL`
-  * DT binding: :dtcompatible:`zephyr,mspi-emul-controller`
+**MSPI 仿真器**
+  * MSPI 总线仿真，见 :ref:`总线仿真器 <bus_emul>`。
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_MSPI_EMUL`
+  * 设备树绑定：:dtcompatible:`zephyr,mspi-emul-controller`
 
-**UART emulator**
-  * Emulated UART bus. See :ref:`bus emulators <bus_emul>`.
-  * Main Kconfig option: :kconfig:option:`CONFIG_UART_EMUL`
-  * DT binding: :dtcompatible:`zephyr,uart-emul`
+**UART 仿真器**
+  * UART 总线仿真，见 :ref:`总线仿真器 <bus_emul>`。
+  * 主要 Kconfig 选项：:kconfig:option:`CONFIG_UART_EMUL`
+  * 设备树绑定：:dtcompatible:`zephyr,uart-emul`

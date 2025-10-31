@@ -1,180 +1,99 @@
 .. _syscalls:
 
-System Calls
-############
-User threads run with a reduced set of privileges than supervisor threads:
-certain CPU instructions may not be used, and they have access to only a
-limited part of the memory map. System calls (may) allow user threads to
-perform operations not directly available to them.
+系统调用（System Calls）
+########################
+用户线程相较于特权线程拥有更少的权限：某些 CPU 指令不可用，且只能访问受限的内存区域。系统调用允许用户线程执行它们直接无法完成的操作。
 
-When defining system calls, it is very important to ensure that access to the
-API's private data is done exclusively through system call interfaces.
-Private kernel data should never be made available to user mode threads
-directly. For example, the ``k_queue`` APIs were intentionally not made
-available as they store bookkeeping information about the queue directly
-in the queue buffers which are visible from user mode.
+在定义系统调用时，务必确保对 API 私有数据的访问仅通过系统调用接口进行；不应直接向用户态线程暴露内核私有数据。例如，``k_queue`` API 有意未暴露为系统调用，因为它们把队列的簿记信息直接放在用户可见的队列缓冲中。
 
-APIs that allow the user to register callback functions that run in
-supervisor mode should never be exposed as system calls. Reserve these
-for supervisor-mode access only.
+允许用户注册在特权态运行的回调函数的 API 不应作为系统调用暴露，应仅供特权态使用。
 
-This section describes how to declare new system calls and discusses a few
-implementation details relevant to them.
+本节描述如何声明新的系统调用，并讨论其实现相关的一些细节。
 
-Components
-**********
+组成部分（Components）
+*********************
 
-All system calls have the following components:
+所有系统调用包含以下组件：
 
-* A **C prototype** prefixed with :c:macro:`__syscall` for the API. It
-  will be declared in some header under ``include/`` or in another
-  ``SYSCALL_INCLUDE_DIRS`` directory. This prototype is never implemented
-  manually, instead it gets created by the :ref:`gen_syscalls.py` script.
-  What gets generated is an inline function which either calls the
-  implementation function directly (if called from supervisor mode) or goes
-  through privilege elevation and validation steps (if called from user
-  mode).
+* 以 :c:macro:`__syscall` 前缀标注的 API 的“C 原型”。该原型位于 ``include/`` 目录或其他 ``SYSCALL_INCLUDE_DIRS`` 指定的目录下的头文件中。此原型不需人工实现，而由 :ref:`gen_syscalls.py` 脚本生成。生成的内容是一个 inline 函数：若在特权态调用则直接调用实现函数；若在用户态调用则完成权限提升与参数校验后再调用。
 
-* An **implementation function**, which is the real implementation of the
-  system call. The implementation function may assume that all parameters
-  passed in have been validated if it was invoked from user mode.
+* “实现函数”（implementation function），是真正完成工作的函数。若由用户态发起，该实现函数可假定所有入参已通过校验。
 
-* A **verification function**, which wraps the implementation function
-  and does validation of all the arguments passed in.
+* “验证函数”（verification function），包装实现函数，对传入的所有参数进行校验。
 
-* An **unmarshalling function**, which is an automatically generated
-  handler that must be included by user source code.
+* “解包函数/解组函数”（unmarshalling function），自动生成，用户源代码必须包含。
 
-C Prototype
-***********
+C 原型（C Prototype）
+*******************
 
-The C prototype represents how the API is invoked from either user or
-supervisor mode. For example, to initialize a semaphore:
+C 原型描述该 API 从用户态或特权态被调用时的签名。例如初始化信号量：
 
 .. code-block:: c
 
     __syscall void k_sem_init(struct k_sem *sem, unsigned int initial_count,
                               unsigned int limit);
 
-The :c:macro:`__syscall` attribute is very special. To the C compiler, it
-simply expands to 'static inline'. However to the post-build
-:ref:`parse_syscalls.py` script, it indicates that this API is a system call.
-The :ref:`parse_syscalls.py` script does some parsing of the function prototype,
-to determine the data types of its return value and arguments, and has some
-limitations:
+:c:macro:`__syscall` 属性非常特殊。对 C 编译器而言，它只是展开为 'static inline'；而对构建后脚本 :ref:`parse_syscalls.py` 而言，则表示该 API 是系统调用。该脚本会解析函数原型以确定返回类型与参数类型，并存在一些限制：
 
-* Array arguments must be passed in as pointers, not arrays. For example,
-  ``int foo[]`` or ``int foo[12]`` is not allowed, but should instead be
-  expressed as ``int *foo``.
+* 数组参数必须以指针形式传入，而非数组。例如 ``int foo[]`` 或 ``int foo[12]`` 均不允许，应使用 ``int *foo``。
 
-* Function pointers horribly confuse the limited parser. The workaround is
-  to typedef them first, and then express in the argument list in terms
-  of that typedef.
+* 函数指针会让有限的解析器非常困惑。解决方式是先 typedef，再在参数列表中使用该 typedef。
 
-* :c:macro:`__syscall` must be the first thing in the prototype.
+* :c:macro:`__syscall` 必须出现在原型声明的最前面。
 
-The preprocessor is intentionally not used when determining the set of system
-calls to generate. However, any generated system calls that don't actually have
-a verification function defined (because the related feature is not enabled in
-the kernel configuration) will instead point to a special verification for
-unimplemented system calls. Data type definitions for APIs should not have
-conditional visibility to the compiler.
+在确定需要生成的系统调用集合时，预处理器不会被使用。然而，若某些生成的系统调用在当前内核配置下并不存在对应的验证函数（因为相关特性未启用），则它们会指向一个“未实现系统调用”的通用验证函数。API 的数据类型定义不应对编译器进行条件隐藏。
 
-Any header file that declares system calls must include a special generated
-header at the very bottom of the header file. This header follows the
-naming convention ``syscalls/<name of header file>``. For example, at the
-bottom of ``include/sensor.h``:
+声明了系统调用的任何头文件，都必须在文件末尾包含一个特别生成的头，命名规则为 ``syscalls/<头文件名>``。例如在 ``include/sensor.h`` 的末尾：
 
 .. code-block:: c
 
     #include <zephyr/syscalls/sensor.h>
 
-C prototype functions must be declared in one of the directories
-listed in the CMake variable ``SYSCALL_INCLUDE_DIRS``. This list
-always contains ``APPLICATION_SOURCE_DIR`` when
-``CONFIG_APPLICATION_DEFINED_SYSCALL`` is set, or
-``${ZEPHYR_BASE}/subsys/testsuite/ztest/include`` when
-``CONFIG_ZTEST`` is set. Additional paths can be added to the list
-through the CMake command line or in CMake code that is run before
-``find_package(Zephyr ...)`` is run. ``${ZEPHYR_BASE}/include``
-is always scanned for potential syscall prototypes.
+系统调用原型必须声明在 CMake 变量 ``SYSCALL_INCLUDE_DIRS`` 所列目录之一内。通常当启用 ``CONFIG_APPLICATION_DEFINED_SYSCALL`` 时，此列表包含 ``APPLICATION_SOURCE_DIR``；启用 ``CONFIG_ZTEST`` 时包含 ``${ZEPHYR_BASE}/subsys/testsuite/ztest/include``。还可通过 CMake 命令行或在调用 ``find_package(Zephyr ...)`` 之前的 CMake 代码中加入路径。``${ZEPHYR_BASE}/include`` 始终会被扫描。
 
-Note that not all syscalls will be included in the final binaries.
-CMake functions ``zephyr_syscall_header`` and
-``zephyr_syscall_header_ifdef`` are used to specify which header
-files contain syscall prototypes where those syscalls must be
-present in the final binaries. Note that header files inside
-directories listed in CMake variable ``SYSCALL_INCLUDE_DIRS``
-will always have their syscalls present in final binaries.
-To force all syscalls to be included in the final binaries,
-turn on :kconfig:option:`CONFIG_EMIT_ALL_SYSCALLS`.
+注意，并非所有系统调用都会被编译进最终二进制。CMake 函数 ``zephyr_syscall_header`` 与 ``zephyr_syscall_header_ifdef`` 用于指定哪些头文件中的系统调用原型必须出现在最终二进制中。位于 ``SYSCALL_INCLUDE_DIRS`` 指定目录中的头文件内的系统调用会被无条件包含。若希望强制所有系统调用都被包含，可启用 :kconfig:option:`CONFIG_EMIT_ALL_SYSCALLS`。
 
-Invocation Context
-==================
+调用上下文（Invocation Context）
+==============================
 
-Source code that uses system call APIs can be made more efficient if it is
-known that all the code inside a particular C file runs exclusively in
-user mode, or exclusively in supervisor mode. The system will look for
-the definition of macros :c:macro:`__ZEPHYR_SUPERVISOR__` or
-:c:macro:`__ZEPHYR_USER__`, typically these will be added to the compiler
-flags in the build system for the related files.
+若可明确某个 C 文件内的代码全部在用户态运行，或全部在特权态运行，则可使使用系统调用 API 的源码更高效。系统会查找 :c:macro:`__ZEPHYR_SUPERVISOR__` 或 :c:macro:`__ZEPHYR_USER__` 的定义，通常它们会在构建系统中以编译器选项的形式为相关文件添加。
 
-* If :kconfig:option:`CONFIG_USERSPACE` is not enabled, all APIs just directly call
-  the implementation function.
+* 若未启用 :kconfig:option:`CONFIG_USERSPACE`，所有 API 仅直接调用实现函数。
 
-* Otherwise, the default case is to make a runtime check to see if the
-  processor is currently running in user mode, and either make the system call
-  or directly call the implementation function as appropriate.
+* 否则，默认情况是运行时检查当前是否处于用户态，并据此要么发起系统调用，要么直接调用实现函数。
 
-* If :c:macro:`__ZEPHYR_SUPERVISOR__` is defined, then it is assumed that
-  all the code runs in supervisor mode and all APIs just directly call the
-  implementation function. If the code was actually running in user mode,
-  there will be a CPU exception as soon as it tries to do something it isn't
-  allowed to do.
+* 若定义了 :c:macro:`__ZEPHYR_SUPERVISOR__`，则假定所有代码都在特权态运行，API 直接调用实现函数。若实际在用户态运行，一旦尝试执行不被允许的操作，就会产生 CPU 异常。
 
-* If :c:macro:`__ZEPHYR_USER__` is defined, then it is assumed that all the
-  code runs in user mode and system calls are unconditionally made.
+* 若定义了 :c:macro:`__ZEPHYR_USER__`，则假定所有代码都在用户态运行，并无条件发起系统调用。
 
-Implementation Details
-======================
+实现细节（Implementation Details）
+================================
 
-Declaring an API with :c:macro:`__syscall` causes some code to be generated in
-C and header files by the :ref:`gen_syscalls.py` script, all of which can be found in
-the project out directory under ``include/generated/``:
+将 API 以 :c:macro:`__syscall` 声明，会使 :ref:`gen_syscalls.py` 在工程的 out 目录 ``include/generated/`` 下生成若干 C 与头文件：
 
-* The system call is added to the enumerated type of system call IDs,
-  which is expressed in ``include/generated/zephyr/syscall_list.h``. It is the name
-  of the API in uppercase, prefixed with ``K_SYSCALL_``.
+* 在 ``include/generated/zephyr/syscall_list.h`` 中把该系统调用加入系统调用 ID 的枚举，命名为大写 API 名并加前缀 ``K_SYSCALL_``。
 
-* An entry for the system call is created in the dispatch table
-  ``_k_syscall_table``, expressed in ``include/generated/zephyr/syscall_dispatch.c``
+* 在分发表 ``_k_syscall_table``（文件 ``include/generated/zephyr/syscall_dispatch.c``）中创建对应表项。
 
-  * This table only contains syscalls where their corresponding
-    prototypes are declared in header files when
-    :kconfig:option:`CONFIG_EMIT_ALL_SYSCALLS` is enabled:
+  * 当启用 :kconfig:option:`CONFIG_EMIT_ALL_SYSCALLS` 时，仅那些其原型声明位于“指定头文件”中的系统调用会被加入该表：
 
-    * Indicated by CMake functions ``zephyr_syscall_header`` and
-      ``zephyr_syscall_header_ifdef``, or
+    * 由 CMake 函数 ``zephyr_syscall_header`` 或 ``zephyr_syscall_header_ifdef`` 指定，或
 
-    * Under directories specified in CMake variable
-      ``SYSCALL_INCLUDE_DIRS``.
+    * 位于 ``SYSCALL_INCLUDE_DIRS`` 指定的目录下。
 
-* A weak verification function is declared, which is just an alias of the
-  'unimplemented system call' verifier. This is necessary since the real
-  verification function may or may not be built depending on the kernel
-  configuration. For example, if a user thread makes a sensor subsystem
-  API call, but the sensor subsystem is not enabled, the weak verifier
-  will be invoked instead.
+* 声明一个弱验证函数（weak），其为“未实现系统调用”验证器的别名。因为真正的验证函数是否会被编译取决于内核配置；例如用户线程调用了传感器子系统 API，但该子系统未启用，则会调用该弱验证器。
 
-* An unmarshalling function is defined in ``include/generated/<name>_mrsh.c``
+* 在 ``include/generated/<name>_mrsh.c`` 中定义解包函数。
 
-The body of the API is created in the generated system header. Using the
-example of :c:func:`k_sem_init()`, this API is declared in
-``include/kernel.h``. At the bottom of ``include/kernel.h`` is::
+API 的函数体位于生成的系统头里。以 :c:func:`k_sem_init()` 为例，该 API 在 ``include/kernel.h`` 中声明，而其底部包含：
+
+::
 
     #include <zephyr/syscalls/kernel.h>
 
-Inside this header is the body of :c:func:`k_sem_init()`::
+在此头中包含 :c:func:`k_sem_init()` 的函数体：
+
+::
 
     static inline void k_sem_init(struct k_sem * sem, unsigned int initial_count, unsigned int limit)
     {
@@ -188,172 +107,83 @@ Inside this header is the body of :c:func:`k_sem_init()`::
             z_impl_k_sem_init(sem, initial_count, limit);
     }
 
-This generates an inline function that takes three arguments with void
-return value. Depending on context it will either directly call the
-implementation function or go through a system call elevation. A
-prototype for the implementation function is also automatically generated.
+这会生成一个接收三个参数、返回 void 的内联函数。它会根据上下文要么直接调用实现函数，要么通过系统调用路径进行权限提升。实现函数的原型也会被自动生成。
 
-The final layer is the invocation of the system call itself. All architectures
-implementing system calls must implement the seven inline functions
-:c:func:`_arch_syscall_invoke0` through :c:func:`_arch_syscall_invoke6`. These
-functions marshal arguments into designated CPU registers and perform the
-necessary privilege elevation. Parameters of API inline function, before being
-passed as arguments to system call, are C casted to ``uintptr_t`` which matches
-size of register.
-Exception to above is passing 64-bit parameters on 32-bit systems, in which case
-64-bit parameters are split into lower and higher part and passed as two consecutive
-arguments.
-There is always a ``uintptr_t`` type return value, which may be neglected if
-not needed.
+最后一层是系统调用本身的触发。所有实现系统调用的架构都必须提供七个内联函数 :c:func:`_arch_syscall_invoke0` 到 :c:func:`_arch_syscall_invoke6`，用于将参数整理到指定的寄存器并执行权限提升。在作为系统调用参数传递前，API 内联函数的参数会强制转换为 ``uintptr_t``，以匹配寄存器大小。
+但在 32 位系统上传递 64 位参数是个例外：64 位参数会被拆分为高/低两部分并作为相邻的两个参数传递。系统调用始终返回 ``uintptr_t`` 类型的值；若不需要可以忽略。
 
 .. figure:: syscall_flow.png
-   :alt: System Call execution flow
+   :alt: 系统调用执行流程
    :width: 80%
    :align: center
 
-   System Call execution flow
+   系统调用执行流程
 
-Some system calls may have more than six arguments, but number of arguments
-passed via registers is limited to six for all architectures.
-Additional arguments will need to be passed in an array in the source memory
-space, which needs to be treated as untrusted memory in the verification
-function. This code (packing, unpacking and validation) is generated
-automatically as needed in the stub above and in the unmarshalling function.
+部分系统调用可能拥有超过六个参数，但所有架构通过寄存器传参的参数数量上限均为六个。额外的参数需要通过源内存空间中的数组传递；在验证函数中必须将其视为不可信内存。相关的打包/解包与校验代码会在上述 stub 与解包函数中按需自动生成。
 
-System calls return ``uintptr_t`` type value that is C casted, by wrapper, to
-a return type of API prototype declaration. This means that 64-bit value may
-not be directly returned, from a system call to its wrapper, on 32-bit systems.
-To solve the problem the automatically generated wrapper function defines 64-bit
-intermediate variable, which is considered **untrusted** buffer, on its stack
-and passes pointer to that variable to the system call, as a final argument.
-Upon return from the system call the value written to that buffer will be
-returned by the wrapper function.
-The problem does not exist on 64-bit systems which are able to return 64-bit
-values directly.
+系统调用返回 ``uintptr_t`` 类型的值，并由包装函数转换为 API 原型声明的返回类型。这意味着在 32 位系统上，系统调用无法直接将 64 位值返回给其包装函数。为解决此问题，自动生成的包装函数会在其栈上定义一个 64 位的中间变量（作为“不可信”缓冲），并在最后一个参数中把该变量的指针传递给系统调用；返回后，包装函数将返回写入该缓冲的值。64 位系统不存在此问题。
 
-Implementation Function
-***********************
+实现函数（Implementation Function）
+********************************
 
-The implementation function is what actually does the work for the API.
-Zephyr normally does little to no error checking of arguments, or does this
-kind of checking with assertions. When writing the implementation function,
-validation of any parameters is optional and should be done with assertions.
+实现函数是实际完成 API 工作的地方。Zephyr 通常对参数进行很少甚至不进行错误检查，或仅通过断言进行检查。编写实现函数时，参数验证是可选的，应倾向用断言完成。
 
-All implementation functions must follow the naming convention, which is the
-name of the API prefixed with ``z_impl_``. Implementation functions may be
-declared in the same header as the API as a static inline function or
-declared in some C file. There is no prototype needed for implementation
-functions, these are automatically generated.
+所有实现函数必须遵循命名约定：API 名称前加前缀 ``z_impl_``。实现函数可以在与 API 相同的头文件中以 static inline 形式声明，或在某个 C 文件中声明。实现函数不需要手写原型，系统会自动生成。
 
-Verification Function
-*********************
+验证函数（Verification Function）
+******************************
 
-The verification function runs on the kernel side when a user thread makes
-a system call. When the user thread makes a software interrupt to elevate to
-supervisor mode, the common system call entry point uses the system call ID
-provided by the user to look up the appropriate unmarshalling function for that
-system call and jump into it. This in turn calls the verification function.
+当用户线程发起系统调用时，验证函数在内核侧运行。用户线程通过软件中断提升到特权态后，通用系统调用入口会根据用户提供的系统调用 ID 查找相应的解包函数并跳转调用，由其进一步调用验证函数。
 
-Verification and unmarshalling functions only run when system call APIs are
-invoked from user mode. If an API is invoked from supervisor mode, the
-implementation is simply called and there is no software trap.
+仅当从用户态调用系统调用 API 时，验证与解包函数才会运行；若从特权态调用，直接调用实现函数，不会触发软件陷阱。
 
-The purpose of the verification function is to validate all the arguments
-passed in.  This includes:
+验证函数的目的在于校验所有传入参数，包括：
 
-* Any kernel object pointers provided. For example, the semaphore APIs must
-  ensure that the semaphore object passed in is a valid semaphore and that
-  the calling thread has permission on it.
+* 任何内核对象指针。例如，信号量 API 必须确保传入的对象确为有效信号量，且调用线程对其有权限。
 
-* Any memory buffers passed in from user mode. Checks must be made that the
-  calling thread has read or write permissions on the provided buffer.
+* 来自用户态的任何内存缓冲。必须检查调用线程对该缓冲是否具备读/写权限。
 
-* Any other arguments that have a limited range of valid values.
+* 任何具有有限有效值范围的其他参数。
 
-Verification functions involve a great deal of boilerplate code which has been
-made simpler by some macros in :zephyr_file:`include/zephyr/internal/syscall_handler.h`.
-Verification functions should be declared using these macros.
+验证函数包含大量样板代码；:zephyr_file:`include/zephyr/internal/syscall_handler.h` 提供了简化编写的宏。应使用这些宏来声明验证函数。
 
-Argument Validation
-===================
+参数校验（Argument Validation）
+============================
 
-Several macros exist to validate arguments:
+用于校验参数的宏包括：
 
-* :c:macro:`K_SYSCALL_OBJ()` Checks a memory address to assert that it is
-  a valid kernel object of the expected type, that the calling thread
-  has permissions on it, and that the object is initialized.
+* :c:macro:`K_SYSCALL_OBJ()` 校验一个内存地址是否为期望类型的有效内核对象、调用线程是否具备权限、对象是否已初始化。
 
-* :c:macro:`K_SYSCALL_OBJ_INIT()` is the same as
-  :c:macro:`K_SYSCALL_OBJ()`, except that the provided object may be
-  uninitialized. This is useful for verifiers of object init functions.
+* :c:macro:`K_SYSCALL_OBJ_INIT()` 与 :c:macro:`K_SYSCALL_OBJ()` 类似，但允许提供的对象处于未初始化状态。适用于对象 init 函数的验证。
 
-* :c:macro:`K_SYSCALL_OBJ_NEVER_INIT()` is the same as
-  :c:macro:`K_SYSCALL_OBJ()`, except that the provided object must be
-  uninitialized. This is not used very often, currently only for
-  :c:func:`k_thread_create()`.
+* :c:macro:`K_SYSCALL_OBJ_NEVER_INIT()` 与 :c:macro:`K_SYSCALL_OBJ()` 类似，但要求提供的对象必须未初始化。目前主要用于 :c:func:`k_thread_create()`。
 
-* :c:macro:`K_SYSCALL_MEMORY_READ()` validates a memory buffer of a particular
-  size. The calling thread must have read permissions on the entire buffer.
+* :c:macro:`K_SYSCALL_MEMORY_READ()` 校验给定大小的内存缓冲；调用线程必须对整个缓冲具有读权限。
 
-* :c:macro:`K_SYSCALL_MEMORY_WRITE()` is the same as
-  :c:macro:`K_SYSCALL_MEMORY_READ()` but the calling thread must additionally
-  have write permissions.
+* :c:macro:`K_SYSCALL_MEMORY_WRITE()` 与上述相同，但还要求调用线程具备写权限。
 
-* :c:macro:`K_SYSCALL_MEMORY_ARRAY_READ()` validates an array whose total size
-  is expressed as separate arguments for the number of elements and the
-  element size. This macro correctly accounts for multiplication overflow
-  when computing the total size. The calling thread must have read permissions
-  on the total size.
+* :c:macro:`K_SYSCALL_MEMORY_ARRAY_READ()` 校验数组，数组总大小由元素个数与元素大小两个参数给出；该宏会正确处理乘法溢出。调用线程必须对总大小具有读权限。
 
-* :c:macro:`K_SYSCALL_MEMORY_ARRAY_WRITE()` is the same as
-  :c:macro:`K_SYSCALL_MEMORY_ARRAY_READ()` but the calling thread must
-  additionally have write permissions.
+* :c:macro:`K_SYSCALL_MEMORY_ARRAY_WRITE()` 与上述相同，但还要求调用线程具备写权限。
 
-* :c:macro:`K_SYSCALL_VERIFY_MSG()` does a runtime check of some boolean
-  expression which must evaluate to true otherwise the check will fail.
-  A variant :c:macro:`K_SYSCALL_VERIFY` exists which does not take
-  a message parameter, instead printing the expression tested if it
-  fails. The latter should only be used for the most obvious of tests.
+* :c:macro:`K_SYSCALL_VERIFY_MSG()` 对某布尔表达式进行运行时检查，若为假则校验失败。其变体 :c:macro:`K_SYSCALL_VERIFY` 不带消息参数，而是打印失败的表达式本身，仅应用于最明显的检查。
 
-* :c:macro:`K_SYSCALL_DRIVER_OP()` checks at runtime if a driver
-  instance is capable of performing a particular operation.  While this
-  macro can be used by itself, it's mostly a building block for macros
-  that are automatically generated for every driver subsystem.  For
-  instance, to validate the GPIO driver, one could use the
-  :c:macro:`K_SYSCALL_DRIVER_GPIO()` macro.
+* :c:macro:`K_SYSCALL_DRIVER_OP()` 运行时检查某驱动实例是否支持某操作。该宏本身可直接使用，更多情况下作为为每个驱动子系统自动生成宏的基础。例如验证 GPIO 驱动可用 :c:macro:`K_SYSCALL_DRIVER_GPIO()`。
 
-* :c:macro:`K_SYSCALL_SPECIFIC_DRIVER()` is a runtime check to verify that
-  a provided pointer is a valid instance of a specific device driver, that
-  the calling thread has permissions on it, and that the driver has been
-  initialized. It does this by checking the API structure pointer that
-  is stored within the driver instance and ensuring that it matches the
-  provided value, which should be the address of the specific driver's
-  API structure.
+* :c:macro:`K_SYSCALL_SPECIFIC_DRIVER()` 运行时检查某指针是否为特定设备驱动的有效实例、调用线程是否具备权限、驱动是否已初始化。其通过检查驱动实例内保存的 API 结构体指针，校验其是否与提供的特定驱动 API 结构体地址一致。
 
-If any check fails, the macros will return a nonzero value. The macro
-:c:macro:`K_OOPS()` can be used to induce a kernel oops which will kill the
-calling thread. This is done instead of returning some error condition to
-keep the APIs the same when calling from supervisor mode.
+若任何检查失败，这些宏会返回非零值。可调用 :c:macro:`K_OOPS()` 触发内核 oops 从而终止调用线程；这样做可避免为了保持从特权态调用 API 的一致性而引入错误返回值。
 
 .. _syscall_verification:
 
-Verifier Definition
-===================
+验证器定义（Verifier Definition）
+===============================
 
-All system calls are dispatched to a verifier function with a prefixed
-``z_vrfy_`` name based on the system call.  They have exactly the same
-return type and argument types as the wrapped system call.  Their job
-is to execute the system call (generally by calling the implementation
-function) after having validated all arguments.
+所有系统调用都会被分发到一个以 ``z_vrfy_`` 前缀命名的验证器函数。它与被包装的系统调用具有完全相同的返回类型和参数类型。其职责是在已验证所有参数后执行系统调用（通常是调用实现函数）。
 
-The verifier is itself invoked by an automatically generated
-unmarshaller function which takes care of unpacking the register
-arguments from the architecture layer and casting them to the correct
-type.  This is defined in a header file that must be included from
-user code, generally somewhere after the definition of the verifier in
-a translation unit (so that it can be inlined).
+验证器由自动生成的解包函数调用，该函数负责从体系结构层传入的寄存器参数中解包并转换为正确类型。此解包函数定义在必须由用户代码包含的头文件中，通常位于验证器定义之后（便于内联）。
 
-For example:
+例如：
 
 .. code-block:: c
 
@@ -365,31 +195,16 @@ For example:
     #include <zephyr/syscalls/k_sem_take_mrsh.c>
 
 
-Verification Memory Access Policies
-===================================
+验证内存访问策略（Verification Memory Access Policies）
+=====================================================
 
-Parameters passed to system calls by reference require special handling,
-because the value of these parameters can be changed at any time by any
-user thread that has access to the memory that parameter points to. If the
-kernel makes any logical decisions based on the contents of this memory, this
-can open up the kernel to attacks even if checking is done. This is a class
-of exploits known as TOCTOU (Time Of Check to Time Of Use).
+以引用方式传递给系统调用的参数需要特别处理，因为只要任一拥有该内存访问权的用户线程在任何时刻修改了该内存的内容，都可能影响内核的逻辑判断；即便做了检查，也可能引入攻击面。这类攻击称为 TOCTOU（检查时与使用时的时间差）。
 
-The proper procedure to mitigate these attacks is to make a copies in the
-verification function, and only perform parameter checks on the copies, which
-user threads will never have access to. The implementation functions get passed
-the copy and not the original data sent by the user. The
-:c:func:`k_usermode_to_copy()` and :c:func:`k_usermode_from_copy()` APIs exist for
-this purpose.
+规避此类攻击的正确方法是在验证函数中制作参数的副本，并仅对副本进行参数检查（用户线程永远无法访问这些副本）。实现函数接收副本，而非用户传入的原始数据。为此可使用 :c:func:`k_usermode_to_copy()` 与 :c:func:`k_usermode_from_copy()`。
 
-There is one exception in place, with respect to large data buffers which are
-only used to provide a memory area that is either only written to, or whose
-contents are never used for any validation or control flow. Further
-discussion of this later in this section.
+有一个例外：当传入的是仅用于“写入”或“仅用于原样读取而从不参与控制流/校验”的大数据缓冲。稍后将进一步讨论。
 
-As a first example, consider a parameter which is used as an output parameter
-for some integral value:
-
+第一个例子，输出整型参数：
 
 .. code-block:: c
 
@@ -403,11 +218,9 @@ for some integral value:
         return ret;
     }
 
-Here we have allocated ``local_out_param`` on the stack, passed its address to
-the implementation function, and then used :c:func:`k_usermode_to_copy()` to fill
-in the memory passed in by the caller.
+这里我们在栈上分配了 ``local_out_param``，将其地址传给实现函数，然后用 :c:func:`k_usermode_to_copy()` 写回调用者提供的缓冲。
 
-It might be tempting to do something more concise:
+看起来更简洁的写法：
 
 .. code-block:: c
 
@@ -417,16 +230,9 @@ It might be tempting to do something more concise:
         return z_impl_some_syscall(out_param);
     }
 
-However, this is unsafe if the implementation ever does any reads to this
-memory as part of its logic. For example, it could be used to store some
-counter value, and this could be meddled with by user threads that have access
-to its memory. It is by far safest for small integral values to do the copying
-as shown in the first example.
+若实现函数出于某些逻辑需要读取该内存，这将变得不安全。例如它可能用于存储某个计数器值，拥有该内存访问权的用户线程可以篡改该值。对于小的整型值，采用第一个例子中的拷贝方式最安全。
 
-Some parameters may be input/output. For instance, it's not uncommon to see APIs
-which pass in a pointer to some ``size_t`` which is a maximum allowable size,
-which is then updated by the implementation to reflect the actual number of
-bytes processed. This too should use a stack copy:
+有些参数可能是输入/输出双向的：常见的情况是传入一个 ``size_t`` 指针作为最大允许大小，随后实现函数会把它更新为实际处理的字节数。这同样应采用栈上副本：
 
 .. code-block:: c
 
@@ -435,14 +241,13 @@ bytes processed. This too should use a stack copy:
         size_t size;
         int ret;
 
-        K_OOPS(k_usermode_from_copy(&size, size_ptr, sizeof(size));
+        K_OOPS(k_usermode_from_copy(&size, size_ptr, sizeof(size)));
         ret = z_impl_in_out_syscall(&size);
         K_OOPS(k_usermode_to_copy(size_ptr, &size, sizeof(size)));
         return ret;
     }
 
-Many system calls pass in structures or even linked data structures. All should
-be copied. Typically this is done by allocating copies on the stack:
+许多系统调用会传入结构体甚至链式结构体，均应进行拷贝。典型做法是在栈上分配副本：
 
 .. code-block:: c
 
@@ -474,14 +279,7 @@ be copied. Typically this is done by allocating copies on the stack:
         return z_impl_must_alloc(&foo_copy);
     }
 
-In some cases the amount of data isn't known at compile time or may be too
-large to allocate on the stack. In this scenario, it may be necessary to draw
-memory from the caller's resource pool via :c:func:`z_thread_malloc()`. This
-should always be considered last resort. Functional safety programming
-guidelines heavily discourage usage of heap and the fact that a resource pool is
-used must be clearly documented. Any issues with allocation must be
-reported, to a caller, with returning the ``-ENOMEM`` . The ``K_OOPS()``
-should never be used to verify if resource allocation has been successful.
+在某些情况下，数据量在编译期未知或过大，无法在栈上分配。这时可能需要通过 :c:func:`z_thread_malloc()` 从调用者的资源池分配内存。此方案应被视为最后手段。功能安全编程指南强烈不建议使用堆，且必须清晰记录资源池的使用。分配失败必须向调用者返回 ``-ENOMEM``；请勿用 ``K_OOPS()`` 来判断资源分配是否成功。
 
 .. code-block:: c
 
@@ -501,17 +299,16 @@ should never be used to verify if resource allocation has been successful.
         struct bar *bar_list_copy;
         size_t bar_list_bytes;
 
-        /* Safely copy foo into foo_copy */
+        /* 安全地把 foo 拷贝到 foo_copy */
         K_OOPS(k_usermode_from_copy(&foo_copy, foo, sizeof(*foo)));
 
-        /* Bounds check the count member, in the copy we made */
+        /* 对我们拷贝的计数字段做边界检查 */
         if (foo_copy.count > 32) {
             return -EINVAL;
         }
 
-        /* Allocate RAM for the bar_list, replace the pointer in
-         * foo_copy */
-        bar_list_bytes = foo_copy.count * sizeof(struct_bar);
+        /* 为 bar_list 分配内存，并替换 foo_copy 中的指针 */
+    bar_list_bytes = foo_copy.count * sizeof(struct bar);
         bar_list_copy = z_thread_malloc(bar_list_bytes);
         if (bar_list_copy == NULL) {
             return -ENOMEM;
@@ -522,30 +319,18 @@ should never be used to verify if resource allocation has been successful.
 
         ret = z_impl_must_alloc(&foo_copy);
 
-        /* All done with the memory, free it and return */
-        k_free(foo_copy.bar_list_copy);
+        /* 用完释放并返回 */
+        k_free(bar_list_copy);
         return ret;
     }
 
-Finally, we must consider large data buffers. These represent areas of user
-memory which either have data copied out of, or copied into. It is permitted
-to pass these pointers to the implementation function directly. The caller's
-access to the buffer still must be validated with ``K_SYSCALL_MEMORY`` APIs.
-The following constraints need to be met:
+最后，考虑大数据缓冲。这类缓冲代表用户内存区域，要么从其中拷出数据，要么向其中拷入数据。允许将这些指针直接传给实现函数，但仍需使用 ``K_SYSCALL_MEMORY`` 宏验证调用者对该缓冲的访问权限。需满足以下约束：
 
- * If the buffer is used by the implementation function to write data, such
-   as data captured from some MMIO region, the implementation function must
-   only write this data, and never read it.
+ * 若缓冲由实现函数“写入”（例如从某 MMIO 区域采集数据），实现函数必须仅写入，不得读取。
 
- * If the buffer is used by the implementation function to read data, such
-   as a block of memory to write to some hardware destination, this data
-   must be read without any processing. No conditional logic can be implemented
-   due to the data buffer's contents. If such logic is required a copy must be
-   made.
+ * 若缓冲由实现函数“读取”（例如将其写入某硬件目标），必须不对数据做任何处理；不得基于数据内容实现条件逻辑。若需要此类逻辑，必须制作副本。
 
- * The buffer must only be used synchronously with the call. The implementation
-   must not ever save the buffer address and use it asynchronously, such as
-   when an interrupt fires.
+ * 缓冲必须仅在调用的同步阶段使用；实现函数不得保存缓冲地址并进行异步使用（例如在中断发生时）。
 
 .. code-block:: c
 
@@ -555,84 +340,49 @@ The following constraints need to be met:
         return z_impl_get_data_from_kernel(buf, size);
     }
 
-Verification Return Value Policies
-==================================
+验证返回值策略（Verification Return Value Policies）
+=================================================
 
-When verifying system calls, it's important to note which kinds of verification
-failures should propagate a return value to the caller, and which should
-simply invoke :c:macro:`K_OOPS()` which kills the calling thread. The current
-conventions are as follows:
+在验证系统调用时，需要明确哪类验证失败应将错误返回给调用者，哪类则应直接触发 :c:macro:`K_OOPS()` 终止调用线程。当前约定如下：
 
-#. For system calls that are defined but not compiled, invocations of these
-   missing system calls are routed to :c:func:`handler_no_syscall()` which
-   invokes :c:macro:`K_OOPS()`.
+#. 对已声明但未编译的系统调用，将路由到 :c:func:`handler_no_syscall()` 并触发 :c:macro:`K_OOPS()`。
 
-#. Any invalid access to memory found by the set of ``K_SYSCALL_MEMORY`` APIs,
-   :c:func:`k_usermode_from_copy()`, :c:func:`k_usermode_to_copy()`
-   should trigger a :c:macro:`K_OOPS`. This happens when the caller doesn't have
-   appropriate permissions on the memory buffer or some size calculation
-   overflowed.
+#. 由 ``K_SYSCALL_MEMORY`` 宏、:c:func:`k_usermode_from_copy()`、:c:func:`k_usermode_to_copy()` 发现的任何非法内存访问都应触发 :c:macro:`K_OOPS()`，例如调用者对缓冲无适当权限、或尺寸计算溢出。
 
-#. Most system calls take kernel object pointers as an argument, checked either
-   with one of the ``K_SYSCALL_OBJ`` functions,  ``K_SYSCALL_DRIVER_nnnnn``, or
-   manually using :c:func:`k_object_validate()`. These can fail for a variety
-   of reasons: missing driver API, bad kernel object pointer, wrong kernel
-   object type, or improper initialization state. These issues should always
-   invoke :c:macro:`K_OOPS()`.
+#. 多数系统调用会接收内核对象指针参数，使用 ``K_SYSCALL_OBJ`` 家族、``K_SYSCALL_DRIVER_nnnnn`` 或 :c:func:`k_object_validate()` 校验。可能失败的原因包括：缺少驱动 API、无效对象指针、对象类型错误、或未正确初始化。这些问题都应触发 :c:macro:`K_OOPS()`。
 
-#. Any error resulting from a failed memory heap allocation, often from
-   invoking :c:func:`z_thread_malloc()`, should propagate ``-ENOMEM`` to the
-   caller.
+#. 因内存堆分配失败（常见于 :c:func:`z_thread_malloc()`）产生的错误，应将 ``-ENOMEM`` 返回给调用者。
 
-#. General parameter checks should be done in the implementation function,
-   in most cases using ``CHECKIF()``.
+#. 一般参数检查应在实现函数中完成，通常使用 ``CHECKIF()``。
 
-   * The behavior of ``CHECKIF()`` depends on the kernel configuration, but if
-     user mode is enabled, :kconfig:option:`CONFIG_RUNTIME_ERROR_CHECKS` is enforced,
-     which guarantees that these checks will be made and a return value
-     propagated.
+   * ``CHECKIF()`` 的行为取决于内核配置；当启用用户态时，会强制启用 :kconfig:option:`CONFIG_RUNTIME_ERROR_CHECKS`，从而保证这些检查会执行并返回错误值。
 
-#. It is totally forbidden for any kind of kernel mode callback function to
-   be registered from user mode. APIs which simply install callbacks shall not
-   be exposed as system calls. Some driver subsystem APIs may take optional
-   function callback pointers. User mode verification functions for these APIs
-   must enforce that these are NULL and should invoke :c:macro:`K_OOPS()` if
-   not.
+#. 严禁从用户态注册任何在内核态执行的回调。仅安装回调的 API 不应暴露为系统调用。某些驱动子系统 API 可能带可选回调指针；其用户态验证函数必须强制为 NULL，若非空则应触发 :c:macro:`K_OOPS()`。
 
-#. Some parameter checks are enforced only from user mode. These should be
-   checked in the verification function and propagate a return value to the
-   caller if possible.
+#. 某些仅在用户态强制的参数检查，应在验证函数中完成，并尽可能将错误返回给调用者。
 
-There are some known exceptions to these policies currently in Zephyr:
+在 Zephyr 中，以下行为是对上述策略的既有例外：
 
-* :c:func:`k_thread_join()` and :c:func:`k_thread_abort()` are no-ops if
-  the thread object isn't initialized. This is because for threads, the
-  initialization bit pulls double-duty to indicate whether a thread is
-  running, cleared upon exit. See #23030.
+* 当线程对象未初始化时，:c:func:`k_thread_join()` 与 :c:func:`k_thread_abort()` 为 no-op。这是因为线程的“初始化位”兼作“线程是否正在运行”的标志，在线程退出时清除。参见 #23030。
 
-* :c:func:`k_thread_create()` invokes :c:macro:`K_OOPS()` for parameter
-  checks, due to a great deal of existing code ignoring the return value.
-  This will also be addressed by #23030.
+* :c:func:`k_thread_create()` 的参数检查使用 :c:macro:`K_OOPS()`，原因是大量现有代码忽略其返回值。此问题也将由 #23030 处理。
 
-* :c:func:`k_thread_abort()` invokes :c:macro:`K_OOPS()` if an essential
-  thread is aborted, as the function has no return value.
+* 若终止的是“关键（essential）”线程，:c:func:`k_thread_abort()` 将触发 :c:macro:`K_OOPS()`，因为该函数无返回值。
 
-* Various system calls related to logging invoke :c:macro:`K_OOPS()`
-  when bad parameters are passed in as they do not propagate errors.
+* 若传入无效参数，与日志相关的若干系统调用会触发 :c:macro:`K_OOPS()`，因为它们不返回错误。
 
-Configuration Options
-*********************
+配置选项（Configuration Options）
+********************************
 
-Related configuration options:
+相关配置项：
 
 * :kconfig:option:`CONFIG_USERSPACE`
 * :kconfig:option:`CONFIG_EMIT_ALL_SYSCALLS`
 
-APIs
-****
+API
+***
 
-Helper macros for creating system call verification functions are provided in
-:zephyr_file:`include/zephyr/internal/syscall_handler.h`:
+用于创建系统调用验证函数的辅助宏位于 :zephyr_file:`include/zephyr/internal/syscall_handler.h`：
 
 * :c:macro:`K_SYSCALL_OBJ()`
 * :c:macro:`K_SYSCALL_OBJ_INIT()`
@@ -645,8 +395,7 @@ Helper macros for creating system call verification functions are provided in
 * :c:macro:`K_SYSCALL_VERIFY_MSG()`
 * :c:macro:`K_SYSCALL_VERIFY`
 
-Functions for invoking system calls are defined in
-:zephyr_file:`include/zephyr/syscall.h`:
+用于触发系统调用的函数定义在 :zephyr_file:`include/zephyr/syscall.h`：
 
 * :c:func:`_arch_syscall_invoke0`
 * :c:func:`_arch_syscall_invoke1`

@@ -1,83 +1,69 @@
 .. _networking_with_eth_qemu:
 
-Networking with QEMU Ethernet
+使用 QEMU 以太网进行网络通信
 #############################
 
 .. contents::
     :local:
     :depth: 2
 
-This page describes how to set up a virtual network between a (Linux) host
-and a Zephyr application running in QEMU.
+本页介绍如何在（Linux）主机与运行在 QEMU 中的 Zephyr 应用之间建立虚拟网络。
 
-In this example, the :zephyr:code-sample:`sockets-echo-server` sample application from
-the Zephyr source distribution is run in QEMU. The Zephyr instance is
-connected to a Linux host using a tuntap device which is modeled in Linux as
-an Ethernet network interface.
+本示例在 QEMU 中运行 Zephyr 源码中的 :zephyr:code-sample:`sockets-echo-server` 示例。
+Zephyr 实例通过一个 tuntap 设备连接到 Linux 主机，该设备在 Linux 中被建模为以太网网络接口。
 
-Prerequisites
+前置条件
 *************
 
-On the Linux Host, find the Zephyr `net-tools`_ project, which can either be
-found in a Zephyr standard installation under the ``tools/net-tools`` directory
-or installed stand alone from its own git repository:
+在 Linux 主机上获取 Zephyr 的 `net-tools`_ 项目。它通常随 Zephyr 标准安装位于 ``tools/net-tools`` 目录，
+也可以从其独立的 Git 仓库单独克隆：
 
 .. code-block:: console
 
    git clone https://github.com/zephyrproject-rtos/net-tools
 
 
-Basic Setup
+基础设置
 ***********
 
-For the steps below, you will need two terminal windows:
+接下来的步骤建议同时打开两个终端窗口：
 
-* Terminal #1 is terminal window with net-tools being the current
-  directory (``cd net-tools``)
-* Terminal #2 is your usual Zephyr development terminal,
-  with the Zephyr environment initialized.
+* 终端 #1：当前目录为 net-tools（``cd net-tools``）
+* 终端 #2：常用的 Zephyr 开发终端，已完成环境初始化。
 
-When configuring the Zephyr instance, you must select the correct Ethernet
-driver for QEMU connectivity:
+配置 Zephyr 实例时，需要为 QEMU 连接选择正确的以太网驱动：
 
-* For ``qemu_x86``, select ``Intel(R) PRO/1000 Gigabit Ethernet driver``
-  Ethernet driver. Driver is called ``e1000`` in Zephyr source tree.
-* For ``qemu_cortex_m3``, select ``TI Stellaris MCU family ethernet driver``
-  Ethernet driver. Driver is called ``stellaris`` in Zephyr source tree.
-* For ``mps2_an385``, select ``SMSC911x/9220 Ethernet driver`` Ethernet driver.
-  Driver is called ``smsc911x`` in Zephyr source tree.
-* For ``qemu_cortex_a53``, ``Intel(R) PRO/1000 Gigabit Ethernet driver``
-  Ethernet driver is selected by default.
-* Additionally, the :zephyr:code-sample:`sockets-echo-server` sample contains
-  overlay files for the VIRTIO Network device on ``qemu_x86_64``.
+* 对于 ``qemu_x86``：选择 ``Intel(R) PRO/1000 Gigabit Ethernet driver``（在 Zephyr 源码中驱动名为 ``e1000``）。
+* 对于 ``qemu_cortex_m3``：选择 ``TI Stellaris MCU family ethernet driver``（驱动名为 ``stellaris``）。
+* 对于 ``mps2_an385``：选择 ``SMSC911x/9220 Ethernet driver``（驱动名为 ``smsc911x``）。
+* 对于 ``qemu_cortex_a53``：默认已选择 ``Intel(R) PRO/1000 Gigabit Ethernet driver``。
+* 另外，:zephyr:code-sample:`sockets-echo-server` 示例为 ``qemu_x86_64`` 的 VIRTIO 网卡提供了覆盖文件。
 
-Step 1 - Create Ethernet interface
+步骤 1 - 创建以太网接口
 ==================================
 
-Before starting QEMU with network connectivity, a network interface
-should be created in the host system.
+在启动具备网络功能的 QEMU 之前，需要先在主机上创建一个网络接口。
 
-In terminal #1, type:
+在终端 #1 执行：
 
 .. code-block:: console
 
    ./net-setup.sh
 
-You can tweak the behavior of the ``net-setup.sh`` script. See various options
-by running ``net-setup.sh`` like this:
+你可以调整 ``net-setup.sh`` 脚本的行为。运行如下命令查看可用选项：
 
 .. code-block:: console
 
    ./net-setup.sh --help
 
 
-Step 2 - Start app in QEMU board
+步骤 2 - 在 QEMU 开发板中启动应用
 ================================
 
-Build and start the :zephyr:code-sample:`sockets-echo-server` sample application.
-In this example, the qemu_x86 board is used.
+构建并启动 :zephyr:code-sample:`sockets-echo-server` 示例应用。
+此处以 qemu_x86 开发板为例。
 
-In terminal #2, type:
+在终端 #2 执行：
 
 .. zephyr-app-commands::
    :zephyr-app: samples/net/sockets/echo_server
@@ -87,7 +73,7 @@ In terminal #2, type:
    :goals: run
    :compact:
 
-Alternatively, if you decided to use the VIRTIO Network device on qemu_x86_64:
+或者，如果打算在 qemu_x86_64 上使用 VIRTIO 网卡：
 
 .. zephyr-app-commands::
    :zephyr-app: samples/net/sockets/echo_server
@@ -97,6 +83,6 @@ Alternatively, if you decided to use the VIRTIO Network device on qemu_x86_64:
    :goals: run
    :compact:
 
-Exit QEMU by pressing :kbd:`CTRL+A` :kbd:`x`.
+按 :kbd:`CTRL+A` :kbd:`x` 退出 QEMU。
 
 .. _`net-tools`: https://github.com/zephyrproject-rtos/net-tools

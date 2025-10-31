@@ -1,191 +1,91 @@
 .. _usermode_overview:
 
-Overview
-########
+概述
+####
 
-Threat Model
+威胁模型
+********
+
+在 Zephyr 中，用户态线程被视为不受信任，因此会与其他用户态线程以及内核彼此隔离。有缺陷或恶意的用户态线程不能泄露或修改其他线程或内核的私有数据/资源，且不能干扰或控制其他用户态线程或内核。
+
+用户态机制的典型使用场景：
+
+- 内核可防御许多无意的编程错误，这些错误否则可能悄然或猛烈地破坏系统。
+- 内核可将复杂的数据解析器（如解释器、网络协议、文件系统）置于沙箱中，使得恶意第三方代码或数据无法危及内核或其他线程。
+- 内核可支持多个逻辑“应用”的概念，每个应用拥有自己的线程组与私有数据结构；若某一应用崩溃或被攻破，彼此仍相互隔离。
+
+设计目标
+========
+
+对以非特权 CPU 状态（下称“用户态”）运行的线程，我们的防护目标包括：
+
+- 阻止访问未被明确授予的内存，或以不兼容策略访问内存（例如对只读区域进行写入）。
+
+  - 线程栈缓冲区的访问策略部分依赖底层的内存保护硬件：
+
+    - 用户线程默认对自身的栈缓冲具有读写权限。
+    - 用户线程默认不允许访问不在同一内存域的其他用户线程的栈。
+    - 用户线程默认不允许访问特权线程拥有的栈，或用于系统调用提权、处理中断或 CPU 异常的栈。
+    - 视硬件而定，用户线程可能被允许读写同一内存域内其他用户线程的栈：
+
+       - 在 MPU 系统中，线程仅可访问自身的栈缓冲。
+       - 在 MMU 系统中，线程可访问同一内存域内任意用户线程的栈；可移植代码不应依赖此行为。
+
+  - 默认情况下，程序文本与只读数据在内核范围内以只读方式对所有线程可见；该策略可调整。
+  - 除上述说明外，用户线程默认不被授予访问任何其他内存的权限。
+
+- 阻止使用未被明确授予的设备驱动或内核对象；权限粒度可落到每个对象或每个驱动实例。
+
+- 校验具有错误参数的内核/驱动 API 调用，避免其导致内核私有数据结构崩溃或损坏。包括：
+
+  - 使用了错误的内核对象类型；
+  - 参数越界或取值无意义；
+  - 传递了调用线程无足够读/写权限的内存缓冲（依 API 语义而定）；
+  - 使用了未处于正确初始化状态的内核对象。
+
+- 确保检测并安全处理用户态栈溢出。
+
+- 阻止调用被内核配置排除的系统调用函数。
+
+- 防止禁用或篡改由内核定义、硬件强制执行的内存保护。
+
+- 除通过内核定义的系统调用与中断处理程序外，阻止从用户态重新进入特权态。
+
+- 阻止用户态线程引入新的可执行代码（除非内核系统调用支持的范围内）。
+
+我们不针对以下情形提供防护：
+
+- 内核自身，以及在特权态下运行的线程，被视为可信。
+- 工具链与构建系统所使用的辅助程序，被视为可信。
+- 内核构建过程被视为可信。在构建期会生成有效内核对象表、定义系统调用、配置中断；过程中产生并使用的 .elf 二进制均视为可信代码。
+- 无法防止在内核态配置内存域时的失误导致内核私有数据对用户线程可见。内核对象所在的 RAM 应始终配置为仅特权可访问。
+- 可以在顶层声明用户态线程并为其赋予内核对象的权限。总体上，凡参与生成 zephyr.elf 的内核构建所包含的 C/头文件均被视为可信。
+- 不防护通过线程 CPU 资源耗尽造成的拒绝服务攻击。Zephyr 不进行线程优先级老化；某一优先级的用户线程可饿死低优先级线程，若未启用时间片，也可能饿死同优先级的其他线程。
+- 同时活动线程的数量存在构建期定义的上限，超过后将无法创建新的用户线程。
+- 对特权态线程的栈溢出可能被捕获，但无法保证系统完整性。
+
+高层策略细节
 ************
 
-User mode threads are considered to be untrusted by Zephyr and are therefore
-isolated from other user mode threads and from the kernel. A flawed or
-malicious user mode thread cannot leak or modify the private data/resources
-of another thread or the kernel, and cannot interfere with or
-control another user mode thread or the kernel.
+总体而言，我们通过以下机制实现线程级内存保护目标：
 
-Example use-cases of Zephyr's user mode features:
+- 任一用户线程只能访问部分内存：通常为其栈、程序文本、只读数据，以及其所属 :ref:`memory_domain` 中配置的分区。访问其他 RAM 必须通过系统调用代为完成，或由特权线程通过内存域 API 赋予权限。新建线程将继承父线程的内存域配置。线程之间可通过共享相同内存域的成员关系，或通过内核对象（如信号量、管道）进行通信。
 
-- The kernel can protect against many unintentional programming errors which
-  could otherwise silently or spectacularly corrupt the system.
+- 用户线程不能直接访问属于内核对象的内存。尽管使用指针引用内核对象，实际的对象操作都通过系统调用接口完成。设备驱动与线程栈也视为内核对象。这确保了内核对象内部私有数据不会被篡改。
 
-- The kernel can sandbox complex data parsers such as interpreters, network
-  protocols, and filesystems such that malicious third-party code or data
-  cannot compromise the kernel or other threads.
+- 用户线程默认无权访问除自身线程对象之外的任何内核对象或驱动。此类访问必须由其他线程授予，该线程要么处于特权态，要么同时对接收方线程对象与被授予的内核对象拥有权限。新建线程可选择自动继承父线程被授予的所有内核对象权限（不含父线程对象自身）。
 
-- The kernel can support the notion of multiple logical "applications", each
-  with their own group of threads and private data structures, which are
-  isolated from each other if one crashes or is otherwise compromised.
+- 出于性能与体积考虑，Zephyr 通常对内核对象或驱动 API 做较少甚至不做参数错误检查。从用户态通过系统调用访问时，会经过额外的处理层，负责严格校验访问权限与对象类型、通过边界检查等方式验证其他参数的有效性、并确认与操作相关的内存缓冲具有适当的读/写权限。
 
-Design Goals
-============
+- 线程栈的定义方式保证一旦超出指定栈空间会触发硬件异常；具体方式因架构而异。
 
-For threads running in a non-privileged CPU state (hereafter referred to as
-'user mode') we aim to protect against the following:
+约束
+****
 
-- We prevent access to memory not specifically granted, or incorrect access to
-  memory that has an incompatible policy, such as attempting to write to a
-  read-only area.
+若需从用户态使用，所有内核对象、线程栈与设备驱动实例都必须在构建期定义。动态使用场景需通过预定义的对象池获取内核对象。
 
-  - Access to thread stack buffers will be controlled with a policy which
-    partially depends on the underlying memory protection hardware.
+内核启动后若加载额外的应用二进制数据进行执行，还存在如下限制：
 
-    - A user thread will by default have read/write access to its own stack
-      buffer.
-
-    - A user thread will never by default have access to user thread stacks
-      that are not members of the same memory domain.
-
-    - A user thread will never by default have access to thread stacks owned
-      by a supervisor thread, or thread stacks used to handle system call
-      privilege elevations, interrupts, or CPU exceptions.
-
-    - A user thread may have read/write access to the stacks of other user
-      threads in the same memory domain, depending on hardware.
-
-       - On MPU systems, threads may only access their own stack buffer.
-
-       - On MMU systems, threads may access any user thread stack in the same
-         memory domain. Portable code should not assume this.
-
-  - By default, program text and read-only data are accessible to all threads
-    on read-only basis, kernel-wide. This policy may be adjusted.
-
-  - User threads by default are not granted default access to any memory
-    except what is noted above.
-
-- We prevent use of device drivers or kernel objects not specifically granted,
-  with the permission granularity on a per object or per driver instance
-  basis.
-
-- We validate kernel or driver API calls with incorrect parameters that would
-  otherwise cause a crash or corruption of data structures private to the
-  kernel. This includes:
-
-  - Using the wrong kernel object type.
-
-  - Using parameters outside of proper bounds or with nonsensical values.
-
-  - Passing memory buffers that the calling thread does not have sufficient
-    access to read or write, depending on the semantics of the API.
-
-  - Use of kernel objects that are not in a proper initialization state.
-
-- We ensure the detection and safe handling of user mode stack overflows.
-
-- We prevent invoking system calls to functions excluded by the kernel
-  configuration.
-
-- We prevent disabling of or tampering with kernel-defined and
-  hardware-enforced memory protections.
-
-- We prevent re-entry from user to supervisor mode except through the
-  kernel-defined system calls and interrupt handlers.
-
-- We prevent the introduction of new executable code by user mode threads,
-  except to the extent to which this is supported by kernel system calls.
-
-We are specifically not protecting against the following attacks:
-
-- The kernel itself, and any threads that are executing in supervisor mode,
-  are assumed to be trusted.
-
-- The toolchain and any supplemental programs used by the build system are
-  assumed to be trusted.
-
-- The kernel build is assumed to be trusted. There is considerable build-time
-  logic for creating the tables of valid kernel objects, defining system calls,
-  and configuring interrupts. The .elf binary files that are worked with
-  during this process are all assumed to be trusted code.
-
-- We can't protect against mistakes made in memory domain configuration done in
-  kernel mode that exposes private kernel data structures to a user thread. RAM
-  for kernel objects should always be configured as supervisor-only.
-
-- It is possible to make top-level declarations of user mode threads and
-  assign them permissions to kernel objects. In general, all C and header
-  files that are part of the kernel build producing zephyr.elf are assumed to
-  be trusted.
-
-- We do not protect against denial of service attacks through thread CPU
-  starvation. Zephyr has no thread priority aging and a user thread of a
-  particular priority can starve all threads of lower priority, and also other
-  threads of the same priority if time-slicing is not enabled.
-
-- There are build-time defined limits on how many threads can be active
-  simultaneously, after which creation of new user threads will fail.
-
-- Stack overflows for threads running in supervisor mode may be caught,
-  but the integrity of the system cannot be guaranteed.
-
-High-level Policy Details
-*************************
-
-Broadly speaking, we accomplish these thread-level memory protection goals
-through the following mechanisms:
-
-- Any user thread will only have access to a subset of memory:
-  typically its stack, program text, read-only data, and any partitions
-  configured in the :ref:`memory_domain` it belongs to. Access to any other RAM
-  must be done on the thread's behalf through system calls, or specifically
-  granted by a supervisor thread using the memory domain APIs. Newly created
-  threads inherit the memory domain configuration of the parent. Threads may
-  communicate with each other by having shared membership of the same memory
-  domains, or via kernel objects such as semaphores and pipes.
-
-- User threads cannot directly access memory belonging to kernel objects.
-  Although pointers to kernel objects are used to reference them, actual
-  manipulation of kernel objects is done through system call interfaces. Device
-  drivers and threads stacks are also considered kernel objects. This ensures
-  that any data inside a kernel object that is private to the kernel cannot be
-  tampered with.
-
-- User threads by default have no permission to access any kernel object or
-  driver other than their own thread object. Such access must be granted by
-  another thread that is either in supervisor mode or has permission on both
-  the receiving thread object and the kernel object being granted access to.
-  The creation of new threads has an option to automatically inherit
-  permissions of all kernel objects granted to the parent, except the parent
-  thread itself.
-
-- For performance and footprint reasons Zephyr normally does little or no
-  parameter error checking for kernel object or device driver APIs. Access from
-  user mode through system calls involves an extra layer of handler functions,
-  which are expected to rigorously validate access permissions and type of
-  the object, check the validity of other parameters through bounds checking or
-  other means, and verify proper read/write access to any memory buffers
-  involved.
-
-- Thread stacks are defined in such a way that exceeding the specified stack
-  space will generate a hardware fault. The way this is done specifically
-  varies per architecture.
-
-Constraints
-***********
-
-All kernel objects, thread stacks, and device driver instances must be defined
-at build time if they are to be used from user mode. Dynamic use-cases for
-kernel objects will need to go through pre-defined pools of available objects.
-
-There are some constraints if additional application binary data is loaded
-for execution after the kernel starts:
-
-- Loaded object code will not be able to define any kernel objects that will be
-  recognized by the kernel. This code will instead need to use APIs for
-  requesting kernel objects from pools.
-
-- Similarly, since the loaded object code will not be part of the kernel build
-  process, this code will not be able to install interrupt handlers,
-  instantiate device drivers, or define system calls, regardless of what
-  mode it runs in.
-
-- Loaded object code that does not come from a verified source should always
-  be entered with the CPU already in user mode.
+- 加载的目标代码无法定义任何可被内核识别的内核对象，需通过对象池 API 请求内核对象。
+- 同理，由于加载的目标代码不参与内核构建流程，该代码无法安装中断处理程序、实例化设备驱动或定义系统调用，无论其以何种特权级运行。
+- 来自非验证来源的加载目标代码应始终在 CPU 已处于用户态时进入执行。

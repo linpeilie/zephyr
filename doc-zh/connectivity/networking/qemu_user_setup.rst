@@ -1,87 +1,69 @@
 .. _networking_with_user_qemu:
 
-Networking with QEMU User
+使用 QEMU User 网络（SLIRP）
 #############################
 
 .. contents::
     :local:
     :depth: 2
 
-This page is intended to serve as a starting point for anyone interested in
-using QEMU SLIRP with Zephyr.
+本页作为使用 QEMU SLIRP 与 Zephyr 结合的入门指南。
 
-Introduction
+简介
 *************
 
-SLIRP is a network backend which provides the complete TCP/IP stack within
-QEMU and uses that stack to implement a virtual NAT'd network. As there are
-no dependencies on the host, SLIRP is simple to setup.
+SLIRP 是一种网络后端，它在 QEMU 内部提供完整的 TCP/IP 协议栈，并基于该协议栈实现一个虚拟的 NAT 网络。
+由于不依赖宿主机环境，SLIRP 的设置非常简单。
 
-By default, QEMU uses the ``10.0.2.X/24`` network and runs a gateway at
-``10.0.2.2``. All traffic intended for the host network has to travel through
-this gateway, which will filter out packets based on the QEMU command line
-parameters. This gateway also functions as a DHCP server for all GOS,
-allowing them to be automatically assigned with an IP address starting from
-``10.0.2.15``.
+默认情况下，QEMU 使用 ``10.0.2.X/24`` 网络，并在 ``10.0.2.2`` 运行网关。
+所有发往宿主网络的流量都将经过该网关，并依据 QEMU 命令行参数进行过滤。
+该网关同时充当所有来宾系统的 DHCP 服务器，使其自动分配从 ``10.0.2.15`` 开始的 IP 地址。
 
-More details about User Networking can be obtained from here:
+关于 User Networking 的更多细节参见：
 https://wiki.qemu.org/Documentation/Networking#User_Networking_.28SLIRP.29
 
-Using SLIRP with Zephyr
+在 Zephyr 中使用 SLIRP
 ************************
 
-In order to use SLIRP with Zephyr, the user has to set the Kconfig option to
-enable User Networking.
+要在 Zephyr 中使用 SLIRP，需要启用相应的 Kconfig 选项以开启 User Networking：
 
 .. code-block:: cfg
 
    CONFIG_NET_QEMU_USER=y
 
-Once this configuration option is enabled, all QEMU launches will use SLIRP.
-In the default configuration, Zephyr only enables User Networking, and does
-not pass any arguments to it. This means that the Guest will only be able to
-communicate to the QEMU gateway, and any data intended for the host machine
-will be dropped by QEMU.
+启用该配置后，所有 QEMU 启动都会使用 SLIRP。
+在默认配置下，Zephyr 仅启用 User Networking，而不会传递任何附加参数。
+这意味着来宾系统只能与 QEMU 网关通信，任何发往宿主机的数据都会被 QEMU 丢弃。
 
-In general, QEMU User Networking can take in a lot of arguments including,
+通常，QEMU User Networking 可以接收许多参数，包括：
 
-* Information about host/guest port forwarding. This must be provided to
-  create a communication channel between the guest and host.
-* Information about network to use. This may be valuable if the user does
-  not want to use the default ``10.0.2.X`` network.
-* Tell QEMU to start DHCP server at user-defined IP address.
-* ID and other information.
+* 宿主/来宾端口转发的信息（必须提供，以创建宿主与来宾之间的通信通道）。
+* 要使用的网络信息（当不希望使用默认的 ``10.0.2.X`` 网络时很有用）。
+* 指示 QEMU 在用户指定的 IP 地址上启动 DHCP 服务器。
+* ID 及其他信息。
 
-As this information varies with every use case, it is difficult to come up
-with good defaults that work for all. Therefore, Zephyr Implementation
-offloads this to the user, and expects that they will provide arguments
-based on requirements. For this, there is a Kconfig string which can be
-populated by the user.
+由于这些信息会随具体使用场景而变化，很难给出适用于所有情况的默认值。
+因此，Zephyr 的实现将这部分留给用户，期望用户根据需求提供参数。
+为此，提供了一个可由用户填写的 Kconfig 字符串：
 
 .. code-block:: cfg
 
    CONFIG_NET_QEMU_USER_EXTRA_ARGS="net=192.168.0.0/24,hostfwd=tcp::8080-:8080"
 
-This option is appended as-is to the QEMU command line. Therefore, any problems with
-this command line will be reported by QEMU only. Here's what this particular
-example will do,
+该选项会按原样附加到 QEMU 命令行。因此该命令行的任何问题只会由 QEMU 报告。
+上述示例将：
 
-* Make QEMU use the ``192.168.0.0/24`` network instead of the default.
-* Enable forwarding of any TCP data received from port 8080 of host to port
-  8080 of guest, and vice versa.
+* 让 QEMU 使用 ``192.168.0.0/24`` 网络而非默认网络。
+* 启用端口转发：将宿主机 8080 端口收到的 TCP 数据转发到来宾 8080 端口，反之亦然。
 
-Limitations
+限制
 *************
 
-If the user does not have any specific networking requirements other than the
-ability to access a web page from the guest, user networking (slirp) is a
-good choice. However, it has several limitations
+如果除在来宾中访问网页之外没有其他特定网络需求，User Networking（slirp）是一个不错的选择。
+但它也有多项限制：
 
-* There is a lot of overhead so the performance is poor.
-* The guest is not directly accessible from the host or the external network.
-* In general, ICMP traffic does not work (so you cannot use ping within a guest).
-* As port mappings need to be defined before launching qemu, clients which use
-  dynamically generated ports cannot communicate with external network.
-* There is a bug in the SLIRP implementation which filters out all IPv6 packets
-  from the guest. See https://bugs.launchpad.net/qemu/+bug/1724590 for details.
-  Therefore, IPv6 will not work with User Networking.
+* 开销较大，性能较差。
+* 宿主或外部网络无法直接访问来宾。
+* 通常 ICMP 流量不可用（无法在来宾中使用 ping）。
+* 由于端口映射需要在启动 QEMU 前定义，使用动态端口的客户端无法与外部网络通信。
+* SLIRP 实现存在一个会过滤来宾所有 IPv6 报文的缺陷，详见 https://bugs.launchpad.net/qemu/+bug/1724590 ，因此在 User Networking 下 IPv6 无法工作。

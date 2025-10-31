@@ -1,58 +1,50 @@
 .. _clang:
 
-Clang static analyzer support
-#############################
+Clang 静态分析器支持
+####################
 
-Clang Static Analyzer is built on top of Clang and LLVM.
-Strictly speaking, the analyzer is part of Clang, as Clang
-consists of a set of reusable C++ libraries for building
-powerful source-level tools. The static analysis engine used by the
-Clang Static Analyzer is a Clang library, and has the capability to
-be reused in different contexts and by different clients.
+Clang Static Analyzer 构建在 Clang 和 LLVM 之上。
+严格来说，分析器是 Clang 的一部分，因为 Clang 包含一组可重用的 C++ 库，
+用于构建强大的源代码级工具。Clang Static Analyzer 使用的静态分析引擎是一个 Clang 库，
+并具有在不同上下文和不同客户端中重用的能力。
 
-LLVM provides various methods to run the analyzer on a codebase,
-through either a dedicated set of tools (scan-build and analyze-build),
-or via command line arguments when running clang ('--analyze').
+LLVM 提供了多种在代码库上运行分析器的方法，
+可以通过专用工具集（scan-build 和 analyze-build），
+也可以通过在运行 clang 时使用命令行参数（'--analyze'）。
 
-- 'scan-build' utility comes as the most convenient way for projects
-  using a simple $CC makefile variables, as it will wraps and replace
-  the compiler calls to perform it's analysis.
+- 'scan-build' 工具对于使用简单的 $CC makefile 变量的项目来说是最方便的方式，
+  因为它会包装和替换编译器调用来执行分析。
 
-- 'analyze-build' utility is a sub-tool from 'scan-build', it only
-  relies on a 'compile_commands.json' database to perform the analysis.
+- 'analyze-build' 工具是 'scan-build' 的子工具，它仅依赖 'compile_commands.json' 数据库来执行分析。
 
-- clang option '--analyze' will run the analyzer alongside the build, but
-  objects files are not generated, making any link stage impossible. In
-  our case the first link stage will fail and stop the analysis.
+- clang 选项 '--analyze' 将在构建的同时运行分析器，但不会生成目标文件，使得任何链接阶段都无法进行。
+  在我们的情况下，第一个链接阶段将失败并停止分析。
 
-Because of it's complexe build infrastructure, invoking clang analyzer with
-'analyze-build' is the most simple way to analyze a Zephyr project.
+由于 Zephyr 项目具有复杂的构建基础设施，使用 'analyze-build' 调用 clang 分析器是分析 Zephyr 项目的最简单方法。
 
 `Clang static analyzer documentation <https://clang.llvm.org/docs/ClangStaticAnalyzer.html>`__
 
-Installing clang analyzer
-*************************
+安装 clang 分析器
+*****************
 
-'scan-build' and its sub-tool 'analyze-build' come natively with llvm as part of the binaries.
-Make sure to have the binary directory accessible into your PATH.
+'scan-build' 及其子工具 'analyze-build' 作为 llvm 二进制文件的一部分原生提供。
+请确保将二进制目录添加到你的 PATH 中。
 
-'scan-build' is also available as a standalone python package available on `pypi <https://pypi.org/project/scan-build/>`__.
+'scan-build' 也可作为独立的 Python 包在 `pypi <https://pypi.org/project/scan-build/>`__ 上获取。
 
 .. code-block:: shell
 
     pip install scan-build
 
-Run clang static analyzer
-*************************
+运行 clang 静态分析器
+*********************
 
 .. note::
 
-  The analyser requires that the project builds with a LLVM toolchain, and
-  produces a 'compile_commands.json' database.
+  分析器要求项目使用 LLVM 工具链构建，并生成 'compile_commands.json' 数据库。
 
-To run clang static analyzer, :ref:`west build <west-building>` should be
-called with a ``-DZEPHYR_SCA_VARIANT=clang`` parameter, alongside the llvm
-toolchain parameters, e.g.
+要运行 clang 静态分析器，应在调用 :ref:`west build <west-building>` 时传递 ``-DZEPHYR_SCA_VARIANT=clang`` 参数，
+以及 llvm 工具链参数，例如：
 
 .. zephyr-app-commands::
    :zephyr-app: samples/userspace/hello_world_user
@@ -63,33 +55,31 @@ toolchain parameters, e.g.
 
 .. note::
 
-  By default, clang static analyzer produces a html report, but various other
-  outputs can be selected with options (sarif, plist, html)
+  默认情况下，clang 静态分析器生成 html 报告，但可以通过选项选择各种其他输出格式（sarif、plist、html）。
 
-Configuring clang static analyzer
-*********************************
+配置 clang 静态分析器
+*********************
 
-Clang static analyzer can be controlled using specific options.
-To get an exhaustive list of available options, report to the
-'analyze-build' helper and 'scan-build' helper.
+可以使用特定选项控制 Clang 静态分析器。
+要获取可用选项的详尽列表，请参考 'analyze-build' 帮助和 'scan-build' 帮助。
 
 .. code-block:: shell
 
     analyze-build --help
 
-Options already activated by default:
+默认已激活的选项：
 
-* --analyze-headers : Also analyze functions in #included files.
+* --analyze-headers：同时分析 #included 文件中的函数。
 
 .. list-table::
    :header-rows: 1
 
-   * - Parameter
-     - Description
+   * - 参数
+     - 描述
    * - ``CLANG_SCA_OPTS``
-     - A semicolon separated list of 'analyze-build' options.
+     - 以分号分隔的 'analyze-build' 选项列表。
 
-These parameters can be passed on the command line, or be set as environment variables.
+这些参数可以在命令行上传递，或设置为环境变量。
 
 .. zephyr-app-commands::
    :zephyr-app: samples/hello_world

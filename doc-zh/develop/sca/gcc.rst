@@ -1,17 +1,15 @@
 .. _gcc:
 
-GCC static analysis support
-###########################
+GCC 静态分析支持
+################
 
-Static analysis was introduced in `GCC <https://gcc.gnu.org/>`__ 10 and it is enabled
-with the option ``-fanalyzer``. This option performs a much more expensive and thorough
-analysis of the code than traditional warnings.
+静态分析在 `GCC <https://gcc.gnu.org/>`__ 10 中引入，通过选项 ``-fanalyzer`` 启用。
+该选项对代码执行比传统警告更昂贵和更彻底的分析。
 
-Run GCC static analysis
-***********************
+运行 GCC 静态分析
+*****************
 
-To run GCC static analysis, :ref:`west build <west-building>` should be
-called with a ``-DZEPHYR_SCA_VARIANT=gcc`` parameter, e.g.
+要运行 GCC 静态分析，应在调用 :ref:`west build <west-building>` 时传递 ``-DZEPHYR_SCA_VARIANT=gcc`` 参数，例如：
 
 .. zephyr-app-commands::
    :zephyr-app: samples/userspace/hello_world_user

@@ -1,219 +1,114 @@
 .. _kernelobjects:
 
-Kernel Objects
-##############
+内核对象（Kernel Objects）
+#########################
 
-A kernel object can be one of three classes of data:
+内核对象可以是以下三类数据之一：
 
-* A core kernel object, such as a semaphore, thread, pipe, etc.
-* A thread stack, which is an array of :c:struct:`z_thread_stack_element`
-  and declared with :c:macro:`K_THREAD_STACK_DEFINE()`
-* A device driver instance (const struct device) that belongs to one of a defined
-  set of subsystems
+* 核心内核对象，例如信号量、线程、管道等。
+* 线程栈，即由 :c:struct:`z_thread_stack_element` 组成的数组，并通过 :c:macro:`K_THREAD_STACK_DEFINE()` 声明。
+* 设备驱动实例（const struct device），其属于某个已定义的子系统集合。
 
-The set of known kernel objects and driver subsystems is defined in
-include/kernel.h as :c:enum:`k_objects`.
+已知的内核对象集合与驱动子系统集合在 include/kernel.h 中以 :c:enum:`k_objects` 定义。
 
-Kernel objects are completely opaque to user threads. User threads work
-with addresses to kernel objects when making API calls, but may never
-dereference these addresses, doing so will cause a memory protection fault.
-All kernel objects must be placed in memory that is not accessible by
-user threads.
+对用户线程而言，内核对象是完全不透明的。用户线程在进行 API 调用时会传递内核对象的地址，但绝不可解引用这些地址，否则会触发内存保护故障。所有内核对象必须放置在用户线程不可访问的内存中。
 
-Since user threads may not directly manipulate kernel objects, all use of
-them must go through system calls. In order to perform a system call on
-a kernel object, checks are performed by system call handler functions
-that the kernel object address is valid and that the calling thread
-has sufficient permissions to work with it.
+由于用户线程不能直接操作内核对象，所有对它们的使用都必须通过系统调用完成。对某个内核对象执行系统调用时，系统调用处理函数会检查该内核对象地址是否有效，以及调用线程是否具备足够权限访问它。
 
-Permission on an object also has the semantics of a reference to an object.
-This is significant for certain object APIs which do temporary allocations,
-or objects which themselves have been allocated from a runtime memory pool.
+对象上的“权限”同时也具有“引用”的语义。对于某些会做临时分配的对象 API，或从运行期内存池中分配出来的对象，这一点尤为重要。
 
-If an object loses all references, two events may happen:
+若对象失去所有引用，可能发生两种情况：
 
-* If the object has an associated cleanup function, the cleanup function
-  may be called to release any runtime-allocated buffers the object was using.
+* 若对象具有关联的清理函数，将调用该清理函数以释放对象使用的任何运行期分配的缓冲。
 
-* If the object itself was dynamically allocated, the memory for the object
-  will be freed.
+* 若对象本身是动态分配的，则该对象的内存会被释放。
 
-Object Placement
-****************
+对象放置（Object Placement）
+**************************
 
-Kernel objects that are only used by supervisor threads have no restrictions
-and can be located anywhere in the binary, or even declared on stacks. However,
-to prevent accidental or intentional corruption by user threads, they must
-not be located in any memory that user threads have direct access to.
+仅供特权线程使用的内核对象没有放置限制，可以位于二进制中的任意位置，甚至可以在栈上声明。但为防止用户线程的无意或恶意破坏，它们不能位于用户线程可直接访问的内存中。
 
-In order for a static kernel object to be usable by a user thread via system
-call APIs, several conditions must be met on how the kernel object is declared:
+若要让静态内核对象能被用户线程通过系统调用 API 使用，其声明方式需满足以下条件：
 
-* The object must be declared as a top-level global at build time, such that it
-  appears in the ELF symbol table. It is permitted to declare kernel objects
-  with static scope. The post-build script :ref:`gen_kobject_list.py` scans the
-  generated ELF file to find kernel objects and places their memory addresses
-  in a special table of kernel object metadata.  Kernel objects may be members
-  of arrays or embedded within other data structures.
+* 必须在构建时作为顶层全局声明，从而出现在 ELF 符号表中。允许以 static 作用域声明内核对象。构建后脚本 :ref:`gen_kobject_list.py` 会扫描生成的内核 ELF 文件以找到内核对象，并将其内存地址放入一个特殊的内核对象元数据表中。内核对象可以是数组成员，或嵌入到其他数据结构中。
 
-* Kernel objects must be located in memory reserved for the kernel. They
-  must not be located in any memory partitions that are user-accessible.
+* 内核对象必须位于为内核保留的内存中，不能位于任何用户可访问的内存分区内。
 
-* Any memory reserved for a kernel object must be used exclusively for that
-  object. Kernel objects may not be members of a union data type.
+* 为内核对象保留的内存必须专用，不得被其他用途复用。内核对象不能作为共用体（union）的成员。
 
-Kernel objects that are found but do not meet the above conditions will not be
-included in the generated table that is used to validate kernel object pointers
-passed in from user mode.
+若发现的内核对象不满足上述条件，则不会被包含在用于验证来自用户态的内核对象指针的生成表中。
 
-The debug output of the :ref:`gen_kobject_list.py` script may be useful when
-debugging why some object was unexpectedly not being tracked. This
-information will be printed if the script is run with the ``--verbose`` flag,
-or if the build system is invoked with verbose output.
+在调试为何某个对象未按预期被跟踪时，:ref:`gen_kobject_list.py` 的调试输出会很有帮助。若以 ``--verbose`` 运行该脚本，或以 verbose 模式调用构建系统，将打印这些信息。
 
-Dynamic Objects
-***************
+动态对象（Dynamic Objects）
+************************
 
-Kernel objects may also be allocated at runtime if
-:kconfig:option:`CONFIG_DYNAMIC_OBJECTS` is enabled. In this case, the
-:c:func:`k_object_alloc` API may be used to instantiate an object from
-the calling thread's resource pool. Such allocations may be freed in two
-ways:
+若启用 :kconfig:option:`CONFIG_DYNAMIC_OBJECTS`，内核对象也可在运行期分配。此时，可使用 :c:func:`k_object_alloc` API 从调用线程的资源池中实例化对象。此类分配可通过两种方式释放：
 
-* Supervisor threads may call :c:func:`k_object_free` to force a dynamic
-  object to be released.
+* 特权线程可调用 :c:func:`k_object_free` 强制释放动态对象。
 
-* If an object's references drop to zero (which happens when no threads have
-  permissions on it) the object will be automatically freed. User threads
-  may drop their own permission on an object with
-  :c:func:`k_object_release`, and their permissions are automatically
-  cleared when a thread terminates. Supervisor threads may additionally
-  revoke references for another thread using
-  :c:func:`k_object_access_revoke`.
+* 若对象引用计数降为零（即没有任何线程对其拥有权限），对象会被自动释放。用户线程可通过 :c:func:`k_object_release` 放弃其对对象的权限；线程终止时其权限也会自动清除。特权线程还可通过 :c:func:`k_object_access_revoke` 撤销其他线程的引用。
 
-Because permissions are also used for reference counting, it is important for
-supervisor threads to acquire permissions on objects they are using even though
-the access control aspects of the permission system are not enforced.
+由于权限同时用于引用计数，即便访问控制对特权线程不生效，特权线程在使用对象时仍应显式获取对象权限。
 
-Implementation Details
-======================
+实现细节（Implementation Details）
+================================
 
-The :ref:`gen_kobject_list.py` script is a post-build step which finds all the
-valid kernel object instances in the binary. It accomplishes this by parsing
-the DWARF debug information present in the generated ELF file for the kernel.
+脚本 :ref:`gen_kobject_list.py` 是一个构建后步骤，用于查找二进制中所有有效的内核对象实例。它通过解析内核生成的 ELF 文件中存在的 DWARF 调试信息来完成此工作。
 
-Any instances of structs or arrays corresponding to kernel objects that meet
-the object placement criteria will have their memory addresses placed in a
-special perfect hash table of kernel objects generated by the 'gperf' tool.
-When a system call is made and the kernel is presented with a memory address
-of what may or may not be a valid kernel object, the address can be validated
-with a constant-time lookup in this table.
+任何满足放置条件的内核对象结构体或数组实例，其内存地址都会被放入由 gperf 工具生成的“完美哈希表”中。当收到系统调用并传入一个可能是也可能不是有效内核对象的内存地址时，可通过对该表进行常数时间查询来进行验证。
 
-Drivers are a special case. All drivers are instances of :c:struct:`device`, but
-it is important to know what subsystem a driver belongs to so that
-incorrect operations, such as calling a UART API on a sensor driver object, can
-be prevented. When a device struct is found, its API pointer is examined to
-determine what subsystem the driver belongs to.
+驱动是一个特殊情形。所有驱动都是 :c:struct:`device` 的实例，但我们需要知道驱动属于哪个子系统，以避免错误操作（例如在传感器驱动对象上调用 UART API）。当发现一个 device 结构体实例时，会检查其 API 指针以确定其所属子系统。
 
-The table itself maps kernel object memory addresses to instances of
-:c:struct:`z_object`, which has all the metadata for that object. This
-includes:
+该表本身将内核对象的内存地址映射到 :c:struct:`z_object` 的实例上，其中包含该对象的全部元数据，包括：
 
-* A bitfield indicating permissions on that object. All threads have a
-  numerical ID assigned to them at build time, used to index the permission
-  bitfield for an object to see if that thread has permission on it. The size
-  of this bitfield is controlled by the :kconfig:option:`CONFIG_MAX_THREAD_BYTES`
-  option and the build system will generate an error if this value is too low.
-* A type field indicating what kind of object this is, which is some
-  instance of :c:enum:`k_objects`.
-* A set of flags for that object. This is currently used to track
-  initialization state and whether an object is public or not.
-* An extra data field. The semantics of this field vary by object type, see
-  the definition of :c:union:`z_object_data`.
+* 一个位段，表示该对象的权限。所有线程在构建时都会分配一个数值 ID，用于索引对象的权限位段以判断该线程是否对其有权限。该位段大小由 :kconfig:option:`CONFIG_MAX_THREAD_BYTES` 控制；若配置过小，构建系统会报错。
+* 一个类型字段，指示对象类型（:c:enum:`k_objects` 的某个实例）。
+* 一组标志。目前用于跟踪初始化状态以及对象是否为 public。
+* 一个额外数据字段。其语义因对象类型而异，见 :c:union:`z_object_data`。
 
-Dynamic objects allocated at runtime are tracked in a runtime red/black tree
-which is used in parallel to the gperf table when validating object pointers.
+运行期分配的动态对象会被跟踪在一个运行期红黑树中，在验证对象指针时与 gperf 表并行使用。
 
-Supervisor Thread Access Permission
-***********************************
+特权线程访问权限（Supervisor Thread Access Permission）
+*****************************************************
 
-Supervisor threads can access any kernel object. However, permissions for
-supervisor threads are still tracked for two reasons:
+特权线程可访问任意内核对象。但仍跟踪特权线程的权限有两个原因：
 
-* If a supervisor thread calls :c:func:`k_thread_user_mode_enter`, the
-  thread will then run in user mode with any permissions it had been granted
-  (in many cases, by itself) when it was a supervisor thread.
+* 若特权线程调用 :c:func:`k_thread_user_mode_enter`，随后该线程将以用户态运行，并保留其在特权态时已被授予的权限（很多情况下是它自己授予的）。
 
-* If a supervisor thread creates a user thread with the
-  :c:macro:`K_INHERIT_PERMS` option, the child thread will be granted the
-  same permissions as the parent thread, except the parent thread object.
+* 若特权线程以 :c:macro:`K_INHERIT_PERMS` 选项创建用户线程，则子线程将继承与父线程相同的权限（不包括父线程对象本身）。
 
-User Thread Access Permission
-*****************************
+用户线程访问权限（User Thread Access Permission）
+************************************************
 
-By default, when a user thread is created, it will only have access permissions
-on its own thread object. Other kernel objects by default are not usable.
-Access to them needs to be explicitly or implicitly granted. There are several
-ways to do this.
+默认情况下，创建的用户线程仅对其自身的线程对象具有访问权限。其他内核对象默认不可用，需要显式或隐式授予权限。方式包括：
 
-* If a thread is created with the :c:macro:`K_INHERIT_PERMS`, that thread
-  will inherit all the permissions of the parent thread, except the parent
-  thread object.
+* 若以 :c:macro:`K_INHERIT_PERMS` 创建线程，则该线程会继承父线程的所有权限（不包括父线程对象）。
 
-* A thread that has permission on an object, or is running in supervisor mode,
-  may grant permission on that object to another thread via the
-  :c:func:`k_object_access_grant` API. The convenience pseudo-function
-  :c:func:`k_thread_access_grant` may also be used, which accepts an arbitrary
-  number of pointers to kernel objects and calls
-  :c:func:`k_object_access_grant` on each of them. The thread being granted
-  permission, or the object whose access is being granted, do not need to be
-  in an initialized state. If the caller is from user mode, the caller must
-  have permissions on both the kernel object and the target thread object.
+* 对某对象有权限的线程，或处于特权态运行的线程，可通过 :c:func:`k_object_access_grant` 为其他线程授予该对象的权限。也可使用便捷的“伪函数” :c:func:`k_thread_access_grant`，可接受任意数量的内核对象指针并对每个调用 :c:func:`k_object_access_grant`。被授予权限的线程或被授予访问的对象，无需处于已初始化状态。若调用者在用户态，则其必须同时对该内核对象和目标线程对象具有权限。
 
-* Supervisor threads may declare a particular kernel object to be a public
-  object, usable by all current and future threads with the
-  :c:func:`k_object_access_all_grant` API. You must assume that any
-  untrusted or exploited code will then be able to access the object. Use
-  this API with caution!
+* 特权线程可通过 :c:func:`k_object_access_all_grant` 将某个内核对象声明为公共对象，允许所有当前与未来线程使用。必须假设任何不受信任或被利用的代码都能访问该对象，请谨慎使用！
 
-* If a thread was declared statically with :c:macro:`K_THREAD_DEFINE()`,
-  then the :c:macro:`K_THREAD_ACCESS_GRANT()` may be used to grant that thread
-  access to a set of kernel objects at boot time.
+* 若使用 :c:macro:`K_THREAD_DEFINE()` 静态声明线程，则可用 :c:macro:`K_THREAD_ACCESS_GRANT()` 在引导期为该线程授予一组内核对象的访问权限。
 
-Once a thread has been granted access to an object, such access may be
-removed with the :c:func:`k_object_access_revoke` API. This API is not
-available to user threads, however user threads may use
-:c:func:`k_object_release` to relinquish their own permissions on an
-object.
+一旦线程被授予某对象的访问权限，可通过 :c:func:`k_object_access_revoke` 撤销之。该 API 不对用户线程开放，不过用户线程可以用 :c:func:`k_object_release` 放弃自身对对象的权限。
 
-API calls from supervisor mode to set permissions on kernel objects that are
-not being tracked by the kernel will be no-ops. Doing the same from user mode
-will result in a fatal error for the calling thread.
+从特权态调用设置未被内核跟踪的内核对象的权限将不会产生任何效果；从用户态进行相同行为将导致调用线程致命错误。
 
-Objects allocated with :c:func:`k_object_alloc` implicitly grant
-permission on the allocated object to the calling thread.
+通过 :c:func:`k_object_alloc` 分配的对象，会隐式将该对象的访问权限授予调用线程。
 
-Initialization State
-********************
+初始化状态（Initialization State）
+********************************
 
-Most operations on kernel objects will fail if the object is considered to be
-in an uninitialized state. The appropriate init function for the object must
-be performed first.
+若对象处于“未初始化”状态，则大多数针对该对象的操作都会失败。必须首先调用相应的初始化函数。
 
-Some objects will be implicitly initialized at boot:
+部分对象会在引导期被隐式初始化：
 
-* Kernel objects that were declared with static initialization macros
-  (such as :c:macro:`K_SEM_DEFINE` for semaphores) will be in an initialized
-  state at build time.
+* 使用静态初始化宏声明的内核对象（例如信号量的 :c:macro:`K_SEM_DEFINE`）在构建时即处于已初始化状态。
 
-* Device driver objects are considered initialized after their init function
-  is run by the kernel early in the boot process.
+* 设备驱动对象在其 init 函数被内核于引导早期执行后，被视为已初始化。
 
-If a kernel object is initialized with a private static initializer, the object
-must have :c:func:`k_object_init` called on it at some point by a supervisor
-thread, otherwise the kernel will consider the object uninitialized if accessed
-by a user thread. This is very uncommon, typically only for kernel objects that
-are embedded within some larger struct and initialized statically.
+若内核对象通过私有的静态初始化器进行初始化，则必须由特权线程在某个时刻调用 :c:func:`k_object_init`，否则内核会在用户线程访问该对象时视其为未初始化。这种情况非常少见，通常发生在内核对象被嵌入到更大的结构体中并以静态方式初始化时。
 
 .. code-block:: c
 
@@ -232,41 +127,36 @@ are embedded within some larger struct and initialized statically.
     ...
 
 
-Creating New Kernel Object Types
+创建新的内核对象类型（Creating New Kernel Object Types）
+*****************************************************
+
+在实现新的内核特性或驱动子系统时，可能需要定义新的内核对象类型。创建核心内核对象与创建新的驱动子系统需要不同的步骤。
+
+创建新的核心内核对象
+=====================
+
+* 在 ``scripts/build/gen_kobject_list.py`` 中，将该结构体名称加入 :py:data:`kobjects` 列表。
+
+新的结构体实例此后将被跟踪。
+
+为新的驱动子系统创建内核对象
+=============================
+
+所有驱动实例都是 :c:struct:`device`，区别在于其所指向的 API 结构体。
+
+* 在 ``scripts/build/gen_kobject_list.py`` 中，将该子系统的 API 结构体名称加入 :py:data:`subsystems` 列表。
+
+该新子系统的驱动实例此后将被跟踪。
+
+配置选项（Configuration Options）
 ********************************
 
-When implementing new kernel features or driver subsystems, it may be necessary
-to define some new kernel object types. There are different steps needed
-for creating core kernel objects and new driver subsystems.
-
-Creating New Core Kernel Objects
-================================
-
-* In ``scripts/build/gen_kobject_list.py``, add the name of the struct to the
-  :py:data:`kobjects` list.
-
-Instances of the new struct should now be tracked.
-
-Creating New Driver Subsystem Kernel Objects
-============================================
-
-All driver instances are :c:struct:`device`. They are differentiated by
-what API struct they are set to.
-
-* In ``scripts/build/gen_kobject_list.py``, add the name of the API struct for the
-  new subsystem to the :py:data:`subsystems` list.
-
-Driver instances of the new subsystem should now be tracked.
-
-Configuration Options
-*********************
-
-Related configuration options:
+相关配置项：
 
 * :kconfig:option:`CONFIG_USERSPACE`
 * :kconfig:option:`CONFIG_MAX_THREAD_BYTES`
 
-API Reference
-*************
+API 参考
+********
 
 .. doxygengroup:: usermode_apis

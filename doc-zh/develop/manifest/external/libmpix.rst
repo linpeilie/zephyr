@@ -3,28 +3,27 @@
 libmpix
 #######
 
-Introduction
+简介
 ************
 
-The `libmpix`_ project provides a library for working with image data on microcontrollers.
-It supports pixel format conversion, debayer, blur, sharpen, color correction, resizing and more.
+`libmpix`_ 项目提供了一个在微控制器上处理图像数据的库。
+它支持像素格式转换、去马赛克、模糊、锐化、色彩校正、缩放等功能。
 
-It pipelines multiple operations together, eliminating intermediate buffers.
-This allows larger image resolutions to fit in constrained systems without compromising performance.
+它将多个操作管道化，消除中间缓冲区。
+这使得更大的图像分辨率能够在资源受限的系统中运行而不影响性能。
 
-Features
+特性
 ********
 
-* Simple zero-copy, pipelined engine with low runtime overhead
-* Reduces memory overhead (for example processes 1 MB of data with only 5 kB of RAM)
-* POSIX support (Linux/BSD/MacOS) and Zephyr support
+* 简单的零拷贝管道引擎，运行时开销低
+* 减少内存开销（例如仅用 5 kB RAM 处理 1 MB 数据）
+* 支持 POSIX（Linux/BSD/MacOS）和 Zephyr
 
-Usage with Zephyr
+与 Zephyr 配合使用
 *****************
 
-To pull in libmpix as a Zephyr module, either add it as a West project in the :file:`west.yaml`
-file or pull it in by adding a submanifest (e.g. ``zephyr/submanifests/libmpix.yaml``) file
-with the following content and run :command:`west update`:
+要将 libmpix 作为 Zephyr 模块引入，可以在 :file:`west.yaml` 中将其作为 West 工程添加，
+或通过添加子清单（例如 ``zephyr/submanifests/libmpix.yaml``）并包含以下内容后运行 :command:`west update`：
 
 .. code-block:: yaml
 
@@ -35,7 +34,7 @@ with the following content and run :command:`west update`:
          revision: main
          path: modules/lib/libmpix
 
-Refer to the ``libmpix`` headers for API details. A brief example is shown below.
+API 详情请参阅 ``libmpix`` 头文件。下面是一个简单的示例。
 
 .. code-block:: c
 
@@ -51,7 +50,7 @@ Refer to the ``libmpix`` headers for API details. A brief example is shown below
 
    return img.err;
 
-References
+参考资料
 **********
 
 .. target-notes::

@@ -7,50 +7,40 @@ Networking with multiple Zephyr instances
     :local:
     :depth: 2
 
-This page describes how to set up a virtual network between multiple
-Zephyr instances. The Zephyr instances could be running inside QEMU
-or could be native_sim board processes. The Linux host can be used
-to route network traffic between these systems.
+本页介绍如何在多个 Zephyr 实例之间建立虚拟网络。Zephyr 实例可以运行在 QEMU 中，
+也可以是 native_sim 开发板进程。Linux 主机可用于在这些系统之间转发网络流量。
 
-Prerequisites
+前置条件
 *************
 
-On the Linux Host, find the Zephyr `net-tools`_ project, which can either be
-found in a Zephyr standard installation under the ``tools/net-tools`` directory
-or installed stand alone from its own git repository:
+在 Linux 主机上获取 Zephyr 的 `net-tools`_ 项目。它通常随 Zephyr 标准安装位于 ``tools/net-tools`` 目录，
+也可以从其独立的 Git 仓库单独克隆：
 
 .. code-block:: console
 
    git clone https://github.com/zephyrproject-rtos/net-tools
 
-Basic Setup
+基础设置
 ***********
 
-For the steps below, you will need five terminal windows:
+接下来的步骤建议同时打开 5 个终端窗口：
 
-* Terminal #1 and #2 are terminal windows with net-tools being the current
-  directory (``cd net-tools``)
-* Terminal #3, where you setup bridging in Linux host
-* Terminal #4 and #5 are your usual Zephyr development terminal,
-  with the Zephyr environment initialized.
+* 终端 #1 与 #2：当前目录为 net-tools（``cd net-tools``）
+* 终端 #3：在 Linux 主机上进行网桥配置
+* 终端 #4 与 #5：日常 Zephyr 开发环境（已完成环境初始化）
 
-As there are multiple ways to setup the Zephyr network, the example below uses
-``qemu_x86`` board with ``e1000`` Ethernet controller and native_sim board
-to simplify the setup instructions. You can use other QEMU boards and drivers
-if needed, see :ref:`networking_with_eth_qemu` for details. You can also use
-two or more native_sim board Zephyr instances and connect them together.
+由于配置 Zephyr 网络的方式不止一种，下面的示例选用带 ``e1000`` 网卡的 ``qemu_x86`` 开发板
+以及 native_sim 开发板以简化说明。你也可以按需选择其他 QEMU 开发板与驱动，详见
+:ref:`networking_with_eth_qemu`。此外，也可以使用两个或多个 native_sim 实例并将它们互联。
 
 
-Step 1 - Create configuration files
+步骤 1 - 创建配置文件
 ===================================
 
-Before starting QEMU with network connectivity, a network interfaces for each
-Zephyr instance should be created in the host system. The default setup for
-creating network interface cannot be used here as that is for connecting one
-Zephyr instance to Linux host.
+在启动具备网络功能的 QEMU 之前，需要先在主机为每个 Zephyr 实例创建网络接口。
+默认的接口创建方式仅适用于“单个 Zephyr 实例连接 Linux 主机”的情形，此处不适用。
 
-For Zephyr instance #1, create file called ``zephyr1.conf`` to ``net-tools``
-project, or to some other suitable directory.
+针对 Zephyr 实例 #1，在 ``net-tools`` 项目目录（或任意合适目录）创建 ``zephyr1.conf`` 文件。
 
 .. code-block:: console
 
@@ -68,8 +58,7 @@ project, or to some other suitable directory.
    ip address add $IPV4_ADDR_1 dev $INTERFACE
    ip route add $IPV4_ROUTE_1 dev $INTERFACE > /dev/null 2>&1
 
-For Zephyr instance #2, create file called ``zephyr2.conf`` to ``net-tools``
-project, or to some other suitable directory.
+针对 Zephyr 实例 #2，在 ``net-tools`` 项目目录（或任意合适目录）创建 ``zephyr2.conf`` 文件。
 
 .. code-block:: console
 
@@ -88,29 +77,28 @@ project, or to some other suitable directory.
    ip route add $IPV4_ROUTE_1 dev $INTERFACE > /dev/null 2>&1
 
 
-Step 2 - Create Ethernet interfaces
+步骤 2 - 创建以太网接口
 ===================================
 
-The following ``net-setup.sh`` commands should be typed in net-tools
-directory (``cd net-tools``).
+以下 ``net-setup.sh`` 命令需在 net-tools 目录下执行（``cd net-tools``）。
 
-In terminal #1, type:
+在终端 #1 执行：
 
 .. code-block:: console
 
    ./net-setup.sh -c zephyr1.conf -i zeth.1
 
-In terminal #2, type:
+在终端 #2 执行：
 
 .. code-block:: console
 
    ./net-setup.sh -c zephyr2.conf -i zeth.2
 
 
-Step 3 - Setup network bridging
+步骤 3 - 配置网络桥接
 ===============================
 
-In terminal #3, type:
+在终端 #3 执行：
 
 .. code-block:: console
 
@@ -120,14 +108,13 @@ In terminal #3, type:
    sudo ifconfig zeth-br up
 
 
-Step 4 - Start Zephyr instances
+步骤 4 - 启动 Zephyr 实例
 ===============================
 
-In this example we start :zephyr:code-sample:`sockets-echo-server` and
-:zephyr:code-sample:`sockets-echo-client` sample applications. You can use other applications
-too as needed.
+本示例分别启动 :zephyr:code-sample:`sockets-echo-server` 与
+:zephyr:code-sample:`sockets-echo-client` 示例应用。你也可以按需替换为其他应用。
 
-In terminal #4, if you are using QEMU, type this:
+在终端 #4，若使用 QEMU，执行：
 
 .. code-block:: console
 
@@ -142,7 +129,7 @@ In terminal #4, if you are using QEMU, type this:
       -DCONFIG_ETH_QEMU_IFACE_NAME=\"zeth.1\" \
       -DCONFIG_ETH_QEMU_EXTRA_ARGS=\"mac=00:00:5e:00:53:01\"
 
-or if you want to use native_sim board, type this:
+或若使用 native_sim 开发板，执行：
 
 .. code-block:: console
 
@@ -158,7 +145,7 @@ or if you want to use native_sim board, type this:
       -DCONFIG_ETH_NATIVE_TAP_RANDOM_MAC=n
 
 
-In terminal #5, if you are using QEMU, type this:
+在终端 #5，若使用 QEMU，执行：
 
 .. code-block:: console
 
@@ -173,7 +160,7 @@ In terminal #5, if you are using QEMU, type this:
       -DCONFIG_ETH_QEMU_IFACE_NAME=\"zeth.2\" \
       -DCONFIG_ETH_QEMU_EXTRA_ARGS=\"mac=00:00:5e:00:53:02\"
 
-or if you want to use native_sim board, type this:
+或若使用 native_sim 开发板，执行：
 
 .. code-block:: console
 
@@ -189,7 +176,6 @@ or if you want to use native_sim board, type this:
       -DCONFIG_ETH_NATIVE_TAP_RANDOM_MAC=n
 
 
-Also if you have firewall enabled in your host, you need to allow traffic
-between ``zeth.1``, ``zeth.2`` and ``zeth-br`` interfaces.
+如果主机上启用了防火墙，请放通 ``zeth.1``、``zeth.2`` 与 ``zeth-br`` 接口之间的流量。
 
 .. _`net-tools`: https://github.com/zephyrproject-rtos/net-tools

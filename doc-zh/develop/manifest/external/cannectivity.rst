@@ -1,33 +1,28 @@
 .. _external_module_cannectivity:
 
-CANnectivity USB to CAN adapter firmware
+CANnectivity USB 转 CAN 适配器固件
 ########################################
 
-Introduction
+简介
 ************
 
-`CANnectivity`_ is an open source firmware for Universal Serial Bus (USB) to Controller Area Network
-(CAN) adapters.
+`CANnectivity`_ 是一个用于通用串行总线（USB）到控制器局域网（CAN）适配器的开源固件。
 
-The firmware implements the Geschwister Schneider USB/CAN device protocol (often referred to as
-"gs_usb"). This protocol is supported by the Linux kernel SocketCAN `gs_usb driver`_, by
-`python-can`_, and by many other software packages.
+该固件实现了 Geschwister Schneider USB/CAN 设备协议（通常称为 “gs_usb”）。
+该协议受到 Linux 内核 SocketCAN 的 `gs_usb driver`_、`python-can`_ 以及众多其他软件包的支持。
 
-The firmware, which is based on Zephyr RTOS, allows turning your favorite microcontroller
-development board into a full-fledged USB to CAN adapter.
+该固件基于 Zephyr RTOS，可将你常用的微控制器开发板变成功能完善的 USB 转 CAN 适配器。
 
-CANnectivity is licensed under the Apache-2.0 license.
+CANnectivity 以 Apache-2.0 许可证发布。
 
-Usage with Zephyr
+与 Zephyr 配合使用
 *****************
 
-The CANnectivity firmware repository is a Zephyr :ref:`module <modules>` which allows for reuse of
-its components (i.e. the "gs_usb" protocol implementation) outside of the CANnectivity firmware
-application.
+CANnectivity 固件仓库是一个 Zephyr :ref:`module <modules>`，这使得其组件（例如 “gs_usb” 协议实现）
+可以在 CANnectivity 固件应用之外复用。
 
-To pull in CANnectivity as a Zephyr module, either add it as a West project in the ``west.yaml``
-file or pull it in by adding a submanifest (e.g. ``zephyr/submanifests/cannectivity.yaml``) file
-with the following content and run ``west update``:
+要将 CANnectivity 作为 Zephyr 模块引入，可以在 ``west.yaml`` 中将其添加为一个 West 工程，
+或通过添加一个子清单（例如 ``zephyr/submanifests/cannectivity.yaml``）并包含以下内容后运行 ``west update``：
 
 .. code-block:: yaml
 
@@ -38,14 +33,13 @@ with the following content and run ``west update``:
          revision: main
          path: custom/cannectivity # adjust the path as needed
 
-Once CANnectivity is added as a Zephyr module, the "gs_usb" implementation can be reused outside of
-the CANnectivity firmware application by including its header:
+当 CANnectivity 作为 Zephyr 模块添加后，可以在 CANnectivity 固件应用之外通过包含其头文件来复用 “gs_usb” 的实现：
 
 .. code-block:: c
 
    #include <cannectivity/usb/class/gs_usb.h>
 
-Please see the header file for the API details.
+API 详情请参阅该头文件。
 
 .. _CANnectivity:
    https://github.com/CANnectivity/cannectivity
