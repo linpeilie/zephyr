@@ -1,127 +1,97 @@
 .. _twister_blackbox:
 
-Twister blackbox tests
+Twister 黑盒测试
 ######################
 
-This guide aims to explain the structure of a test file so the reader will be able
-to understand existing files and create their own. All developers should fix any tests
-they break and create new ones when introducing new features, so this knowledge is
-important for any Twister developer.
+本指南旨在说明测试文件的结构，帮助读者理解现有文件并创建自己的测试。所有开发者在对代码进行修改时，应修复其破坏的测试；在引入新功能时，应创建相应的新测试，因此这些知识对任何 Twister 开发者都十分重要。
 
-Basics
+基础
 ******
 
-Twister blackbox tests are written in python, using the ``pytest`` library.
-Read up on it :ref:`here <integration_with_pytest>` .
-Auxiliary test data follows whichever format it was in originally.
-Tests and data are wholly contained in the :zephyr_file:`scripts/tests/twister_blackbox`
-directory and prepended with ``test_``.
+Twister 黑盒测试使用 Python 编写，基于 ``pytest`` 库。相关说明见 :ref:`here <integration_with_pytest>` 。
+辅助测试数据保持其原始格式。
+测试与数据全部位于 :zephyr_file:`scripts/tests/twister_blackbox` 目录，且文件名前缀为 ``test_``。
 
-Blackbox tests should not be aware of the internal twister code. Instead, they should
-call twister as user would and check the results.
+黑盒测试不应依赖 Twister 的内部实现，而应像用户一样调用 Twister 并检查其输出结果。
 
-Sample test file
+示例测试文件
 ****************
 
 .. literalinclude:: ./sample_blackbox_test.py
    :language: python
    :linenos:
 
-Comparison with CLI
+与命令行的比较
 *******************
 
-Test above runs the command
+上例测试会运行如下命令：
 
 .. code-block:: console
 
-    twister -i --outdir $OUTDIR -T $TEST_DATA/tests -y --level $LEVEL
-    --test-config $TEST_DATA/test_config.yaml -p qemu_x86 -p frdm_k64f
+  twister -i --outdir $OUTDIR -T $TEST_DATA/tests -y --level $LEVEL
+  --test-config $TEST_DATA/test_config.yaml -p qemu_x86 -p frdm_k64f
 
-It presumes a CLI with the ``zephyr-env.sh`` or ``zephyr-env.cmd`` already run.
+该测试假定命令行环境中已运行过 ``zephyr-env.sh`` 或 ``zephyr-env.cmd``。
 
-Such a test provides us with all the outputs we typically expect of a Twister run thanks to
-``importlib`` 's ``exec_module()`` [#f1]_ .
-We can easily set up all flags that we expect from a Twister call via ``args`` variable [#f2]_ .
-We can check the standard output or stderr in ``out`` and ``err`` variables.
+得益于 ``importlib`` 的 ``exec_module()`` [#f1]_，此类测试能提供我们在 Twister 运行中通常期望得到的所有输出。
+我们可以通过 ``args`` 变量轻松设置预期的 Twister 调用参数 [#f2]_，并在 ``out`` 与 ``err`` 变量中检查标准输出与标准错误。
 
-Beside the standard outputs, we can also investigate the file outputs, normally placed in
-``twister-out`` directories. Most of the time, we will use the ``out_path`` fixture in conjunction
-with ``--outdir`` flag (L52) to keep test-generated files in temporary directories.
-Typical files read in blackbox tests are ``testplan.json`` , ``twister.xml`` and ``twister.log`` .
+除了标准输出外，还可以检查文件输出，通常位于 ``twister-out`` 目录中。大多数情况下，我们会将 ``out_path`` 夹具与 ``--outdir`` 标志（见 L52）配合使用，以便将测试生成的文件保存在临时目录中。
+黑盒测试中常读取的文件包括 ``testplan.json``、``twister.xml`` 和 ``twister.log``。
 
-Other functionalities
+其他功能
 *********************
 
-Decorators
+装饰器
 ==========
 
 * ``@pytest.mark.usefixtures('clear_log')``
-    - allows us to use ``clear_log`` fixture from ``conftest.py`` .
-      The fixture is to become ``autouse`` in the future.
-      After that, this decorator can be removed.
+  - 允许我们使用来自 ``conftest.py`` 的 ``clear_log`` 夹具。该夹具未来可能设为 ``autouse``，届时可移除该装饰器。
 * ``@pytest.mark.parametrize('level, expected_tests', TESTDATA_X, ids=['smoke', 'acceptance'])``
-    - this is an example of ``pytest`` 's test parametrization.
-      Read up on it `here <https://docs.pytest.org/en/7.1.x/example/parametrize.html#different-options-for-test-ids>`__.
-      TESTDATAs are most often declared as class fields.
+  - 这是 ``pytest`` 的参数化测试示例。详情见 `here <https://docs.pytest.org/en/7.1.x/example/parametrize.html#different-options-for-test-ids>`__。
+    TESTDATA 通常声明为类字段。
 * ``@mock.patch.object(TestPlan, 'TESTSUITE_FILENAME', suite_filename_mock)``
-    - this decorator allows us to use only tests defined in the ``test_data`` and
-      ignore the Zephyr testcases in the ``tests`` directory. **Note that all ``test_data``
-      tests use** ``test_data.yaml`` **as a filename, not** ``testcase.yaml`` **!**
-      Read up on the ``mock`` library
-      `here <https://docs.python.org/3/library/unittest.mock.html>`__.
+  - 该装饰器允许我们仅使用 ``test_data`` 中定义的测试，从而忽略 ``tests`` 目录中的 Zephyr 测试用例。**注意：所有 ``test_data`` 的测试文件名均使用** ``test_data.yaml`` **而不是** ``testcase.yaml`` **！**
+    有关 ``mock`` 库的说明见 `here <https://docs.python.org/3/library/unittest.mock.html>`__。
 
-Fixtures
+夹具（Fixtures）
 ========
 
-Blackbox tests use ``pytest`` 's fixtures, further reading on which is available
-`here <https://docs.pytest.org/en/6.2.x/fixture.html>`__.
+黑盒测试使用 ``pytest`` 的夹具，详情见 `here <https://docs.pytest.org/en/6.2.x/fixture.html>`__。
 
-If you would like to add your own fixtures,
-consider whether they will be used in just one test file, or in many.
+如果你想添加自定义夹具，请考虑它们是仅在单个测试文件中使用还是在多个文件中复用：
 
-* If in many, create such a fixture in the
-  :zephyr_file:`scripts/tests/twister_blackbox/conftest.py` file.
+* 若在多个文件中使用，请将该夹具放到 :zephyr_file:`scripts/tests/twister_blackbox/conftest.py` 中。
 
-    - :zephyr_file:`scripts/tests/twister_blackbox/conftest.py` already contains some fixtures -
-      take a look there for an example.
-* If in just one, declare it in that file.
+  - :zephyr_file:`scripts/tests/twister_blackbox/conftest.py` 已包含若干夹具，参考其中示例。
+* 若仅在单个文件中使用，可直接在该文件中声明。
 
-    - Consider using class fields instead - look at TESTDATAs for an example.
+  - 还可以考虑使用类字段来声明夹具——参见 TESTDATA 的示例。
 
-How do I...
+如何……
 ***********
 
-Call Twister multiple times in one test?
+在同一个测试中多次调用 Twister？
 ========================================
 
-Sometimes we want to test something that requires prior Twister use. ``--test-only``
-flag would be a typical example, as it is to be coupled with previous ``--build-only``
-Twister call. How should we approach that?
+有时我们需要先运行一次 Twister（例如使用 ``--build-only``），再运行一次（例如 ``--test-only``）。如果直接两次调用 ``importlib`` 的 ``exec_module``，会导致日志重复：``twister.log`` 中的每行会被重复写入（若调用三次则三次），而不是覆盖或追加为单一日志。
 
-If we just call the ``importlib`` 's ``exec_module`` two times, we will experience log
-duplication. ``twister.log`` will duplicate every line (triplicate if we call it three times, etc.)
-instead of overwriting the log or appending to the end of it.
+这是由于 Twister 文件中使用了 logger 的模块级变量，重复执行模块会导致 logger 拥有多个处理器句柄。
 
-It is caused by the use of logger module variables in the Twister files.
-Thus us executing the module again causes the loggers to have multiple handles.
-
-To overcome this, between the calls you ought to use
+为避免此问题，两次调用之间应执行：
 
 .. code:: python
 
-    capfd.readouterr()   # To remove output from the buffer
-                         # Note that if you want output from all runs after each other,
-                         # skip this line.
-    clear_log_in_test()  # To remove log duplication
+  capfd.readouterr()   # 清除输出缓冲区的内容
+             # 注意：如果希望保留所有运行的输出以便连续查看，则跳过此行。
+  clear_log_in_test()  # 清除日志重复的处理器
 
 
 ------
 
-.. rubric:: Footnotes
+.. rubric:: 脚注
 
-.. [#f1] Take note of the ``setup_class()`` class function, which allows us to run
-         ``twister`` python file as if it were called directly
-         (bypassing the ``__name__ == '__main__'`` check).
+.. [#f1] 请注意 ``setup_class()`` 类方法，它允许我们像直接调用一样运行
+     ``twister`` 的 Python 文件（绕开 ``__name__ == '__main__'`` 的检查）。
 
-.. [#f2] We advise you to keep the first section of ``args`` definition intact in almost all
-         of your tests, as it is used for the common test setup.
+.. [#f2] 我们建议在大多数测试中保持 ``args`` 定义的第一部分不变，因为它用于通用的测试初始化设置。

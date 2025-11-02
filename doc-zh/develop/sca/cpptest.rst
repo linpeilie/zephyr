@@ -1,40 +1,36 @@
 .. _cpptest:
 
-Parasoft C/C++test support
+
+Parasoft C/C++test 支持
 ##########################
 
-Parasoft `C/C++test <https://www.parasoft.com/products/parasoft-c-ctest/>`__ is a software testing
-and static analysis tool for C and C++. It is a commercial software and you must acquire a
-commercial license to use it.
+Parasoft 的 `C/C++test <https://www.parasoft.com/products/parasoft-c-ctest/>`__ 是一款用于 C/C++ 的软件测试与静态分析工具。它是商业软件，需获取商业许可证才能使用。
 
-Documentation of C/C++test can be found at https://docs.parasoft.com/.  Please refer to the
-documentation for how to use it.
+有关 C/C++test 的文档请参阅 https://docs.parasoft.com/，其中包含使用说明。
 
-Generating Build Data Files
+生成构建数据文件
 ***************************
 
-To use C/C++test, ``cpptestscan`` must be found in your :envvar:`PATH` environment variable.  And
-:ref:`west build <west-building>` should be called with a ``-DZEPHYR_SCA_VARIANT=cpptest``
-parameter, e.g.
+要使用 C/C++test，系统的 :envvar:`PATH` 环境变量中必须包含 ``cpptestscan`` 可执行文件。并且在调用 :ref:`west build <west-building>` 时需要添加 ``-DZEPHYR_SCA_VARIANT=cpptest`` 参数，例如：
 
 .. code-block:: shell
 
     west build -b qemu_cortex_m3 zephyr/samples/hello_world -- -DZEPHYR_SCA_VARIANT=cpptest
 
 
-A ``.bdf`` file will be generated as :file:`build/sca/cpptest/cpptestscan.bdf`.
+将会生成一个 ``.bdf`` 文件，位于 :file:`build/sca/cpptest/cpptestscan.bdf`。
 
-Generating a report file
+生成报告文件
 ************************
 
-Please refer to Parasoft C/C++test documentation for more details.
+有关更多细节，请参考 Parasoft C/C++test 的官方文档。
 
-To import and generate a report file, something like the following should work.
+要导入并生成报告文件，类似下面的命令通常可行：
 
 .. code-block:: shell
 
     cpptestcli -data out -localsettings local.conf -bdf build/sca/cpptest/cpptestscan.bdf -config "builtin://Recommended Rules" -report out/report
 
 
-You might need to set ``bdf.import.c.compiler.exec``, ``bdf.import.cpp.compiler.exec``, and
-``bdf.import.linker.exec`` to the toolchain :ref:`west build <west-building>` used.
+可能需要将 ``bdf.import.c.compiler.exec``、``bdf.import.cpp.compiler.exec`` 和
+``bdf.import.linker.exec`` 设置为用于构建的工具链（参见 :ref:`west build <west-building>`）。

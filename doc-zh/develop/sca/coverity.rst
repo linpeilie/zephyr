@@ -1,33 +1,30 @@
 .. _coverity:
 
-Coverity
+
+Coverity 支持
 #########
 
-Coverity Scan is a service by which Black Duck provides the results of analysis
-on open source coding projects to open source code developers that have
-registered their products with Coverity Scan.
+Coverity Scan 是 Black Duck 提供的一项服务，能够为已在 Coverity Scan 注册的开源项目开发者，提供开源代码分析结果。
 
-This integration was only tested with scan.coverity.com and the tool
-distribution available through this service.
+本集成仅在 scan.coverity.com 及其提供的工具分发包上进行了测试。
 
-Generating Build Data Files
+
+生成构建数据文件
 ***************************
 
-To use this integration, coverity tool distribution must be found in your :envvar:`PATH` environment and
-:ref:`west build <west-building>` should be called with a ``-DZEPHYR_SCA_VARIANT=coverity``
-parameter, e.g.
+要使用本集成，需将 coverity 工具分发包添加到你的 :envvar:`PATH` 环境变量，并在调用 :ref:`west build <west-building>` 时添加 ``-DZEPHYR_SCA_VARIANT=coverity`` 参数，例如：
 
 .. code-block:: shell
 
     west build -b qemu_cortex_m3 samples/hello_world -- -DZEPHYR_SCA_VARIANT=coverity
 
 
-Results of the scan will be generated as :file:`build/sca/coverity`.
+扫描结果将生成在 :file:`build/sca/coverity` 目录下。
 
-You can also set :envvar:`COVERITY_OUTPUT_DIR` as the destination for multiple
-and incremental scan results.
+你也可以通过设置 :envvar:`COVERITY_OUTPUT_DIR`，指定多个或增量扫描结果的保存位置。
 
-Result Analysis
+
+结果分析
 ****************
 
-Follow the instructions on https://scan.coverity.com for uploading results.
+请按照 https://scan.coverity.com 上的说明上传分析结果。

@@ -1,38 +1,25 @@
+
 .. _twister_script:
 
-Test Runner (Twister)
+测试运行器（Twister）
 #####################
 
-Twister scans for the set of test applications in the git repository
-and attempts to execute them. By default, it tries to build each test
-application on boards marked as default in the board definition file.
+Twister 会扫描 git 仓库中的测试应用集合并尝试执行它们。默认情况下，Twister 会在板定义文件中标记为默认的板子上构建每个测试应用。
 
-The default options will build the majority of the test applications on a
-defined set of boards and will run in an emulated environment if available for
-the architecture or configuration being tested.
+默认选项会在一组预定义板子上构建大多数测试应用，并且如果针对所测架构或配置存在仿真环境（例如 QEMU），则会在仿真环境中运行它们。
 
-Because of the limited test execution coverage, twister
-cannot guarantee local changes will succeed in the full build
-environment, but it does sufficient testing by building samples and
-tests for different boards and different configurations to help keep the
-complete code tree buildable.
+由于本地测试执行覆盖率有限，Twister 无法保证本地修改在完整构建环境中一定能成功，但它会通过在不同板子与配置上构建样例和测试来进行足够的验证，从而有助于保持整个代码树可构建。
 
-When using (at least) one ``-v`` option, twister's console output
-shows for every test application how the test is run (qemu, native_sim, etc.) or
-whether the binary was just built. The resultant
-:ref:`status <twister_statuses>`
-of a test is likewise reported in the ``twister.json`` and other report files.
-There are a few reasons why twister only builds a test and doesn't run it:
+当使用至少一个 ``-v`` 选项时，Twister 的控制台输出会显示每个测试应用的运行方式（例如 qemu、native_sim 等）或仅构建二进制的情况。测试的结果状态也会记录在 ``twister.json`` 以及其他报告文件中，参见 :ref:`status <twister_statuses>`。
 
-- The test is marked as ``build_only: true`` in its ``.yaml``
-  configuration file.
-- The test configuration has defined a ``harness`` but you don't have
-  it or haven't set it up.
-- The target device is not connected and not available for flashing
-- You or some higher level automation invoked twister with
-  ``--build-only``.
+Twister 只构建但不运行测试的常见原因包括：
 
-To run the script in the local tree, follow the steps below:
+- 测试在其 ``.yaml`` 配置文件中被标记为 ``build_only: true``。
+- 测试配置中定义了某个 ``harness``，但本地未安装或未配置该 harness。
+- 目标设备未连接或无法进行烧录。
+- 你或上层自动化以 ``--build-only`` 参数调用了 Twister。
+
+在本地仓库中运行该脚本，请按以下步骤操作：
 
 .. tabs::
 
@@ -51,8 +38,7 @@ To run the script in the local tree, follow the steps below:
          python .\scripts\twister
 
 
-If you have a system with a large number of cores and plenty of free storage space,
-you can build and run all possible tests using the following options:
+如果你的系统拥有大量内核和充足的存储空间，可以使用如下选项构建并运行所有可能的测试：
 
 .. tabs::
 
@@ -68,16 +54,11 @@ you can build and run all possible tests using the following options:
 
          python .\scripts\twister --all --enable-slow
 
-This will build for all available boards and run all applicable tests in
-a simulated (for example QEMU) environment.
+这将为所有可用的板子构建并在仿真环境（例如 QEMU）中运行所有适用的测试。
 
-If you want to run tests on one or more specific platforms, you can use
-the ``--platform`` option, it is a platform filter for testing, with this
-option, test suites will only be built/run on the platforms specified.
-This option also supports different revisions of one same board,
-you can use ``--platform board@revision`` to test on a specific revision.
+如果你想在一个或多个特定平台上运行测试，可以使用 ``--platform`` 选项作为平台过滤器；带此选项时，测试套件仅会在指定的平台上构建/运行。该选项也支持板子的特定修订，例如使用 ``--platform board@revision`` 来测试某个指定修订。
 
-The list of command line options supported by twister can be viewed using:
+可以使用以下命令查看 Twister 支持的命令行选项列表：
 
 .. tabs::
 
@@ -93,18 +74,12 @@ The list of command line options supported by twister can be viewed using:
          python .\scripts\twister --help
 
 
-Board Configuration
+板子配置
 *******************
 
-To build tests for a specific board and to execute some of the tests on real
-hardware or in an emulation environment such as QEMU a board configuration file
-is required which is generic enough to be used for other tasks that require a
-board inventory with details about the board and its configuration that is only
-available during build time otherwise.
+要为特定板子构建测试并在真实硬件或 QEMU 等仿真环境中执行部分测试，需要一个板子配置文件。该文件应包含在构建时可用于测试所需的板子元数据，从而被其他需要板子清单的任务复用。
 
-The board metadata file is located in the board directory and is structured
-using the YAML markup language. The example below shows a board with a data
-required for best test coverage for this specific board:
+板子元数据文件位于板子目录下，使用 YAML 语法组织。下面示例展示了为获得最佳测试覆盖率而为某板子配置的必要字段：
 
 .. code-block:: yaml
 
@@ -133,23 +108,21 @@ required for best test coverage for this specific board:
 
 
 identifier:
-  A string that matches how the board is defined in the build system. This same
-  string is used when building, for example when calling ``west build`` or
-  ``cmake``:
+  用于在构建系统中标识板子的字符串。构建时该字符串将被使用，例如调用 ``west build`` 或 ``cmake`` 时：
 
   .. code-block:: console
 
-     # with west
+     # 使用 west
      west build -b reel_board
-     # with cmake
+     # 使用 cmake
      cmake -DBOARD=reel_board ..
 
 name:
-  The actual name of the board as it appears in marketing material.
+  板子的实际名称（通常用于产品展示）。
 type:
-  Type of the board or configuration, currently we support 2 types: mcu, qemu
+  板子或配置的类型，目前支持两类：mcu、qemu。
 simulation:
-  Simulator(s) used to simulate the platform, e.g. qemu.
+  用于仿真该平台的模拟器，例如 qemu。
 
   .. code-block:: yaml
 
@@ -160,34 +133,26 @@ simulation:
         - name: custom
           exec: AnotherBinary
 
-  By default, tests will be executed using the first entry in the simulation array. Another
-  simulation can be selected with ``--simulation <simulation_name>``.
-  The ``exec`` attribute is optional. If it is set but the required simulator is not available, the
-  tests will be built only.
-  If it is not set and the required simulator is not available the tests will fail to run.
-  The simulation name must match one of the element of ``SUPPORTED_EMU_PLATFORMS``.
+  默认情况下，测试会使用 simulation 数组中的第一个条目执行。可以使用 ``--simulation <simulation_name>`` 选择其他仿真项。
+  ``exec`` 属性为可选项：如果设置了该属性但对应模拟器不可用，则测试只会被构建；如果未设置且所需模拟器不可用，则测试运行会失败。
+  simulation 名称必须与 ``SUPPORTED_EMU_PLATFORMS`` 中的元素之一匹配。
 arch:
-  Architecture of the board
+  板子的架构。
 toolchain:
-  The list of supported toolchains that can build this board. This should match
-  one of the values used for :envvar:`ZEPHYR_TOOLCHAIN_VARIANT` when building on the command line
+  可用于构建该板子的工具链列表。应与命令行构建时使用的 :envvar:`ZEPHYR_TOOLCHAIN_VARIANT` 值之一相匹配。
 ram:
-  Available RAM on the board (specified in KB). This is used to match test scenario
-  requirements.  If not specified we default to 128KB.
+  板子可用的 RAM（以 KB 为单位），用于匹配测试场景需求；若未指定，默认为 128KB。
 flash:
-  Available FLASH on the board (specified in KB). This is used to match test scenario
-  requirements.  If not specified we default to 512KB.
+  板子可用的 FLASH（以 KB 为单位），用于匹配测试场景需求；若未指定，默认为 512KB。
 supported:
-  A list of features this board supports. This can be specified as a single word
-  feature or as a variant of a feature class. For example:
+  板子支持的特性列表。可以写单个特性，也可以写特性类的变体。例如：
 
   .. code-block:: yaml
 
         supported:
           - pci
 
-  This indicates the board does support PCI. You can make a test scenario build or
-  run only on such boards, or:
+  表示该板子支持 PCI。你可以让某个测试场景仅在支持该特性的板子上构建或运行；也可以写成：
 
   .. code-block:: yaml
 
@@ -195,40 +160,29 @@ supported:
           - netif:eth
           - sensor:bmi16
 
-  A test scenario can depend on 'eth' to only test ethernet or on 'netif' to run
-  on any board with a networking interface.
+  这样测试场景可以仅在具有以太网接口或任何网络接口的板子上运行。
 
 testing:
-  testing relating keywords to provide best coverage for the features of this
-  board.
+  与该板子功能覆盖相关的测试关键字集合。
 
 .. _twister_default_testing_board:
 
   binaries:
-    A list of custom binaries to be kept for device testing.
+    自定义二进制列表，用于设备测试保留。
   default: [True|False]:
-    This is a default board, it will tested with the highest priority and is
-    covered when invoking the simplified twister without any additional
-    arguments.
+    指示该板是否为默认板；在不带额外参数运行简化的 Twister 时会优先测试默认板。
   ignore_tags:
-    Do not attempt to build (and therefore run) tests marked with this list of
-    tags.
+    列表中标注的标签对应的测试将不会被尝试构建（因此也不会被运行）。
   only_tags:
-    Only execute tests with this list of tags on a specific platform.
+    在特定平台上只执行带有该标签列表的测试。
 
   .. _twister_board_timeout_multiplier:
 
-  timeout_multiplier: <float> (default 1)
-    Multiply each test scenario timeout by specified ratio. This option allows to tune timeouts only
-    for required platform. It can be useful in case naturally slow platform I.e.: HW board with
-    power-efficient but slow CPU or simulation platform which can perform instruction accurate
-    simulation but does it slowly.
+  timeout_multiplier: <float> (默认 1)
+    将每个测试场景的超时时间乘以指定倍数，用于针对某些较慢或较快的平台调整超时，例如低功耗但较慢的硬件或慢速的指令级仿真。
 
 env:
-  A list of environment variables. Twister will check if all these environment variables are set,
-  and otherwise skip this platform. This allows the user to define a platform which should be
-  used, for example, only if some required software or hardware is present, and to signal that
-  presence to twister using these environment variables.
+  一组环境变量。Twister 会检查这些环境变量是否均已设置，否则会跳过该平台。这允许用户定义仅在某些软件或硬件存在时才使用的平台，并通过这些环境变量将该信息通知 Twister。
 
 .. _twister_tests_long_version:
 

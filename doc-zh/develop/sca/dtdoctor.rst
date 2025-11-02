@@ -1,20 +1,19 @@
 .. _dtdoctor:
 
-Devicetree diagnostics (``dtdoctor``)
+
+设备树诊断（``dtdoctor``）
 #####################################
 
-``dtdoctor`` is a static analysis tool that helps diagnose Devicetree-related build errors.
+``dtdoctor`` 是一个静态分析工具，用于诊断与设备树（Devicetree）相关的构建错误。
 
-It intercepts error messages from the compiler and linker and, when they refer to unresolved
-Devicetree device symbols (e.g. ``__device_dts_ord_*``), provides detailed information about what
-might be causing the error and how to fix it.
+它会拦截编译器和链接器的错误信息，当这些错误涉及未解析的设备树符号（例如 ``__device_dts_ord_*``）时，提供关于可能原因以及如何修复的详细信息。
 
-Using dtdoctor
+使用 dtdoctor
 **************
 
-To enable ``dtdoctor``, build with ``-DZEPHYR_SCA_VARIANT=dtdoctor``.
+要启用 ``dtdoctor``，请在构建时添加 ``-DZEPHYR_SCA_VARIANT=dtdoctor`` 参数。
 
-For example:
+例如：
 
 .. code-block:: shell
 

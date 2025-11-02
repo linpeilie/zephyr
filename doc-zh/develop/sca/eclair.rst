@@ -1,95 +1,74 @@
 .. _eclair:
 
-ECLAIR support
+
+ECLAIR 支持
 ##############
 
-Bugseng `ECLAIR <https://www.bugseng.com/eclair/>`__ is a certified
-static analysis tool and platform for software verification.
-Applications range from coding rule validation, with a
-particular emphasis on the MISRA and BARR-C coding standards, to the
-computation of software metrics, to the checking of independence and
-freedom from interference among software components, to the automatic
-detection of important classes of software errors.
+Bugseng 的 `ECLAIR <https://www.bugseng.com/eclair/>`__ 是一套经过认证的静态分析工具与软件验证平台。
+它的应用范围广泛，从代码规则校验（尤其关注 MISRA 与 BARR-C 编码规范）、软件度量计算、组件间独立性与互不干扰检查，到自动检测重要类别的软件错误。
 
-Prerequisites
+先决条件
 *************
 
-The ECLAIR tool must be installed and made available in the operating system's
-PATH variable.
+必须安装 ECLAIR 工具，并将其可执行路径添加到操作系统的 PATH 变量中。
 
-To verify the installation, you can run:
+可通过运行以下命令验证安装：
 
 .. code-block:: shell
 
    eclair -version
 
-A valid license or trial license is required to use ECLAIR. To request a trial
-license, visit `this page <https://www.bugseng.com/eclair/free-trial>`__.
+使用 ECLAIR 需要有效的许可证或试用许可证。要申请试用许可证，请访问 `此页面 <https://www.bugseng.com/eclair/free-trial>`__。
 
-Running ECLAIR
+运行 ECLAIR
 **************
 
-To run ECLAIR, :ref:`west build <west-building>` should be
-called with a ``-DZEPHYR_SCA_VARIANT=eclair`` parameter.
+要运行 ECLAIR，请在调用 :ref:`west build <west-building>` 时添加 ``-DZEPHYR_SCA_VARIANT=eclair`` 参数。
 
 .. code-block:: shell
 
     west build -b mimxrt1064_evk samples/basic/blinky -- -DZEPHYR_SCA_VARIANT=eclair
 
 .. note::
-   This will only invoke the ECLAIR analysis with the predefined ruleset ``first_analysis``. If you
-   want to use a different ruleset, you need to provide a configuration file. See the next section
-   for more information.
+   这将仅使用预定义规则集 ``first_analysis`` 调用 ECLAIR 进行分析。若要使用其他规则集，需要提供配置文件；详见下节。
 
-Configurations
+配置
 **************
 
-The configuration of the ECLAIR SCA environment can either be done via a CMake
-options file or with adapted options as command line arguments.
+ECLAIR SCA 环境的配置可以通过 CMake 选项文件或作为命令行参数传递。
 
-To invoke a CMake options file into the ECLAIR call, you can define the
-``ECLAIR_OPTIONS_FILE`` variable, for example:
+要在 ECLAIR 调用中使用 CMake 选项文件，可定义 ``ECLAIR_OPTIONS_FILE`` 变量，例如：
 
 .. code-block:: shell
 
     west build -b mimxrt1064_evk samples/basic/blinky -- -DZEPHYR_SCA_VARIANT=eclair -DECLAIR_OPTIONS_FILE=my_options.cmake
 
-The default (if no config file is given) configuration is always
-``first_analysis``, which is a tiny selection of rules to verify that
-everything is correctly working.
+如果未提供配置文件，默认的配置为 ``first_analysis``，这是一个用于验证环境是否正常工作的简要规则集。
 
-If the default configuration wants to be overwritten via the command line and
-not via an options file, that can be achieved by giving the argument
-``-DOption=ON|OFF``.
+若希望通过命令行覆盖默认配置（而非选项文件），可通过传递类似 ``-DOption=ON|OFF`` 的参数实现。
 
-For example:
+例如：
 
 .. code-block:: shell
 
     west build -b mimxrt1064_evk samples/basic/blinky -- -DZEPHYR_SCA_VARIANT=eclair -DECLAIR_REPORTS_SARIF=ON
 
-Zephyr is a large and complex project, so the configuration sets are split into
-the Zephyr's guidelines selection
-(taken from https://docs.zephyrproject.org/latest/contribute/coding_guidelines/index.html)
-in five sets to make it more digestible to use on a private machine:
+由于 Zephyr 项目规模和复杂度较大，配置集按照 Zephyr 的编码指南（来源：
+https://docs.zephyrproject.org/latest/contribute/coding_guidelines/index.html）被划分为五类，以便在私有机器上更易于使用：
 
-* first_analysis (default): a tiny selection of the project's coding guidelines to verify that
-  everything is correctly working.
+* first_analysis（默认）：用于验证基本功能的简要规则子集。
 
-* STU: Selection of the project's coding guidelines, which can be verified by analyzing the single
-  translation units independently.
+* STU：可通过独立分析单个翻译单元来验证的规则子集。
 
-* STU_heavy: Selection of complex STU project coding guidelines that require a significant amount
-  of time.
+* STU_heavy：更复杂的 STU 类规则集，分析耗时较长。
 
-* WP: All whole program project coding guidelines ("system" in MISRA's parlance).
+* WP：全程序（whole program）级别的规则集（在 MISRA 术语中相当于“system”）。
 
-* std_lib: Project coding guidelines about the C Standard Library.
+* std_lib：与 C 标准库相关的项目规则集。
 
-In addition, the zephyr_guidelines ruleset contains all the main rules
-listed in the `Coding Guidelines <https://docs.zephyrproject.org/latest/contribute/coding_guidelines/index.html>`__.
+此外，zephyr_guidelines 规则集包含 `编码指南 <https://docs.zephyrproject.org/latest/contribute/coding_guidelines/index.html>`__ 中的主要规则。
 
-Related CMake options:
+相关的 CMake 选项：
 
 * ``ECLAIR_RULESET_FIRST_ANALYSIS``
 * ``ECLAIR_RULESET_STU``
@@ -98,54 +77,47 @@ Related CMake options:
 * ``ECLAIR_RULESET_STD_LIB``
 * ``ECLAIR_RULESET_ZEPHYR_GUIDELINES``
 
-User-defined ruleset
+用户自定义规则集
 ====================
 
-If you want to use your own defined ruleset instead of the predefined Zephyr coding guidelines
-rulesets, you can do so by setting :code:`ECLAIR_RULESET_USER=ON`.
-Create your own ruleset file for ECLAIR with the following naming format:
-``analysis_<RULESET>.ecl``. After creating the file, define the name of the ruleset for ECLAIR
-with the CMake variable :code:`ECLAIR_USER_RULESET_NAME`.
-If the ruleset file is not in the application source directory, you can define the path to the
-ruleset file with the CMake variable :code:`ECLAIR_USER_RULESET_PATH`. This configuration takes
-relative paths and absolute paths.
+若要使用自定义规则集（替代预定义的 Zephyr 规则集），可将 :code:`ECLAIR_RULESET_USER=ON` 设置为启用。
+创建自定义规则文件时，文件名应为 ``analysis_<RULESET>.ecl``，并通过 CMake 变量 :code:`ECLAIR_USER_RULESET_NAME` 指定规则集名称。
+若规则文件不在应用源码目录中，可使用 :code:`ECLAIR_USER_RULESET_PATH` 指定规则文件路径，支持相对路径和绝对路径。
 
-Related CMake options and variables:
+相关 CMake 选项和变量：
 
 * ``ECLAIR_RULESET_USER``
 * ``ECLAIR_USER_RULESET_NAME``
 * ``ECLAIR_USER_RULESET_PATH``
 
-Generate additional report formats
+生成额外报告格式
 **********************************
 
-ECLAIR can generate additional report formats (e.g., DOC, ODT, XLSX) and
-different variants of reports in addition to the
-default ecd file. Following additional reports and report formats can be generated:
+ECLAIR 可生成除默认 ecd 文件外的多种报告格式（如 DOC、ODT、XLSX）和不同变体，示例包括：
 
-* Metrics in spreadsheet format.
+* 电子表格格式的度量（Metrics）。
 
-* Findings in spreadsheet format.
+* 电子表格格式的问题清单（Findings）。
 
-* Findings in SARIF format.
+* SARIF 格式的问题清单（Findings）。
 
-* Summary report in plain textual format.
+* 纯文本格式的摘要报告。
 
-* Summary report in DOC format.
+* DOC 格式的摘要报告。
 
-* Summary report in ODT format.
+* ODT 格式的摘要报告。
 
-* Summary report in HTML format.
+* HTML 格式的摘要报告。
 
-* Detailed reports in txt format.
+* TXT 格式的详细报告。
 
-* Detailed report in DOC format.
+* DOC 格式的详细报告。
 
-* Detailed report in ODT format.
+* ODT 格式的详细报告。
 
-* Detailed report in HTML format.
+* HTML 格式的详细报告。
 
-Related CMake options:
+相关 CMake 选项：
 
 * ``ECLAIR_METRICS_TAB``
 * ``ECLAIR_REPORTS_TAB``
@@ -159,15 +131,14 @@ Related CMake options:
 * ``ECLAIR_FULL_ODT``
 * ``ECLAIR_FULL_HTML``
 
-Detail level of full reports
+完整报告的详细级别
 ============================
 
-The detail level of the txt and doc full reports can also be adapted by a configuration.
-In this case, the following configurations are available:
+TXT 与 DOC 格式的完整报告的详细级别也可通过配置调整，当前可用的选项包括：
 
-* Show all areas
+* 显示全部区域（Show all areas）。
 
-* Show only the first area
+* 仅显示第一个区域（Show only the first area）。
 
 Related CMake options:
 

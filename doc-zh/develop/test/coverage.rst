@@ -3,43 +3,36 @@
 Generating coverage reports
 ###########################
 
-With Zephyr, you can generate code coverage reports to analyze which parts of
-the code are covered by a given test or application.
+使用覆盖率工具生成报告
+###########################
 
-You can do this in two ways:
+在 Zephyr 中，你可以生成代码覆盖率报告，以分析给定测试或应用程序覆盖了代码的哪些部分。
 
-* In a real embedded target or QEMU, using Zephyr's gcov integration
-* Directly in your host computer, by compiling your application targeting
-  the POSIX architecture
+可以通过两种方式来生成覆盖率报告：
+
+- 在真实的嵌入式目标或 QEMU 中，使用 Zephyr 的 gcov 集成
+- 在主机上直接生成，通过将你的应用程序编译为 POSIX 架构的本机可执行文件
 
 Test coverage reports in embedded devices or QEMU
 *************************************************
 
 Overview
 ========
-`GCC GCOV <gcov_>`_ is a test coverage program
-used together with the GCC compiler to analyze and create test coverage reports
-for your programs, helping you create more efficient, faster running code and
-discovering untested code paths
+概述
+====
+`GCC GCOV <gcov_>`_ 是一个与 GCC 编译器配合使用的测试覆盖率工具，用于分析并生成程序的覆盖率报告，帮助你发现未被测试的代码路径，从而编写更高效、更快速的代码。
 
-In Zephyr, gcov collects coverage profiling data in RAM (and not to a file
-system) while your application is running. Support for gcov collection and
-reporting is limited by available RAM size and so is currently enabled only
-for QEMU emulation of embedded targets.
+在 Zephyr 中，gcov 在应用运行时将覆盖率分析数据收集到 RAM（而不是文件系统）。由于覆盖率数据的收集和报告受可用 RAM 大小限制，目前只在嵌入式目标的 QEMU 仿真中启用该功能。
 
 Details
 =======
-There are 2 parts to enable this feature. The first is to enable the coverage for the
-device and the second to enable in the test application. As explained earlier the
-code coverage with gcov is a function of RAM available. Therefore ensure that the
-device has enough RAM when enabling the coverage for it. For example a small device
-like frdm_k64f can run a simple test application but the more complex test
-cases which consume more RAM will crash when coverage is enabled.
+详细说明
+========
+启用该功能有两个部分：一是为设备启用覆盖率支持，二是在测试应用中启用覆盖率。如前所述，gcov 的代码覆盖率功能受可用 RAM 的影响。因此在为设备启用覆盖率时，请确保该设备有足够的 RAM。例如像 frdm_k64f 这样的小型设备可以运行简单的测试应用，但一些占用更多内存的复杂测试用例在启用覆盖率时可能会崩溃。
 
-To enable the device for coverage, select :kconfig:option:`CONFIG_HAS_COVERAGE_SUPPORT`
-in the Kconfig.board file.
+要为设备启用覆盖率支持，请在 Kconfig.board 文件中选择 :kconfig:option:`CONFIG_HAS_COVERAGE_SUPPORT`。
 
-To report the coverage for the particular test application set :kconfig:option:`CONFIG_COVERAGE`.
+要为特定测试应用生成覆盖率报告，请设置 :kconfig:option:`CONFIG_COVERAGE`。
 
 Steps to generate code coverage reports
 =======================================
@@ -54,9 +47,7 @@ These steps will produce an HTML coverage report for a single application.
       :goals: build
       :compact:
 
-#. Capture the emulator output into a log file. You may need to terminate
-   the emulator with :kbd:`Ctrl-A X` for this to complete after the coverage dump
-   has been printed:
+#. 将模拟器输出捕获到日志文件中。在覆盖率转储输出完成后，你可能需要使用 :kbd:`Ctrl-A X` 来终止模拟器以完成该操作：
 
    .. code-block:: console
 
@@ -68,28 +59,25 @@ These steps will produce an HTML coverage report for a single application.
 
      $ ninja -Cbuild run | tee log.log
 
-#. Generate the gcov ``.gcda`` and ``.gcno`` files from the log file that was
-   saved:
+#. 从生成的日志文件中提取并生成 gcov 使用的 ``.gcda`` 和 ``.gcno`` 文件：
 
    .. code-block:: console
 
      $ python3 scripts/gen_gcov_files.py -i log.log
 
-#. Find the gcov binary placed in the SDK. You will need to pass the path to
-   the gcov binary for the appropriate architecture when you later invoke
-   ``gcovr``:
+#. 在 SDK 中查找适用于目标架构的 gcov 二进制文件。在后续运行 ``gcovr`` 时需要传入该 gcov 可执行文件的路径：
 
    .. code-block:: console
 
      $ find $ZEPHYR_SDK_INSTALL_DIR -iregex ".*gcov"
 
-#. Create an output directory for the reports:
+#. 创建一个输出目录用于保存报告：
 
    .. code-block:: console
 
      $ mkdir -p gcov_report
 
-#. Run ``gcovr`` to get the reports:
+#. 运行 ``gcovr`` 来生成报告：
 
    .. code-block:: console
 
@@ -104,14 +92,10 @@ When compiling for the POSIX architecture, you utilize your host native tooling
 to build a native executable which contains your application, the Zephyr OS,
 and some basic HW emulation.
 
-That means you can use the same tools you would while developing any
-other desktop application.
+这意味着你可以使用开发普通桌面应用所使用的相同工具链。
 
-To build your application with ``gcc``'s `gcov`_, simply set
-:kconfig:option:`CONFIG_COVERAGE` before compiling it.
-When you run your application, ``gcov`` coverage data will be dumped into the
-respective ``gcda`` and ``gcno`` files.
-You may postprocess these with your preferred tools. For example:
+要为你的应用使用 ``gcc`` 的 `gcov`_ 生成覆盖率，请在编译前设置 :kconfig:option:`CONFIG_COVERAGE`。
+运行应用后，``gcov`` 会将覆盖率数据转储到相应的 ``.gcda`` 和 ``.gcno`` 文件中，随后可以使用你偏好的工具对这些文件进行后处理。例如：
 
 .. zephyr-app-commands::
    :zephyr-app: samples/hello_world
@@ -130,10 +114,9 @@ You may postprocess these with your preferred tools. For example:
 
 .. note::
 
-   You need a recent version of lcov (at least 1.14) with support for
-   intermediate text format. Such packages exist in recent Linux distributions.
+   你需要较新的 lcov（至少 1.14），以支持中间文本格式。大多数现代 Linux 发行版都提供了满足要求的包。
 
-   Alternatively, you can use gcovr (at least version 4.2).
+   或者，你也可以使用 gcovr（至少 4.2 版本）。
 
 Coverage reports using Twister
 ******************************
@@ -160,10 +143,7 @@ the coverage data collected by ``gcovr`` tool in ``twister-out/coverage.json``.
 Other reports might be chosen with ``--coverage-tool`` and ``--coverage-formats``
 command line options.
 
-To generate code coverage report including Zephyr sources as well as your application
-code outside of Zephyr repository (see :ref:`Application Types <zephyr-app-types>`)
-call Twister from your project directory with ``--coverage-basedir $ZEPHYR_BASE``
-command line option, for example:
+如果你希望生成同时包含 Zephyr 源码以及 Zephyr 仓库外部应用代码的覆盖率报告（参见 :ref:`Application Types <zephyr-app-types>`），可以在你的工程目录中使用 Twister 并指定 ``--coverage-basedir $ZEPHYR_BASE`` 选项，例如：
 
 .. code-block:: console
 
@@ -171,12 +151,7 @@ command line option, for example:
 
 .. note::
 
-   By default, Twister calls ``gcovr`` tool which filters source files assuming real paths
-   are everywhere with `all symlinks resolved <gcovr_symlinks_>`_, so when your development
-   environment has directories with symlinks then, to avoid incomplete ``gcovr`` reports,
-   either your :ref:`ZEPHYR_BASE <important-build-vars>` should contain a real path,
-   or ``lcov`` tool used instead of ``gcovr`` with additional Twister command line
-   option ``--coverage-tool lcov``.
+   默认情况下，Twister 会调用 ``gcovr`` 工具，gcovr 在过滤源文件时假定所有路径都是已解析的真实路径（参见 `all symlinks resolved <gcovr_symlinks_>`_）。如果你的开发环境中存在符号链接目录，为了避免 gcovr 生成不完整的报告，请确保 :ref:`ZEPHYR_BASE <important-build-vars>` 是真实路径，或者改用 lcov，并通过 Twister 的命令行选项指定 ``--coverage-tool lcov``。
 
 The process differs for unit tests, which are built with the host
 toolchain and require a different board:

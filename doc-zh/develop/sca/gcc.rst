@@ -18,47 +18,43 @@ GCC 静态分析支持
    :goals: build
    :compact:
 
-Configuring GCC static analyzer
+配置 GCC 静态分析器
 *******************************
 
-GCC static analyzer can be controlled using specific options.
+GCC 静态分析器可以通过若干专用选项进行控制。
 
 * `Options controlling the
-  analyzer <https://gcc.gnu.org/onlinedocs/gcc/Static-Analyzer-Options.html>`__
+   analyzer <https://gcc.gnu.org/onlinedocs/gcc/Static-Analyzer-Options.html>`__
 * `Options controlling the diagnostic message
-  formatting <https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Message-Formatting-Options.html>`__
+   formatting <https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Message-Formatting-Options.html>`__
 
 .. list-table::
-   :header-rows: 1
+    :header-rows: 1
 
-   * - Parameter
-     - Description
-   * - ``GCC_SCA_OPTS``
-     - A semicolon separated list of GCC analyzer options.
+    * - 参数
+       - 说明
+    * - ``GCC_SCA_OPTS``
+       - 以分号分隔的 GCC 分析器选项列表。
 
-These parameters can be passed on the command line, or be set as environment variables.
+这些参数可以通过命令行传递，也可以设置为环境变量。
 
 .. zephyr-app-commands::
-   :zephyr-app: samples/hello_world
-   :board: stm32h573i_dk
-   :gen-args: -DZEPHYR_SCA_VARIANT=gcc -DGCC_SCA_OPTS="-fdiagnostics-format=json;-fanalyzer-verbosity=3"
-   :goals: build
-   :compact:
+    :zephyr-app: samples/hello_world
+    :board: stm32h573i_dk
+    :gen-args: -DZEPHYR_SCA_VARIANT=gcc -DGCC_SCA_OPTS="-fdiagnostics-format=json;-fanalyzer-verbosity=3"
+    :goals: build
+    :compact:
 
 .. note::
 
-   GCC static analyzer is under active development, and each new release comes with new options.
-   This `page <https://gcc.gnu.org/wiki/StaticAnalyzer>`__ gives an overview of options and fix
-   introduced with each new release of the analyzer.
+    GCC 静态分析器仍在积极开发中，每个新版本通常会引入新的选项。此 `页面 <https://gcc.gnu.org/wiki/StaticAnalyzer>`__ 概述了分析器在各个版本中引入的选项与修复内容。
 
 
-Latest version of the analyzer
+分析器的最新版本
 ******************************
 
-Since the Zephyr toolchain may not include the most recent version of the GCC static analyzer,
-the GCC static analysis can be run with a more recent `GNU Arm embedded toolchain
-<https://docs.zephyrproject.org/latest/develop/toolchains/gnu_arm_embedded.html>`__
-to take advantage of the latest analyzer version.
+由于 Zephyr 自带的工具链可能并不包含最新版本的 GCC 静态分析器，您可以使用更新的 `GNU Arm embedded toolchain
+<https://docs.zephyrproject.org/latest/develop/toolchains/gnu_arm_embedded.html>`__ 来运行 GCC 静态分析，从而利用更新的分析器功能和修复。
 
 .. zephyr-app-commands::
    :zephyr-app: samples/hello_world

@@ -3,197 +3,143 @@
 BabbleSim
 #########
 
-BabbleSim and Zephyr
+BabbleSim 与 Zephyr
 ********************
 
-In the Zephyr project we use the `Babblesim`_ simulator to test some of the Zephyr radio protocols,
-including the Bluetooth LE stack, 802.15.4, and some of the networking stack.
+在 Zephyr 项目中，我们使用 `Babblesim`_ 模拟器来测试部分 Zephyr 的无线协议栈，包括 Bluetooth LE、802.15.4 以及部分网络栈。
 
-BabbleSim_ is a physical layer simulator, which in combination with the Zephyr
-:ref:`bsim boards<bsim boards>`
-can be used to simulate a network of Bluetooth LE and 15.4 devices.
-When we build Zephyr targeting a :ref:`bsim board<bsim boards>` we produce a Linux
-executable, which includes the application, Zephyr OS, and models of the HW.
+BabbleSim_ 是一个物理层（PHY）模拟器，结合 Zephyr 的 :ref:`bsim boards<bsim boards>`，可用于模拟由 Bluetooth LE 和 15.4 设备组成的网络。针对 :ref:`bsim board<bsim boards>` 构建 Zephyr 时，会生成包含应用、Zephyr OS 以及硬件模型的 Linux 可执行文件。
 
-When there is radio activity, this Linux executable will connect to the BabbleSim Phy simulation
-to simulate the radio channel.
+当存在无线电活动时，该 Linux 可执行文件会连接到 BabbleSim 的 PHY 模拟以模拟无线信道。
 
-In the BabbleSim documentation you can find more information on how to
-`get <https://babblesim.github.io/fetching.html>`_ and
-`build <https://babblesim.github.io/building.html>`_ the simulator.
-In the :ref:`nrf52_bsim<nrf52_bsim>`, :ref:`nrf5340bsim<nrf5340bsim>`,
-and :ref:`nrf54l15bsim<nrf54l15bsim>` boards documentation
-you can find more information about how to build Zephyr targeting these particular boards,
-and a few examples.
+有关如何获取和构建模拟器的更多信息，请参阅 BabbleSim 文档中的 `获取 <https://babblesim.github.io/fetching.html>`_ 与 `构建 <https://babblesim.github.io/building.html>`_ 页面。在 :ref:`nrf52_bsim<nrf52_bsim>`、:ref:`nrf5340bsim<nrf5340bsim>` 和 :ref:`nrf54l15bsim<nrf54l15bsim>` 板的文档中，可找到针对这些板构建 Zephyr 的说明与示例。
 
-Types of tests
+测试类型
 **************
 
-Tests without radio activity: bsim tests with twister
+无无线电活动的测试：使用 twister 的 bsim 测试
 =====================================================
 
-The :ref:`bsim boards<bsim boards>` can be used without radio activity, and in that case, it is not
-necessary to connect them to a physical layer simulation. Thanks to this, these target boards can
-be used just like :zephyr:board:`native_sim<native_sim>` with :ref:`twister <twister_script>`,
-to run all standard Zephyr twister tests, but with models of a real SOC HW, and their drivers.
+:ref:`bsim boards<bsim boards>` 可在无无线电活动的情况下使用，此时无需将其连接到物理层模拟。因此，这些目标板可以像 :zephyr:board:`native_sim<native_sim>` 一样与 :ref:`twister <twister_script>` 配合使用，运行所有标准的 Zephyr twister 测试，但使用的是更贴近真实 SoC 硬件与驱动的模型。
 
-Tests with radio activity
+有无线电活动的测试
 =========================
 
-When there is radio activity, BabbleSim tests require at the very least a physical layer simulation
-running, and most, more than 1 simulated device. Due to this, these tests are not build and run
-with twister, but with a dedicated set of tests scripts.
+当存在无线电活动时，BabbleSim 测试至少需要一个正在运行的物理层模拟，并且大多数测试需要多个被模拟设备。因此，这类测试不是用 twister 构建和运行的，而是使用专门的一组测试脚本。
 
-These tests are kept in the :code:`tests/bsim/` folder. The ``compile.sh`` and ``run_parallel.sh``
-scripts contained in that folder are used by the CI system to build the needed images and execute
-these tests in batch.
+这些测试保存在 :code:`tests/bsim/` 目录下。该目录中的 ``compile.sh`` 与 ``run_parallel.sh`` 脚本由 CI 系统使用，用于构建所需映像并批量执行这些测试。
 
-See sections below for more information about how to build and run them, as well as the conventions
-they follow.
+下面各节介绍如何构建与运行这些测试以及它们遵循的约定。
 
-There are two main sets of tests:
+主要有两类测试：
 
-* Self checking embedded application/tests: In which some of the simulated devices applications are
-  built with some checks which decide if the test is passing or failing. These embedded
-  applications tests use the :ref:`bs_tests<bsim_boards_bs_tests>` system to report the pass or
-  failure, and in many cases to build several tests into the same binary.
+* 自检的嵌入式应用/测试：部分模拟设备的应用包含用于判定测试通过或失败的检查逻辑。这类嵌入式应用测试使用 :ref:`bs_tests<bsim_boards_bs_tests>` 系统上报通过或失败，并在许多场景下将多个测试打包到同一二进制中。
 
-* Test using the EDTT_ tool, in which a EDTT (python) test controls the embedded applications over
-  an RPC mechanism, and decides if the test passes or not.
-  Today these tests include a very significant subset of the BT qualification test suite.
+* 使用 EDTT_ 工具的测试：由 EDTT（Python）测试通过 RPC 机制控制嵌入式应用，并判定测试是否通过。目前这类测试包含 BT 认证测试套件的一个重要子集。
 
-More information about how different tests types relate to BabbleSim and the bsim boards can be
-found in the :ref:`bsim boards tests section<bsim_boards_tests>`.
+关于不同测试类型与 BabbleSim 及 bsim boards 的关系，请参见 :ref:`bsim boards tests section<bsim_boards_tests>`。
 
-Test coverage and BabbleSim
+与 BabbleSim 的测试覆盖率
 ***************************
 
-As the :ref:`nrf52_bsim<nrf52_bsim>` and :ref:`nrf5340bsim<nrf5340bsim>`, and
-:ref:`nrf54l15bsim<nrf54l15bsim>` boards are based on the POSIX architecture, you can easily collect
-test coverage information.
+由于 :ref:`nrf52_bsim<nrf52_bsim>`、:ref:`nrf5340bsim<nrf5340bsim>` 与 :ref:`nrf54l15bsim<nrf54l15bsim>` 板基于 POSIX 架构，您可以比较方便地收集测试覆盖率信息。
 
-You can use the script :zephyr_file:`tests/bsim/generate_coverage_report.sh` to generate an html
-coverage report from tests.
+可使用脚本 :zephyr_file:`tests/bsim/generate_coverage_report.sh` 从测试结果生成 HTML 覆盖率报告。
 
-Check :ref:`the page on coverage generation <coverage_posix>` for more info.
+更多信息请参见 :ref:`coverage_posix` 中关于覆盖率生成的页面。
 
 .. _BabbleSim:
-   https://BabbleSim.github.io
+  https://BabbleSim.github.io
 
 .. _EDTT:
-   https://github.com/EDTTool/EDTT
+  https://github.com/EDTTool/EDTT
 
-Building and running the tests
+构建与运行测试
 ******************************
 
-See the :ref:`nrf52_bsim` page for setting up the simulator.
+有关搭建模拟器的说明，请参阅 :ref:`nrf52_bsim` 页面。
 
-The scripts also expect a few environment variables to be set.
-For example, from Zephyr's root folder, you can run:
-
-.. code-block:: bash
-
-   # Build all the tests
-   ${ZEPHYR_BASE}/tests/bsim/compile.sh
-
-   # Run them (in parallel)
-   RESULTS_FILE=${ZEPHYR_BASE}/myresults.xml \
-      SEARCH_PATH=${ZEPHYR_BASE}/tests/bsim \
-         ${ZEPHYR_BASE}/tests/bsim/run_parallel.sh
-
-Or to build and run only a specific subset, e.g. host advertising tests:
+这些脚本还期望设置若干环境变量。例如，在 Zephyr 根目录下可以运行：
 
 .. code-block:: bash
 
-   # Build the Bluetooth host advertising tests
-   ${ZEPHYR_BASE}/tests/bsim/bluetooth/host/adv/compile.sh
+  # 构建所有测试
+  ${ZEPHYR_BASE}/tests/bsim/compile.sh
 
-   # Run them (in parallel)
-   RESULTS_FILE=${ZEPHYR_BASE}/myresults.xml \
-      SEARCH_PATH=${ZEPHYR_BASE}/tests/bsim/bluetooth/host/adv \
-         ${ZEPHYR_BASE}/tests/bsim/run_parallel.sh
+  # 并行运行它们
+  RESULTS_FILE=${ZEPHYR_BASE}/myresults.xml \
+    SEARCH_PATH=${ZEPHYR_BASE}/tests/bsim \
+      ${ZEPHYR_BASE}/tests/bsim/run_parallel.sh
 
-Check the ``run_parallel.sh`` help for more options and examples on how to use this script to run
-the tests in batch.
-
-After building the tests' required binaries you can run a test directly using its individual test
-script.
-
-For example you can build the required binaries for the networking tests with
+或者仅构建并运行特定子集，例如主机广播测试：
 
 .. code-block:: bash
 
-   WORK_DIR=${ZEPHYR_BASE}/bsim_out ${ZEPHYR_BASE}/tests/bsim/net/compile.sh
+  # 构建 Bluetooth 主机广播测试
+  ${ZEPHYR_BASE}/tests/bsim/bluetooth/host/adv/compile.sh
 
-and then directly run one of the tests:
+  # 并行运行它们
+  RESULTS_FILE=${ZEPHYR_BASE}/myresults.xml \
+    SEARCH_PATH=${ZEPHYR_BASE}/tests/bsim/bluetooth/host/adv \
+      ${ZEPHYR_BASE}/tests/bsim/run_parallel.sh
+
+查看 ``run_parallel.sh`` 的帮助以获取更多选项和如何批量运行测试的示例。
+
+在构建测试所需二进制之后，可使用对应的测试脚本直接运行单个测试。
+
+例如，可以为网络测试构建所需二进制：
 
 .. code-block:: bash
 
-   ${ZEPHYR_BASE}/tests/bsim/net/sockets/echo_test/tests_scripts/echo_test_802154.sh
+  WORK_DIR=${ZEPHYR_BASE}/bsim_out ${ZEPHYR_BASE}/tests/bsim/net/compile.sh
 
-Conventions
+然后直接运行某个测试：
+
+.. code-block:: bash
+
+  ${ZEPHYR_BASE}/tests/bsim/net/sockets/echo_test/tests_scripts/echo_test_802154.sh
+
+约定
 ===========
 
-Test code
+测试代码
 ---------
 
-See the :zephyr_file:`Bluetooth sample test <tests/bsim/bluetooth/host/misc/sample_test/README.rst>` for conventions that apply to test
-code.
+有关测试代码应遵循的约定，请参见 :zephyr_file:`Bluetooth sample test <tests/bsim/bluetooth/host/misc/sample_test/README.rst>`。
 
-Build scripts
+构建脚本
 -------------
 
-The build scripts ``compile.sh`` simply build all the required test and sample applications
-for the tests' scripts placed in the subfolders below.
+``compile.sh`` 构建脚本负责为子文件夹中的测试脚本构建所有所需的测试与示例应用。
 
-This build scripts use the common compile.source which provide a function (compile) which calls
-cmake and ninja with the provided application, configuration and overlay files.
+这些构建脚本使用公共的 compile.source，该脚本提供一个函数（compile），用于调用 cmake 和 ninja，传入指定的应用、配置与覆盖文件。
 
-To speed up compilation for users interested only in a subset of tests, several compile scripts
-exist in several subfolders, where the upper ones call into the lower ones.
+为了加快仅对部分测试感兴趣的用户的编译速度，部分子文件夹中存在多个编译脚本，较上层的脚本会调用下层的脚本。
 
-Note that cmake and ninja are used directly instead of the ``west build`` wrapper as west is not
-required, and some Zephyr users do not use or have west, but still use the build and tests scripts.
+注意：此处直接使用 cmake 与 ninja，而非 ``west build`` 封装器，因为并非所有 Zephyr 用户都会使用或安装 west，但仍希望使用这些构建与测试脚本。
 
-Test scripts
+测试脚本
 ------------
 
-Please follow the existing conventions and do not design one-off bespoke runners (e.g. a python
-script, or another shell abstraction).
+请遵循现有约定，不要设计一次性专用的运行器（例如自定义 Python 脚本或其它 shell 抽象）。
 
-The rationale is that it is easier and faster for the maintainers to perform tree-wide updates for
-build system or compatibility changes if the tests are run in the same manner, with the same
-variables, etc..
+这样做的理由是：如果所有测试以相同方式、使用相同变量运行，维护者在进行构建系统或兼容性更改时可以更快、更方便地对整个代码树进行更新。
 
-If you have a good idea for improving your test script, please make a PR changing *all* the test
-scripts in order to benefit everyone and conserve homogeneity. You can of course discuss it first in
-an RFC issue or on the babblesim discord channel.
+如果你有改进测试脚本的好想法，请提交 PR 修改 *所有* 测试脚本，以便让所有人受益并保持一致性。你也可以先在 RFC issue 中讨论，或在 BabbleSim 的 Discord 频道交流。
 
-Scripts starting with an underscore (``_``) are not automatically discovered and run. They can serve
-as either helper functions for the main script, or can be used for local development utilities, e.g.
-building and running tests locally, debugging, etc..
+以“_”开头的脚本（``_``）不会被自动发现和运行，它们可用作主脚本的辅助函数，或用于本地开发工具（例如本地构建与运行测试、调试等）。
 
-Here are the conventions:
+以下是约定：
 
-- Each test is defined by a shell script with the extension ``.sh``, in a subfolder called
-  ``test_scripts/``.
-- It is recommended to run a single test per script file. It allows for better parallelization of
-  the runs in CI.
-- Scripts expect that the binaries they require are already built. They should not compile binaries.
-- Scripts will spawn the processes for every simulated device and the physical layer simulation.
-- Scripts must return 0 to the invoking shell if the test passes, and not 0 if the test fails.
-- Each test must have a unique simulation id, to enable running different tests in parallel.
-- Neither the scripts nor the images should modify the workstation filesystem content beyond the
-  ``${BSIM_OUT_PATH}/results/<simulation_id>/`` or ``/tmp/`` folders.
-  That is, they should not leave stray files behind.
-- Tests that require several consecutive simulations (e.g, if simulating a device pairing, powering
-  off, and powering up after as a new simulation) should use separate simulation ids for each
-  simulation segment, ensuring that the radio activity of each segment can be inspected a
-  posteriori.
-- Avoid overly long tests. If the test takes over 20 seconds of runtime, consider if it is possible
-  to split it in several separate tests.
-- If the test takes over 5 seconds, set ``EXECUTE_TIMEOUT`` to a value that is at least 5 times
-  bigger than the measured run-time.
-- Do not set ``EXECUTE_TIMEOUT`` to a value lower than the default.
-- Tests should not be overly verbose: less than a hundred lines are expected on the outputs. Do make
-  use of ``LOG_DBG()`` extensively, but don't enable the ``DBG`` log level by default.
+- 每个测试由扩展名为 ``.sh`` 的 shell 脚本定义，位于名为 ``test_scripts/`` 的子文件夹中。
+- 建议每个脚本文件只运行单个测试，这有助于在 CI 中更好地并行化运行。
+- 脚本假定所需的二进制已被构建。脚本不应编译二进制文件。
+- 脚本将为每个被模拟设备及物理层模拟生成进程。
+- 如果测试通过，脚本必须向调用的 shell 返回 0；若测试失败，则返回非 0 值。
+- 每个测试必须具有唯一的仿真 id，以便支持并行运行不同测试。
+- 脚本或镜像不得修改工作站文件系统中 ``${BSIM_OUT_PATH}/results/<simulation_id>/`` 或 ``/tmp/`` 之外的内容，换言之，不应留下额外的临时文件。
+- 需要多次连续仿真的测试（例如：模拟设备配对、断电再以新仿真启动等），应为每个仿真段使用不同的仿真 id，从而确保可以事后检查每段的无线电活动。
+- 避免过长的测试。如果测试运行时间超过 20 秒，考虑将其拆分为多个独立测试。
+- 如果测试运行时间超过 5 秒，请将 ``EXECUTE_TIMEOUT`` 设置为至少为实际运行时间的 5 倍。
+- 不要将 ``EXECUTE_TIMEOUT`` 设置为低于默认值。
+- 测试输出不应过于冗长：期望输出少于一百行。可以广泛使用 ``LOG_DBG()``，但不要默认启用 ``DBG`` 日志级别。

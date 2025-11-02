@@ -1,25 +1,17 @@
 .. _sparse:
 
-Sparse support
+is a static code analysis tool.
+
+Sparse 支持
 ##############
 
-`Sparse <https://www.kernel.org/doc/html/latest/dev-tools/sparse.html>`__
-is a static code analysis tool.
-Apart from performing common code analysis tasks it also supports an
-``address_space`` attribute, which allows introduction of distinct address
-spaces in C code with subsequent verification that pointers to different
-address spaces do not get confused. Additionally it supports a ``force``
-attribute which should be used to cast pointers between different address
-spaces. At the moment Zephyr introduces a single custom address space
-``__cache`` used to identify pointers from the cached address range on the
-Xtensa architecture. This helps identify cases where cached and uncached
-addresses are confused.
+`Sparse <https://www.kernel.org/doc/html/latest/dev-tools/sparse.html>`__ 是一个静态代码分析工具。
+除了常见的代码分析功能外，Sparse 还支持 ``address_space`` 属性，允许在 C 代码中引入不同的地址空间，并验证不同地址空间的指针不会相互混淆。此外，它还支持用于在不同地址空间之间进行指针转换的 ``force`` 属性。目前 Zephyr 引入了一个名为 ``__cache`` 的自定义地址空间，用于标识 Xtensa 架构上缓存地址范围的指针。这有助于识别缓存地址与非缓存地址混淆的情形。
 
-Running with sparse
+使用 sparse 运行
 *******************
 
-To run a sparse verification build :ref:`west build <west-building>` should be
-called with a ``-DZEPHYR_SCA_VARIANT=sparse`` parameter, e.g.
+要运行 Sparse 验证构建，请在调用 :ref:`west build <west-building>` 时传递 ``-DZEPHYR_SCA_VARIANT=sparse`` 参数，例如：
 
 .. code-block:: shell
 

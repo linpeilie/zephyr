@@ -1,53 +1,34 @@
 .. _integration_with_pytest:
 
-Integration with pytest test framework
+与 pytest 测试框架的集成
 ######################################
 
-*Please mind that integration of twister with pytest is still work in progress. Not every platform
-type is supported in pytest (yet). If you find any issue with the integration or have an idea for
-an improvement, please, let us know about it and open a GitHub issue/enhancement.*
+*注意：twister 与 pytest 的集成仍在进行中。目前并非所有平台类型都能被 pytest 支持。如果你在集成过程中发现问题或有改进建议，请在 GitHub 上提交 issue 或增强请求。*
 
-Introduction
+简介
 ************
 
-Pytest is a python framework that *“makes it easy to write small, readable tests, and can scale to
-support complex functional testing for applications and libraries”* (`<https://docs.pytest.org/en/7.3.x/>`_).
-Python is known for its free libraries and ease of using it for scripting. In addition, pytest
-utilizes the concept of plugins and fixtures, increasing its expendability and reusability.
-A pytest plugin ``pytest-twister-harness`` was introduced to provide an integration between pytest
-and twister, allowing Zephyr’s community to utilize pytest functionality with keeping twister as
-the main framework.
+Pytest 是一个 Python 测试框架，"使编写小而可读的测试变得容易，并且能够扩展以支持应用程序和库的复杂功能测试"（详见 `<https://docs.pytest.org/en/7.3.x/>`_）。Python 拥有丰富的库并便于用于脚本编写。此外，pytest 使用插件（plugins）和夹具（fixtures）机制，增强了扩展性与可重用性。
 
-Integration with twister
+我们引入了名为 ``pytest-twister-harness`` 的 pytest 插件，用于在 pytest 与 twister 之间建立集成，允许 Zephyr 社区在保留 twister 作为主框架的同时使用 pytest 的功能。
+
+与 twister 的集成
 ************************
 
-By default, there is nothing to be done to enable pytest support in twister. The plugin is
-developed as a part of Zephyr’s tree. To enable install-less operation, twister first extends
-``PYTHONPATH`` with path to this plugin, and then during pytest call, it appends the command with
-``-p twister_harness.plugin`` argument. If one prefers to use the installed version of the plugin,
-they must add ``--allow-installed-plugin`` flag to twister’s call.
+默认情况下，无需额外操作即可在 twister 中启用 pytest 支持。该插件作为 Zephyr 源树的一部分进行开发。为实现无需安装的运行方式，twister 会首先将该插件路径加入 ``PYTHONPATH``，然后在调用 pytest 时在命令行中追加 ``-p twister_harness.plugin`` 参数。如果希望使用已安装的插件版本，可以在 twister 命令中加入 ``--allow-installed-plugin`` 标志。
 
-Pytest-based test suites are discovered the same way as other twister tests, i.e., by a presence
-of test/sample.yaml. Inside, a keyword ``harness`` tells twister how to handle a given test.
-In the case of ``harness: pytest``, most of twister workflow (test suites discovery,
-parallelization, building and reporting) remains the same as for other harnesses. The change
-happens during the execution step. The below picture presents a simplified overview of the
-integration.
+基于 pytest 的测试套件与其他 twister 测试的发现方式相同，例如通过存在 test/sample.yaml 文件来识别。该文件中的 ``harness`` 关键字告诉 twister 如何处理给定测试。当使用 ``harness: pytest`` 时，twister 的大部分工作流（测试套件发现、并行化、构建与报告）与其他 harness 一致。差异出现在执行阶段。下面插图展示了集成的简要示意。
 
 .. figure:: figures/twister_and_pytest.svg
    :figclass: align-center
 
 
-If ``harness: pytest`` is used, twister delegates the test execution to pytest, by calling it as
-a subprocess. Required parameters (such as build directory, device to be used, etc.) are passed
-through a CLI command. When pytest is done, twister looks for a pytest report (results.xml) and
-sets the test result accordingly.
+当使用 ``harness: pytest`` 时，twister 会将测试执行委托给 pytest（以子进程方式调用）。所需参数（例如构建目录、要使用的设备等）通过命令行传递。pytest 执行完成后，twister 会查找 pytest 报告（results.xml）并据此设置测试结果。
 
-How to create a pytest test
+如何创建 pytest 测试
 ***************************
 
-An example folder containing a pytest test, application source code and Twister configuration .yaml
-file can look like the following:
+一个包含 pytest 测试、应用源码和 Twister 配置 .yaml 文件的示例目录结构如下：
 
 .. code-block:: none
 
@@ -60,11 +41,7 @@ file can look like the following:
    ├─── prj.conf
    └─── testcase.yaml
 
-An example of a pytest test is given at
-:zephyr_file:`samples/subsys/testsuite/pytest/shell/pytest/test_shell.py`. Using the configuration
-provided in the ``testcase.yaml`` file, Twister builds the application from ``src`` and then, if the
-.yaml file contains a ``harness: pytest`` entry, it calls pytest in a separate subprocess. A sample
-configuration file may look like this:
+在 :zephyr_file:`samples/subsys/testsuite/pytest/shell/pytest/test_shell.py` 中给出了一个 pytest 测试的示例。使用 ``testcase.yaml`` 中的配置，Twister 会从 ``src`` 构建应用程序；如果 .yaml 文件包含 ``harness: pytest`` 条目，则 Twister 会在单独的子进程中调用 pytest。示例配置文件可能如下所示：
 
 .. code-block:: yaml
 
@@ -73,47 +50,35 @@ configuration file may look like this:
          harness: pytest
          tags: foo
 
-By default, pytest tries to look for tests in a ``pytest`` directory located next to a directory
-with binary sources. A keyword ``pytest_root`` placed under ``harness_config`` section in .yaml file
-can be used to point to other files, directories or subtests (more info :ref:`here <pytest_root>`).
+默认情况下，pytest 会在与二进制源目录相邻的 ``pytest`` 目录中查找测试。可以在 .yaml 文件的 ``harness_config`` 部分使用 ``pytest_root`` 关键字来指向其他文件、目录或子测试（更多信息见 :ref:`here <pytest_root>`）。
 
-Pytest scans the given locations looking for tests, following its default
-`discovery rules <https://docs.pytest.org/en/7.1.x/explanation/goodpractices.html#conventions-for-python-test-discovery>`_.
+Pytest 会按其默认的
+`发现规则 <https://docs.pytest.org/en/7.1.x/explanation/goodpractices.html#conventions-for-python-test-discovery>`_
+扫描给定位置以查找测试。
 
-Passing extra arguments
+传递额外参数
 =======================
 
-There are two ways for passing extra arguments to the called pytest subprocess:
+有两种方式可以向被调用的 pytest 子进程传递额外参数：
 
-#. From .yaml file, using ``pytest_args`` placed under ``harness_config`` section - more info
-   :ref:`here <pytest_args>`.
-#. Through Twister command line interface as ``--pytest-args`` argument. This can be particularly
-   useful when one wants to select a specific testcase from a test suite. For instance, one can use
-   a command:
+#. 在 .yaml 文件的 ``harness_config`` 部分使用 ``pytest_args``（更多信息见 :ref:`here <pytest_args>`）。
+#. 通过 Twister 命令行使用 ``--pytest-args`` 参数。这在需要从测试套件中选择特定测试用例时非常有用。例如，可以使用：
 
-   .. code-block:: console
+.. code-block:: console
 
-      $ ./scripts/twister --platform native_sim -T samples/subsys/testsuite/pytest/shell \
-      -s samples/subsys/testsuite/pytest/shell/sample.pytest.shell \
-      --pytest-args='-k test_shell_print_version'
+   $ ./scripts/twister --platform native_sim -T samples/subsys/testsuite/pytest/shell \
+   -s samples/subsys/testsuite/pytest/shell/sample.pytest.shell \
+   --pytest-args='-k test_shell_print_version'
 
-   The command line arguments will extend those from the .yaml file. If the same argument is
-   present in both places, the one from the command line will take precedence.
+命令行参数会扩展来自 .yaml 文件的参数；如果两处都存在相同参数，则命令行参数优先。
 
-Fixtures
+Fixtures（夹具）
 ********
 
 dut
 ===
 
-Give access to a `DeviceAdapter`_ type object, that represents Device Under Test. This fixture is
-the core of pytest harness plugin. It is required to launch DUT (initialize logging, flash device,
-connect serial etc). This fixture yields a device prepared according to the requested type
-(``native``, ``qemu``, ``hardware``, etc.). All types of devices share the same API. This allows for
-writing tests which are device-type-agnostic. Scope of this fixture is determined by the
-``pytest_dut_scope`` keyword placed under ``harness_config`` section (more info
-:ref:`here <pytest_dut_scope>`).
-
+提供对 `DeviceAdapter`_ 类型对象的访问，该对象表示被测设备（DUT）。该夹具是 pytest harness 插件的核心，用于启动 DUT（初始化日志、烧写设备、连接串口等）。夹具会根据请求的类型（``native``、``qemu``、``hardware`` 等）返回已准备好的设备。所有设备类型共享相同 API，从而允许编写与设备类型无关的测试。该夹具的作用域由 .yaml 文件 ``harness_config`` 部分中的 ``pytest_dut_scope`` 关键字决定（更多信息见 :ref:`here <pytest_dut_scope>`）。
 
 .. code-block:: python
 
@@ -125,12 +90,7 @@ writing tests which are device-type-agnostic. Scope of this fixture is determine
 shell
 =====
 
-Provide a `Shell <shell_class_>`_ class object with methods used to interact with shell application.
-It calls ``wait_for_promt`` method, to not start scenario until DUT is ready. The shell fixture
-calls ``dut`` fixture, hence has access to all its methods. The ``shell`` fixture adds methods
-optimized for interactions with a shell. It can be used instead of ``dut`` for tests. Scope of this
-fixture is determined by the ``pytest_dut_scope`` keyword placed under ``harness_config`` section
-(more info :ref:`here <pytest_dut_scope>`).
+提供一个 `Shell <shell_class_>`_ 类对象，包含与 shell 应用交互所需的方法。它会调用 ``wait_for_promt`` 方法，以确保在 DUT 就绪前不启动场景。shell 夹具会调用 ``dut`` 夹具，因此可以访问其所有方法。``shell`` 夹具为与 shell 的交互添加了一些优化方法，可在测试中替代直接使用 ``dut``。该夹具的作用域由 .yaml 文件 ``harness_config`` 部分的 ``pytest_dut_scope`` 关键字决定（更多信息见 :ref:`here <pytest_dut_scope>`）。
 
 .. code-block:: python
 
@@ -142,39 +102,34 @@ fixture is determined by the ``pytest_dut_scope`` keyword placed under ``harness
 mcumgr
 ======
 
-Sample fixture to wrap ``mcumgr`` command-line tool used to manage remote devices. More information
-about MCUmgr can be found here :ref:`mcu_mgr`.
+示例夹具用于封装用于管理远程设备的命令行工具 ``mcumgr``。有关 MCUmgr 的更多信息，请参见 :ref:`mcu_mgr`。
 
 .. note::
-   This fixture requires the ``mcumgr`` available in the system PATH
+   此夹具要求系统 PATH 中包含可用的 ``mcumgr`` 可执行文件。
 
-Only selected functionality of MCUmgr is wrapped by this fixture. For example, here is a test with
-a fixture ``mcumgr``
+只有 MCUmgr 的部分功能被该夹具封装。例如，下面演示了使用 ``mcumgr`` 夹具的测试：
 
 .. code-block:: python
 
    from twister_harness import DeviceAdapter, Shell, McuMgr
 
    def test_upgrade(dut: DeviceAdapter, shell: Shell, mcumgr: McuMgr):
-      # free the serial port for mcumgr
+      # 释放 mcumgr 使用的串口
       dut.disconnect()
-      # upload the signed image
+      # 上传签名映像
       mcumgr.image_upload('path/to/zephyr.signed.bin')
-      # obtain the hash of uploaded image from the device
+      # 从设备获取已上传映像的哈希
       second_hash = mcumgr.get_hash_to_test()
-      # test a new upgrade image
+      # 测试新的升级映像
       mcumgr.image_test(second_hash)
-      # reset the device remotely
+      # 远程重置设备
       mcumgr.reset_device()
-      # continue test scenario, check version etc.
-
+      # 继续测试场景，检查版本等
 
 unlaunched_dut
 ==============
 
-Similar to the ``dut`` fixture, but it does not initialize the device. It can be used when a finer
-control over the build process is needed. It becomes responsibility of the test to initialize the
-device.
+类似于 ``dut`` 夹具，但不初始化设备。适用于需要对构建过程进行更细粒度控制的场景，测试代码将负责初始化设备。
 
 .. code-block:: python
 
@@ -221,98 +176,81 @@ Shell
 
    .. automethod:: get_filtered_output
 
-
-Examples of pytest tests in the Zephyr project
+Zephyr 项目中 pytest 测试示例
 **********************************************
 
 * :zephyr:code-sample:`pytest_shell`
-* MCUmgr tests - :zephyr_file:`tests/boot/with_mcumgr`
-* LwM2M tests - :zephyr_file:`tests/net/lib/lwm2m/interop`
-* GDB stub tests - :zephyr_file:`tests/subsys/debug/gdbstub`
-
+* MCUmgr 测试 - :zephyr_file:`tests/boot/with_mcumgr`
+* LwM2M 测试 - :zephyr_file:`tests/net/lib/lwm2m/interop`
+* GDB stub 测试 - :zephyr_file:`tests/subsys/debug/gdbstub`
 
 FAQ
 ***
 
-How to flash/run application only once per pytest session?
-==========================================================
+如何在整个 pytest 会话中只烧写/运行一次应用？
+==================================================
 
-   ``dut`` is a fixture responsible for flashing/running application. By default, its scope is set
-   as ``function``. This can be changed by adding to .yaml file ``pytest_dut_scope`` keyword placed
-   under ``harness_config`` section:
+``dut`` 是负责烧写/运行应用的夹具。默认情况下其作用域为 ``function``。可以在 .yaml 文件的 ``harness_config`` 部分通过添加 ``pytest_dut_scope`` 关键字将其更改为会话级别：
 
-   .. code-block:: yaml
+.. code-block:: yaml
 
-      harness: pytest
-      harness_config:
-         pytest_dut_scope: session
+   harness: pytest
+   harness_config:
+      pytest_dut_scope: session
 
-   More info can be found :ref:`here <pytest_dut_scope>`.
+更多信息见 :ref:`here <pytest_dut_scope>`。
 
-How to run only one particular test from a python file?
-=======================================================
+如何只运行 Python 文件中的某个特定测试？
+================================================
 
-   This can be achieved in several ways. In .yaml file it can be added using a ``pytest_root`` entry
-   placed under ``harness_config`` with list of tests which should be run:
+可以通过多种方式实现。在 .yaml 文件中可以在 ``harness_config`` 下添加 ``pytest_root`` 条目，列出应运行的测试：
 
-   .. code-block:: yaml
+.. code-block:: yaml
 
-      harness: pytest
-      harness_config:
-         pytest_root:
-            - "pytest/test_shell.py::test_shell_print_help"
+   harness: pytest
+   harness_config:
+      pytest_root:
+         - "pytest/test_shell.py::test_shell_print_help"
 
-   Particular tests can be also chosen by pytest ``-k`` option (more info about pytest keyword
-   filter can be found
-   `here <https://docs.pytest.org/en/latest/example/markers.html#using-k-expr-to-select-tests-based-on-their-name>`_
-   ). It can be applied by adding ``-k`` filter in ``pytest_args`` in .yaml file:
+也可以使用 pytest 的 ``-k`` 选项选择特定测试（关于 pytest 关键字过滤的更多信息见 `here <https://docs.pytest.org/en/latest/example/markers.html#using-k-expr-to-select-tests-based-on-their-name>`_）。可以将 ``-k`` 过滤器添加到 .yaml 文件中的 ``pytest_args``：
 
-   .. code-block:: yaml
+.. code-block:: yaml
 
-      harness: pytest
-      harness_config:
-         pytest_args:
-            - "-k test_shell_print_help"
+   harness: pytest
+   harness_config:
+      pytest_args:
+         - "-k test_shell_print_help"
 
-   or by adding it to Twister command overriding parameters from the .yaml file:
+或者在 Twister 命令行中覆盖 .yaml 文件中的参数：
 
-   .. code-block:: console
+.. code-block:: console
 
-      $ ./scripts/twister ... --pytest-args='-k test_shell_print_help'
+   $ ./scripts/twister ... --pytest-args='-k test_shell_print_help'
 
-How to get information about used device type in test?
-======================================================
+如何获取测试中使用的设备类型信息？
+========================================
 
-   This can be taken from ``dut`` fixture (which represents `DeviceAdapter`_ object):
+可以从 ``dut`` 夹具（表示 `DeviceAdapter`_ 对象）中获取设备类型信息：
 
-   .. code-block:: python
+.. code-block:: python
 
-      device_type: str = dut.device_config.type
-      if device_type == 'hardware':
-         ...
-      elif device_type == 'native':
-         ...
+   device_type: str = dut.device_config.type
+   if device_type == 'hardware':
+      ...
+   elif device_type == 'native':
+      ...
 
-How to rerun locally pytest tests without rebuilding application by Twister?
-============================================================================
+如何在本地重新运行 pytest 测试而无需 Twister 重新构建应用？
+===============================================================
 
-   This can be achieved by running Twister once again with ``--test-only`` argument added to Twister
-   command. Another way is running Twister with highest verbosity level (``-vv``) and then
-   copy-pasting from logs command dedicated for spawning pytest (log started by ``Running pytest
-   command: ...``).
+可以通过再次运行 Twister 并添加 ``--test-only`` 参数来实现。本地另一种做法是以最高详细级别（``-vv``）运行 Twister，然后从日志中复制用于启动 pytest 的命令（日志中会有类似 “Running pytest command: ...” 的条目）。
 
-Is this possible to run pytest tests in parallel?
-=================================================
+是否可以并行运行 pytest 测试？
+================================================
 
-   Basically ``pytest-harness-plugin`` wasn't written with intention of running pytest tests in
-   parallel. Especially those one dedicated for hardware. There was assumption that parallelization
-   of tests is made by Twister, and it is responsible for managing available sources (jobs and
-   hardwares). If anyone is interested in doing this for some reasons (for example via
-   `pytest-xdist plugin <https://pytest-xdist.readthedocs.io/en/stable/>`_) they do so at their own
-   risk.
+原则上，``pytest-harness-plugin`` 并不是为并行运行 pytest 测试（尤其是面向硬件的测试）而编写。设计假设是并行化由 Twister 负责，Twister 管理可用资源（作业和硬件）。如果有人因某些原因希望并行运行（例如使用 `pytest-xdist plugin <https://pytest-xdist.readthedocs.io/en/stable/>`_），则需自行承担风险。
 
-
-Limitations
+限制
 ***********
 
-* Not every platform type is supported in the plugin (yet).
+* 目前并非所有平台类型都被插件支持。
