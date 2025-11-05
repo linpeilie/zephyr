@@ -1,10 +1,10 @@
 .. _bluetooth_bap:
 
-Basic Audio Profile
-###################
+基本音频配置文件
+################
 
-API Reference
-*************
+API 参考
+********
 
 .. doxygengroup:: bt_bap
 .. doxygengroup:: bt_bap_unicast_client

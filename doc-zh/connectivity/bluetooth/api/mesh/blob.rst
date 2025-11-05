@@ -1,29 +1,27 @@
 .. _bluetooth_mesh_blob:
 
-BLOB Transfer models
+BLOB 传输模型
 ####################
 
-The Binary Large Object (BLOB) Transfer models implement the Bluetooth Mesh Binary Large Object
-Transfer Model specification version 1.0 and provide functionality for sending large binary objects
-from a single source to many Target nodes over the Bluetooth Mesh network. It is the underlying
-transport method for the :ref:`bluetooth_mesh_dfu`, but may be used for other object transfer
-purposes. The implementation is in experimental state.
+二进制大对象 (BLOB) 传输模型实现了蓝牙网状二进制大对象
+传输模型规范版本 1.0，并提供通过蓝牙网状网络从单个源向许多目标节点发送大型二进制对象的功能。它是 :ref:`bluetooth_mesh_dfu` 的底层
+传输方法，但也可用于其他对象传输
+目的。该实现处于实验状态。
 
-The BLOB Transfer models support transfers of continuous binary objects of up to 4 GB (2 \ :sup:`32`
-bytes). The BLOB transfer protocol has built-in recovery procedures for packet losses, and sets up
-checkpoints to ensure that all targets have received all the data before moving on. Data transfer
-order is not guaranteed.
+BLOB 传输模型支持传输最多 4 GB (2 \ :sup:`32`
+字节)的连续二进制对象。BLOB 传输协议具有内置的数据包丢失恢复程序，并设置
+检查点以确保所有目标在继续之前都已接收所有数据。不保证数据传输
+顺序。
 
-BLOB transfers are constrained by the transfer speed and reliability of the underlying mesh network.
-Under ideal conditions, the BLOBs can be transferred at a rate of up to 1 kbps, allowing a 100 kB
-BLOB to be transferred in 10-15 minutes. However, network conditions, transfer capabilities and
-other limiting factors can easily degrade the data rate by several orders of magnitude. Tuning the
-parameters of the transfer according to the application and network configuration, as well as
-scheduling it to periods with low network traffic, will offer significant improvements on the speed
-and reliability of the protocol. However, achieving transfer rates close to the ideal rate is
-unlikely in actual deployments.
+BLOB 传输受底层网状网络的传输速度和可靠性约束。
+在理想条件下，BLOB 可以高达 1 kbps 的速率传输，允许 100 kB
+BLOB 在 10-15 分钟内传输。然而，网络条件、传输能力和
+其他限制因素可以轻易地将数据速率降低几个数量级。根据
+应用程序和网络配置调整传输参数，以及
+将其安排在网络流量较低的时段，将显著提高协议的速度
+和可靠性。然而，在实际部署中不太可能实现接近理想速率的传输速率。
 
-There are two BLOB Transfer models:
+有两种 BLOB 传输模型：
 
 .. toctree::
    :maxdepth: 1
@@ -31,94 +29,77 @@ There are two BLOB Transfer models:
    blob_srv
    blob_cli
 
-The BLOB Transfer Client is instantiated on the sender node, and the BLOB Transfer Server is
-instantiated on the receiver nodes.
+BLOB 传输客户端在发送器节点上实例化，BLOB 传输服务器在接收器节点上实例化。
 
-Concepts
+概念
 ********
 
-The BLOB transfer protocol introduces several new concepts to implement the BLOB transfer.
+BLOB 传输协议引入了几个新概念来实现 BLOB 传输。
 
 
-BLOBs
-=====
+BLOB
+====
 
-BLOBs are binary objects up to 4 GB in size, that can contain any data the application would like to
-transfer through the mesh network. The BLOBs are continuous data objects, divided into blocks and
-chunks to make the transfers reliable and easy to process. No limitations are put on the contents or
-structure of the BLOB, and applications are free to define any encoding or compression they'd like
-on the data itself.
+BLOB 是最多 4 GB 大小的二进制对象，可以包含应用程序希望通过
+网状网络传输的任何数据。BLOB 是连续的数据对象，被划分为块和
+数据块，以使传输可靠且易于处理。对 BLOB 的内容或
+结构没有限制，应用程序可以自由定义任何编码或压缩。
 
-The BLOB transfer protocol does not provide any built-in integrity checks, encryption or
-authentication of the BLOB data. However, the underlying encryption of the Bluetooth Mesh protocol
-provides data integrity checks and protects the contents of the BLOB from third parties using
-network and application level encryption.
+BLOB 传输协议不提供任何内置的完整性检查、加密或
+BLOB 数据认证。但是，蓝牙网状协议的底层加密
+提供数据完整性检查，并使用
+网络和应用级加密保护 BLOB 的内容免受第三方侵害。
 
-Blocks
+块
 ------
 
-The binary objects are divided into blocks, typically from a few hundred to several thousand bytes
-in size. Each block is transmitted separately, and the BLOB Transfer Client ensures that all BLOB
-Transfer Servers have received the full block before moving on to the next. The block size is
-determined by the transfer's ``block_size_log`` parameter, and is the same for all blocks in the
-transfer except the last, which may be smaller. For a BLOB stored in flash memory, the block size is
-typically a multiple of the flash page size of the Target devices.
+二进制对象被划分为块，通常从几百字节到几千字节
+大小。每个块单独传输，BLOB 传输客户端确保所有 BLOB
+传输服务器已接收完整块，然后再继续下一个。块大小由传输的 ``block_size_log`` 参数确定，对于传输中的所有块都是相同的，除了最后一个可能较小。对于存储在闪存中的 BLOB，块大小通常是目标设备闪存页大小的倍数。
 
-Chunks
+数据块
 ------
 
-Each block is divided into chunks. A chunk is the smallest data unit in the BLOB transfer, and must
-fit inside a single Bluetooth Mesh access message excluding the opcode (379 bytes or less). The
-mechanism for transferring chunks depends on the transfer mode.
+每个块被划分为数据块。数据块是 BLOB 传输中最小的数据单元，必须适合单个蓝牙网状接入消息（不包括操作码）（379 字节或更少）。传输数据块的机制取决于传输模式。
 
-When operating in Push BLOB Transfer Mode, the chunks are sent as unacknowledged packets from the
-BLOB Transfer Client to all targeted BLOB Transfer Servers. Once all chunks in a block have been
-sent, the BLOB Transfer Client asks each BLOB Transfer Server if they're missing any chunks, and
-resends them. This is repeated until all BLOB Transfer Servers have received all chunks, or the BLOB
-Transfer Client gives up.
+当在推 BLOB 传输模式下操作时，数据块作为未确认的数据包从
+BLOB 传输客户端发送到所有目标 BLOB 传输服务器。一旦一个块中的所有数据块都发送了，BLOB 传输客户端会询问每个 BLOB 传输服务器是否缺少任何数据块，并重新发送它们。这将重复直到所有 BLOB 传输服务器都已接收所有数据块，或 BLOB传输客户端放弃。
 
-When operating in Pull BLOB Transfer Mode, the BLOB Transfer Server will request a small number of
-chunks from the BLOB Transfer Client at a time, and wait for the BLOB Transfer Client to send them
-before requesting more chunks. This repeats until all chunks have been transferred, or the BLOB
-Transfer Server gives up.
+当在拉 BLOB 传输模式下操作时，BLOB 传输服务器将一次从 BLOB 传输客户端请求少量数据块，并等待 BLOB 传输客户端发送它们，然后再请求更多数据块。这将重复直到所有数据块都已传输，或 BLOB传输服务器放弃。
 
-Read more about the transfer modes in :ref:`bluetooth_mesh_blob_transfer_modes` section.
+在 :ref:`bluetooth_mesh_blob_transfer_modes` 部分了解有关传输模式的更多信息。
 
 .. _bluetooth_mesh_blob_stream:
 
-BLOB streams
+BLOB 流
 ============
 
-In the BLOB Transfer models' APIs, the BLOB data handling is separated from the high-level transfer
-handling. This split allows reuse of different BLOB storage and transfer strategies for different
-applications. While the high level transfer is controlled directly by the application, the BLOB data
-itself is accessed through a *BLOB stream*.
+在 BLOB 传输模型的 API 中，BLOB 数据处理与高级传输
+处理分离。这种分离允许为不同
+应用程序重用不同的 BLOB 存储和传输策略。虽然高级传输由应用程序直接控制，但 BLOB 数据本身通过 *BLOB 流* 访问。
 
-The BLOB stream is comparable to a standard library file stream. Through opening, closing, reading
-and writing, the BLOB Transfer model gets full access to the BLOB data, whether it's kept in flash,
-RAM, or on a peripheral. The BLOB stream is opened with an access mode (read or write) before it's
-used, and the BLOB Transfer models will move around inside the BLOB's data in blocks and chunks,
-using the BLOB stream as an interface.
+BLOB 流类似于标准库文件流。通过打开、关闭、读取
+和写入，BLOB 传输模型可以完全访问 BLOB 数据，无论它存储在闪存、
+RAM 还是外设上。BLOB 流在使用前以访问模式（读取或写入）打开，BLOB 传输模型将使用 BLOB 流作为接口在块和数据块内移动 BLOB 数据。
 
-Interaction
+交互
 -----------
 
-Before the BLOB is read or written, the stream is opened by calling its
-:c:member:`open <bt_mesh_blob_io.open>` callback. When used with a BLOB Transfer Server, the BLOB
-stream is always opened in write mode, and when used with a BLOB Transfer Client, it's always opened
-in read mode.
+在读取或写入 BLOB 之前，通过调用其
+:c:member:`open <bt_mesh_blob_io.open>` 回调打开流。当与 BLOB 传输服务器一起使用时，BLOB
+流总是以写入模式打开，当与 BLOB 传输客户端一起使用时，总是打开
+读取模式。
 
-For each block in the BLOB, the BLOB Transfer model starts by calling
-:c:member:`block_start <bt_mesh_blob_io.block_start>`. Then, depending on the access mode, the BLOB
-stream's :c:member:`wr <bt_mesh_blob_io.wr>` or :c:member:`rd <bt_mesh_blob_io.rd>` callback is
-called repeatedly to move data to or from the BLOB. When the model is done processing the block, it
-calls :c:member:`block_end <bt_mesh_blob_io.block_end>`. When the transfer is complete, the BLOB
-stream is closed by calling :c:member:`close <bt_mesh_blob_io.close>`.
+对于 BLOB 中的每个块，BLOB 传输模型首先调用
+:c:member:`block_start <bt_mesh_blob_io.block_start>`。然后，根据访问模式，BLOB
+流的 :c:member:`wr <bt_mesh_blob_io.wr>` 或 :c:member:`rd <bt_mesh_blob_io.rd>` 回调将
+被重复调用以将数据移入或移出 BLOB。当模型完成处理块时，它
+调用 :c:member:`block_end <bt_mesh_blob_io.block_end>`。当传输完成时，通过调用 :c:member:`close <bt_mesh_blob_io.close>` 关闭 BLOB 流。
 
-Implementations
+实现
 ---------------
 
-The application may implement their own BLOB stream, or use the implementations provided by Zephyr:
+应用程序可以实现自己的 BLOB 流，或使用 Zephyr 提供的实现：
 
 .. toctree::
    :maxdepth: 2
@@ -126,68 +107,56 @@ The application may implement their own BLOB stream, or use the implementations 
    blob_flash
 
 
-Transfer capabilities
+传输能力
 =====================
 
-Each BLOB Transfer Server may have different transfer capabilities. The transfer capabilities of
-each device are controlled through the following configuration options:
+每个 BLOB 传输服务器可能具有不同的传输能力。每个设备的传输能力通过以下配置选项控制：
 
 * :kconfig:option:`CONFIG_BT_MESH_BLOB_SIZE_MAX`
 * :kconfig:option:`CONFIG_BT_MESH_BLOB_BLOCK_SIZE_MIN`
 * :kconfig:option:`CONFIG_BT_MESH_BLOB_BLOCK_SIZE_MAX`
 * :kconfig:option:`CONFIG_BT_MESH_BLOB_CHUNK_COUNT_MAX`
 
-The :kconfig:option:`CONFIG_BT_MESH_BLOB_CHUNK_COUNT_MAX` option is also used by the BLOB Transfer
-Client and affects memory consumption by the BLOB Transfer Client model structure.
+:kconfig:option:`CONFIG_BT_MESH_BLOB_CHUNK_COUNT_MAX` 选项也被 BLOB 传输
+客户端使用，并影响 BLOB 传输客户端模型结构的内存消耗。
 
-To ensure that the transfer can be received by as many servers as possible, the BLOB Transfer Client
-can retrieve the capabilities of each BLOB Transfer Server before starting the transfer. The client
-will transfer the BLOB with the highest possible block and chunk size.
+为了确保尽可能多的服务器能够接收传输，BLOB 传输客户端
+可以在开始传输之前检索每个 BLOB 传输服务器的能力。客户端
+将使用尽可能高的块和数据块大小传输 BLOB。
 
 .. _bluetooth_mesh_blob_transfer_modes:
 
-Transfer modes
+传输模式
 ==============
 
-BLOBs can be transferred using two transfer modes, Push BLOB Transfer Mode and Pull BLOB Transfer
-Mode. In most cases, the transfer should be conducted in Push BLOB Transfer Mode.
+BLOB 可以使用两种传输模式传输：推 BLOB 传输模式和拉 BLOB 传输模式。在大多数情况下，应在推 BLOB 传输模式下进行传输。
 
-In Push BLOB Transfer Mode, the send rate is controlled by the BLOB Transfer Client, which will push
-all the chunks of each block without any high level flow control. Push BLOB Transfer Mode supports
-any number of Target nodes, and should be the default transfer mode.
+在推 BLOB 传输模式下，发送速率由 BLOB 传输客户端控制，该客户端将在没有高级流控制的情况下推送每个块的所有数据块。推 BLOB 传输模式支持任意数量的目标节点，应为默认传输模式。
 
-In Pull BLOB Transfer Mode, the BLOB Transfer Server will "pull" the chunks from the BLOB Transfer
-Client at its own rate. Pull BLOB Transfer Mode can be conducted with multiple Target nodes, and is
-intended for transferring BLOBs to Target nodes acting as :ref:`bluetooth_mesh_lpn`. When operating
-in Pull BLOB Transfer Mode, the BLOB Transfer Server will request chunks from the BLOB Transfer
-Client in small batches, and wait for them all to arrive before requesting more chunks. This process
-is repeated until the BLOB Transfer Server has received all chunks in a block. Then, the BLOB
-Transfer Client starts the next block, and the BLOB Transfer Server requests all chunks of that
-block.
+在拉 BLOB 传输模式下，BLOB 传输服务器将以其自身速率从 BLOB 传输客户端"拉取"数据块。拉 BLOB 传输模式可以与多个目标节点一起进行，并且旨在向作为 :ref:`bluetooth_mesh_lpn` 的目标节点传输 BLOB。当在拉 BLOB 传输模式下操作时，BLOB 传输服务器将从小批次请求 BLOB 传输客户端的数据块，并等待它们全部到达，然后再请求更多数据块。此过程重复直到 BLOB 传输服务器已接收一个块中的所有数据块。然后，BLOB传输客户端开始下一个块，BLOB传输服务器请求该块的所有数据块。
 
 
 .. _bluetooth_mesh_blob_timeout:
 
-Transfer timeout
+传输超时
 ================
 
-The timeout of the BLOB transfer is based on a Timeout Base value. Both client and server use the
-same Timeout Base value, but they calculate timeout differently.
+BLOB 传输的超时基于超时基数。客户端和服务器使用相同的超时基数值，但它们的超时计算方式不同。
 
-The BLOB Transfer Server uses the following formula to calculate the BLOB transfer timeout::
+BLOB 传输服务器使用以下公式计算 BLOB 传输超时::
 
-  10 * (Timeout Base + 1) seconds
+  10 * (Timeout Base + 1) 秒
 
 
-For the BLOB Transfer Client, the following formula is used::
+对于 BLOB 传输客户端，使用以下公式::
 
-  (10000 * (Timeout Base + 2)) + (100 * TTL) milliseconds
+  (10000 * (Timeout Base + 2)) + (100 * TTL) 毫秒
 
-where TTL is time to live value set in the transfer.
+其中 TTL 是传输中设置的生存时间值。
 
-API reference
+API 参考
 *************
 
-This section contains types and defines common to the BLOB Transfer models.
+本节包含 BLOB 传输模型通用的类型和定义。
 
 .. doxygengroup:: bt_mesh_blob

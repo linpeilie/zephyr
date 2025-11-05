@@ -1,33 +1,24 @@
 .. _bluetooth_mesh_models_priv_beacon_cli:
 
-Private Beacon Client
-#####################
+私有信标客户端
+######################
 
-The Private Beacon Client model is a foundation model defined by the Bluetooth
-mesh specification. It is enabled with the
-:kconfig:option:`CONFIG_BT_MESH_PRIV_BEACON_CLI` option.
+私有信标客户端模型是蓝牙网状规范定义的基础模型。它通过
+:kconfig:option:`CONFIG_BT_MESH_PRIV_BEACON_CLI` 选项启用。
 
-The Private Beacon Client model is introduced in the Bluetooth Mesh Protocol
-Specification version 1.1, and provides functionality for configuring the
-:ref:`bluetooth_mesh_models_priv_beacon_srv` models.
+私有信标客户端模型在蓝牙网状协议规范版本 1.1 中引入，并提供用于配置
+:ref:`bluetooth_mesh_models_priv_beacon_srv` 模型的功能。
 
-The Private Beacons feature adds privacy to the different Bluetooth Mesh
-beacons by periodically randomizing the beacon input data. This protects the
-mesh node from being tracked by devices outside the mesh network, and hides the
-network's IV index, IV update and the Key Refresh state.
+私有信标功能通过定期随机化信标输入数据为不同的蓝牙网状信标添加隐私保护。这保护网状节点免受网状网络外部设备的跟踪，并隐藏网络的 IV 索引、IV 更新和密钥刷新状态。
 
-The Private Beacon Client model communicates with a
-:ref:`bluetooth_mesh_models_priv_beacon_srv` model using the device key of the
-target node. The Private Beacon Client model may communicate with servers on
-other nodes or self-configure through the local Private Beacon Server model.
+私有信标客户端模型使用目标节点的设备密钥与
+:ref:`bluetooth_mesh_models_priv_beacon_srv` 模型进行通信。私有信标客户端模型可以与其他节点上的服务器通信，或通过本地私有信标服务器模型进行自配置。
 
-All configuration functions in the Private Beacon Client API have ``net_idx``
-and ``addr`` as their first parameters. These should be set to the network
-index and the primary unicast address the target node was provisioned with.
+私有信标客户端 API 中的所有配置函数都以 ``net_idx`` 和 ``addr`` 作为第一个参数。这些参数应设置为网络索引和目标节点配置时使用的主要单播地址。
 
-If present, the Private Beacon Client model must only be instantiated on the primary element.
+如果存在，私有信标客户端模型只能在主元素上实例化。
 
-API reference
-*************
+API 参考
+***********
 
 .. doxygengroup:: bt_mesh_priv_beacon_cli

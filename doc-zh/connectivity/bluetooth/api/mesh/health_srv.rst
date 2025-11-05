@@ -1,62 +1,40 @@
 .. _bluetooth_mesh_models_health_srv:
 
-Health Server
+健康服务器
 #############
 
-The Health Server model provides attention callbacks and node diagnostics for
-:ref:`bluetooth_mesh_models_health_cli` models. It is primarily used to report
-faults in the mesh node and map the mesh nodes to their physical location.
+健康服务器模型为 :ref:`bluetooth_mesh_models_health_cli` 模型提供注意回调和节点诊断。它主要用于报告网状节点中的故障并将网状节点映射到其物理位置。
 
-If present, the Health Server model must be instantiated on the primary element.
+如果存在，健康服务器模型必须在主元素上实例化。
 
-Faults
+故障
 ******
 
-The Health Server model may report a list of faults that have occurred in the
-device's lifetime. Typically, the faults are events or conditions that may
-alter the behavior of the node, like power outages or faulty peripherals.
-Faults are split into warnings and errors. Warnings indicate conditions that
-are close to the limits of what the node is designed to withstand, but not
-necessarily damaging to the device. Errors indicate conditions that are
-outside of the node's design limits, and may have caused invalid behavior or
-permanent damage to the device.
+健康服务器模型可以报告设备生命周期中发生的一系列故障。通常，故障是可能改变节点行为的事件或条件，如电源故障或故障外设。故障分为警告和错误。警告指示接近节点设计承受极限的条件，但不一定损坏设备。错误指示超出节点设计限制的条件，并可能导致无效行为或永久设备损坏。
 
-Fault values ``0x01`` to ``0x7f`` are reserved for the Bluetooth Mesh
-specification, and the full list of specification defined faults are available
-in :ref:`bluetooth_mesh_health_faults`. Fault values ``0x80`` to ``0xff`` are
-vendor specific. The list of faults are always reported with a company ID to
-help interpreting the vendor specific faults.
+故障值 ``0x01`` 到 ``0x7f`` 保留给蓝牙网状规范，规范定义的故障完整列表可在 :ref:`bluetooth_mesh_health_faults` 中找到。故障值 ``0x80`` 到 ``0xff`` 是供应商特定的。故障列表始终与公司 ID 一起报告，以帮助解释供应商特定故障。
 
 .. _bluetooth_mesh_models_health_srv_attention:
 
-Attention state
+注意状态
 ***************
 
-The attention state is used to make the device call attention to itself
-through some physical behavior like blinking, playing a sound or vibrating.
-The attention state may be used during provisioning to let the user know which
-device they're provisioning, as well as through the Health models at runtime.
+注意状态用于使设备通过一些物理行为（如闪烁、播放声音或振动）引起对自身的注意。注意状态可在配置期间使用，以让用户知道他们正在配置哪个设备，以及在运行时通过健康模型使用。
 
-The attention state is always assigned a timeout in the range of one to 255
-seconds when enabled. The Health Server API provides two callbacks for the
-application to run their attention calling behavior:
-:c:member:`bt_mesh_health_srv_cb.attn_on` is called at the beginning of the
-attention period, :c:member:`bt_mesh_health_srv_cb.attn_off` is called at
-the end.
+启用时，注意状态始终分配一到 255 秒范围内的超时。健康服务器 API 为应用程序提供两个回调来运行其注意调用行为：:c:member:`bt_mesh_health_srv_cb.attn_on` 在注意期开始时调用，:c:member:`bt_mesh_health_srv_cb.attn_off` 在结束时调用。
 
-The remaining time for the attention period may be queried through
-:c:member:`bt_mesh_health_srv.attn_timer`.
+注意期的剩余时间可以通过 :c:member:`bt_mesh_health_srv.attn_timer` 查询。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_health_srv
 
 .. _bluetooth_mesh_health_faults:
 
-Health faults
+健康故障
 =============
 
-Fault values defined by the Bluetooth Mesh specification.
+蓝牙网状规范定义的故障值。
 
 .. doxygengroup:: bt_mesh_health_faults

@@ -1,17 +1,13 @@
 .. _bluetooth_mesh_models_cfg_srv:
 
-Configuration Server
+配置服务器
 ####################
 
-The Configuration Server model is a foundation model defined by the Bluetooth Mesh
-specification. The Configuration Server model controls most parameters of the
-mesh node. It does not have an API of its own, but relies on a
-:ref:`bluetooth_mesh_models_cfg_cli` to control it.
+配置服务器模型是蓝牙网状规范定义的基础模型。配置服务器模型控制网状节点的大多数参数。它没有自己的 API，但依赖 :ref:`bluetooth_mesh_models_cfg_cli` 来控制它。
 
-The Configuration Server model is mandatory on all Bluetooth Mesh nodes, and
-must only be instantiated on the primary element.
+配置服务器模型在所有蓝牙网状节点上是强制的，并且只能在主元素上实例化。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_cfg_srv

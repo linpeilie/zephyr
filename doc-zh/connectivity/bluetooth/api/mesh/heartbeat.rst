@@ -1,65 +1,60 @@
 .. _bluetooth_mesh_heartbeat:
 
-Heartbeat
-#########
+心跳
+########
 
-The Heartbeat feature provides functionality for monitoring Bluetooth Mesh nodes
-and determining the distance between nodes.
+心跳功能提供用于监控蓝牙网状节点和确定节点之间距离的功能。
 
-The Heartbeat feature is configured through the :ref:`bluetooth_mesh_models_cfg_srv` model.
+心跳功能通过 :ref:`bluetooth_mesh_models_cfg_srv` 模型进行配置。
 
-Heartbeat messages
+心跳消息
 ******************
 
-Heartbeat messages are sent as transport control packets through the network,
-and are only encrypted with a network key. Heartbeat messages contain the
-original Time To Live (TTL) value used to send the message and a bitfield of
-the active features on the node. Through this, a receiving node can determine
-how many relays the message had to go through to arrive at the receiver, and
-what features the node supports.
+心跳消息作为传输控制数据包通过网络发送，
+仅使用网络密钥进行加密。心跳消息包含
+发送消息时使用的原始生存时间 (TTL) 值和节点上活跃功能的位字段。通过
+此功能，接收节点可以确定消息必须经过多少次中继才能到达接收方，以及节点支持哪些功能。
 
-Available Heartbeat feature flags:
+可用的心跳功能标志：
 
 - :c:macro:`BT_MESH_FEAT_RELAY`
 - :c:macro:`BT_MESH_FEAT_PROXY`
 - :c:macro:`BT_MESH_FEAT_FRIEND`
 - :c:macro:`BT_MESH_FEAT_LOW_POWER`
 
-Heartbeat publication
+心跳发布
 *********************
 
-Heartbeat publication is controlled through the Configuration models, and can
-be triggered in two ways:
+心跳发布通过配置模型进行控制，可以
+通过两种方式触发：
 
-Periodic publication
-   The node publishes a new Heartbeat message at regular intervals. The
-   publication can be configured to stop after a certain number of messages, or
-   continue indefinitely.
+定期发布
+   节点以固定间隔发布新的心跳消息。发布可以配置为在一定数量的消息后停止，或
+   无限期继续。
 
-Triggered publication
-   The node publishes a new Heartbeat message every time a feature changes. The
-   set of features that can trigger the publication is configurable.
+触发发布
+   节点每次功能更改时都会发布新的心跳消息。可以触发发布的
+   功能集是可配置的。
 
-The two publication types can be combined.
+可以结合两种发布类型。
 
-Heartbeat subscription
+心跳订阅
 **********************
 
-A node can be configured to subscribe to Heartbeat messages from one node at
-the time. To receive a Heartbeat message, both the source and destination must
-match the configured subscription parameters.
+节点可以配置为一次订阅来自一个节点的心跳消息。要接收心跳消息，源和目标都必须
+与配置的订阅参数匹配。
 
-Heartbeat subscription is always time limited, and throughout the subscription
-period, the node keeps track of the number of received Heartbeats as well as
-the minimum and maximum received hop count.
+心跳订阅总是有时间限制的，在整个订阅
+期间，节点会跟踪接收到的心跳数量以及
+接收到的最小和最大跳数。
 
-All Heartbeats received with the configured subscription parameters are passed
-to the :cpp:member:`bt_mesh_hb_cb::recv` event handler.
+所有具有配置订阅参数接收到的心跳都会传递给
+:cpp:member:`bt_mesh_hb_cb::recv` 事件处理程序。
 
-When the Heartbeat subscription period ends, the
-:cpp:member:`bt_mesh_hb_cb::sub_end` callback gets called.
+当心跳订阅期结束时，将调用
+:cpp:member:`bt_mesh_hb_cb::sub_end` 回调。
 
-API reference
+API 参考
 **************
 
 .. doxygengroup:: bt_mesh_heartbeat

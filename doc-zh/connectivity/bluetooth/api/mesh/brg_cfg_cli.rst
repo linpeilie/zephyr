@@ -1,21 +1,15 @@
 .. _bluetooth_mesh_models_brg_cfg_cli:
 
-Bridge Configuration Client
+桥接配置客户端
 ###########################
 
-The Bridge Configuration Client is a foundation model defined by the Bluetooth Mesh
-specification. The model is optional, and is enabled through
-the :kconfig:option:`CONFIG_BT_MESH_BRG_CFG_CLI` option.
+桥接配置客户端是蓝牙网状规范定义的基础模型。该模型是可选的，通过 :kconfig:option:`CONFIG_BT_MESH_BRG_CFG_CLI` 选项启用。
 
-The Bridge Configuration Client model provides functionality for configuring the
-subnet bridge functionality of another Mesh node containing the
-:ref:`bluetooth_mesh_models_brg_cfg_srv`. The device key of the node containing
-the target Bridge Configuration Server is used for access layer security.
+桥接配置客户端模型提供配置包含 :ref:`bluetooth_mesh_models_brg_cfg_srv` 的另一个网状节点的网状桥功能的功能。包含目标桥接配置服务器的节点的设备密钥用于接入层安全。
 
-If present, the Bridge Configuration Client model must only be instantiated on the primary
-element.
+如果存在，桥接配置客户端模型只能在主元素上实例化。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_brg_cfg_cli

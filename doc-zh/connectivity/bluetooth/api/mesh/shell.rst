@@ -1,2025 +1,1808 @@
 .. _bluetooth_mesh_shell:
 
-Bluetooth Mesh Shell
+蓝牙网状 Shell
 ####################
 
-The Bluetooth Mesh shell subsystem provides a set of Bluetooth Mesh shell commands for the
-:ref:`shell_api` module. It allows for testing and exploring the Bluetooth Mesh API through an
-interactive interface, without having to write an application.
+蓝牙网状 shell 子系统为 :ref:`shell_api` 模块提供一组蓝牙网状 shell 命令。它允许通过交互式界面测试和探索蓝牙网状 API，而无需编写应用程序。
 
-The Bluetooth Mesh shell interface provides access to most Bluetooth Mesh features, including
-provisioning, configuration, and message sending.
+蓝牙网状 shell 接口提供对大多数蓝牙网状功能的访问，包括配置、配置和消息发送。
 
-Prerequisites
+先决条件
 *************
 
-The Bluetooth Mesh shell subsystem depends on the application to create the composition data and do
-the mesh initialization.
+蓝牙网状 shell 子系统依赖于应用程序创建组合数据并完成网状初始化。
 
-Application
+应用程序
 ***********
 
-The Bluetooth Mesh shell subsystem is most easily used through the Bluetooth Mesh shell application
-under ``tests/bluetooth/mesh_shell``. See :ref:`shell_api` for information on how to connect and
-interact with the Bluetooth Mesh shell application.
+蓝牙网状 shell 子系统最易于通过 ``tests/bluetooth/mesh_shell`` 下的蓝牙网状 shell 应用程序使用。有关如何连接和与蓝牙网状 shell 应用程序交互的信息，请参见 :ref:`shell_api`。
 
-Basic usage
+基本用法
 ***********
 
-The Bluetooth Mesh shell subsystem adds a single ``mesh`` command, which holds a set of
-sub-commands. Every time the device boots up, make sure to call ``mesh init`` before any of the
-other Bluetooth Mesh shell commands can be called::
+蓝牙网状 shell 子系统添加一个 ``mesh`` 命令，它包含一组子命令。每次设备启动时，确保在任何其他蓝牙网状 shell 命令可以调用之前调用 ``mesh init`` ::
 
 	uart:~$ mesh init
 
-This is done to ensure that all available log will be printed to the shell output.
+这样做是为了确保所有可用日志都将打印到 shell 输出。
 
-Provisioning
+配置
 ============
 
-The mesh node must be provisioned to become part of the network. This is only necessary the first
-time the device boots up, as the device will remember its provisioning data between reboots.
+网状节点必须被配置才能成为网络的一部分。这仅在设备首次启动时是必要的，因为设备会在重启之间记住其配置数据。
 
-The simplest way to provision the device is through self-provisioning. To do this the user must
-provision the device with the default network key and address ``0x0001``, execute::
+配置设备的最简单方法是通过自配置。要做到这一点，用户必须使用默认网络密钥和地址 ``0x0001`` 配置设备，执行 ::
 
 	uart:~$ mesh prov local 0 0x0001
 
-Since all mesh nodes use the same values for the default network key, this can be done on multiple
-devices, as long as they're assigned non-overlapping unicast addresses. Alternatively, to provision
-the device into an existing network, the unprovisioned beacon can be enabled with
-``mesh prov pb-adv on`` or ``mesh prov pb-gatt on``. The beacons can be picked up by an external
-provisioner, which can provision the node into its network.
+由于所有网状节点对默认网络密钥使用相同的值，这可以在多个设备上完成，只要为它们分配非重叠的单播地址。或者，要将设备配置到现有网络中，可以通过 ``mesh prov pb-adv on`` 或 ``mesh prov pb-gatt on`` 启用未配置信标。信标可以被外部配置器拾取，该配置器可以将节点配置到其网络中。
 
-Once the mesh node is part of a network, its transmission parameters can be controlled by the
-general configuration commands:
+一旦网状节点成为网络的一部分，其传输参数可以通过通用配置命令控制：
 
-* To set the destination address, call ``mesh target dst <Addr>``.
-* To set the network key index, call ``mesh target net <NetKeyIdx>``.
-* To set the application key index, call ``mesh target app <AppKeyIdx>``.
+* 要设置目标地址，调用 ``mesh target dst <Addr>``。
+* 要设置网络密钥索引，调用 ``mesh target net <NetKeyIdx>``。
+* 要设置应用程序密钥索引，调用 ``mesh target app <AppKeyIdx>``。
 
-By default, the transmission parameters are set to send messages to the provisioned address and
-network key.
+默认情况下，传输参数设置为将消息发送到配置的地址和网络密钥。
 
-Configuration
+配置
 =============
 
-By setting the destination address to the local unicast address (``0x0001`` in the
-``mesh prov local`` command above), we can perform self-configuration through any of the
-:ref:`bluetooth_mesh_shell_cfg_cli` commands.
+通过将目标地址设置为本地单播地址（上述 ``mesh prov local`` 命令中的 ``0x0001``），我们可以通过任何 :ref:`bluetooth_mesh_shell_cfg_cli` 命令执行自配置。
 
-A good first step is to read out the node's own composition data::
+很好的第一步是读取节点自己的组合数据 ::
 
 	uart:~$ mesh models cfg get-comp
 
-This prints a list of the composition data of the node, including a list of its model IDs.
+这将打印节点组合数据的列表，包括其模型 ID 列表。
 
-Next, since the device has no application keys by default, it's a good idea to add one::
+接下来，由于设备默认没有应用程序密钥，最好添加一个 ::
 
 	uart:~$ mesh models cfg appkey add 0 0
 
-Message sending
+消息发送
 ===============
 
-With an application key added (see above), the mesh node's transition parameters are all valid, and
-the Bluetooth Mesh shell can send raw mesh messages through the network.
+添加应用程序密钥后（见上文），网状节点的传输参数都有效，蓝牙网状 shell 可以通过网络发送原始网状消息。
 
-For example, to send a Generic OnOff Set message, call::
+例如，要发送通用 OnOff 设置消息，调用 ::
 
 	uart:~$ mesh test net-send 82020100
 
 .. note::
-	All multibyte fields model messages are in little endian, except the opcode.
+	所有多字节字段模型消息都是小端序，除了操作码。
 
-The message will be sent to the current destination address, using the current network and
-application key indexes. As the destination address points to the local unicast address by default,
-the device will only send packets to itself. To change the destination address to the All Nodes
-broadcast address, call::
+消息将使用当前网络和应用程序密钥索引发送到当前目标地址。由于目标地址默认指向本地单播地址，设备只会向自身发送数据包。要将目标地址更改为所有节点广播地址，调用 ::
 
 	uart:~$ mesh target dst 0xffff
 
-With the destination address set to ``0xffff``, any other mesh nodes in the network with the
-configured network and application keys will receive and process the messages we send.
+将目标地址设置为 ``0xffff`` 后，网络中任何具有配置的网络和应用程序密钥的其他网状节点都将接收和处理我们发送的消息。
 
 .. note::
-	To change the configuration of the device, the destination address must be set back to the
-	local unicast address before issuing any configuration commands.
+	要更改设备的配置，在发出任何配置命令之前必须将目标地址设置回本地单icast地址。
 
-Sending raw mesh packets is a good way to test model message handler implementations during
-development, as it can be done without having to implement the sending model. By default, only the
-reception of the model messages can be tested this way, as the Bluetooth Mesh shell only includes
-the foundation models. To receive a packet in the mesh node, you have to add a model with a valid
-opcode handler list to the composition data in ``subsys/bluetooth/mesh/shell.c``, and print the
-incoming message to the shell in the handler callback.
+发送原始网状数据包是在开发期间测试模型消息处理器实现的好方法，因为它可以在不必实现发送模型的情况下完成。默认情况下，只有模型消息的接收可以通过这种方式测试，因为蓝牙网状 shell 仅包含基础模型。要在网状节点中接收数据包，必须在 ``subsys/bluetooth/mesh/shell.c`` 中的组合数据中添加带有有效操作码处理器列表的模型，并在处理器回调中将传入消息打印到 shell。
 
-Parameter formats
+参数格式
 *****************
 
-The Bluetooth Mesh shell commands are parsed with a variety of formats:
+蓝牙网状 shell 命令使用各种格式进行解析：
 
-.. list-table:: Parameter formats
+.. list-table:: 参数格式
 	:widths: 1 4 2
 	:header-rows: 1
 
-	* - Type
-	  - Description
-	  - Example
-	* - Integers
-	  - The default format unless something else is specified. Can be either decimal or
-	    hexadecimal.
+	* - 类型
+	  - 描述
+	  - 示例
+	* - 整数
+	  - 默认格式，除非另有指定。可以是十进制或十六进制。
 	  - ``1234``, ``0xabcd01234``
-	* - Hexstrings
-	  - For raw byte arrays, like UUIDs, key values and message payloads, the parameters should
-	    be formatted as an unbroken string of hexadecimal values without any prefix.
+	* - 十六进制字符串
+	  - 对于原始字节数组，如 UUID、密钥值和消息有效负载，参数应格式化为没有前缀的连续十六进制值字符串。
 	  - ``deadbeef01234``
-	* - Booleans
-	  - Boolean values are denoted in the API documentation as ``<val(off, on)>``.
+	* - 布尔值
+	  - 布尔值在 API 文档中表示为 ``<val(off, on)>``。
 	  - ``on``, ``off``, ``enabled``, ``disabled``, ``1``, ``0``
 
-Commands
+命令
 ********
 
-The Bluetooth Mesh shell implements a large set of commands. Some of the commands accept parameters,
-which are mentioned in brackets after the command name. For example,
-``mesh lpn set <value: off, on>``. Mandatory parameters are marked with angle brackets (e.g.
-``<NetKeyIdx>``), and optional parameters are marked with square brackets (e.g. ``[DstAddr]``).
+蓝牙网状 shell 实现了一组大型命令。一些命令接受参数，这些参数在命令名称后的括号中提及。例如，``mesh lpn set <value: off, on>``。强制参数用尖括号（例如 ``<NetKeyIdx>``）标记，可选参数用方括号（例如 ``[DstAddr]``）标记。
 
-The Bluetooth Mesh shell commands are divided into the following groups:
+蓝牙网状 shell 命令分为以下组：
 
 .. contents::
 	:depth: 1
 	:local:
 
 .. note::
-	Some commands depend on specific features being enabled in the compile time configuration of
-	the application. Not all features are enabled by default. The list of available Bluetooth
-	mesh shell commands can be shown in the shell by calling ``mesh`` without any arguments.
+	某些命令取决于在应用程序的编译时配置中启用特定功能。并非所有功能都默认启用。可以通过不带任何参数调用 ``mesh`` 来显示 shell 中可用的蓝牙网状 shell 命令列表。
 
-General configuration
+通用配置
 =====================
 
 ``mesh init``
 -------------
 
-	Initialize the mesh shell. This command must be run before any other mesh command.
+	初始化网状 shell。此命令必须在任何其他网状命令之前运行。
 
 ``mesh reset-local``
 --------------------
 
-	Reset the local mesh node to its initial unprovisioned state. This command will also clear
-	the Configuration Database (CDB) if present.
+	将本地网状节点重置为其初始未配置状态。如果存在，此命令还将清除配置数据库 (CDB)。
 
-Target
+目标
 ======
 
-The target commands enables the user to monitor and set the target destination address, network
-index and application index for the shell. These parameters are used by several commands, like
-provisioning, Configuration Client, etc.
+目标命令使用户能够监控和设置 shell 的目标目标地址、网络索引和应用程序索引。这些参数由多个命令使用，如配置、配置客户端等。
 
 ``mesh target dst [DstAddr]``
 -----------------------------
 
-	Get or set the message destination address. The destination address determines where mesh
-	packets are sent with the shell, but has no effect on modules outside the shell's control.
+	获取或设置消息目标地址。目标地址确定网状数据包与 shell 一起发送到何处，但对 shell 控制之外的模块没有影响。
 
-	* ``DstAddr``: If present, sets the new 16-bit mesh destination address. If omitted, the current destination address is printed.
+	* ``DstAddr``: 如果存在，设置新的 16 位网状目标地址。如果省略，打印当前目标地址。
 
 
 ``mesh target net [NetKeyIdx]``
 -------------------------------
 
-	Get or set the message network index. The network index determines which network key is used
-	to encrypt mesh packets that are sent with the shell, but has no effect on modules outside
-	the shell's control. The network key must already be added to the device, either through
-	provisioning or by a Configuration Client.
+	获取或设置消息网络索引。网络索引确定使用哪个网络密钥来加密与 shell 一起发送的网状数据包，但对 shell 控制之外的模块没有影响。网络密钥必须已经添加到设备中，通过配置或由配置客户端。
 
-	* ``NetKeyIdx``: If present, sets the new network index. If omitted, the current network index is printed.
+	* ``NetKeyIdx``: 如果存在，设置新的网络索引。如果省略，打印当前网络索引。
 
 
 ``mesh target app [AppKeyIdx]``
 -------------------------------
 
-	Get or set the message application index. The application index determines which application
-	key is used to encrypt mesh packets that are sent with the shell, but has no effect on
-	modules outside the shell's control. The application key must already be added to the device
-	by a Configuration Client, and must be bound to the current network index.
+	获取或设置消息应用程序索引。应用程序索引确定使用哪个应用程序密钥来加密与 shell 一起发送的网状数据包，但对 shell 控制之外的模块没有影响。应用程序密钥必须已经由配置客户端添加到设备，并且必须绑定到当前网络索引。
 
-	* ``AppKeyIdx``: If present, sets the new application index. If omitted, the current application index is printed.
+	* ``AppKeyIdx``: 如果存在，设置新的应用程序索引。如果省略，打印当前应用程序索引。
 
 
-Low Power Node
+低功耗节点
 ==============
 
 ``mesh lpn set <Val(off, on)>``
 -------------------------------
 
-	Enable or disable Low Power operation. Once enabled, the device will turn off its radio and
-	start polling for friend nodes.
+	启用或禁用低功耗操作。一旦启用，设备将关闭其无线电并开始轮询友好节点。
 
-	* ``Val``: Sets whether Low Power operation is enabled.
+	* ``Val``: 设置是否启用低功耗操作。
 
 ``mesh lpn poll``
 -----------------
 
-	Perform a poll to the friend node, to receive any pending messages. Only available when LPN
-	is enabled.
+	对友好节点执行轮询，以接收任何待处理的消息。仅在启用 LPN 时可用。
 
-Testing
+测试
 =======
 
 ``mesh test net-send <HexString>``
 -----------------------------------
 
-	Send a raw mesh message with the current destination address, network and application index.
-	The message opcode must be encoded manually.
+	使用当前目标地址、网络和应用程序索引发送原始网状消息。消息操作码必须手动编码。
 
-	* ``HexString`` Raw hexadecimal representation of the message to send.
+	* ``HexString`` 要发送的消息的原始十六进制表示。
 
 ``mesh test iv-update``
 -----------------------
 
-	Force an IV update.
+	强制 IV 更新。
 
 
 ``mesh test iv-update-test <Val(off, on)>``
 -------------------------------------------
 
-	Set the IV update test mode. In test mode, the IV update timing requirements are bypassed.
+	设置 IV 更新测试模式。在测试模式下，IV 更新时序要求将被绕过。
 
-	* ``Val``: Enable or disable the IV update test mode.
+	* ``Val``: 启用或禁用 IV 更新测试模式。
 
 
 ``mesh test rpl-clear``
 -----------------------
 
-	Clear the replay protection list, forcing the node to forget all received messages.
+	清除重放保护列表，强制节点忘记所有接收的消息。
 
 .. warning::
 
-	Clearing the replay protection list breaks the security mechanisms of the mesh node, making
-	it susceptible to message replay attacks. This should never be performed in a real
-	deployment.
+	清除重放保护列表会破坏网状节点的安全机制，使其容易受到消息重放攻击。这绝不应该在实际部署中执行。
 
-Health Server Test
+健康服务器测试
 ------------------
 
 ``mesh test health-srv add-fault <FaultID>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Register a new Health Server Fault for the Linux Foundation Company ID.
+	为 Linux Foundation 公司 ID 注册新的健康服务器故障。
 
-	* ``FaultID``: ID of the fault to register (``0x0001`` to ``0xFFFF``)
+	* ``FaultID``: 要注册的故障 ID（``0x0001`` 到 ``0xFFFF``）
 
 
 ``mesh test health-srv del-fault [FaultID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Remove registered Health Server faults for the Linux Foundation Company ID.
+	删除为 Linux Foundation 公司 ID 注册的健康服务器故障。
 
-	* ``FaultID``: If present, the given fault ID will be deleted. If omitted, all registered faults will be cleared.
+	* ``FaultID``: 如果存在，将删除给定的故障 ID。如果省略，将清除所有注册的故障。
 
-Provisioning
+配置
 ============
 
-To allow a device to broadcast connectable unprovisioned beacons, the
-:kconfig:option:`CONFIG_BT_MESH_PROVISIONEE` configuration option must be enabled, along with the
-:kconfig:option:`CONFIG_BT_MESH_PB_GATT` option.
+要允许设备广播可连接未配置信标，必须启用 :kconfig:option:`CONFIG_BT_MESH_PROVISIONEE` 配置选项，以及 :kconfig:option:`CONFIG_BT_MESH_PB_GATT` 选项。
 
 ``mesh prov pb-gatt <Val(off, on)>``
 ------------------------------------
 
-	Start or stop advertising a connectable unprovisioned beacon. The connectable unprovisioned
-	beacon allows the mesh node to be discovered by nearby GATT based provisioners, and
-	provisioned through the GATT bearer.
+	开始或停止广播可连接未配置信标。可连接未配置信标允许网状节点被附近的基于 GATT 的配置器发现，并通过 GATT 承载器进行配置。
 
-	* ``Val``: Enable or disable provisioning with GATT
+	* ``Val``: 启用或禁用 GATT 配置
 
-To allow a device to broadcast unprovisioned beacons, the
-:kconfig:option:`CONFIG_BT_MESH_PROVISIONEE` configuration option must be enabled, along with the
-:kconfig:option:`CONFIG_BT_MESH_PB_ADV` option.
+要允许设备广播未配置信标，必须启用 :kconfig:option:`CONFIG_BT_MESH_PROVISIONEE` 配置选项，以及 :kconfig:option:`CONFIG_BT_MESH_PB_ADV` 选项。
 
 ``mesh prov pb-adv <Val(off, on)>``
 -----------------------------------
 
-	Start or stop advertising the unprovisioned beacon. The unprovisioned beacon allows the mesh
-	node to be discovered by nearby advertising-based provisioners, and provisioned through the
-	advertising bearer.
+	开始或停止广播未配置信标。未配置信标允许网状节点被附近的基于广告的配置器发现，并通过广告承载器进行配置。
 
-	* ``Val``: Enable or disable provisioning with advertiser
+	* ``Val``: 启用或禁用广告器配置
 
-To allow a device to provision devices, the :kconfig:option:`CONFIG_BT_MESH_PROVISIONER` and
-:kconfig:option:`CONFIG_BT_MESH_PB_ADV` configuration options must be enabled.
+要允许设备配置设备，必须启用 :kconfig:option:`CONFIG_BT_MESH_PROVISIONER` 和 :kconfig:option:`CONFIG_BT_MESH_PB_ADV` 配置选项。
 
 ``mesh prov remote-adv <UUID(1-16 hex)> <NetKeyIdx> <Addr> <AttDur(s)>``
 -----------------------------------------------------------------------------------
 
-	Provision a nearby device into the mesh. The mesh node starts scanning for unprovisioned
-	beacons with the given UUID. Once found, the unprovisioned device will be added to the mesh
-	network with the given unicast address, and given the network key indicated by
-	``NetKeyIdx``.
+	将附近设备配置到网状网络中。网状节点开始扫描具有给定 UUID 的未配置信标。一旦找到，未配置设备将使用给定的单播地址添加到网状网络，并获得由 ``NetKeyIdx`` 指示的网络密钥。
 
-	* ``UUID``: UUID of the unprovisioned device. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
-	* ``NetKeyIdx``: Index of the network key to pass to the device.
-	* ``Addr``: First unicast address to assign to the unprovisioned device. The device will occupy as many addresses as it has elements, and all must be available.
-	* ``AttDur``: The duration in seconds the unprovisioned device will identify itself for, if supported. See :ref:`bluetooth_mesh_models_health_srv_attention` for details.
+	* ``UUID``: 未配置设备的 UUID。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。
+	* ``NetKeyIdx``: 要传递给设备的网络密钥索引。
+	* ``Addr``: 要分配给未配置设备的第一个单播地址。设备将占用与其元素一样多的地址，并且所有地址都必须可用。
+	* ``AttDur``: 未配置设备标识自己的秒数（如果支持）。有关详细信息，请参见 :ref:`bluetooth_mesh_models_health_srv_attention`。
 
-To allow a device to provision devices over GATT, the :kconfig:option:`CONFIG_BT_MESH_PROVISIONER`
-and :kconfig:option:`CONFIG_BT_MESH_PB_GATT_CLIENT` configuration options must be enabled.
+要允许设备通过 GATT 配置设备，必须启用 :kconfig:option:`CONFIG_BT_MESH_PROVISIONER` 和 :kconfig:option:`CONFIG_BT_MESH_PB_GATT_CLIENT` 配置选项。
 
 ``mesh prov remote-gatt <UUID(1-16 hex)> <NetKeyIdx> <Addr> <AttDur(s)>``
 -------------------------------------------------------------------------
 
-	Provision a nearby device into the mesh. The mesh node starts scanning for connectable
-	advertising for PB-GATT with the given UUID. Once found, the unprovisioned device will be
-	added to the mesh network with the given unicast address, and given the network key
-	indicated by ``NetKeyIdx``.
+	将附近设备配置到网状网络中。网状节点开始扫描具有给定 UUID 的 PB-GATT 可连接广告。一旦找到，未配置设备将使用给定的单播地址添加到网状网络，并获得由 ``NetKeyIdx`` 指示的网络密钥。
 
-	* ``UUID``: UUID of the unprovisioned device. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
-	* ``NetKeyIdx``: Index of the network key to pass to the device.
-	* ``Addr``: First unicast address to assign to the unprovisioned device. The device will occupy as many addresses as it has elements, and all must be available.
-	* ``AttDur``: The duration in seconds the unprovisioned device will identify itself for, if supported. See :ref:`bluetooth_mesh_models_health_srv_attention` for details.
+	* ``UUID``: 未配置设备的 UUID。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。
+	* ``NetKeyIdx``: 要传递给设备的网络密钥索引。
+	* ``Addr``: 要分配给未配置设备的第一个单播地址。设备将占用与其元素一样多的地址，并且所有地址都必须可用。
+	* ``AttDur``: 未配置设备标识自己的秒数（如果支持）。有关详细信息，请参见 :ref:`bluetooth_mesh_models_health_srv_attention`。
 
 ``mesh prov uuid [UUID(1-16 hex)]``
 -----------------------------------
 
-	Get or set the mesh node's UUID, used in the unprovisioned beacons.
+	获取或设置网状节点的 UUID，用于未配置信标。
 
-	* ``UUID``: If present, new 128-bit UUID value. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. If omitted, the current UUID will be printed. To enable this command, the :kconfig:option:`CONFIG_BT_MESH_SHELL_PROV_CTX_INSTANCE` option must be enabled.
+	* ``UUID``: 如果存在，新的 128 位 UUID 值。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。如果省略，将打印当前 UUID。要启用此命令，必须启用 :kconfig:option:`CONFIG_BT_MESH_SHELL_PROV_CTX_INSTANCE` 选项。
 
 
 ``mesh prov input-num <Number>``
 --------------------------------
 
-	Input a numeric OOB authentication value. Only valid when prompted by the shell during
-	provisioning. The input number must match the number presented by the other participant in
-	the provisioning.
+	输入数值 OOB 认证值。仅在配置期间 shell 提示时有效。输入数字必须与配置中另一方呈现的数字匹配。
 
-	* ``Number``: Decimal authentication number.
+	* ``Number``: 十进制认证数字。
 
 
 ``mesh prov input-str <String>``
 --------------------------------
 
-	Input an alphanumeric OOB authentication value. Only valid when prompted by the shell during
-	provisioning. The input string must match the string presented by the other participant in
-	the provisioning.
+	输入字母数字 OOB 认证值。仅在配置期间 shell 提示时有效。输入字符串必须与配置中另一方呈现的字符串匹配。
 
-	* ``String``: Unquoted alphanumeric authentication string.
+	* ``String``: 无引号的字母数字认证字符串。
 
 
 ``mesh prov static-oob [Val(1-32 hex)]``
 ----------------------------------------
 
-	Set or clear the static OOB authentication value. The static OOB authentication value must
-	be set before provisioning starts to have any effect. The static OOB value must be same on
-	both participants in the provisioning. To enable this command, the
-	:kconfig:option:`CONFIG_BT_MESH_SHELL_PROV_CTX_INSTANCE` option must be enabled.
+	设置或清除静态 OOB 认证值。静态 OOB 认证值必须在配置开始前设置才能生效。静态 OOB 值在配置的双方上必须相同。要启用此命令，必须启用 :kconfig:option:`CONFIG_BT_MESH_SHELL_PROV_CTX_INSTANCE` 选项。
 
-	* ``Val``: If present, indicates the new hexadecimal value of the static OOB. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. If omitted, the static OOB value is cleared.
+	* ``Val``: 如果存在，指示静态 OOB 的新十六进制值。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。如果省略，将清除静态 OOB 值。
 
 
 ``mesh prov local <NetKeyIdx> <Addr> [IVI]``
 --------------------------------------------
 
-	Provision the mesh node itself. If the Configuration database is enabled, the network key
-	must be created. Otherwise, the default key value is used.
+	配置网状节点本身。如果启用配置数据库，则必须创建网络密钥。否则，使用默认密钥值。
 
-	* ``NetKeyIdx``: Index of the network key to provision.
-	* ``Addr``: First unicast address to assign to the device. The device will occupy as many addresses as it has elements, and all must be available.
-	* ``IVI``: Indicates the current network IV index. Defaults to 0 if omitted.
+	* ``NetKeyIdx``: 要配置的网络密钥索引。
+	* ``Addr``: 要分配给设备的第一个单播地址。设备将占用与其元素一样多的地址，并且所有地址都必须可用。
+	* ``IVI``: 指示当前网络 IV 索引。如果省略，默认为 0。
 
 
 ``mesh prov beacon-listen <Val(off, on)>``
 ------------------------------------------
 
-	Enable or disable printing of incoming unprovisioned beacons. Allows a provisioner device to
-	detect nearby unprovisioned devices and provision them. To enable this command, the
-	:kconfig:option:`CONFIG_BT_MESH_SHELL_PROV_CTX_INSTANCE` option must be enabled.
+	启用或禁用打印传入的未配置信标。允许配置器设备检测附近的未配置设备并配置它们。要启用此命令，必须启用 :kconfig:option:`CONFIG_BT_MESH_SHELL_PROV_CTX_INSTANCE` 选项。
 
-	* ``Val``: Whether to enable the unprovisioned beacon printing.
+	* ``Val``: 是否启用未配置信标打印。
 
 ``mesh prov remote-pub-key <PubKey>``
 -------------------------------------
-	Provide Device public key.
+	提供设备公钥。
 
-	* ``PubKey`` - Device public key in big-endian.
+	* ``PubKey`` - 大端序中的设备公钥。
 
 ``mesh prov auth-method input <Action> <Size>``
 -----------------------------------------------
-	From the provisioner device, instruct the unprovisioned device to use the specified Input
-	OOB authentication action.
+	从配置器设备，指示未配置设备使用指定的输入 OOB 认证操作。
 
-	* ``Action`` - Input action. Allowed values:
+	* ``Action`` - 输入操作。允许的值：
 
-		* ``0`` - No input action.
-		* ``1`` - Push action set.
-		* ``2`` - Twist action set.
-		* ``4`` - Enter number action set.
-		* ``8`` - Enter String action set.
-	* ``Size`` - Authentication size.
+		* ``0`` - 无输入操作。
+		* ``1`` - 推送动作集。
+		* ``2`` - 扭转动作集。
+		* ``4`` - 输入数字动作集。
+		* ``8`` - 输入字符串动作集。
+	* ``Size`` - 认证大小。
 
 ``mesh prov auth-method output <Action> <Size>``
 ------------------------------------------------
-	From the provisioner device, instruct the unprovisioned device to use the specified Output
-	OOB authentication action.
+	从配置器设备，指示未配置设备使用指定的输出 OOB 认证操作。
 
-	* ``Action`` - Output action. Allowed values:
+	* ``Action`` - 输出操作。允许的值：
 
-		* ``0`` - No output action.
-		* ``1`` - Blink action set.
-		* ``2`` - Vibrate action set.
-		* ``4`` - Display number action set.
-		* ``8`` - Display String action set.
-	* ``Size`` - Authentication size.
+		* ``0`` - 无输出操作。
+		* ``1`` - 闪烁动作集。
+		* ``2`` - 振动动作集。
+		* ``4`` - 显示数字动作集。
+		* ``8`` - 显示字符串动作集。
+	* ``Size`` - 认证大小。
 
 ``mesh prov auth-method static <Val(1-16 hex)>``
 ------------------------------------------------
-	From the provisioner device, instruct the unprovisioned device to use static OOB
-	authentication, and use the given static authentication value when provisioning.
+	从配置器设备，指示未配置设备使用静态 OOB 认证，并在配置时使用给定的静态认证值。
 
-	* ``Val`` - Static OOB value. Providing a hex-string shorter than 32 bytes will populate the N most significant bytes of the array and zero-pad the rest.
+	* ``Val`` - 静态 OOB 值。提供短于 32 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。
 
 ``mesh prov auth-method none``
 ------------------------------
-	From the provisioner device, don't use any authentication when provisioning new devices.
-	This is the default behavior.
+	从配置器设备，在配置新设备时不使用任何认证。这是默认行为。
 
-Proxy
+代理
 =====
 
-The Proxy Server module is an optional mesh subsystem that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_GATT_PROXY` configuration option.
+代理服务器模块是一个可选的网状子系统，可以通过 :kconfig:option:`CONFIG_BT_MESH_GATT_PROXY` 配置选项启用。
 
 ``mesh proxy identity-enable``
 ------------------------------
 
-	Enable the Proxy Node Identity beacon, allowing Proxy devices to connect explicitly to this
-	device. The beacon will run for 60 seconds before the node returns to normal Proxy beacons.
+	启用代理节点标识信标，允许代理设备显式连接到此设备。信标将运行 60 秒，然后节点返回到普通代理信标。
 
-The Proxy Client module is an optional mesh subsystem that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_PROXY_CLIENT` configuration option.
+代理客户端模块是一个可选的网状子系统，可以通过 :kconfig:option:`CONFIG_BT_MESH_PROXY_CLIENT` 配置选项启用。
 
 ``mesh proxy connect <NetKeyIdx>``
 ----------------------------------
 
-	Auto-Connect a nearby proxy server into the mesh.
+	自动连接附近的代理服务器到网状网络。
 
-	* ``NetKeyIdx``: Index of the network key to connect.
+	* ``NetKeyIdx``: 要连接的网络密钥索引。
 
 
 ``mesh proxy disconnect <NetKeyIdx>``
 -------------------------------------
 
-	Disconnect the existing proxy connection.
+	断开现有代理连接。
 
-	* ``NetKeyIdx``: Index of the network key to disconnect.
+	* ``NetKeyIdx``: 要断开的网络密钥索引。
 
 
 ``mesh proxy solicit <NetKeyIdx>``
 ----------------------------------
 
-	Begin Proxy Solicitation of a subnet. Support of this feature can be enabled through the
-	:kconfig:option:`CONFIG_BT_MESH_PROXY_SOLICITATION` configuration option.
+	开始子网的代理征求。可以通过 :kconfig:option:`CONFIG_BT_MESH_PROXY_SOLICITATION` 配置选项启用对此功能的支持。
 
-	* ``NetKeyIdx``: Index of the network key to send Solicitation PDUs to.
+	* ``NetKeyIdx``: 要向其发送征求 PDU 的网络密钥索引。
 
 .. _bluetooth_mesh_shell_cfg_cli:
 
-Models
+模型
 ======
 
-Configuration Client
+配置客户端
 --------------------
 
-The Configuration Client model is an optional mesh subsystem that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_CFG_CLI` configuration option. This is implemented as a separate
-module (``mesh models cfg``) inside the ``mesh models`` subcommand list. This module will work on
-any instance of the Configuration Client model if the mentioned shell configuration options is
-enabled, and as long as the Configuration Client model is present in the model composition of the
-application. This shell module can be used for configuring itself and other nodes in the mesh
-network.
+配置客户端模型是一个可选的网状子系统，可以通过 :kconfig:option:`CONFIG_BT_MESH_CFG_CLI` 配置选项启用。这在 ``mesh models`` 子命令列表内作为独立模块（``mesh models cfg``）实现。如果启用上述 shell 配置选项，只要配置客户端模型存在于应用程序的模型组合中，此模块将在任何配置客户端模型实例上工作。此 shell 模块可用于配置自身和网状网络中的其他节点。
 
-The Configuration Client uses general message parameters set by ``mesh target dst`` and ``mesh
-target net`` to target specific nodes. When the Bluetooth Mesh shell node is provisioned, given that
-the :kconfig:option:`CONFIG_BT_MESH_SHELL_PROV_CTX_INSTANCE` option is enabled with the shell
-provisioning context initialized, the Configuration Client model targets itself by default.
-Similarly, when another node has been provisioned by the Bluetooth Mesh shell, the Configuration
-Client model targets the new node. In most common use-cases, the Configuration Client is depending
-on the provisioning features and the Configuration database to be fully functional. The
-Configuration Client always sends messages using the Device key bound to the destination address, so
-it will only be able to configure itself and the mesh nodes it provisioned. The following steps are
-an example of how you can set up a device to start using the Configuration Client commands:
+配置客户端使用由 ``mesh target dst`` 和 ``mesh target net`` 设置的通用消息参数来定位特定节点。当蓝牙网状 shell 节点被配置时，如果 :kconfig:option:`CONFIG_BT_MESH_SHELL_PROV_CTX_INSTANCE` 选项被启用且 shell 配置上下文已初始化，则配置客户端模型默认以自身为目标。类似地，当另一个节点被蓝牙网状 shell 配置时，配置客户端模型将以新节点为目标。在大多数常见用例中，配置客户端依赖于配置功能和配置数据库才能完全正常工作。配置客户端始终使用与目标地址绑定的设备密钥发送消息，因此它只能配置自身及其配置的网状节点。以下步骤是如何设置设备开始使用配置客户端命令的示例：
 
-* Initialize the client node (``mesh init``).
-* Create the CDB (``mesh cdb create``).
-* Provision the local device (``mesh prov local``).
-* The shell module should now target itself.
-* Monitor the composition data of the local node (``mesh models cfg get-comp``).
-* Configure the local node as desired with the Configuration Client commands.
-* Provision other devices (``mesh prov beacon-listen``) (``mesh prov remote-adv``)
-  (``mesh prov remote-gatt``).
-* The shell module should now target the newly added node.
-* Monitor the newly provisioned nodes and their addresses (``mesh cdb show``).
-* Monitor the composition data of the target device (``mesh models cfg get-comp``).
-* Configure the node as desired with the Configuration Client commands.
+* 初始化客户端节点（``mesh init``）。
+* 创建 CDB（``mesh cdb create``）。
+* 配置本地设备（``mesh prov local``）。
+* shell 模块现在应该以自身为目标。
+* 监控本地节点的组合数据（``mesh models cfg get-comp``）。
+* 使用配置客户端命令根据需要配置本地节点。
+* 配置其他设备（``mesh prov beacon-listen``）（``mesh prov remote-adv``）
+  （``mesh prov remote-gatt``）。
+* shell 模块现在应该以新添加的节点为目标。
+* 监控新配置的节点及其地址（``mesh cdb show``）。
+* 监控目标设备的组合数据（``mesh models cfg get-comp``）。
+* 使用配置客户端命令根据需要配置节点。
 
 ``mesh models cfg target get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the target Configuration server for the Configuration Client model.
+	获取配置客户端模型的目标配置服务器。
 
 ``mesh models cfg help``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Print information for the Configuration Client shell module.
+	打印配置客户端 shell 模块的信息。
 
 ``mesh models cfg reset``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Reset the target device.
+	重置目标设备。
 
 ``mesh models cfg timeout [Timeout(s)]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get and set the Config Client model timeout used during message sending.
+	获取和设置消息发送期间使用的配置客户端模型超时。
 
-	* ``Timeout``: If present, set the Config Client model timeout in seconds. If omitted, the current timeout is printed.
+	* ``Timeout``: 如果存在，以秒为单位设置配置客户端模型超时。如果省略，打印当前超时。
 
 
 ``mesh models cfg get-comp [Page]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Read a composition data page. The full composition data page will be printed. If the target
-	does not have the given page, it will return the last page before it.
+	读取组合数据页。将打印完整的组合数据页。如果目标节点没有给定的页，它将返回之前的最后一页。
 
-	* ``Page``: The composition data page to request. Defaults to 0 if omitted.
+	* ``Page``: 要请求的组合数据页。如果省略，默认为 0。
 
 
 ``mesh models cfg beacon [Val(off, on)]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the network beacon transmission.
+	获取或设置网络信标传输。
 
-	* ``Val``: If present, enables or disables sending of the network beacon. If omitted, the current network beacon state is printed.
+	* ``Val``: 如果存在，启用或禁用网络信标的发送。如果省略，打印当前网络信标状态。
 
 
 ``mesh models cfg ttl [TTL]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the default TTL value.
+	获取或设置默认 TTL 值。
 
-	* ``TTL``: If present, sets the new default TTL value. Legal TTL values are 0x00 and 0x02-0x7f. If omitted, the current default TTL value is printed.
+	* ``TTL``: 如果存在，设置新的默认 TTL 值。合法 TTL 值为 0x00 和 0x02-0x7f。如果省略，打印当前默认 TTL 值。
 
 
 ``mesh models cfg friend [Val(off, on)]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the Friend feature.
+	获取或设置友好特性。
 
-	* ``Val``: If present, enables or disables the Friend feature. If omitted, the current Friend feature state is printed:
+	* ``Val``: 如果存在，启用或禁用友好特性。如果省略，打印当前友好特性状态：
 
-		* ``0x00``: The feature is supported, but disabled.
-		* ``0x01``: The feature is enabled.
-		* ``0x02``: The feature is not supported.
+		* ``0x00``: 该功能受支持，但被禁用。
+		* ``0x01``: 该功能已启用。
+		* ``0x02``: 该功能不受支持。
 
 
 ``mesh models cfg gatt-proxy [Val(off, on)]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the GATT Proxy feature.
+	获取或设置 GATT 代理功能。
 
-	* ``Val``: If present, enables or disables the GATT Proxy feature. If omitted, the current GATT Proxy feature state is printed:
+	* ``Val``: 如果存在，启用或禁用 GATT 代理功能。如果省略，打印当前 GATT 代理功能状态：
 
-		* ``0x00``: The feature is supported, but disabled.
-		* ``0x01``: The feature is enabled.
-		* ``0x02``: The feature is not supported.
+		* ``0x00``: 该功能受支持，但被禁用。
+		* ``0x01``: 该功能已启用。
+		* ``0x02``: 该功能不受支持。
 
 
 ``mesh models cfg relay [<Val(off, on)> [<Count> [Int(ms)]]]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the Relay feature and its parameters.
+	获取或设置中继特性及其参数。
 
-	* ``Val``: If present, enables or disables the Relay feature. If omitted, the current Relay feature state is printed:
+	* ``Val``: 如果存在，启用或禁用中继特性。如果省略，打印当前中继特性状态：
 
-		* ``0x00``: The feature is supported, but disabled.
-		* ``0x01``: The feature is enabled.
-		* ``0x02``: The feature is not supported.
+		* ``0x00``: 该功能受支持，但被禁用。
+		* ``0x01``: 该功能已启用。
+		* ``0x02``: 该功能不受支持。
 
-	* ``Count``: Sets the new relay retransmit count if ``val`` is ``on``. Ignored if ``val`` is ``off``. Legal retransmit count is 0-7. Defaults to ``2`` if omitted.
-	* ``Int``: Sets the new relay retransmit interval in milliseconds if ``val`` is ``on``.  Legal interval range is 10-320 milliseconds. Ignored if ``val`` is ``off``.  Defaults to ``20`` if omitted.
+	* ``Count``: 如果 ``val`` 为 ``on``，设置新的中继重传计数。如果 ``val`` 为 ``off``，则忽略。合法重传计数为 0-7。如果省略，默认为 ``2``。
+	* ``Int``: 如果 ``val`` 为 ``on``，以毫秒为单位设置新的中继重传间隔。合法间隔范围为 10-320 毫秒。如果 ``val`` 为 ``off``，则忽略。如果省略，默认为 ``20``。
 
 ``mesh models cfg node-id <NetKeyIdx> [Identity]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or Set of current Node Identity state of a subnet.
+	获取或设置子网的当前节点标识状态。
 
-	* ``NetKeyIdx``: The network key index to Get/Set.
-	* ``Identity``: If present, sets the identity of Node Identity state.
+	* ``NetKeyIdx``: 要获取/设置的网络密钥索引。
+	* ``Identity``: 如果存在，设置节点标识状态的身份标识。
 
 ``mesh models cfg polltimeout-get <LPNAddr>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get current value of the PollTimeout timer of the LPN within a Friend node.
+	获取友好节点内 LPN 的轮询超时计时器的当前值。
 
-	* ``LPNAddr`` Address of Low Power node.
+	* ``LPNAddr`` 低功耗节点的地址。
 
 ``mesh models cfg net-transmit-param [<Count> <Int(ms)>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the network transmit parameters.
+	获取或设置网络传输参数。
 
-	* ``Count``: Sets the number of additional network transmits for every sent message. Legal retransmit count is 0-7.
-	* ``Int``: Sets the new network retransmit interval in milliseconds. Legal interval range is 10-320 milliseconds.
+	* ``Count``: 为每条发送的消息设置额外的网络传输次数。合法重传计数为 0-7。
+	* ``Int``: 以毫秒为单位设置新的网络重传间隔。合法间隔范围为 10-320 毫秒。
 
 
 ``mesh models cfg netkey add <NetKeyIdx> [Key(1-16 hex)]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Add a network key to the target node. Adds the key to the Configuration Database if enabled.
+	向目标节点添加网络密钥。如果启用，则将密钥添加到配置数据库。
 
-	* ``NetKeyIdx``: The network key index to add.
-	* ``Key``: If present, sets the key value as a 128-bit hexadecimal value. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. Only valid if the key does not already exist in the Configuration Database. If omitted, the default key value is used.
+	* ``NetKeyIdx``: 要添加的网络密钥索引。
+	* ``Key``: 如果存在，将密钥值设置为 128 位十六进制值。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。仅在密钥在配置数据库中尚不存在时有效。如果省略，使用默认密钥值。
 
 
 ``mesh models cfg netkey upd <NetKeyIdx> [Key(1-16 hex)]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Update a network key to the target node.
+	更新目标节点的网络密钥。
 
-	* ``NetKeyIdx``: The network key index to updated.
-	* ``Key``: If present, sets the key value as a 128-bit hexadecimal value. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. If omitted, the default key value is used.
+	* ``NetKeyIdx``: 要更新的网络密钥索引。
+	* ``Key``: 如果存在，将密钥值设置为 128 位十六进制值。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。如果省略，使用默认密钥值。
 
 ``mesh models cfg netkey get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of known network key indexes.
+	获取已知网络密钥索引的列表。
 
 
 ``mesh models cfg netkey del <NetKeyIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Delete a network key from the target node.
+	从目标节点删除网络密钥。
 
-	* ``NetKeyIdx``: The network key index to delete.
+	* ``NetKeyIdx``: 要删除的网络密钥索引。
 
 
 ``mesh models cfg appkey add <NetKeyIdx> <AppKeyIdx> [Key(1-16 hex)]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Add an application key to the target node. Adds the key to the Configuration Database if
-	enabled.
+	向目标节点添加应用程序密钥。如果启用，将密钥添加到配置数据库。
 
-	* ``NetKeyIdx``: The network key index the application key is bound to.
-	* ``AppKeyIdx``: The application key index to add.
-	* ``Key``: If present, sets the key value as a 128-bit hexadecimal value. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. Only valid if the key does not already exist in the Configuration Database. If omitted, the default key value is used.
+	* ``NetKeyIdx``: 应用程序密钥绑定到的网络密钥索引。
+	* ``AppKeyIdx``: 要添加的应用程序密钥索引。
+	* ``Key``: 如果存在，将密钥值设置为 128 位十六进制值。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。仅在密钥在配置数据库中尚不存在时有效。如果省略，使用默认密钥值。
 
 ``mesh models cfg appkey upd <NetKeyIdx> <AppKeyIdx> [Key(1-16 hex)]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Update an application key to the target node.
+	更新目标节点的应用程序密钥。
 
-	* ``NetKeyIdx``: The network key index the application key is bound to.
-	* ``AppKeyIdx``: The application key index to update.
-	* ``Key``: If present, sets the key value as a 128-bit hexadecimal value. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. If omitted, the default key value is used.
+	* ``NetKeyIdx``: 应用程序密钥绑定到的网络密钥索引。
+	* ``AppKeyIdx``: 要更新的应用程序密钥索引。
+	* ``Key``: 如果存在，将密钥值设置为 128 位十六进制值。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。如果省略，使用默认密钥值。
 
 ``mesh models cfg appkey get <NetKeyIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of known application key indexes bound to the given network key index.
+	获取绑定到给定网络密钥索引的已知应用程序密钥索引的列表。
 
-	* ``NetKeyIdx``: Network key indexes to get a list of application key indexes from.
+	* ``NetKeyIdx``: 要从中获取应用程序密钥索引列表的网络密钥索引。
 
 
 ``mesh models cfg appkey del <NetKeyIdx> <AppKeyIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Delete an application key from the target node.
+	从目标节点删除应用程序密钥。
 
-	* ``NetKeyIdx``: The network key index the application key is bound to.
-	* ``AppKeyIdx``: The application key index to delete.
+	* ``NetKeyIdx``: 应用程序密钥绑定到的网络密钥索引。
+	* ``AppKeyIdx``: 要删除的应用程序密钥索引。
 
 
 ``mesh models cfg model app-bind <Addr> <AppKeyIdx> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Bind an application key to a model. Models can only encrypt and decrypt messages sent with
-	application keys they are bound to.
+	将应用程序密钥绑定到模型。模型只能加密和解密使用与其绑定的应用程序密钥发送的消息。
 
-	* ``Addr``: Address of the element the model is on.
-	* ``AppKeyIdx``: The application key to bind to the model.
-	* ``MID``: The model ID of the model to bind the key to.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``Addr``: 模型所在元素的地址。
+	* ``AppKeyIdx``: 要绑定到模型的应用程序密钥。
+	* ``MID``: 要绑定密钥的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 
 ``mesh models cfg model app-unbind <Addr> <AppKeyIdx> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Unbind an application key from a model.
+	从模型中取消绑定应用程序密钥。
 
-	* ``Addr``: Address of the element the model is on.
-	* ``AppKeyIdx``: The application key to unbind from the model.
-	* ``MID``: The model ID of the model to unbind the key from.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``Addr``: 模型所在元素的地址。
+	* ``AppKeyIdx``: 要从模型中取消绑定的应用程序密钥。
+	* ``MID``: 要取消绑定密钥的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 
 ``mesh models cfg model app-get <ElemAddr> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of application keys bound to a model.
+	获取绑定到模型的应用程序密钥列表。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``MID``: The model ID of the model to get the bound keys of.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``MID``: 要获取绑定密钥的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 
 ``mesh models cfg model pub <Addr> <MID> [CID] [<PubAddr> <AppKeyIdx> <Cred(off, on)> <TTL> <PerRes> <PerSteps> <Count> <Int(ms)>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the publication parameters of a model. If all publication parameters are
-	included, they become the new publication parameters of the model.  If all publication
-	parameters are omitted, print the current publication parameters of the model.
+	获取或设置模型的发布参数。如果包含所有发布参数，它们将成为模型的新发布参数。如果省略所有发布参数，打印模型的当前发布参数。
 
-	* ``Addr``: Address of the element the model is on.
-	* ``MID``: The model ID of the model to get the bound keys of.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``Addr``: 模型所在元素的地址。
+	* ``MID``: 要获取绑定密钥的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
-	Publication parameters:
+	发布参数：
 
-		* ``PubAddr``: The destination address to publish to.
-		* ``AppKeyIdx``: The application key index to publish with.
-		* ``Cred``: Whether to publish with Friendship credentials when acting as a Low Power Node.
-		* ``TTL``: TTL value to publish with (``0x00`` to ``0x07f``).
-		* ``PerRes``: Resolution of the publication period steps:
+		* ``PubAddr``: 发布的目标地址。
+		* ``AppKeyIdx``: 要使用的发布应用程序密钥索引。
+		* ``Cred``: 在充当低功耗节点时是否使用友好凭证进行发布。
+		* ``TTL``: 要使用的发布 TTL 值（``0x00`` 到 ``0x07f``）。
+		* ``PerRes``: 发布周期步长的分辨率：
 
-			* ``0x00``: The Step Resolution is 100 milliseconds
-			* ``0x01``: The Step Resolution is 1 second
-			* ``0x02``: The Step Resolution is 10 seconds
-			* ``0x03``: The Step Resolution is 10 minutes
-		* ``PerSteps``: Number of publication period steps, or 0 to disable periodic publication.
-		* ``Count``: Number of retransmission for each published message (``0`` to ``7``).
-		* ``Int`` The interval between each retransmission, in milliseconds. Must be a multiple of 50.
+			* ``0x00``: 步长分辨率为 100 毫秒
+			* ``0x01``: 步长分辨率为 1 秒
+			* ``0x02``: 步长分辨率为 10 秒
+			* ``0x03``: 步长分辨率为 10 分钟
+		* ``PerSteps``: 发布周期步数，或 0 禁用定期发布。
+		* ``Count``: 每条发布消息的重传次数（``0`` 到 ``7``）。
+		* ``Int`` 每次重传之间的间隔（毫秒）。必须是 50 的倍数。
 
 ``mesh models cfg model pub-va <Addr> <UUID(1-16 hex)> <AppKeyIdx> <Cred(off, on)> <TTL> <PerRes> <PerSteps> <Count> <Int(ms)> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the publication parameters of a model.
+	设置模型的发布参数。
 
-	* ``Addr``: Address of the element the model is on.
-	* ``MID``: The model ID of the model to get the bound keys of.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``Addr``: 模型所在元素的地址。
+	* ``MID``: 要获取绑定密钥的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
-	Publication parameters:
+	发布参数：
 
-		* ``UUID``: The destination virtual address to publish to. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
-		* ``AppKeyIdx``: The application key index to publish with.
-		* ``Cred``: Whether to publish with Friendship credentials when acting as a Low Power Node.
-		* ``TTL``: TTL value to publish with (``0x00`` to ``0x07f``).
-		* ``PerRes``: Resolution of the publication period steps:
+		* ``UUID``: 发布的目标虚拟地址。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。
+		* ``AppKeyIdx``: 要使用的发布应用程序密钥索引。
+		* ``Cred``: 在充当低功耗节点时是否使用友好凭证进行发布。
+		* ``TTL``: 要使用的发布 TTL 值（``0x00`` 到 ``0x07f``）。
+		* ``PerRes``: 发布周期步长的分辨率：
 
-			* ``0x00``: The Step Resolution is 100 milliseconds
-			* ``0x01``: The Step Resolution is 1 second
-			* ``0x02``: The Step Resolution is 10 seconds
-			* ``0x03``: The Step Resolution is 10 minutes
-		* ``PerSteps``: Number of publication period steps, or 0 to disable periodic publication.
-		* ``Count``: Number of retransmission for each published message (``0`` to ``7``).
-		* ``Int`` The interval between each retransmission, in milliseconds. Must be a multiple of 50.
+			* ``0x00``: 步长分辨率为 100 毫秒
+			* ``0x01``: 步长分辨率为 1 秒
+			* ``0x02``: 步长分辨率为 10 秒
+			* ``0x03``: 步长分辨率为 10 分钟
+		* ``PerSteps``: 发布周期步数，或 0 禁用定期发布。
+		* ``Count``: 每条发布消息的重传次数（``0`` 到 ``7``）。
+		* ``Int`` 每次重传之间的间隔（毫秒）。必须是 50 的倍数。
 
 
 ``mesh models cfg model sub-add <ElemAddr> <SubAddr> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Subscription the model to a group address. Models only receive messages sent to their
-	unicast address or a group or virtual address they subscribe to. Models may subscribe to
-	multiple group and virtual addresses.
+	订阅模型到组地址。模型只接收发送到其单播地址或模型订阅的组地址或虚拟地址的消息。模型可以订阅多个组地址和虚拟地址。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``SubAddr``: 16-bit group address the model should subscribe to (``0xc000`` to ``0xFEFF``).
-	* ``MID``: The model ID of the model to add the subscription to.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``SubAddr``: 模型应该订阅的 16 位组地址（``0xc000`` 到 ``0xFEFF``）。
+	* ``MID``: 要添加订阅的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 
 ``mesh models cfg model sub-del <ElemAddr> <SubAddr> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Unsubscribe a model from a group address.
+	取消模型对组地址的订阅。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``SubAddr``: 16-bit group address the model should remove from its subscription list (``0xc000`` to ``0xFEFF``).
-	* ``MID``: The model ID of the model to add the subscription to.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``SubAddr``: 模型应从其订阅列表中移除的 16 位组地址（``0xc000`` 到 ``0xFEFF``）。
+	* ``MID``: 要添加订阅的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 
 ``mesh models cfg model sub-add-va <ElemAddr> <LabelUUID(1-16 hex)> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Subscribe the model to a virtual address. Models only receive messages sent to their unicast
-	address or a group or virtual address they subscribe to. Models may subscribe to multiple
-	group and virtual addresses.
+	订阅模型到虚拟地址。模型只接收发送到其单播地址或模型订阅的组地址或虚拟地址的消息。模型可以订阅多个组地址和虚拟地址。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``LabelUUID``: 128-bit label UUID of the virtual address to subscribe to. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
-	* ``MID``: The model ID of the model to add the subscription to.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``LabelUUID``: 要订阅的虚拟地址的 128 位标签 UUID。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。
+	* ``MID``: 要添加订阅的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 
 ``mesh models cfg model sub-del-va <ElemAddr> <LabelUUID(1-16 hex)> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Unsubscribe a model from a virtual address.
+	取消模型对虚拟地址的订阅。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``LabelUUID``: 128-bit label UUID of the virtual address to remove the subscription of.  Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
-	* ``MID``: The model ID of the model to add the subscription to.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``LabelUUID``: 要移除订阅的虚拟地址的 128 位标签 UUID。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。
+	* ``MID``: 要添加订阅的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 ``mesh models cfg model sub-ow <ElemAddr> <SubAddr> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Overwrite all model subscriptions with a single new group address.
+	使用单个新组地址覆盖所有模型订阅。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``SubAddr``: 16-bit group address the model should added to the subscription list (``0xc000`` to ``0xFEFF``).
-	* ``MID``: The model ID of the model to add the subscription to.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``SubAddr``: 模型应添加到订阅列表的 16 位组地址（``0xc000`` 到 ``0xFEFF``）。
+	* ``MID``: 要添加订阅的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 ``mesh models cfg model sub-ow-va <ElemAddr> <LabelUUID(1-16 hex)> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Overwrite all model subscriptions with a single new virtual address. Models only receive
-	messages sent to their unicast address or a group or virtual address they subscribe to.
-	Models may subscribe to multiple group and virtual addresses.
+	使用单个新虚拟地址覆盖所有模型订阅。模型只接收发送到其单播地址或模型订阅的组地址或虚拟地址的消息。模型可以订阅多个组地址和虚拟地址。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``LabelUUID``: 128-bit label UUID of the virtual address as the new Address to be added to the subscription list. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
-	* ``MID``: The model ID of the model to add the subscription to.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``LabelUUID``: 作为新地址要添加到订阅列表的虚拟地址的 128 位标签 UUID。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。
+	* ``MID``: 要添加订阅的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 ``mesh models cfg model sub-del-all <ElemAddr> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Remove all group and virtual address subscriptions from of a model.
+	移除模型的所有组地址和虚拟地址订阅。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``MID``: The model ID of the model to Unsubscribe all.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``MID``: 要取消所有订阅的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 ``mesh models cfg model sub-get <ElemAddr> <MID> [CID]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of addresses the model subscribes to.
+	获取模型订阅的地址列表。
 
-	* ``ElemAddr``: Address of the element the model is on.
-	* ``MID``: The model ID of the model to get the subscription list of.
-	* ``CID``: If present, determines the Company ID of the model. If omitted, the model is a Bluetooth SIG defined model.
+	* ``ElemAddr``: 模型所在元素的地址。
+	* ``MID``: 要获取订阅列表的模型的模型 ID。
+	* ``CID``: 如果存在，确定模型的蓝牙 SIG 公司 ID。如果省略，该模型是蓝牙 SIG 定义的模型。
 
 
 ``mesh models cfg krp <NetKeyIdx> [Phase]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the key refresh phase of a subnet.
+	获取或设置子网的密钥刷新阶段。
 
-	* ``NetKeyIdx``: The identified network key used to Get/Set the current Key Refresh Phase state.
-	* ``Phase``: New Key Refresh Phase. Valid phases are:
+	* ``NetKeyIdx``: 用于获取/设置当前密钥刷新阶段状态的标识网络密钥。
+	* ``Phase``: 新的密钥刷新阶段。有效阶段为：
 
-		* ``0x00``: Normal operation; Key Refresh procedure is not active
-		* ``0x01``: First phase of Key Refresh procedure
-		* ``0x02``: Second phase of Key Refresh procedure
+		* ``0x00``: 正常运行；密钥刷新过程未激活
+		* ``0x01``: 密钥刷新过程的第一阶段
+		* ``0x02``: 密钥刷新过程的第二阶段
 
 ``mesh models cfg hb-sub [<Src> <Dst> <Per>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the Heartbeat subscription parameters. A node only receives Heartbeat messages
-	matching the Heartbeat subscription parameters. Sets the Heartbeat subscription parameters
-	if present, or prints the current Heartbeat subscription parameters if called with no
-	parameters.
+	获取或设置心跳订阅参数。节点仅接收与心跳订阅参数匹配的心跳消息。如果存在，设置心跳订阅参数；如果不带参数调用，则打印当前心跳订阅参数。
 
-	* ``Src``: Unicast source address to receive Heartbeat messages from.
-	* ``Dst``: Destination address to receive Heartbeat messages on.
-	* ``Per``: Logarithmic representation of the Heartbeat subscription period:
+	* ``Src``: 接收心跳消息的单播源地址。
+	* ``Dst``: 接收心跳消息的目标地址。
+	* ``Per``: 心跳订阅周期的对数表示：
 
-		* ``0``: Heartbeat subscription will be disabled.
-		* ``1`` to ``17``: The node will subscribe to Heartbeat messages for 2\ :sup:`(period - 1)` seconds.
+		* ``0``: 心跳订阅将被禁用。
+		* ``1`` 到 ``17``: 节点将订阅心跳消息 2\ :sup:`(period - 1)` 秒。
 
 
 ``mesh models cfg hb-pub [<Dst> <Count> <Per> <TTL> <Features> <NetKeyIdx>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get or set the Heartbeat publication parameters. Sets the Heartbeat publication parameters
-	if present, or prints the current Heartbeat publication parameters if called with no
-	parameters.
+	获取或设置心跳发布参数。如果存在，设置心跳发布参数；如果不带参数调用，则打印当前心跳发布参数。
 
-	* ``Dst``: Destination address to publish Heartbeat messages to.
-	* ``Count``: Logarithmic representation of the number of Heartbeat messages to publish periodically:
+	* ``Dst``: 发布心跳消息的目标地址。
+	* ``Count``: 定期发布的心跳消息数量的对数表示：
 
-		* ``0``: Heartbeat messages are not published periodically.
-		* ``1`` to ``17``: The node will periodically publish 2\ :sup:`(count - 1)` Heartbeat messages.
-		* ``255``: Heartbeat messages will be published periodically indefinitely.
+		* ``0``: 心跳消息不会定期发布。
+		* ``1`` 到 ``17``: 节点将定期发布 2\ :sup:`(count - 1)` 条心跳消息。
+		* ``255``: 心跳消息将无限期定期发布。
 
-	* ``Per``: Logarithmic representation of the Heartbeat publication period:
+	* ``Per``: 心跳发布周期的对数表示：
 
-		* ``0``: Heartbeat messages are not published periodically.
-		* ``1`` to ``17``: The node will publish Heartbeat messages every 2\ :sup:`(period - 1)` seconds.
+		* ``0``: 心跳消息不会定期发布。
+		* ``1`` 到 ``17``: 节点将每 2\ :sup:`(period - 1)` 秒发布一次心跳消息。
 
-	* ``TTL``: The TTL value to publish Heartbeat messages with (``0x00`` to ``0x7f``).
-	* ``Features``: Bitfield of features that should trigger a Heartbeat publication when changed:
+	* ``TTL``: 发布心跳消息时要使用的 TTL 值（``0x00`` 到 ``0x7f``）。
+	* ``Features``: 当更改时应触发心跳发布的特性位域：
 
-		* ``Bit 0``: Relay feature.
-		* ``Bit 1``: Proxy feature.
-		* ``Bit 2``: Friend feature.
-		* ``Bit 3``: Low Power feature.
+		* ``Bit 0``: 中继功能。
+		* ``Bit 1``: 代理功能。
+		* ``Bit 2``: 友好功能。
+		* ``Bit 3``: 低功耗功能。
 
-	* ``NetKeyIdx``: Index of the network key to publish Heartbeat messages with.
+	* ``NetKeyIdx``: 发布心跳消息时要使用的网络密钥索引。
 
 
-Health Client
+健康客户端
 -------------
 
-The Health Client model is an optional mesh subsystem that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_HEALTH_CLI` configuration option. This is implemented as a separate
-module (``mesh models health``) inside the ``mesh models`` subcommand list. This module will work on
-any instance of the Health Client model if the mentioned shell configuration options is enabled, and
-as long as one or more Health Client model(s) is present in the model composition of the
-application. This shell module can be used to trigger interaction between Health Clients and Servers
-on devices in a Mesh network.
+健康客户端模型是一个可选的网状子系统，可以通过 :kconfig:option:`CONFIG_BT_MESH_HEALTH_CLI` 配置选项启用。这在 ``mesh models`` 子命令列表内作为独立模块（``mesh models health``）实现。如果启用上述 shell 配置选项，并且只要应用程序的模型组合中存在一个或多个健康客户端模型，此模块将在任何健康客户端模型实例上工作。此 shell 模块可用于触发网状网络中设备上健康客户端和服务器之间的交互。
 
-By default, the module will choose the first Health Client instance in the model composition when
-using the Health Client commands. To choose a specific Health Client instance the user can utilize
-the commands ``mesh models health instance set`` and ``mesh models health instance get-all``.
+默认情况下，使用健康客户端命令时，模块将选择模型组合中的第一个健康客户端实例。要选择特定的健康客户端实例，用户可以使用命令 ``mesh models health instance set`` 和 ``mesh models health instance get-all``。
 
-The Health Client may use the general messages parameters set by ``mesh target dst``,
-``mesh target net`` and ``mesh target app`` to target specific nodes. If the shell target
-destination address is set to zero, the targeted Health Client will attempt to publish messages
-using its configured publication parameters.
+健康客户端可以使用由 ``mesh target dst``、``mesh target net`` 和 ``mesh target app`` 设置的通用消息参数来定位特定节点。如果 shell 目标目的地地址设置为零，目标健康客户端将尝试使用其配置的发布参数发布消息。
 
 ``mesh models health instance set <ElemIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the Health Client model instance to use.
+	设置要使用的健康客户端模型实例。
 
-	* ``ElemIdx``: Element index of Health Client model.
+	* ``ElemIdx``: 健康客户端模型的元素索引。
 
 ``mesh models health instance get-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Prints all available Health Client model instances on the device.
+	打印设备上所有可用的健康客户端模型实例。
 
 ``mesh models health fault-get <CID>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of registered faults for a Company ID.
+	获取公司 ID 的注册故障列表。
 
-	* ``CID``: Company ID to get faults for.
+	* ``CID``: 要获取故障的公司 ID。
 
 
 ``mesh models health fault-clear <CID>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Clear the list of faults for a Company ID.
+	清除公司 ID 的故障列表。
 
-	* ``CID``: Company ID to clear the faults for.
+	* ``CID``: 要清除故障的公司 ID。
 
 
 ``mesh models health fault-clear-unack <CID>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Clear the list of faults for a Company ID without requesting a response.
+	不清除请求响应的情况下清除公司 ID 的故障列表。
 
-	* ``CID``: Company ID to clear the faults for.
+	* ``CID``: 要清除故障的公司 ID。
 
 
 ``mesh models health fault-test <CID> <TestID>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Invoke a self-test procedure, and show a list of triggered faults.
+	调用自检程序，并显示触发故障的列表。
 
-	* ``CID``: Company ID to perform self-tests for.
-	* ``TestID``: Test to perform.
+	* ``CID``: 要执行自检的公司 ID。
+	* ``TestID``: 要执行的测试。
 
 
 ``mesh models health fault-test-unack <CID> <TestID>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Invoke a self-test procedure without requesting a response.
+	不清除请求响应的情况下调用自检程序。
 
-	* ``CID``: Company ID to perform self-tests for.
-	* ``TestID``: Test to perform.
+	* ``CID``: 要执行自检的公司 ID。
+	* ``TestID``: 要执行的测试。
 
 
 ``mesh models health period-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the current Health Server publish period divisor.
+	获取当前健康服务器发布周期除数。
 
 
 ``mesh models health period-set <Divisor>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the current Health Server publish period divisor. When a fault is detected, the Health
-	Server will start publishing is fault status with a reduced interval. The reduced interval
-	is determined by the Health Server publish period divisor: Fault publish period = Publish
-	period / 2\ :sup:`divisor`.
+	设置当前健康服务器发布周期除数。当检测到故障时，健康服务器将开始以缩短的间隔发布其故障状态。缩短间隔由健康服务器发布周期除数确定：故障发布周期 = 发布周期 / 2\ :sup:`divisor`。
 
-	* ``Divisor``: The new Health Server publish period divisor.
+	* ``Divisor``: 新的健康服务器发布周期除数。
 
 
 ``mesh models health period-set-unack <Divisor>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the current Health Server publish period divisor. When a fault is detected, the Health
-	Server will start publishing is fault status with a reduced interval. The reduced interval
-	is determined by the Health Server publish period divisor: Fault publish period = Publish
-	period / 2\ :sup:`divisor`.
+	设置当前健康服务器发布周期除数。当检测到故障时，健康服务器将开始以缩短的间隔发布其故障状态。缩短间隔由健康服务器发布周期除数确定：故障发布周期 = 发布周期 / 2\ :sup:`divisor`。
 
-	* ``Divisor``: The new Health Server publish period divisor.
+	* ``Divisor``: 新的健康服务器发布周期除数。
 
 
 ``mesh models health attention-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the current Health Server attention state.
+	获取当前健康服务器注意状态。
 
 
 ``mesh models health attention-set <Time(s)>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Enable the Health Server attention state for some time.
+	启用健康服务器注意状态一段时间。
 
-	* ``Time``: Duration of the attention state, in seconds (``0`` to ``255``)
+	* ``Time``: 注意状态的持续时间，以秒为单位（``0`` 到 ``255``）
 
 
 ``mesh models health attention-set-unack <Time(s)>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Enable the Health Server attention state for some time without requesting a response.
+	不清除请求响应的情况下启用健康服务器注意状态一段时间。
 
-	* ``Time``: Duration of the attention state, in seconds (``0`` to ``255``)
+	* ``Time``: 注意状态的持续时间，以秒为单位（``0`` 到 ``255``）
 
 
-Binary Large Object (BLOB) Transfer Client model
+二进制大对象（BLOB）传输客户端模型
 ------------------------------------------------
 
-The :ref:`bluetooth_mesh_blob_cli` can be added to the mesh shell by enabling the
-:kconfig:option:`CONFIG_BT_MESH_BLOB_CLI` option, and disabling the
-:kconfig:option:`CONFIG_BT_MESH_DFU_CLI` option.
+通过启用 :kconfig:option:`CONFIG_BT_MESH_BLOB_CLI` 选项并禁用 :kconfig:option:`CONFIG_BT_MESH_DFU_CLI` 选项，可以将 :ref:`bluetooth_mesh_blob_cli` 添加到网状 shell。
 
 ``mesh models blob cli target <Addr>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Add a Target node for the next BLOB transfer.
+	为下次 BLOB 传输添加目标节点。
 
-	* ``Addr``: Unicast address of the Target node's BLOB Transfer Server model.
+	* ``Addr``: 目标节点的 BLOB 传输服务器模型的单播地址。
 
 
 ``mesh models blob cli caps [<Group> [<TimeoutBase>]]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Retrieve transfer capabilities for Target nodes.
+	检索目标节点的传输能力。
 
-	* ``Group``: Optional group address to use when communicating with Target nodes. If omitted, the BLOB Transfer Client will address each Target node individually.
-	* ``TimeoutBase``: Optional time to wait for responses from Target nodes, in 10-second increments.
+	* ``Group``: 与目标节点通信时要使用的可选组地址。如果省略，BLOB 传输客户端将单独寻址每个目标节点。
+	* ``TimeoutBase``: 等待目标节点响应的可选时间，以 10 秒为增量单位。
 
 
 ``mesh models blob cli tx <Id> <Size> <BlockSizeLog> <ChunkSize> [<Group> [<Mode(push, pull)>]]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Perform a BLOB transfer to Target nodes. The BLOB Transfer Client will send a dummy BLOB to
-	all Target nodes, then post a message when the transfer is completed. Note that all Target
-	nodes must first be configured to receive the transfer using the ``mesh models blob srv rx``
-	command.
+	对目标节点执行 BLOB 传输。BLOB 传输客户端将向所有目标节点发送虚拟 BLOB，然后在传输完成时发布消息。请注意，所有目标节点必须首先使用 ``mesh models blob srv rx`` 命令配置为接收传输。
 
-	* ``Id``: 64-bit BLOB transfer ID.
-	* ``Size``: Size of the BLOB in bytes.
-	* ``BlockSizeLog``: Logarithmic representation of the BLOB's block size. The final block size will be ``1 << block size log`` bytes.
-	* ``ChunkSize``: Chunk size in bytes.
-	* ``Group``: Optional group address to use when communicating with Target nodes. If omitted or set to 0, the BLOB Transfer Client will address each Target node individually.
-	* ``Mode``: BLOB transfer mode to use. Must be either ``push`` (Push BLOB Transfer Mode) or ``pull`` (Pull BLOB Transfer Mode). If omitted, ``push`` will be used by default.
+	* ``Id``: 64 位 BLOB 传输 ID。
+	* ``Size``: BLOB 的大小（字节）。
+	* ``BlockSizeLog``: BLOB 块大小的对数表示。最终块大小将为 ``1 << block size log`` 字节。
+	* ``ChunkSize``: 块大小（字节）。
+	* ``Group``: 与目标节点通信时要使用的可选组地址。如果省略或设置为 0，BLOB 传输客户端将单独寻址每个目标节点。
+	* ``Mode``: 要使用的 BLOB 传输模式。必须为 ``push``（推 BLOB 传输模式）或 ``pull``（拉 BLOB 传输模式）。如果省略，默认使用 ``push``。
 
 
 ``mesh models blob cli tx-cancel``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Cancel an ongoing BLOB transfer.
+	取消正在进行的 BLOB 传输。
 
 ``mesh models blob cli tx-get [Group]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Determine the progress of a previously running BLOB transfer. Can be used when not
-	performing a BLOB transfer.
+	确定先前运行的 BLOB 传输的进度。在不执行 BLOB 传输时可以使用。
 
-	* ``Group``: Optional group address to use when communicating with Target nodes. If omitted or set to 0, the BLOB Transfer Client will address each Target node individually.
+	* ``Group``: 与目标节点通信时要使用的可选组地址。如果省略或设置为 0，BLOB 传输客户端将单独寻址每个目标节点。
 
 
 ``mesh models blob cli tx-suspend``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Suspend the ongoing BLOB transfer.
+	暂停正在进行的 BLOB 传输。
 
 
 ``mesh models blob cli tx-resume``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Resume the suspended BLOB transfer.
+	恢复暂停的 BLOB 传输。
 
 ``mesh models blob cli instance-set <ElemIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Use the BLOB Transfer Client model instance on the specified element when using the other
-	BLOB Transfer Client model commands.
+	使用指定元素上的 BLOB 传输客户端模型实例来使用其他 BLOB 传输客户端模型命令。
 
-	* ``ElemIdx``: The element on which to find the BLOB Transfer Client model instance to use.
+	* ``ElemIdx``: 要查找要使用的 BLOB 传输客户端模型实例的元素。
 
 ``mesh models blob cli instance-get-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of all BLOB Transfer Client model instances on the node.
+	获取节点上所有 BLOB 传输客户端模型实例的列表。
 
 
-BLOB Transfer Server model
+BLOB 传输服务器模型
 --------------------------
 
-The :ref:`bluetooth_mesh_blob_srv` can be added to the mesh shell by enabling the
-:kconfig:option:`CONFIG_BT_MESH_BLOB_SRV` option. The BLOB Transfer Server model is capable of
-receiving any BLOB data, but the implementation in the mesh shell will discard the incoming data.
+通过启用 :kconfig:option:`CONFIG_BT_MESH_BLOB_SRV` 选项，可以将 :ref:`bluetooth_mesh_blob_srv` 添加到网状 shell。BLOB 传输服务器模型能够接收任何 BLOB 数据，但网状 shell 中的实现将丢弃传入的数据。
 
 
 ``mesh models blob srv rx <ID> [<TimeoutBase(10s steps)>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Prepare to receive a BLOB transfer.
+	准备接收 BLOB 传输。
 
-	* ``ID``: 64-bit BLOB transfer ID to receive.
-	* ``TimeoutBase``: Optional additional time to wait for client messages, in 10-second increments.
+	* ``ID``: 要接收的 64 位 BLOB 传输 ID。
+	* ``TimeoutBase``: 等待客户端消息的可选额外时间，以 10 秒为增量单位。
 
 
 ``mesh models blob srv rx-cancel``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Cancel an ongoing BLOB transfer.
+	取消正在进行的 BLOB 传输。
 
 ``mesh models blob srv instance-set <ElemIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Use the BLOB Transfer Server model instance on the specified element when using the other
-	BLOB Transfer Server model commands.
+	使用指定元素上的 BLOB 传输服务器模型实例来使用其他 BLOB 传输服务器模型命令。
 
-	* ``ElemIdx``: The element on which to find the BLOB Transfer Server model instance to use.
+	* ``ElemIdx``: 要查找要使用的 BLOB 传输服务器模型实例的元素。
 
 ``mesh models blob srv instance-get-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of all BLOB Transfer Server model instances on the node.
+	获取节点上所有 BLOB 传输服务器模型实例的列表。
 
 
-Binary Large Object (BLOB) Transfer flash stream
+二进制大对象（BLOB）传输闪存流
 ------------------------------------------------
-BLOB flash stream configuration can be added to the mesh shell by enabling the
-:kconfig:option:`CONFIG_BT_MESH_SHELL_BLOB_IO_FLASH` option. By default, the shell uses a
-dummy BLOB stream. This option allows the user to specify which area in the flash to use.
-See :ref:`flash_map_api` for information on how to obtain related parameters.
+通过启用 :kconfig:option:`CONFIG_BT_MESH_SHELL_BLOB_IO_FLASH` 选项，可以将 BLOB 闪存流配置添加到网状 shell。默认情况下，shell 使用虚拟 BLOB 流。此选项允许用户指定要使用的闪存中的区域。有关如何获取相关参数的信息，请参见 :ref:`flash_map_api`。
 
 ``mesh models blob flash-stream-set <AreaID> [<Offset>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the BLOB stream to a specified area.
+	将 BLOB 流设置为指定区域。
 
-	* ``AreaID``: Flash area ID to write/read the BLOB to/from.
-	* ``Offset``: Optional offset into the flash area to place the BLOB at (in bytes).
+	* ``AreaID``: 要向其中写入/从中读取 BLOB 的闪存区域 ID。
+	* ``Offset``: 在闪存区域中放置 BLOB 的可选偏移量（以字节为单位）。
 
 ``mesh models blob flash-stream-unset``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the BLOB stream back to the dummy stream.
+	将 BLOB 流设置回虚拟流。
 
 
-Firmware Update Client model
+固件更新客户端模型
 ----------------------------
 
-The Firmware Update Client model can be added to the mesh shell by enabling configuration options
-:kconfig:option:`CONFIG_BT_MESH_BLOB_CLI` and :kconfig:option:`CONFIG_BT_MESH_DFU_CLI`. The Firmware
-Update Client demonstrates the firmware update Distributor role by transferring a dummy firmware
-update to a set of Target nodes.
+通过启用 :kconfig:option:`CONFIG_BT_MESH_BLOB_CLI` 和 :kconfig:option:`CONFIG_BT_MESH_DFU_CLI` 配置选项，可以将固件更新客户端模型添加到网状 shell。固件更新客户端通过向一组目标节点传输虚拟固件更新来演示固件更新分发器角色。
 
 
 ``mesh models dfu slot add <Size> <FwID> [<Metadata>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Add a virtual DFU image slot that can be transferred as a DFU image. The image slot will be
-	assigned an image slot index, which is printed as a response, and can be used to reference
-	the slot in other commands. To update the image slot, remove it using the
-	``mesh models dfu slot del`` shell command and then add it again.
+	添加可作为DFU图像传输的虚拟DFU图像槽。图像槽将被分配一个图像槽索引，该索引作为响应打印，并可用于在其他命令中引用该槽。要更新图像槽，请使用``mesh models dfu slot del`` shell命令删除它，然后重新添加。
 
-	* ``Size``: DFU image slot size in bytes.
-	* ``FwID``: Firmware ID, formatted as a hexstring.
-	* ``Metadata``: Optional firmware metadata, formatted as a hexstring.
+	* ``Size``: DFU图像槽大小（字节）。
+	* ``FwID``: 固件ID，格式为十六进制字符串。
+	* ``Metadata``: 可选的固件元数据，格式为十六进制字符串。
 
 
 ``mesh models dfu slot del <SlotIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Delete the DFU image slot at the given index.
+	删除给定索引处的DFU图像槽。
 
-	* ``SlotIdx``: Index of the slot to delete.
+	* ``SlotIdx``: 要删除的槽的索引。
 
 
 ``mesh models dfu slot get <SlotIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get all available information about a DFU image slot.
+	获取DFU图像槽的所有可用信息。
 
-	* ``SlotIdx``: Index of the slot to get.
+	* ``SlotIdx``: 要获取的槽的索引。
 
 
 ``mesh models dfu cli target <Addr> <ImgIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Add a Target node.
+	添加目标节点。
 
-	* ``Addr``: Unicast address of the Target node.
-	* ``ImgIdx``: Image index to address on the Target node.
+	* ``Addr``: 目标节点的单播地址。
+	* ``ImgIdx``: 在目标节点上寻址的图像索引。
 
 
 ``mesh models dfu cli target-state``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Check the DFU Target state of the device at the configured destination address.
+	检查配置的目标地址处设备的DFU目标状态。
 
 
 ``mesh models dfu cli target-imgs [<MaxCount>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of DFU images on the device at the configured destination address.
+	获取配置的目标地址处设备的DFU图像列表。
 
-	* ``MaxCount``: Optional maximum number of images to return. If omitted, there's no limit on the number of returned images.
+	* ``MaxCount``: 可选的要返回的最大图像数。如果省略，返回的图像数量没有限制。
 
 
 ``mesh models dfu cli target-check <SlotIdx> <TargetImgIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Check whether the device at the configured destination address will accept a DFU transfer
-	from the given DFU image slot to the Target node's DFU image at the given index, and what
-	the effect would be.
+	检查配置的目标地址处设备是否将接受从给定DFU图像槽到给定索引处的目标节点DFU图像的DFU传输，以及会产生什么影响。
 
-	* ``SlotIdx``: Index of the local DFU image slot to check.
-	* ``TargetImgIdx``: Index of the Target node's DFU image to check.
+	* ``SlotIdx``: 要检查的本地DFU图像槽的索引。
+	* ``TargetImgIdx``: 要检查的目标节点DFU图像的索引。
 
 
 ``mesh models dfu cli send <SlotIdx> [<Group>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Start a DFU transfer to all added Target nodes.
+	开始向所有添加的目标节点进行DFU传输。
 
-	* ``SlotIdx``: Index of the local DFU image slot to send.
-	* ``Group``: Optional group address to use when communicating with the Target nodes. If omitted, the Firmware Update Client will address each Target node individually.
+	* ``SlotIdx``: 要发送的本地DFU图像槽的索引。
+	* ``Group``: 与目标节点通信时使用的可选组地址。如果省略，固件更新客户端将单独寻址每个目标节点。
 
 
 ``mesh models dfu cli cancel [<Addr>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Cancel the DFU procedure at any state on a specific Target node or on all Target nodes. When
-	a Target node address is provided, the Firmware Update Client model will try to cancel the
-	DFU procedure on the provided Target node. Otherwise, the Firmware Update Client model will
-	try to cancel the ongoing DFU procedure on all Target nodes.
+	取消特定目标节点或所有目标节点在任何状态下的DFU过程。当提供目标节点地址时，固件更新客户端模型将尝试取消提供目标节点上的DFU过程。否则，固件更新客户端模型将尝试取消所有目标节点上正在进行的DFU过程。
 
-	* ``Addr``: Optional unicast address of a Target node on which to cancel the DFU procedure.
+	* ``Addr``: 要取消DFU过程的目标节点的可选单播地址。
 
 
 ``mesh models dfu cli apply``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Apply the most recent DFU transfer on all Target nodes. Can only be called after a DFU
-	transfer is completed.
+	在所有目标节点上应用最近的DFU传输。只能在DFU传输完成后调用。
 
 
 ``mesh models dfu cli confirm``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Confirm that the most recent DFU transfer was successfully applied on all Target nodes. Can
-	only be called after a DFU transfer is completed and applied.
+	确认最近的DFU传输已在所有目标节点上成功应用。只能在DFU传输完成并应用后调用。
 
 
 ``mesh models dfu cli suspend``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Suspend the ongoing DFU transfer.
+	暂停正在进行的DFU传输。
 
 
 ``mesh models dfu cli resume``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Resume the suspended DFU transfer.
+	恢复暂停的DFU传输。
 
 
 ``mesh models dfu cli progress``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Check the progress of the current transfer.
+	检查当前传输的进度。
 
 
 ``mesh models dfu cli instance-set <ElemIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Use the Firmware Update Client model instance on the specified element when using the other
-	Firmware Update Client model commands.
+	使用指定元素上的固件更新客户端模型实例在使用其他固件更新客户端模型命令时。
 
-	* ``ElemIdx``: The element on which to find the Firmware Update Client model instance to use.
+	* ``ElemIdx``: 要查找要使用的固件更新客户端模型实例的元素。
 
 ``mesh models dfu cli instance-get-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of all Firmware Update Client model instances on the node.
+	获取节点上所有固件更新客户端模型实例的列表。
 
 
-Firmware Update Server model
+固件更新服务器模型
 ----------------------------
 
-The Firmware Update Server model can be added to the mesh shell by enabling configuration options
-:kconfig:option:`CONFIG_BT_MESH_BLOB_SRV` and :kconfig:option:`CONFIG_BT_MESH_DFU_SRV`. The Firmware
-Update Server demonstrates the firmware update Target role by accepting any firmware update. The
-mesh shell Firmware Update Server will discard the incoming firmware data, but otherwise behave as a
-proper firmware update Target node.
+通过启用 :kconfig:option:`CONFIG_BT_MESH_BLOB_SRV` 和 :kconfig:option:`CONFIG_BT_MESH_DFU_SRV` 配置选项，可以将固件更新服务器模型添加到网状 shell。固件更新服务器通过接受任何固件更新来演示固件更新目标角色。网状 shell 固件更新服务器将丢弃传入的固件数据，但 otherwise 行为像一个真正的固件更新目标节点。
 
 
 ``mesh models dfu srv applied``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Mark the most recent DFU transfer as applied. Can only be called after a DFU transfer is
-	completed, and the Distributor has requested that the transfer is applied.
+	标记最新的 DFU 传输为已应用。只能在 DFU 传输完成后，并且分发器已请求应用传输时调用。
 
-	As the mesh shell Firmware Update Server doesn't actually apply the incoming firmware image,
-	this command can be used to emulate an applied status, to notify the Distributor that the
-	transfer was successful.
+	由于网状 shell 固件更新服务器实际上不会应用传入的固件镜像，此命令可用于模拟应用状态，以通知分发器传输成功。
 
 
 ``mesh models dfu srv progress``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Check the progress of the current transfer.
+	检查当前传输的进度。
 
 ``mesh models dfu srv rx-cancel``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Cancel incoming DFU transfer.
+	取消传入的 DFU 传输。
 
 ``mesh models dfu srv instance-set <ElemIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Use the Firmware Update Server model instance on the specified element when using the other
-	Firmware Update Server model commands.
+	使用指定元素上的固件更新服务器模型实例来使用其他固件更新服务器模型命令。
 
-	* ``ElemIdx``: The element on which to find the Firmware Update Server model instance to use.
+	* ``ElemIdx``: 要查找要使用的固件更新服务器模型实例的元素。
 
 ``mesh models dfu srv instance-get-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of all Firmware Update Server model instances on the node.
+	获取节点上所有固件更新服务器模型实例的列表。
 
 
 .. _bluetooth_mesh_shell_dfd_server:
 
-Firmware Distribution Server model
+固件分发服务器模型
 ----------------------------------
 
-The Firmware Distribution Server model commands can be added to the mesh shell by enabling the
-:kconfig:option:`CONFIG_BT_MESH_DFD_SRV` configuration option. The shell commands for this model
-mirror the messages sent to the server by a Firmware Distribution Client model. To use these
-commands, a Firmware Distribution Server must be instantiated by the application.
+通过启用 :kconfig:option:`CONFIG_BT_MESH_DFD_SRV` 配置选项，可以将固件分发服务器模型命令添加到网状 shell。此模型的 shell 命令镜像固件分发客户端模型发送到服务器的消息。要使用这些命令，应用程序必须实例化固件分发服务器。
 
 ``mesh models dfd receivers-add <Addr>,<FwIdx>[;<Addr>,<FwIdx>]...``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Add receivers to the Firmware Distribution Server. Supply receivers as a list of
-	comma-separated addr,fw_idx pairs, separated by semicolons, for example,
-	``0x0001,0;0x0002,0;0x0004,1``.  Do not use spaces in the receiver list. Repeated calls to
-	this command will continue populating the receivers list until
-	``mesh models dfd receivers-delete-all`` is called.
+	向固件分发服务器添加接收器。提供以分号分隔的逗号分隔的 addr,fw_idx 对列表作为接收器，例如，``0x0001,0;0x0002,0;0x0004,1``。不要在接收器列表中使用空格。重复调用此命令将继续填充接收器列表，直到调用 ``mesh models dfd receivers-delete-all``。
 
-	* ``Addr``: Address of the receiving node(s).
-	* ``FwIdx``: Index of the firmware slot to send to ``Addr``.
+	* ``Addr``: 接收节点的地址。
+	* ``FwIdx``: 要发送到 ``Addr`` 的固件槽的索引。
 
 ``mesh models dfd receivers-delete-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Delete all receivers from the server.
+	从服务器中删除所有接收器。
 
 ``mesh models dfd receivers-get <First> <Count>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of info about firmware receivers.
+	获取固件接收器信息的列表。
 
-	* ``First``: Index of the first receiver to get from the receiver list.
-	* ``Count``: The number of receivers for which to get info.
+	* ``First``: 从接收器列表中获取的第一个接收器的索引。
+	* ``Count``: 要获取信息的接收器数量。
 
 ``mesh models dfd capabilities-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the capabilities of the server.
+	获取服务器的功能。
 
 ``mesh models dfd get``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get information about the current distribution state, phase and the transfer parameters.
+	获取有关当前分发状态、阶段和传输参数的信息。
 
 ``mesh models dfd start <AppKeyIdx> <SlotIdx> [<Group> [<PolicyApply> [<TTL> [<TimeoutBase> [<XferMode>]]]]]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Start the firmware distribution.
+	开始固件分发。
 
-	* ``AppKeyIdx``: Application index to use for sending. The common application key should be bound to the Firmware Update and BLOB Transfer models on the Distributor and Target nodes.
-	* ``SlotIdx``: Index of the local image slot to send.
-	* ``Group``: Optional group address to use when communicating with the Target nodes. If omitted, the Firmware Distribution Server will address each Target node individually. To keep addressing each Target node individually while changing other arguments, set this argument value to 0.
-	* ``PolicyApply``: Optional field that corresponds to the update policy. Setting this to ``true`` will make the Firmware Distribution Server apply the image immediately after the transfer is completed.
-	* ``TTL``: Optional. TTL value to use when sending. Defaults to configured default TTL.
-	* ``TimeoutBase``: Optional additional value used to calculate timeout values in the firmware distribution process, in 10-second increments.. See :ref:`bluetooth_mesh_blob_timeout` for information about how ``timeout_base`` is used to calculate the transfer timeout. Defaults to 0.
-	* ``XferMode``: Optional BLOB transfer mode. 1 = Push mode (Push BLOB Transfer Mode), 2 = Pull mode (Pull BLOB Transfer Mode). Defaults to Push mode.
+	* ``AppKeyIdx``: 用于发送的应用程序索引。通用应用程序密钥应绑定到分发器和目标节点上的固件更新和 BLOB 传输模型。
+	* ``SlotIdx``: 要发送的本地镜像槽的索引。
+	* ``Group``: 与目标节点通信时要使用的可选组地址。如果省略，固件分发服务器将单独寻址每个目标节点。要在更改其他参数的同时保持单独寻址每个目标节点，请将此参数值设置为 0。
+	* ``PolicyApply``: 对应于更新策略的可选字段。将此设置为 ``true`` 将使固件分发服务器在传输完成后立即应用镜像。
+	* ``TTL``: 可选。发送时要使用的 TTL 值。默认为配置的默认 TTL。
+	* ``TimeoutBase``: 在固件分发过程中用于计算超时值的可选附加值，以 10 秒为增量单位。有关如何使用 ``timeout_base`` 计算传输超时的信息，请参见 :ref:`bluetooth_mesh_blob_timeout`。默认为 0。
+	* ``XferMode``: 可选 BLOB 传输模式。1 = 推模式（推 BLOB 传输模式），2 = 拉模式（拉 BLOB 传输模式）。默认为推模式。
 
 ``mesh models dfd suspend``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Suspends the ongoing distribution.
+	暂停正在进行的分发。
 
 ``mesh models dfd cancel``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Cancel the ongoing distribution.
+	取消正在进行的分发。
 
 ``mesh models dfd apply``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Apply the distributed firmware.
+	应用分发的固件。
 
 ``mesh models dfd fw-get <FwID>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get information about the firmware image uploaded to the server.
+	获取有关上传到服务器的固件镜像的信息。
 
-	* ``FwID``: Firmware ID of the image to get.
+	* ``FwID``: 要获取的镜像的固件 ID。
 
 ``mesh models dfd fw-get-by-idx <Idx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get information about the firmware image uploaded to the server in a specific slot.
+	获取有关上传到服务器特定槽中的固件镜像的信息。
 
-	* ``Idx``: Index of the slot to get the image from.
+	* ``Idx``: 要获取镜像的槽的索引。
 
 ``mesh models dfd fw-delete <FwID>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Delete a firmware image from the server.
+	从服务器中删除固件镜像。
 
-	* ``FwID``: Firmware ID of the image to delete.
+	* ``FwID``: 要删除的镜像的固件 ID。
 
 ``mesh models dfd fw-delete-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Delete all firmware images from the server.
+	从服务器中删除所有固件镜像。
 
 ``mesh models dfd instance-set <ElemIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Use the Firmware Distribution Server model instance on the specified element when using the
-	other Firmware Distribution Server model commands.
+	使用指定元素上的固件分发服务器模型实例来使用其他固件分发服务器模型命令。
 
-	* ``ElemIdx``: The element on which to find the Firmware Distribution Server model instance to use.
+	* ``ElemIdx``: 要查找要使用的固件分发服务器模型实例的元素。
 
 ``mesh models dfd instance-get-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of all Firmware Distribution Server model instances on the node.
+	获取节点上所有固件分发服务器模型实例的列表。
 
 
 .. _bluetooth_mesh_shell_dfu_metadata:
 
-DFU metadata
+DFU 元数据
 ------------
 
-The DFU metadata shell commands allow generating metadata that can be used by a Target node to
-check the firmware before accepting it. The commands are enabled through the
-:kconfig:option:`CONFIG_BT_MESH_SHELL_DFU_METADATA` configuration option.
+DFU 元数据 shell 命令允许生成目标节点可以用来在接受固件之前检查固件的元数据。这些命令通过 :kconfig:option:`CONFIG_BT_MESH_SHELL_DFU_METADATA` 配置选项启用。
 
 ``mesh models dfu metadata comp-clear``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Clear the stored composition data to be used for the Target node.
+	清除存储的要用于目标节点的组合数据。
 
 ``mesh models dfu metadata comp-add <CID> <ProductID> <VendorID> <Crpl> <Features>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Create a header of the Composition Data Page 0.
+	创建组合数据页0的头部。
 
-	* ``CID``: Company identifier assigned by Bluetooth SIG.
-	* ``ProductID``: Vendor-assigned product identifier.
-	* ``VendorID``: Vendor-assigned version identifier.
-	* ``Crpl``: The size of the replay protection list.
-	* ``Features``: Features supported by the node in bit field format:
+	* ``CID``: 蓝牙SIG分配的公司标识符。
+	* ``ProductID``: 供应商分配的产品标识符。
+	* ``VendorID``: 供应商分配的版本标识符。
+	* ``Crpl``: 重放保护列表的大小。
+	* ``Features``: 节点支持的特性（位字段格式）：
 
-		* ``0``: Relay.
-		* ``1``: Proxy.
-		* ``2``: Friend.
-		* ``3``: Low Power.
+		* ``0``: 中继。
+		* ``1``: 代理。
+		* ``2``: 好友。
+		* ``3``: 低功耗。
 
 ``mesh models dfu metadata comp-elem-add <Loc> <NumS> <NumV> {<SigMID>|<VndCID> <VndMID>}...``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	Add element description of the Target node.
+	添加目标节点的元素描述。
 
-	* ``Loc``: Element location.
-	* ``NumS``: Number of SIG models instantiated on the element.
-	* ``NumV``: Number of vendor models instantiated on the element.
-	* ``SigMID``: SIG Model ID.
-	* ``VndCID``: Vendor model company identifier.
-	* ``VndMID``: Vendor model identifier.
+	* ``Loc``: 元素位置。
+	* ``NumS``: 在元素上实例化的SIG模型数量。
+	* ``NumV``: 在元素上实例化的供应商模型数量。
+	* ``SigMID``: SIG模型ID。
+	* ``VndCID``: 供应商模型公司标识符。
+	* ``VndMID``: 供应商模型标识符。
 
 ``mesh models dfu metadata comp-hash-get [<Key(16 hex)>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Generate a hash of the stored Composition Data to be used in metadata.
+	生成存储的组合数据的哈希以在元数据中使用。
 
-	* ``Key``: Optional 128-bit key to be used to generate the hash. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
+	* ``Key``: 可选的128位密钥，用于生成哈希。提供短于16字节的十六进制字符串将填充数组的N个最高有效字节，其余部分为零填充。
 
 ``mesh models dfu metadata encode <Major> <Minor> <Rev> <BuildNum> <Size> <CoreType> <Hash> <Elems> [<UserData>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Encode metadata for the DFU.
+	为DFU编码元数据。
 
-	* ``Major``: Major version of the firmware.
-	* ``Minor``: Minor version of the firmware.
-	* ``Rev``: Revision number of the firmware.
-	* ``BuildNum``: Build number.
-	* ``Size``: Size of the signed bin file.
-	* ``CoreType``: New firmware core type:
+	* ``Major``: 固件的主要版本。
+	* ``Minor``: 固件的次要版本。
+	* ``Rev``: 固件的修订号。
+	* ``BuildNum``: 构建号。
+	* ``Size``: 已签名bin文件的大小。
+	* ``CoreType``: 新固件核心类型：
 
-		* ``1``: Application core.
-		* ``2``: Network core.
-		* ``4``: Applications specific BLOB.
-	* ``Hash``: Hash of the composition data generated using ``mesh models dfu metadata comp-hash-get`` command.
-	* ``Elems``: Number of elements on the new firmware.
-	* ``UserData``: User data supplied with the metadata.
+		* ``1``: 应用程序核心。
+		* ``2``: 网络核心。
+		* ``4``: 应用程序特定BLOB。
+	* ``Hash``: 使用``mesh models dfu metadata comp-hash-get``命令生成的组合数据哈希。
+	* ``Elems``: 新固件上的元素数量。
+	* ``UserData``: 随元数据提供的用户数据。
 
 
-Segmentation and Reassembly (SAR) Configuration Client
+分段和重组（SAR）配置客户端
 ------------------------------------------------------
 
-The SAR Configuration client is an optional mesh model that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_SAR_CFG_CLI` configuration option. The SAR Configuration Client
-model is used to support the functionality of configuring the behavior of the lower transport layer
-of a node that supports the SAR Configuration Server model.
+SAR 配置客户端是一个可选的网状模型，可以通过 :kconfig:option:`CONFIG_BT_MESH_SAR_CFG_CLI` 配置选项启用。SAR 配置客户端模型用于支持配置支持 SAR 配置服务器模型的节点的下层传输层行为的功能。
 
 
 ``mesh models sar tx-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Send SAR Configuration Transmitter Get message.
+	发送 SAR 配置发射器获取消息。
 
 ``mesh models sar tx-set <SegIntStep> <UniRetransCnt> <UniRetransWithoutProgCnt> <UniRetransIntStep> <UniRetransIntInc> <MultiRetransCnt> <MultiRetransInt>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Send SAR Configuration Transmitter Set message.
+	发送 SAR 配置发射器设置消息。
 
-	* ``SegIntStep``: SAR Segment Interval Step state.
-	* ``UniRetransCnt``: SAR Unicast Retransmissions Count state.
-	* ``UniRetransWithoutProgCnt``: SAR Unicast Retransmissions Without Progress Count state.
-	* ``UniRetransIntStep``: SAR Unicast Retransmissions Interval Step state.
-	* ``UniRetransIntInc``: SAR Unicast Retransmissions Interval Increment state.
-	* ``MultiRetransCnt``: SAR Multicast Retransmissions Count state.
-	* ``MultiRetransInt``: SAR Multicast Retransmissions Interval state.
+	* ``SegIntStep``: SAR 段间隔步长状态。
+	* ``UniRetransCnt``: SAR 单播重传计数状态。
+	* ``UniRetransWithoutProgCnt``: SAR 无进度单播重传计数状态。
+	* ``UniRetransIntStep``: SAR 单播重传间隔步长状态。
+	* ``UniRetransIntInc``: SAR 单播重传间隔增量状态。
+	* ``MultiRetransCnt``: SAR 多播重传计数状态。
+	* ``MultiRetransInt``: SAR 多播重传间隔状态。
 
 ``mesh models sar rx-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Send SAR Configuration Receiver Get message.
+	发送 SAR 配置接收器获取消息。
 
 ``mesh models sar rx-set <SegThresh> <AckDelayInc> <DiscardTimeout> <RxSegIntStep> <AckRetransCount>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Send SAR Configuration Receiver Set message.
+	发送 SAR 配置接收器设置消息。
 
-	* ``SegThresh``: SAR Segments Threshold state.
-	* ``AckDelayInc``: SAR Acknowledgment Delay Increment state.
-	* ``DiscardTimeout``: SAR Discard Timeout state.
-	* ``RxSegIntStep``: SAR Receiver Segment Interval Step state.
-	* ``AckRetransCount``: SAR Acknowledgment Retransmissions Count state.
+	* ``SegThresh``: SAR 段阈值状态。
+	* ``AckDelayInc``: SAR 确认延迟增量状态。
+	* ``DiscardTimeout``: SAR 丢弃超时状态。
+	* ``RxSegIntStep``: SAR 接收器段间隔步长状态。
+	* ``AckRetransCount``: SAR 确认重传计数状态。
 
 
-Private Beacon Client
+私有信标客户端
 ---------------------
 
-The Private Beacon Client model is an optional mesh subsystem that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_PRIV_BEACON_CLI` configuration option.
+私有信标客户端模型是一个可选的网状子系统，可以通过 :kconfig:option:`CONFIG_BT_MESH_PRIV_BEACON_CLI` 配置选项启用。
 
 ``mesh models prb priv-beacon-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the target's Private Beacon state. Possible values:
+	获取目标的私有信标状态。可能值：
 
-		* ``0x00``: The node doesn't broadcast Private beacons.
-		* ``0x01``: The node broadcasts Private beacons.
+		* ``0x00``: 节点不广播私有信标。
+		* ``0x01``: 节点广播私有信标。
 
 ``mesh models prb priv-beacon-set <Val(off, on)> <RandInt(10s steps)>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the target's Private Beacon state.
+	设置目标的私有信标状态。
 
-	* ``Val``: Control Private Beacon state.
-	* ``RandInt``: Random refresh interval (in 10-second steps), or 0 to keep current value.
+	* ``Val``: 控制私有信标状态。
+	* ``RandInt``: 随机刷新间隔（以 10 秒为步长），或 0 保持当前值。
 
 ``mesh models prb priv-gatt-proxy-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the target's Private GATT Proxy state. Possible values:
+	获取目标的私有 GATT 代理状态。可能值：
 
-		* ``0x00``: The Private Proxy functionality is supported, but disabled.
-		* ``0x01``: The Private Proxy functionality is enabled.
-		* ``0x02``: The Private Proxy functionality is not supported.
+		* ``0x00``: 私有代理功能受支持，但被禁用。
+		* ``0x01``: 私有代理功能已启用。
+		* ``0x02``: 私有代理功能不受支持。
 
 ``mesh models prb priv-gatt-proxy-set <Val(off, on)>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the target's Private GATT Proxy state.
+	设置目标的私有 GATT 代理状态。
 
-	* ``Val``: New Private GATT Proxy value:
+	* ``Val``: 新的私有 GATT 代理值：
 
-		* ``0x00``: Disable the Private Proxy functionality.
-		* ``0x01``: Enable the Private Proxy functionality.
+		* ``0x00``: 禁用私有代理功能。
+		* ``0x01``: 启用私有代理功能。
 
 ``mesh models prb priv-node-id-get <NetKeyIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the target's Private Node Identity state. Possible values:
+	获取目标的私有节点标识状态。可能值：
 
-		* ``0x00``: The node does not adverstise with the Private Node Identity.
-		* ``0x01``: The node advertises with the Private Node Identity.
-		* ``0x02``: The node doesn't support advertising with the Private Node Identity.
+		* ``0x00``: 节点不使用私有节点标识进行广告。
+		* ``0x01``: 节点使用私有节点标识进行广告。
+		* ``0x02``: 节点不支持使用私有节点标识进行广告。
 
-	* ``NetKeyIdx``: Network index to get the Private Node Identity state of.
+	* ``NetKeyIdx``: 要获取私有节点标识状态的网络索引。
 
 ``mesh models prb priv-node-id-set <NetKeyIdx> <State>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the target's Private Node Identity state.
+	设置目标的私有节点标识状态。
 
-	* ``NetKeyIdx``: Network index to set the Private Node Identity state of.
-	* ``State``: New Private Node Identity value:
+	* ``NetKeyIdx``: 要设置私有节点标识状态的网络索引。
+	* ``State``: 新的私有节点标识值：
 
-		* ``0x00``: Stop advertising with the Private Node Identity.
-		* ``0x01``: Start advertising with the Private Node Identity.
+		* ``0x00``: 停止使用私有节点标识进行广告。
+		* ``0x01``: 开始使用私有节点标识进行广告。
 
 
-Opcodes Aggregator Client
+操作码聚合器客户端
 -------------------------
 
-The Opcodes Aggregator client is an optional Bluetooth Mesh model that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_OP_AGG_CLI` configuration option. The Opcodes Aggregator Client
-model is used to support the functionality of dispatching a sequence of access layer messages to
-nodes supporting the Opcodes Aggregator Server model.
+操作码聚合器客户端是一个可选的蓝牙网状模型，可以通过 :kconfig:option:`CONFIG_BT_MESH_OP_AGG_CLI` 配置选项启用。操作码聚合器客户端模型用于支持向支持操作码聚合器服务器模型的节点分派访问层消息序列的功能。
 
 ``mesh models opagg seq-start <ElemAddr>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Start the Opcodes Aggregator Sequence message. This command initiates the context for
-	aggregating messages and sets the destination address for next shell commands to
-	``elem_addr``.
+	启动操作码聚合器序列消息。此命令初始化聚合消息的上下文，并将下一个 shell 命令的目标地址设置为 ``elem_addr``。
 
-	* ``ElemAddr``: Element address that will process the aggregated opcodes.
+	* ``ElemAddr``: 将处理聚合操作码的元素地址。
 
 ``mesh models opagg seq-send``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Send the Opcodes Aggregator Sequence message. This command completes the procedure, sends
-	the aggregated sequence message to the target node and clears the context.
+	发送操作码聚合器序列消息。此命令完成该过程，将聚合序列消息发送到目标节点并清除上下文。
 
 ``mesh models opagg seq-abort``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Abort the Opcodes Aggregator Sequence message. This command clears the Opcodes Aggregator
-	Client context.
+	中止操作码聚合器序列消息。此命令清除操作码聚合器客户端上下文。
 
 
-Remote Provisioning Client
+远程配置客户端
 --------------------------
 
-The Remote Provisioning Client is an optional Bluetooth Mesh model enabled through the
-:kconfig:option:`CONFIG_BT_MESH_RPR_CLI` configuration option. The Remote Provisioning Client model
-provides support for remote provisioning of devices into a mesh network by using the Remote
-Provisioning Server model.
+远程配置客户端是一个可选的蓝牙网状模型，通过 :kconfig:option:`CONFIG_BT_MESH_RPR_CLI` 配置选项启用。远程配置客户端模型通过使用远程配置服务器模型提供将设备远程配置到网状网络的支持。
 
-This shell module can be used to trigger interaction between Remote Provisioning Clients and Remote
-Provisioning Servers on devices in a mesh network.
+此 shell 模块可用于触发网状网络中设备上远程配置客户端和远程配置服务器之间的交互。
 
 ``mesh models rpr scan <Timeout(s)> [<UUID(1-16 hex)>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Start scanning for unprovisioned devices.
+	开始扫描未配置设备。
 
-	* ``Timeout``: Scan timeout in seconds. Must be at least 1 second.
-	* ``UUID``: Device UUID to scan for. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. If omitted, all devices will be reported.
+	* ``Timeout``: 扫描超时时间（秒）。必须至少为 1 秒。
+	* ``UUID``: 要扫描的设备 UUID。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。如果省略，将报告所有设备。
 
 ``mesh models rpr scan-ext <Timeout(s)> <UUID(1-16 hex)> [<ADType> ... ]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Start the extended scanning for unprovisioned devices.
+	开始扩展扫描未配置设备。
 
-	* ``Timeout``: Scan timeout in seconds. Valid values from :c:macro:`BT_MESH_RPR_EXT_SCAN_TIME_MIN` to :c:macro:`BT_MESH_RPR_EXT_SCAN_TIME_MAX`.
-	* ``UUID``: Device UUID to start extended scanning for. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
+	* ``Timeout``: 扫描超时时间（秒）。有效值从 :c:macro:`BT_MESH_RPR_EXT_SCAN_TIME_MIN` 到 :c:macro:`BT_MESH_RPR_EXT_SCAN_TIME_MAX`。
+	* ``UUID``: 要开始扩展扫描的设备 UUID。提供短于 16 字节的十六进制字符串将填充数组的 N 个最高有效字节，其余部分零填充。
 	* ``ADType``: List of AD types to include in the scan report. Must contain 1 to :kconfig:option:`CONFIG_BT_MESH_RPR_AD_TYPES_MAX` entries.
 
 ``mesh models rpr scan-srv [<ADType> ... ]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Start the extended scanning for the Remote Provisioning Server.
+	开始远程配置服务器的扩展扫描。
 
 	* ``ADType``: List of AD types to include in the scan report. Must contain 1 to :kconfig:option:`CONFIG_BT_MESH_RPR_AD_TYPES_MAX` entries.
 
 ``mesh models rpr scan-caps``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the scanning capabilities of the Remote Provisioning Server.
+	获取远程配置服务器的扫描能力。
 
 ``mesh models rpr scan-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the current scanning state of the Remote Provisioning Server.
+	获取远程配置服务器的当前扫描状态。
 
 ``mesh models rpr scan-stop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Stop any ongoing scanning on the Remote Provisioning Server.
+	停止远程配置服务器上任何正在进行的扫描。
 
 ``mesh models rpr link-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the current link status of the Remote Provisioning Server.
+	获取远程配置服务器的当前链接状态。
 
 ``mesh models rpr link-close``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Close any open links on the Remote Provisioning Server.
+	关闭远程配置服务器上任何打开的链接。
 
 ``mesh models rpr provision-remote <UUID(1-16 hex)> <NetKeyIdx> <Addr>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Provision a mesh node using the PB-Remote provisioning bearer.
+	使用PB-Remote配置承载器配置网状节点。
 
-	* ``UUID``: UUID of the unprovisioned node. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
-	* ``NetKeyIdx``: Network Key Index to give to the unprovisioned node.
-	* ``Addr``: Address to assign to remote device. If ``addr`` is 0, the lowest available address will be chosen.
+	* ``UUID``: 未配置节点的UUID。提供短于16字节的十六进制字符串将填充数组的N个最高有效字节，其余部分为零填充。
+	* ``NetKeyIdx``: 要分配给未配置节点的网络密钥索引。
+	* ``Addr``: 要分配给远程设备的地址。如果``addr``为0，将选择最低可用地址。
 
 ``mesh models rpr reprovision-remote <Addr> [<CompChanged(false, true)>]``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Reprovision a mesh node using the PB-Remote provisioning bearer.
+	使用PB-Remote配置承载器重新配置网状节点。
 
-	* ``Addr``: Address to assign to remote device. If ``addr`` is 0, the lowest available address will be chosen.
-	* ``CompChanged``: The Target node has indicated that its Composition Data has changed.  Defaults to false.
+	* ``Addr``: 要分配给远程设备的地址。如果``addr``为0，将选择最低可用地址。
+	* ``CompChanged``: 目标节点已指示其组合数据已更改。默认为false。
 
 ``mesh models rpr instance-set <ElemIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Use the Remote Provisioning Client model instance on the specified element when using the
-	other Remote Provisioning Client model commands.
+	使用指定元素上的远程配置客户端模型实例在使用其他远程配置客户端模型命令时。
 
-	* ``ElemIdx``: The element on which to find the Remote Provisioning Client model instance to use.
+	* ``ElemIdx``: 要查找要使用的远程配置客户端模型实例的元素。
 
 ``mesh models rpr instance-get-all``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of all Remote Provisioning Client model instances on the node.
+	获取节点上所有远程配置客户端模型实例的列表。
 
 
-Large Composition Data Client
+大型组合数据客户端
 -----------------------------
 
-The Large Composition Data Client is an optional Bluetooth Mesh model enabled through the
-:kconfig:option:`CONFIG_BT_MESH_LARGE_COMP_DATA_CLI` configuration option. The Large Composition Data Client
-model is used to support the functionality of reading pages of Composition Data that do not fit in
-a Config Composition Data Status message, and reading the metadata of the model instances.
+大型组合数据客户端是一个可选的蓝牙网状模型，通过 :kconfig:option:`CONFIG_BT_MESH_LARGE_COMP_DATA_CLI` 配置选项启用。大型组合数据客户端模型用于支持读取不适合配置组合数据状态消息的组合数据页面，以及读取模型实例元数据的功能。
 
 ``mesh models lcd large-comp-data-get <Page> <Offset>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Send the Large Composition Data Get message to query a portion of the Composition Data state of a node.
+	发送大型组合数据获取消息以查询节点组合数据状态的一部分。
 
-	* ``Page``: Page number of the Composition Data.
-	* ``Offset``: Offset within the page.
+	* ``Page``: 组合数据的页号。
+	* ``Offset``: 页内的偏移量。
 
 ``mesh models lcd models-metadata-get <Page> <Offset>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Send the Models Metadata Get message to query a portion of a page of the Models Metadata state.
+	发送模型元数据获取消息以查询模型元数据状态的一页的一部分。
 
-	* ``Page``: Page number of the Models Metadata.
-	* ``Offset``: Offset within the page.
+	* ``Page``: 模型元数据的页号。
+	* ``Offset``: 页内的偏移量。
 
 
-Bridge Configuration Client
+桥接配置客户端
 ---------------------------
 
-The Bridge Configuration Client model is an optional Bluetooth Mesh model that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_BRG_CFG_CLI` configuration option. The model provides functionality
-for configuring the subnet bridge functionality of a mesh node.
+桥接配置客户端模型是一个可选的蓝牙网状模型，可以通过 :kconfig:option:`CONFIG_BT_MESH_BRG_CFG_CLI` 配置选项启用。该模型提供配置网状节点的子网桥接功能的功能。
 
 ``mesh models brg get``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the current Subnet Bridge state.
+	获取当前子网桥状态。
 
 ``mesh models brg set <State(disable, enable)>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Set the Subnet Bridge state.
+	设置子网桥状态。
 
-	* ``State``: Disable or enable the Subnet Bridge functionality.
+	* ``State``: 禁用或启用子网桥功能。
 
 ``mesh models brg table-size-get``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get the current size of the Bridging Table.
+	获取桥接表的当前大小。
 
 ``mesh models brg table-add <Directions> <NetIdx1> <NetIdx2> <Addr1> <Addr2>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Add an entry to the Bridging Table.
+	向桥接表添加条目。
 
-	* ``Directions``: Allowed directions for the bridged traffic. Valid values are:
+	* ``Directions``: 桥接流量的允许方向。有效值为：
 
-		* ``0x01``: Bridging is allowed only for messages with ``Addr1`` as the source address and ``Addr2`` as the destination address.
-		* ``0x02``: Bridging is allowed in both directions.
+		* ``0x01``: 仅允许``Addr1``作为源地址和``Addr2``作为目标地址的消息进行桥接。
+		* ``0x02``: 允许双向桥接。
 
-	* ``NetIdx1``: NetKey index of the first subnet.
-	* ``NetIdx2``: NetKey index of the second subnet.
-	* ``Addr1``: Address of the node in the first subnet.
-	* ``Addr2``: Address of the node in the second subnet.
+	* ``NetIdx1``: 第一个子网的NetKey索引。
+	* ``NetIdx2``: 第二个子网的NetKey索引。
+	* ``Addr1``: 第一个子网中节点的地址。
+	* ``Addr2``: 第二个子网中节点的地址。
 
 ``mesh models brg table-remove <NetIdx1> <NetIdx2> <Addr1> <Addr2>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Remove an entry from the Bridging Table.
+	从桥接表移除条目。
 
-	* ``NetIdx1``: NetKey index of the first subnet.
-	* ``NetIdx2``: NetKey index of the second subnet.
-	* ``Addr1``: Address of the node in the first subnet.
-	* ``Addr2``: Address of the node in the second subnet.
+	* ``NetIdx1``: 第一个子网的NetKey索引。
+	* ``NetIdx2``: 第二个子网的NetKey索引。
+	* ``Addr1``: 第一个子网中节点的地址。
+	* ``Addr2``: 第二个子网中节点的地址。
 
 ``mesh models brg subnets-get <Filter> <NetIdx> <StartIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a filtered set of NetKey index pairs extracted from the Bridging Table.
+	获取从桥接表提取的NetKey索引对的过滤集。
 
-	* ``Filter``: Filter to be applied when reporting pairs of NetKey indexes extracted from the Bridging Table. Allowed values:
+	* ``Filter``: 报告从桥接表提取的NetKey索引对时要应用的过滤器。允许的值：
 
-		* ``0x00``: Report all pairs.
-		* ``0x01``: Report pairs in which the NetKey index of the first subnet matches ``NetIdx``.
-		* ``0x02``: Report pairs in which the NetKey index of the second subnet matches ``NetIdx``.
-		* ``0x03``: Report pairs in which one of the NetKey indexes matches ``NetIdx``.
+		* ``0x00``: 报告所有对。
+		* ``0x01``: 报告第一个子网的NetKey索引与``NetIdx``匹配的对。
+		* ``0x02``: 报告第二个子网的NetKey索引与``NetIdx``匹配的对。
+		* ``0x03``: 报告其中一个NetKey索引与``NetIdx``匹配的对。
 
-	* ``NetIdx``: NetKey index of any of the subnets.
-	* ``StartIdx``: Start offset in units of pairs of NetKey indexes to read.
+	* ``NetIdx``: 任何子网的NetKey索引。
+	* ``StartIdx``: 要读取的NetKey索引对的起始偏移量（单位为对）。
 
 ``mesh models brg table-get <NetIdx1> <NetIdx2> <StartIdx>``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Get a list of addresses and allowed traffic directions of the Bridging Table entries.
+	获取桥接表条目的地址和允许的流量方向的列表。
 
-	* ``NetIdx1``: NetKey index of the first subnet.
-	* ``NetIdx2``: NetKey index of the second subnet.
-	* ``StartIdx``: Start offset to read in units of Bridging Table state entries.
+	* ``NetIdx1``: 第一个子网的NetKey索引。
+	* ``NetIdx2``: 第二个子网的NetKey索引。
+	* ``StartIdx``: 要读取的起始偏移量（单位为桥接表状态条目）。
 
 
-Configuration database
+配置数据库
 ======================
 
-The Configuration database is an optional mesh subsystem that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_CDB` configuration option. The Configuration database is only
-available on provisioner devices, and allows them to store all information about the mesh network.
-To avoid conflicts, there should only be one mesh node in the network with the Configuration
-database enabled. This node is the Configurator, and is responsible for adding new nodes to the
-network and configuring them.
+配置数据库是一个可选的网状子系统，可以通过 :kconfig:option:`CONFIG_BT_MESH_CDB` 配置选项启用。配置数据库仅在配置器设备上可用，并允许它们存储有关网状网络的所有信息。为避免冲突，网络中应该只有一个启用了配置数据库的网状节点。该节点是配置器，负责向网络添加新节点并配置它们。
 
 ``mesh cdb create [NetKey(1-16 hex)]``
 --------------------------------------
 
-	Create a Configuration database.
+	创建配置数据库。
 
-	* ``NetKey``: Optional network key value of the primary network key (NetKeyIndex=0).  Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. Defaults to the default key value if omitted.
+	* ``NetKey``: 主网络密钥（NetKeyIndex=0）的可选网络密钥值。提供短于16字节的十六进制字符串将填充数组的N个最高有效字节，其余部分为零填充。如果省略，默认为默认密钥值。
 
 
 ``mesh cdb clear``
 ------------------
 
-	Clear all data from the Configuration database.
+	清除配置数据库中的所有数据。
 
 
 ``mesh cdb show``
 -----------------
 
-	Show all data in the Configuration database.
+	显示配置数据库中的所有数据。
 
 
 ``mesh cdb node-add <UUID(1-16 hex)> <Addr> <ElemCnt> <NetKeyIdx> [DevKey(1-16 hex)]``
 --------------------------------------------------------------------------------------
 
-	Manually add a mesh node to the configuration database. Note that devices provisioned with
-	``mesh provision`` and ``mesh provision-adv`` will be added automatically if the
-	Configuration Database is enabled and created.
+	手动向配置数据库添加网状节点。请注意，使用``mesh provision``和``mesh provision-adv``配置的设备如果启用并创建了配置数据库，将被自动添加。
 
-	* ``UUID``: 128-bit hexadecimal UUID of the node. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest.
-	* ``Addr``: Unicast address of the node, or 0 to automatically choose the lowest available address.
-	* ``ElemCnt``: Number of elements on the node.
-	* ``NetKeyIdx``: The network key the node was provisioned with.
-	* ``DevKey``: Optional 128-bit device key value for the device. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. If omitted, a random value will be generated.
+	* ``UUID``: 节点的128位十六进制UUID。提供短于16字节的十六进制字符串将填充数组的N个最高有效字节，其余部分为零填充。
+	* ``Addr``: 节点的单播地址，或0以自动选择最低可用地址。
+	* ``ElemCnt``: 节点上的元素数量。
+	* ``NetKeyIdx``: 节点配置的网络密钥。
+	* ``DevKey``: 设备的可选128位设备密钥值。提供短于16字节的十六进制字符串将填充数组的N个最高有效字节，其余部分为零填充。如果省略，将生成随机值。
 
 
 ``mesh cdb node-del <Addr>``
 ----------------------------
 
-	Delete a mesh node from the Configuration database. If possible, the node should be reset
-	with ``mesh reset`` before it is deleted from the Configuration database, to avoid
-	unexpected behavior and uncontrolled access to the network.
+	从配置数据库中删除网状节点。如果可能，应使用``mesh reset``在从配置数据库删除节点之前重置该节点，以避免意外行为和对网络的不受控访问。
 
-	* ``Addr`` Address of the node to delete.
+	* ``Addr`` 要删除的节点的地址。
 
 
 ``mesh cdb subnet-add <NetKeyIdx> [<NetKey(1-16 hex)>]``
 --------------------------------------------------------
 
-	Add a network key to the Configuration database. The network key can later be passed to mesh
-	nodes in the network. Note that adding a key to the Configuration database does not
-	automatically add it to the local node's list of known network keys.
+	向配置数据库添加网络密钥。网络密钥可以稍后传递给网络中的网状节点。请注意，向配置数据库添加密钥不会自动将其添加到本地节点的已知网络密钥列表中。
 
-	* ``NetKeyIdx``: Key index of the network key to add.
-	* ``NetKey``: Optional 128-bit network key value. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. If omitted, a random value will be generated.
+	* ``NetKeyIdx``: 要添加的网络密钥的密钥索引。
+	* ``NetKey``: 可选的128位网络密钥值。提供短于16字节的十六进制字符串将填充数组的N个最高有效字节，其余部分为零填充。如果省略，将生成随机值。
 
 
 ``mesh cdb subnet-del <NetKeyIdx>``
 -----------------------------------
 
-	Delete a network key from the Configuration database.
+	从配置数据库中删除网络密钥。
 
-	* ``NetKeyIdx``: Key index of the network key to delete.
+	* ``NetKeyIdx``: 要删除的网络密钥的密钥索引。
 
 
 ``mesh cdb app-key-add <NetKeyIdx> <AppKeyIdx> [<AppKey(1-16 hex)>]``
 ---------------------------------------------------------------------
 
-	Add an application key to the Configuration database. The application key can later be
-	passed to mesh nodes in the network. Note that adding a key to the Configuration database
-	does not automatically add it to the local node's list of known application keys.
+	向配置数据库添加应用程序密钥。应用程序密钥可以稍后传递给网络中的网状节点。请注意，向配置数据库添加密钥不会自动将其添加到本地节点的已知应用程序密钥列表中。
 
-	* ``NetKeyIdx``: Network key index the application key is bound to.
-	* ``AppKeyIdx``: Key index of the application key to add.
-	* ``AppKey``: Optional 128-bit application key value. Providing a hex-string shorter than 16 bytes will populate the N most significant bytes of the array and zero-pad the rest. If omitted, a random value will be generated.
+	* ``NetKeyIdx``: 应用程序密钥绑定的网络密钥索引。
+	* ``AppKeyIdx``: 要添加的应用程序密钥的密钥索引。
+	* ``AppKey``: 可选的128位应用程序密钥值。提供短于16字节的十六进制字符串将填充数组的N个最高有效字节，其余部分为零填充。如果省略，将生成随机值。
 
 
 ``mesh cdb app-key-del <AppKeyIdx>``
 ------------------------------------
 
-	Delete an application key from the Configuration database.
+	从配置数据库中删除应用程序密钥。
 
-	* ``AppKeyIdx``: Key index of the application key to delete.
+	* ``AppKeyIdx``: 要删除的应用程序密钥的密钥索引。
 
 
-On-Demand Private GATT Proxy Client
+按需私有 GATT 代理客户端
 -----------------------------------
 
-The On-Demand Private GATT Proxy Client model is an optional mesh subsystem that can be enabled
-through the :kconfig:option:`CONFIG_BT_MESH_OD_PRIV_PROXY_CLI` configuration option.
+按需私有 GATT 代理客户端模型是一个可选的网状子系统，可以通过 :kconfig:option:`CONFIG_BT_MESH_OD_PRIV_PROXY_CLI` 配置选项启用。
 
 ``mesh models od_priv_proxy od-priv-gatt-proxy [Dur(s)]``
 ---------------------------------------------------------
 
-	Set the On-Demand Private GATT Proxy state on active target, or fetch the value of this
-	state from it.
+	在活动目标上设置按需私有GATT代理状态，或从中获取此状态的值。
 
-	* ``Dur``: If given, set the state of On-Demand Private GATT Proxy to this value in seconds.  Fetch this value otherwise.
+	* ``Dur``: 如果给出，将按需私有GATT代理状态设置为该值（秒）。否则获取此值。
 
 
-Solicitation PDU RPL Client
+征求 PDU RPL 客户端
 ---------------------------
 
-The Solicitation PDU RPL Client model is an optional mesh subsystem that can be enabled through the
-:kconfig:option:`CONFIG_BT_MESH_SOL_PDU_RPL_CLI` configuration option.
+征求 PDU RPL 客户端模型是一个可选的网状子系统，可以通过 :kconfig:option:`CONFIG_BT_MESH_SOL_PDU_RPL_CLI` 配置选项启用。
 
 ``mesh models sol_pdu_rpl sol-pdu-rpl-clear <RngStart> <Ackd> [RngLen]``
 ------------------------------------------------------------------------
 
-	Clear active target's solicitation replay protection list (SRPL) in given range of
-	solicitation source (SSRC) addresses.
+	清除活动目标在给定征求源（SSRC）地址范围内的征求重放保护列表（SRPL）。
 
-	* ``RngStart``: Start address of the SSRC range.
-	* ``Ackd``: This argument decides on whether an acknowledged or unacknowledged message will be sent.
-	* ``RngLen``: Range length for the SSRC addresses to be cleared from the solicitiation RPL list. This parameter is optional; if absent, only a single SSRC address will be cleared.
+	* ``RngStart``: SSRC 范围的起始地址。
+	* ``Ackd``: 此参数决定是否将发送确认或未确认的消息。
+	* ``RngLen``: 要从征求 RPL 列表中清除的 SSRC 地址的范围长度。此参数是可选的；如果不存在，仅清除单个 SSRC 地址。
 
 
-Frame statistic
+帧统计
 ===============
 
 ``mesh stat get``
 -----------------
 
-	Get the frame statistic. The command prints numbers of received frames, as well as numbers
-	of planned and succeeded transmission attempts.
+	获取帧统计信息。该命令打印接收到的帧数，以及计划中和成功的传输尝试次数。
 
 
 ``mesh stat clear``
 -------------------
 
-	Clear all statistics collected before.
+	清除之前收集的所有统计信息。

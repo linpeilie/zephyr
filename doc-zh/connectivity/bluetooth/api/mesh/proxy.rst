@@ -1,64 +1,35 @@
 .. _bt_mesh_proxy:
 
-Proxy
+代理
 #####
 
-The Proxy feature allows legacy devices like phones to access the Bluetooth Mesh network through
-GATT. The Proxy feature is only compiled in if the :kconfig:option:`CONFIG_BT_MESH_GATT_PROXY`
-option is set. The Proxy feature state is controlled by the :ref:`bluetooth_mesh_models_cfg_srv`,
-and the initial value can be set with :c:member:`bt_mesh_cfg_srv.gatt_proxy`.
+代理功能允许传统设备（如手机）通过 GATT 访问蓝牙网状网络。代理功能只有在设置了 :kconfig:option:`CONFIG_BT_MESH_GATT_PROXY` 选项时才被编译。代理功能状态由 :ref:`bluetooth_mesh_models_cfg_srv` 控制，初始值可以通过 :c:member:`bt_mesh_cfg_srv.gatt_proxy` 设置。
 
-Nodes with the Proxy feature enabled can advertise with Network Identity and Node Identity,
-which is controlled by the :ref:`bluetooth_mesh_models_cfg_cli`.
+启用代理功能的节点可以使用网络标识和节点标识进行广播，这由 :ref:`bluetooth_mesh_models_cfg_cli` 控制。
 
-The GATT Proxy state indicates if the Proxy feature is supported.
+GATT 代理状态指示是否支持代理功能。
 
-Private Proxy
+私有代理
 *************
 
-A node supporting the Proxy feature and the :ref:`bluetooth_mesh_models_priv_beacon_srv` model can
-advertise with Private Network Identity and Private Node Identity types, which is controlled by the
-:ref:`bluetooth_mesh_models_priv_beacon_cli`. By advertising with this set of identification types,
-the node allows the legacy device to connect to the network over GATT while maintaining the
-privacy of the network.
+支持代理功能和 :ref:`bluetooth_mesh_models_priv_beacon_srv` 模型的节点可以使用私有网络标识和私有节点标识类型进行广播，这由 :ref:`bluetooth_mesh_models_priv_beacon_cli` 控制。通过使用这组标识类型进行广播，节点允许传统设备通过 GATT 连接到网络，同时保持网络的隐私。
 
-The Private GATT Proxy state indicates whether the Private Proxy functionality is supported.
+私有 GATT 代理状态指示是否支持私有代理功能。
 
-Proxy Solicitation
+代理征求
 ******************
 
-In the case where both GATT Proxy and Private GATT Proxy states are disabled on a node, a legacy
-device cannot connect to it. A node supporting the :ref:`bluetooth_mesh_od_srv` may however be
-solicited to advertise connectable advertising events without enabling the Private GATT Proxy state.
-To solicit the node, the legacy device can send a Solicitation PDU by calling the
-:func:`bt_mesh_proxy_solicit` function.  To enable this feature, the device must to be compiled with
-the :kconfig:option:`CONFIG_BT_MESH_PROXY_SOLICITATION` option set.
+如果节点上的 GATT 代理和私有 GATT 代理状态都被禁用，传统设备无法连接到它。但是，支持 :ref:`bluetooth_mesh_od_srv` 的节点可以被征求以在未启用私有 GATT 代理状态的情况下广播可连接广告事件。要征求节点，传统设备可以通过调用 :func:`bt_mesh_proxy_solicit` 函数来发送征求 PDU。要启用此功能，设备必须使用 :kconfig:option:`CONFIG_BT_MESH_PROXY_SOLICITATION` 选项进行编译。
 
-Solicitation PDUs are non-mesh, non-connectable, undirected advertising messages containing Proxy
-Solicitation UUID, encrypted with the network key of the subnet that the legacy device wants to
-connect to. The PDU contains the source address of the legacy device and a sequence number. The
-sequence number is maintained by the legacy device and is incremented for every new Solicitation PDU
-sent.
+征求 PDU 是包含代理征求 UUID 的非网状、不可连接、非定向广告消息，使用传统设备想要连接的子网的网络密钥加密。PDU 包含传统设备的源地址和序列号。序列号由传统设备维护，并在每次发送新的征求 PDU 时递增。
 
-Each node supporting the Solicitation PDU reception holds its own Solicitation Replay Protection
-List (SRPL).  The SRPL protects the solicitation mechanism from replay attacks by storing
-solicitation sequence number (SSEQ) and solicitation source (SSRC) pairs of valid Solicitation PDUs
-processed by the node. The delay between updating the SRPL and storing the change to the persistent
-storage is defined by :kconfig:option:`CONFIG_BT_MESH_RPL_STORE_TIMEOUT`.
+每个支持征求 PDU 接收的节点都维护自己的征求重放保护列表 (SRPL)。SRPL 通过存储节点处理的有效征求 PDU 的征求序列号 (SSEQ) 和征求源 (SSRC) 对来保护征求机制免受重放攻击。更新 SRPL 和将更改存储到持久存储之间的延迟由 :kconfig:option:`CONFIG_BT_MESH_RPL_STORE_TIMEOUT` 定义。
 
-The Solicitation PDU RPL Configuration models, :ref:`bluetooth_mesh_srpl_cli` and
-:ref:`bluetooth_mesh_srpl_srv`, provide the functionality of saving and clearing SRPL entries.  A
-node that supports the Solicitation PDU RPL Configuration Client model can clear a section of the
-SRPL on the target by calling the :func:`bt_mesh_sol_pdu_rpl_clear` function.  Communication between
-the Solicitation PDU RPL Configuration Client and Server is encrypted using the application key,
-therefore, the Solicitation PDU RPL Configuration Client can be instantiated on any device in the
-network.
+征求 PDU RPL 配置模型 :ref:`bluetooth_mesh_srpl_cli` 和 :ref:`bluetooth_mesh_srpl_srv` 提供了保存和清除 SRPL 条目的功能。支持征求 PDU RPL 配置客户端模型的节点可以通过调用 :func:`bt_mesh_sol_pdu_rpl_clear` 函数来清除目标上的 SRPL 部分。征求 PDU RPL 配置客户端和服务器之间的通信使用应用程序密钥加密，因此征求 PDU RPL 配置客户端可以在网络中的任何设备上实例化。
 
-When the node receives the Solicitation PDU and successfully authenticates it, it will start
-advertising connectable advertisements with the Private Network Identity type. The duration of the
-advertisement can be configured by the On-Demand Private Proxy Client model.
+当节点接收征求 PDU 并成功认证它时，它将开始使用私有网络标识类型广播可连接广告。广告的持续时间可以通过按需私有代理客户端模型进行配置。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_proxy

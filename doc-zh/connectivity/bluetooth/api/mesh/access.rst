@@ -1,275 +1,227 @@
 .. _bluetooth_mesh_access:
 
-Access layer
-############
+接入层
+######
 
-The access layer is the application's interface to the Bluetooth Mesh network.
-The access layer provides mechanisms for compartmentalizing the node behavior
-into elements and models, which are implemented by the application.
+接入层是应用程序与蓝牙网状网络的接口。
+接入层提供了将节点行为划分为元素和模型的机制，
+这些由应用程序实现。
 
-Mesh models
-***********
+网状模型
+********
 
-The functionality of a mesh node is represented by models. A model implements
-a single behavior the node supports, like being a light, a sensor or a
-thermostat. The mesh models are grouped into *elements*. Each element is
-assigned its own unicast address, and may only contain one of each type of
-model. Conventionally, each element represents a single aspect of the mesh
-node behavior. For instance, a node that contains a sensor, two lights and a
-power outlet would spread this functionality across four elements, with each
-element instantiating all the models required for a single aspect of the
-supported behavior.
+网状节点的功能由模型表示。模型实现节点支持的单一行为，
+如灯、传感器或恒温器。网状模型被分组为*元素*。每个元素
+被分配自己的单播地址，并且每种类型的模型只能包含一个。
+通常，每个元素代表网状节点行为的单个方面。例如，包含一个传感器、
+两个灯和一个电源插座的节点将把此功能分布在四个元素上，每个元素
+实例化支持行为的单个方面所需的所有模型。
 
-The node's element and model structure is specified in the node composition
-data, which is passed to :c:func:`bt_mesh_init` during initialization. The
-Bluetooth SIG have defined a set of foundation models (see
-:ref:`bluetooth_mesh_models`) and a set of models for implementing common
-behavior in the `Bluetooth Mesh Model Specification
-<https://www.bluetooth.com/specifications/mesh-specifications/>`_. All models
-not specified by the Bluetooth SIG are vendor models, and must be tied to a
-Company ID.
+节点的元素和模型结构在节点组成数据中指定，
+在初始化期间传递给 :c:func:`bt_mesh_init`。蓝牙 SIG 定义了一组基础模型（参见
+:ref:`bluetooth_mesh_models`）和一组用于在 `蓝牙网状模型规范
+<https://www.bluetooth.com/specifications/mesh-specifications/>`_ 中实现常见行为的模型。所有未由
+蓝牙 SIG 指定的模型都是供应商模型，必须绑定到公司 ID。
 
-Mesh models have several parameters that can be configured either through
-initialization of the mesh stack or with the
-:ref:`bluetooth_mesh_models_cfg_srv`:
+网状模型有几个参数可以通过网状堆栈的初始化或通过
+:ref:`bluetooth_mesh_models_cfg_srv` 进行配置：
 
-Opcode list
+操作码列表
+==========
+
+操作码列表包含模型可以接收的所有消息操作码，以及
+最小可接受的有效载荷长度和传递给它们的回调。模型
+可以支持任意数量的操作码，但每个操作码在每个元素中只能由一个
+模型列出。
+
+完整的操作码列表必须传递给组合数据中模型结构中的模型，
+并且不能在运行时更改。操作码列表的结尾由特殊的 :c:macro:`BT_MESH_MODEL_OP_END` 条目确定。此条目
+必须始终存在于操作码列表中，除非列表为空。在那种情况下，应使用 :c:macro:`BT_MESH_MODEL_NO_OPS` 来替代
+操作码列表定义。
+
+AppKey 列表
 ===========
 
-The opcode list contains all message opcodes the model can receive, as well as
-the minimum acceptable payload length and the callback to pass them to. Models
-can support any number of opcodes, but each opcode can only be listed by one
-model in each element.
+AppKey 列表包含模型可以接收消息的所有应用密钥。只有使用 AppKey 列表中
+应用密钥加密的消息才会传递给模型。
 
-The full opcode list must be passed to the model structure in the composition
-data, and cannot be changed at runtime. The end of the opcode list is
-determined by the special :c:macro:`BT_MESH_MODEL_OP_END` entry. This entry
-must always be present in the opcode list, unless the list is empty. In that
-case, :c:macro:`BT_MESH_MODEL_NO_OPS` should be used in place of a proper
-opcode list definition.
+每个模型可以持有的最大支持应用密钥数量通过 :kconfig:option:`CONFIG_BT_MESH_MODEL_KEY_COUNT` 配置
+选项进行配置。AppKey 列表的内容由
+:ref:`bluetooth_mesh_models_cfg_srv` 管理。
 
-AppKey list
-===========
+订阅列表
+========
 
-The AppKey list contains all the application keys the model can receive
-messages on. Only messages encrypted with application keys in the AppKey list
-will be passed to the model.
+模型将处理寻址到其元素单播地址的所有消息（假设使用的应用密钥
+存在于 AppKey 列表中）。此外，模型将处理寻址到其订阅列表中任何组或
+虚拟地址的数据包。这允许节点通过单个消息寻址
+整个网状网络中的多个节点。
 
-The maximum number of supported application keys each model can hold is
-configured with the :kconfig:option:`CONFIG_BT_MESH_MODEL_KEY_COUNT` configuration
-option. The contents of the AppKey list is managed by the
-:ref:`bluetooth_mesh_models_cfg_srv`.
+每个模型可以持有的订阅列表中支持的最大地址数量通过 :kconfig:option:`CONFIG_BT_MESH_MODEL_GROUP_COUNT`
+配置选项进行配置。订阅列表的内容由
+:ref:`bluetooth_mesh_models_cfg_srv` 管理。
 
-Subscription list
-=================
+模型发布
+========
 
-A model will process all messages addressed to the unicast address of their
-element (given that the utilized application key is present in the AppKey
-list). Additionally, the model will process packets addressed to any group or
-virtual address in its subscription list. This allows nodes to address
-multiple nodes throughout the mesh network with a single message.
+模型可以通过两种方式发送消息：
 
-The maximum number of supported addresses in the Subscription list each model
-can hold is configured with the :kconfig:option:`CONFIG_BT_MESH_MODEL_GROUP_COUNT`
-configuration option. The contents of the subscription list is managed by the
-:ref:`bluetooth_mesh_models_cfg_srv`.
+* 通过在 :c:struct:`bt_mesh_msg_ctx` 中指定一组消息参数，
+  并调用 :c:func:`bt_mesh_model_send`。
+* 通过设置 :c:struct:`bt_mesh_model_pub` 结构并调用
+  :c:func:`bt_mesh_model_publish`。
 
-Model publication
-=================
+当使用 :c:func:`bt_mesh_model_publish` 发布消息时，模型
+将使用由 :ref:`bluetooth_mesh_models_cfg_srv` 配置的发布参数。这是发送
+无提示模型消息的推荐方式，因为它将选择
+消息参数的责任传递给网络管理员，网络管理员可能比单个节点
+更了解网状网络。
 
-The models may send messages in two ways:
+为了支持使用发布参数进行发布，模型必须为发布分配
+数据包缓冲区，并将其传递给
+:c:member:`bt_mesh_model_pub.msg`。配置服务器还可以为发布消息设置周期
+发布。为了支持这一点，模型必须填充 :c:member:`bt_mesh_model_pub.update` 回调。在
+消息发布之前会调用 :c:member:`bt_mesh_model_pub.update` 回调，允许模型更改有效载荷以反映其
+当前状态。
 
-* By specifying a set of message parameters in a :c:struct:`bt_mesh_msg_ctx`,
-  and calling :c:func:`bt_mesh_model_send`.
-* By setting up a :c:struct:`bt_mesh_model_pub` structure and calling
-  :c:func:`bt_mesh_model_publish`.
+通过将 :c:member:`bt_mesh_model_pub.retr_update` 设置为 1，模型可以
+配置 :c:member:`bt_mesh_model_pub.update` 回调在每次重传时触发。例如，这可以由使用
+延迟参数的模型使用，每次重传可以调整该参数。
+:c:func:`bt_mesh_model_pub_is_retransmission` 函数可以
+用于区分首次发布和重传。
+:c:macro:`BT_MESH_PUB_MSG_TOTAL` 和 :c:macro:`BT_MESH_PUB_MSG_NUM` 宏
+可以用于返回总传输数和一次发布间隔内的重传
+数。
 
-When publishing messages with :c:func:`bt_mesh_model_publish`, the model
-will use the publication parameters configured by the
-:ref:`bluetooth_mesh_models_cfg_srv`. This is the recommended way to send
-unprompted model messages, as it passes the responsibility of selecting
-message parameters to the network administrator, which likely knows more about
-the mesh network than the individual nodes will.
+扩展模型
+========
 
-To support publishing with the publication parameters, the model must allocate
-a packet buffer for publishing, and pass it to
-:c:member:`bt_mesh_model_pub.msg`. The Config Server may also set up period
-publication for the publication message. To support this, the model must
-populate the :c:member:`bt_mesh_model_pub.update` callback. The
-:c:member:`bt_mesh_model_pub.update` callback will be called right before the
-message is published, allowing the model to change the payload to reflect its
-current state.
+蓝牙网状规范允许网状模型相互扩展。
+当一个模型扩展另一个模型时，它继承该模型的功能，扩展
+可以用于从简单模型构建复杂模型，
+利用现有模型功能来避免定义新操作码。
+模型可以扩展来自任何元素的任意数量的模型。当一个模型
+在同一个元素中扩展另一个模型时，两个模型将共享订阅
+列表。网状堆栈通过将两个模型的订阅列表
+合并为一个来实现这一点，结合模型总共可以拥有的
+订阅数量。模型可以扩展扩展其他模型的模型，创建"扩展
+树"。扩展树中的所有模型在每个
+元素上共享一个订阅列表。
 
-By setting :c:member:`bt_mesh_model_pub.retr_update` to 1, the model can
-configure the :c:member:`bt_mesh_model_pub.update` callback to be triggered
-on every retransmission. This can, for example, be used by models that make
-use of a Delay parameter, which can be adjusted for every retransmission.
-The :c:func:`bt_mesh_model_pub_is_retransmission` function can be
-used to differentiate a first publication and a retransmission.
-The :c:macro:`BT_MESH_PUB_MSG_TOTAL` and :c:macro:`BT_MESH_PUB_MSG_NUM` macros
-can be used to return total number of transmissions and the retransmission
-number within one publication interval.
+模型扩展通过在初始化期间调用 :c:func:`bt_mesh_model_extend` 来完成。一个模型只能被另一个模型扩展，
+扩展不能是循环的。请注意，节点状态的绑定和模型之间的其他
+关系必须由模型实现定义。
 
-Extended models
-===============
+模型扩展概念在接入层数据包处理中增加了一些开销，必须通过
+:kconfig:option:`CONFIG_BT_MESH_MODEL_EXTENSIONS` 显式启用才能生效。
 
-The Bluetooth Mesh specification allows the mesh models to extend each other.
-When a model extends another, it inherits that model's functionality, and
-extension can be used to construct complex models out of simple ones,
-leveraging the existing model functionality to avoid defining new opcodes.
-Models may extend any number of models, from any element. When one model
-extends another in the same element, the two models will share subscription
-lists. The mesh stack implements this by merging the subscription lists of the
-two models into one, combining the number of subscriptions the models can have
-in total. Models may extend models that extend others, creating an "extension
-tree". All models in an extension tree share a single subscription list per
-element it spans.
+模型数据存储
+============
 
-Model extensions are done by calling :c:func:`bt_mesh_model_extend` during
-initialization. A model can only be extended by one other model, and
-extensions cannot be circular. Note that binding of node states and other
-relationships between the models must be defined by the model implementations.
+网状模型可能与每个需要持久存储的模型实例相关联的数据。访问 API 提供了一种存储此
+数据的机制，利用内部模型实例编码方案。模型可以通过调用
+:c:func:`bt_mesh_model_data_store` 为每个实例存储一个用户定义的数据条目。为了能够在
+设备下次重启时读出数据，模型的
+:c:member:`bt_mesh_model_cb.settings_set` 回调必须被填充。在持久存储中找到模型特定数据时，将调用此
+回调。模型可以通过调用作为
+回调参数传递的 ``read_cb`` 来检索数据。详细信息请参见 :ref:`settings_api` 模块文档。
 
-The model extension concept adds some overhead in the access layer packet
-processing, and must be explicitly enabled with
-:kconfig:option:`CONFIG_BT_MESH_MODEL_EXTENSIONS` to have any effect.
+当模型数据频繁更改时，每次更改都存储可能会导致
+闪存磨损增加。为了减少磨损，模型可以通过调用 :c:func:`bt_mesh_model_data_store_schedule` 来推迟存储
+数据。堆栈将调度一个延迟由
+:kconfig:option:`CONFIG_BT_MESH_STORE_TIMEOUT` 选项定义的工作项。当工作项
+运行时，堆栈将为每个请求存储数据的模型调用 :c:member:`bt_mesh_model_cb.pending_store`
+回调。然后模型可以调用 :c:func:`bt_mesh_model_data_store` 来存储数据。
 
-Model data storage
-==================
+如果启用了 :kconfig:option:`CONFIG_BT_MESH_SETTINGS_WORKQ`，则
+:c:member:`bt_mesh_model_cb.pending_store` 回调从专用
+线程调用。这允许堆栈在存储模型数据的同时处理其他传入和传出消息。建议在需要存储大量数据时使用此选项和
+:c:func:`bt_mesh_model_data_store_schedule` 函数。
 
-Mesh models may have data associated with each model instance that needs to be
-stored persistently. The access API provides a mechanism for storing this
-data, leveraging the internal model instance encoding scheme. Models can store
-one user defined data entry per instance by calling
-:c:func:`bt_mesh_model_data_store`. To be able to read out the data the
-next time the device reboots, the model's
-:c:member:`bt_mesh_model_cb.settings_set` callback must be populated. This
-callback gets called when model specific data is found in the persistent
-storage. The model can retrieve the data by calling the ``read_cb`` passed as
-a parameter to the callback. See the :ref:`settings_api` module documentation for
-details.
+组合数据
+========
 
-When model data changes frequently, storing it on every change may lead to
-increased wear of flash. To reduce the wear, the model can postpone storing of
-data by calling :c:func:`bt_mesh_model_data_store_schedule`. The stack will
-schedule a work item with delay defined by the
-:kconfig:option:`CONFIG_BT_MESH_STORE_TIMEOUT` option. When the work item is
-running, the stack will call the :c:member:`bt_mesh_model_cb.pending_store`
-callback for every model that has requested storing of data. The model can
-then call :c:func:`bt_mesh_model_data_store` to store the data.
+组合数据提供有关网状设备的信息。
+设备的组合数据包含有关设备上元素、
+支持模型和其他特征的信息。组合
+数据被拆分为不同的页面，每个页面包含有关设备的特定特征
+信息。为了访问此信息，用户可以使用 :ref:`bluetooth_mesh_models_cfg_srv` 模型，如果支持，
+或者使用 :ref:`bluetooth_mesh_lcd_srv` 模型。
 
-If :kconfig:option:`CONFIG_BT_MESH_SETTINGS_WORKQ` is enabled, the
-:c:member:`bt_mesh_model_cb.pending_store` callback is called from a dedicated
-thread. This allows the stack to process other incoming and outgoing messages
-while model data is being stored. It is recommended to use this option and the
-:c:func:`bt_mesh_model_data_store_schedule` function when large amount of data
-needs to be stored.
+组合数据页面 0
+---------------
 
-Composition Data
-================
+组合数据页面 0 提供有关设备的基本信息，对于所有网状设备都是必需的。它包含元素和模型组成、
+支持的功能和制造商信息。
 
-The Composition Data provides information about a mesh device.
-A device's Composition Data holds information about the elements on the
-device, the models that it supports, and other features. The Composition
-Data is split into different pages, where each page contains specific feature
-information about the device. In order to access this information, the user
-may use the :ref:`bluetooth_mesh_models_cfg_srv` model or, if supported,
-the :ref:`bluetooth_mesh_lcd_srv` model.
+组合数据页面 1
+---------------
 
-Composition Data Page 0
------------------------
+组合数据页面 1 提供有关模型之间关系的信息，对于所有网状设备都是必需的。一个模型可以扩展和/或对应一个
+或多个模型。模型可以通过调用 :c:func:`bt_mesh_model_extend` 扩展另一个模型，
+或者通过调用 :c:func:`bt_mesh_model_correspond` 对应另一个模型。
+:kconfig:option:`CONFIG_BT_MESH_MODEL_EXTENSION_LIST_SIZE` 指定在设备上组合中可以存储多少模型
+关系，此数字应反映 :c:func:`bt_mesh_model_extend` 和 :c:func:`bt_mesh_model_correspond` 调用的数量。
 
-Composition Data Page 0 provides the fundamental information about a device, and
-is mandatory for all mesh devices. It contains the element and model composition,
-the supported features, and manufacturer information.
+组合数据页面 2
+---------------
 
-Composition Data Page 1
------------------------
+组合数据页面 2 为支持的网状配置文件提供信息。网状配置文件规范定义了希望支持特定
+蓝牙 SIG 定义配置文件的设备的产品要求。当前支持的配置文件可以在
+3.12 章节中的 `蓝牙 SIG 分配编号
+<https://www.bluetooth.com/specifications/assigned-numbers/uri-scheme-name-string-mapping/>`_ 中找到。
+组合数据页面 2 仅对于声明支持一个或多个
+网状配置文件的设备才是必需的。
 
-Composition Data Page 1 provides information about the relationships between models,
-and is mandatory for all mesh devices. A model may extend and/or correspond to one
-or more models. A model can extend another model by calling :c:func:`bt_mesh_model_extend`,
-or correspond to another model by calling :c:func:`bt_mesh_model_correspond`.
-:kconfig:option:`CONFIG_BT_MESH_MODEL_EXTENSION_LIST_SIZE` specifies how many model
-relations can be stored in the composition on a device, and this number should reflect the
-number of :c:func:`bt_mesh_model_extend` and :c:func:`bt_mesh_model_correspond` calls.
-
-Composition Data Page 2
------------------------
-
-Composition Data Page 2 provides information for supported mesh profiles. Mesh profile
-specifications define product requirements for devices that want to support a specific
-Bluetooth SIG defined profile. Currently supported profiles can be found in section
-3.12 in `Bluetooth SIG Assigned Numbers
-<https://www.bluetooth.com/specifications/assigned-numbers/uri-scheme-name-string-mapping/>`_.
-Composition Data Page 2 is only mandatory for devices that claim support for one or more
-mesh profile(s).
-
-Composition Data Pages 128, 129 and 130
+组合数据页面 128、129 和 130
 ---------------------------------------
 
-Composition Data Pages 128, 129 and 130 mirror Composition Data Pages 0, 1 and 2 respectively.
-They are used to represent the new content of the mirrored pages when the Composition Data will
-change after a firmware update. See :ref:`bluetooth_mesh_dfu_srv_comp_data_and_models_metadata`
-for details.
+组合数据页面 128、129 和 130 分别镜像组合数据页面 0、1 和 2。它们用于表示镜像页面在固件更新后组合数据
+更改时的新内容。详细信息请参见 :ref:`bluetooth_mesh_dfu_srv_comp_data_and_models_metadata`。
 
-Delayable messages
-==================
+可延迟消息
+==========
 
-The delayable message functionality is enabled with Kconfig option
-:kconfig:option:`CONFIG_BT_MESH_ACCESS_DELAYABLE_MSG`.
-This is an optional functionality that implements specification recommendations for
-messages that are transmitted by a model in a response to a received message, also called
-response messages.
+可延迟消息功能通过 Kconfig 选项 :kconfig:option:`CONFIG_BT_MESH_ACCESS_DELAYABLE_MSG` 启用。
+这是一个可选功能，实现了规范对模型响应接收消息而传输的消息（也称为
+响应消息）的建议。
 
-Response messages should be sent with the following random delays:
+响应消息应通过以下随机延迟发送：
 
-* Between 20 and 50 milliseconds if the received message was sent
-  to a unicast address
-* Between 20 and 500 milliseconds if the received message was sent
-  to a group or virtual address
+* 如果接收到的消息发送到单播地址，则在 20 到 50 毫秒之间
+* 如果接收到的消息发送到组或虚拟地址，则在 20 到 500 毫秒之间
 
-The delayable message functionality is triggered if the :c:member:`bt_mesh_msg_ctx.rnd_delay`
-flag is set.
-The delayable message functionality stores messages in the local memory while they are
-waiting for the random delay expiration.
+如果设置了 :c:member:`bt_mesh_msg_ctx.rnd_delay`
+标志，则触发可延迟消息功能。
+可延迟消息功能将消息存储在本地内存中，同时它们在等待随机延迟到期。
 
-If the transport layer doesn't have sufficient memory to send a message at the moment
-the random delay expires, the message is postponed for another 10 milliseconds.
-If the transport layer cannot send a message for any other reason, the delayable message
-functionality raises the :c:member:`bt_mesh_send_cb.start` callback with a transport layer
-error code.
+如果传输层在随机延迟到期时没有足够的内存来发送消息，则消息将推迟另外 10 毫秒。
+如果传输层由于任何其他原因无法发送消息，可延迟消息
+功能会使用传输层错误码触发 :c:member:`bt_mesh_send_cb.start` 回调。
 
-If the delayable message functionality cannot find enough free memory to store an incoming
-message, it will send messages with delay close to expiration to free memory.
+如果可延迟消息功能找不到足够的空闲内存来存储传入
+消息，它将发送延迟接近到期以释放内存的消息。
 
-When the mesh stack is suspended or reset, messages not yet sent are removed and
-the :c:member:`bt_mesh_send_cb.start` callback is raised with an error code.
+当网状堆栈挂起或重置时，尚未发送的消息将被移除并
+使用错误码触发 :c:member:`bt_mesh_send_cb.start` 回调。
 
 .. note::
-   When a model sends several messages in a row, it may happen that the messages are not sent in
-   the order they were passed to the access layer. This is because some messages can be delayed
-   for a longer time than the others.
+   当模型连续发送几条消息时，消息可能不会按照传递给接入层的顺序发送。这是因为某些消息可能比其他消息延迟更长时间。
 
-   Disable the randomization by setting the :c:member:`bt_mesh_msg_ctx.rnd_delay` to ``false``,
-   when a set of messages originated by the same model needs to be sent in a certain order.
+   当同一模型生成的一组消息需要按特定顺序发送时，通过将 :c:member:`bt_mesh_msg_ctx.rnd_delay` 设置为 ``false`` 来禁用随机化。
 
-Delayable publications
-======================
+可延迟发布
+==========
 
-The delayable publication functionality implements the specification recommendations for message
-publication delays in the following cases:
+可延迟发布功能在以下情况下实现了规范对消息
+发布延迟的建议：
 
-* Between 20 to 500 milliseconds when the Bluetooth Mesh stack starts or when the publication is
-  triggered by the :c:func:`bt_mesh_model_publish` function
-* Between 20 to 50 milliseconds for periodically published messages
+* 在 20 到 500 毫秒之间，当蓝牙网状堆栈启动或当发布由 :c:func:`bt_mesh_model_publish` 函数触发时
+* 对于周期性发布的消息，在 20 到 50 毫秒之间
 
-This feature is optional and enabled with the :kconfig:option:`CONFIG_BT_MESH_DELAYABLE_PUBLICATION`
-Kconfig option. When enabled, each model can enable or disable the delayable publication by setting
-the :c:member:`bt_mesh_model_pub.delayable` bit field to ``1`` or ``0`` correspondingly. This bit
-field can be changed at any time.
+此功能是可选的，并通过 :kconfig:option:`CONFIG_BT_MESH_DELAYABLE_PUBLICATION` Kconfig 选项启用。启用后，每个模型可以通过相应地将 :c:member:`bt_mesh_model_pub.delayable` 位字段设置为 ``1`` 或 ``0`` 来启用或禁用可延迟发布。此位字段可以随时更改。
 
-API reference
-*************
+API 参考
+********
 
 .. doxygengroup:: bt_mesh_access

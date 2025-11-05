@@ -1,19 +1,15 @@
 .. _bluetooth_mesh_stat:
 
-Frame statistic
+帧统计
 ###############
 
-The frame statistic API allows monitoring the number of received frames over
-different interfaces, and the number of planned and succeeded transmission and
-relaying attempts.
+帧统计 API 允许监控不同接口接收的帧数，以及计划和成功传输和中继尝试的次数。
 
-The API helps the user to estimate the efficiency of the advertiser configuration
-parameters and the scanning ability of the device. The number of the monitored
-parameters can be easily extended by customer values.
+该 API 帮助用户估计广告器配置参数和设备扫描能力的效率。监控参数的数量可以通过客户值轻松扩展。
 
-An application can read out and clean up statistics at any time.
+应用程序可以随时读取和清理统计信息。
 
-API reference
-*************
+API 参考
+***********
 
 .. doxygengroup:: bt_mesh_stat

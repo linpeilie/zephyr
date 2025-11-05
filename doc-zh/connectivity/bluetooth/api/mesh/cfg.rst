@@ -1,24 +1,16 @@
 .. _bluetooth_mesh_cfg:
 
-Runtime Configuration
+运行时配置
 #####################
 
-The runtime configuration API allows applications to change their runtime
-configuration directly, without going through the Configuration models.
+运行时配置 API 允许应用程序直接更改其运行时配置，而无需通过配置模型。
 
-Bluetooth Mesh nodes should generally be configured by a central network
-configurator device with a :ref:`bluetooth_mesh_models_cfg_cli` model. Each
-mesh node instantiates a :ref:`bluetooth_mesh_models_cfg_srv` model that the
-Configuration Client can communicate with to change the node configuration. In some
-cases, the mesh node can't rely on the Configuration Client to detect or determine
-local constraints, such as low battery power or changes in topology. For these
-scenarios, this API can be used to change the configuration locally.
+蓝牙网状节点通常应由具有 :ref:`bluetooth_mesh_models_cfg_cli` 模型的中央网络配置设备进行配置。每个网状节点实例化一个 :ref:`bluetooth_mesh_models_cfg_srv` 模型，配置客户端可以与之通信以更改节点配置。在某些情况下，网状节点不能依赖配置客户端来检测或确定本地约束，例如电池电量低或拓扑变化。对于这些场景，此 API 可用于在本地更改配置。
 
 .. note::
-   Runtime configuration changes before the node is provisioned will not be stored
-   in the :ref:`persistent storage <bluetooth_mesh_persistent_storage>`.
+   节点配置之前的运行时配置更改不会存储在 :ref:`持久存储 <bluetooth_mesh_persistent_storage>` 中。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_cfg

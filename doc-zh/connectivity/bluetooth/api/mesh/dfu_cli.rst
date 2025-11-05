@@ -1,14 +1,12 @@
 .. _bluetooth_mesh_dfu_cli:
 
-Firmware Update Client
+固件更新客户端
 ######################
 
-The Firmware Update Client is responsible for distributing firmware updates through the mesh
-network. The Firmware Update Client uses the :ref:`bluetooth_mesh_blob_cli` as a transport for its
-transfers.
+固件更新客户端负责通过网状网络分发固件更新。固件更新客户端使用 :ref:`bluetooth_mesh_blob_cli` 作为其传输的传输层。
 
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_dfu_cli

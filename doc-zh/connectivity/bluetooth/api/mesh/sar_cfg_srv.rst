@@ -1,29 +1,23 @@
 .. _bluetooth_mesh_sar_cfg_srv:
 
-SAR Configuration Server
+SAR 配置服务器
 ########################
 
-The SAR Configuration Server model is a foundation model defined by the Bluetooth Mesh
-specification. It is an optional model, enabled with the
-:kconfig:option:`CONFIG_BT_MESH_SAR_CFG_SRV` configuration option.
+SAR 配置服务器模型是蓝牙网状规范定义的基础模型。它是一个可选模型，通过
+:kconfig:option:`CONFIG_BT_MESH_SAR_CFG_SRV` 配置选项启用。
 
-The SAR Configuration Server model is introduced in the Bluetooth Mesh Protocol Specification
-version 1.1, and it supports the configuration of the
-:ref:`segmentation and reassembly (SAR) <bluetooth_mesh_sar_cfg>` behavior of a Bluetooth Mesh node.
-The model defines a set of states and messages for the SAR configuration.
+SAR 配置服务器模型在蓝牙网状协议规范版本 1.1 中引入，它支持配置蓝牙网状节点的
+:ref:`分段和重组 (SAR) <bluetooth_mesh_sar_cfg>` 行为。该模型为 SAR 配置定义了一组状态和消息。
 
-The SAR Configuration Server model defines two states, SAR Transmitter state and SAR Receiver state.
-For more information about the two states, see :ref:`bt_mesh_sar_cfg_states`.
+SAR 配置服务器模型定义了两个状态，SAR 发送器状态和 SAR 接收器状态。有关这两个状态的更多信息，请参见 :ref:`bt_mesh_sar_cfg_states`。
 
-The model also supports the SAR Transmitter and SAR Receiver get and set messages.
+该模型还支持 SAR 发送器和 SAR 接收器的获取和设置消息。
 
-The SAR Configuration Server model does not have an API of its own, but relies on a
-:ref:`bluetooth_mesh_sar_cfg_cli` to control it.  The SAR Configuration Server model only accepts
-messages encrypted with the node’s device key.
+SAR 配置服务器模型没有自己的 API，但依赖 :ref:`bluetooth_mesh_sar_cfg_cli` 来控制它。SAR 配置服务器模型仅接受使用节点设备密钥加密的消息。
 
-If present, the SAR Configuration Server model must only be instantiated on the primary element.
+如果存在，SAR 配置服务器模型只能在主元素上实例化。
 
-API reference
-*************
+API 参考
+***********
 
 .. doxygengroup:: bt_mesh_sar_cfg_srv

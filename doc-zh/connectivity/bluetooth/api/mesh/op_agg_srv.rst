@@ -1,30 +1,22 @@
 .. _bluetooth_mesh_models_op_agg_srv:
 
-Opcodes Aggregator Server
-#########################
+操作码聚合器服务器
+##########################
 
-The Opcodes Aggregator Server model is a foundation model defined by the Bluetooth
-mesh specification. It is an optional model, enabled with the
-:kconfig:option:`CONFIG_BT_MESH_OP_AGG_SRV` option.
+操作码聚合器服务器模型是蓝牙网状规范定义的基础模型。它是一个可选模型，通过
+:kconfig:option:`CONFIG_BT_MESH_OP_AGG_SRV` 选项启用。
 
-The Opcodes Aggregator Server model is introduced in the Bluetooth Mesh Protocol
-Specification version 1.1, and is used to support the functionality of processing
-a sequence of access layer messages.
+操作码聚合器服务器模型在蓝牙网状协议规范版本 1.1 中引入，用于支持处理访问层消息序列的功能。
 
-The Opcodes Aggregator Server model accepts messages encrypted with the node's device key
-or the application keys.
+操作码聚合器服务器模型接受使用节点设备密钥或应用程序密钥加密的消息。
 
-If present, the Opcodes Aggregator Server model must only be instantiated on the primary element.
+如果存在，操作码聚合器服务器模型只能在主元素上实例化。
 
-The targeted server models should be bound to the same application key that is used
-to encrypt the sequence of access layer messages sent to the Opcodes Aggregator Server.
+目标服务器模型应绑定到与用于加密发送到操作码聚合器服务器的访问层消息序列相同的应用程序密钥。
 
-The Opcodes Aggregator Server handles aggregated messages and dispatches them to the
-respective models and their message handlers. Current implementation assumes that
-responses are sent from the same execution context as the received message and
-doesn't allow to send a postponed response, for example from a work queue.
+操作码聚合器服务器处理聚合消息并将它们分派到相应的模型和消息处理器。当前实现假设响应从与接收消息相同的执行上下文发送，不允许发送延迟的响应，例如从工作队列发送。
 
-API reference
-*************
+API 参考
+***********
 
 .. doxygengroup:: bt_mesh_op_agg_srv

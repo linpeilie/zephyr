@@ -1,29 +1,23 @@
 .. _bluetooth_mesh_models_op_agg_cli:
 
-Opcodes Aggregator Client
-#########################
+操作码聚合器客户端
+##########################
 
-The Opcodes Aggregator Client model is a foundation model defined by the Bluetooth Mesh
-specification. It is an optional model, enabled with the :kconfig:option:`CONFIG_BT_MESH_OP_AGG_CLI`
-option.
+操作码聚合器客户端模型是蓝牙网状规范定义的基础模型。它是一个可选模型，通过 :kconfig:option:`CONFIG_BT_MESH_OP_AGG_CLI`
+选项启用。
 
-The Opcodes Aggregator Client model is introduced in the Bluetooth Mesh Protocol Specification
-version 1.1, and is used to support the functionality of dispatching a sequence of access layer
-messages to nodes supporting the :ref:`bluetooth_mesh_models_op_agg_srv` model.
+操作码聚合器客户端模型在蓝牙网状协议规范版本 1.1 中引入，用于支持将访问层消息序列分派到支持
+:ref:`bluetooth_mesh_models_op_agg_srv` 模型的功能。
 
-The Opcodes Aggregator Client model communicates with an Opcodes Aggregator Server model using the
-device key of the target node or the application keys configured by the Configuration Client.
+操作码聚合器客户端模型使用目标节点的设备密钥或配置客户端配置的应用程序密钥与操作码聚合器服务器模型进行通信。
 
-If present, the Opcodes Aggregator Client model must only be instantiated on the primary element.
+如果存在，操作码聚合器客户端模型只能在主元素上实例化。
 
-The Opcodes Aggregator Client model is implicitly bound to the device key on initialization. It
-should be bound to the same application keys as the client models that are used to produce the
-sequence of messages.
+操作码聚合器客户端模型在初始化时隐式绑定到设备密钥。它应该绑定到与用于生成消息序列的客户端模型相同的应用程序密钥。
 
-To be able to aggregate a message from a client model, it should support an asynchronous API, for
-example through callbacks.
+为了能够聚合来自客户端模型的消息，它应该支持异步 API，例如通过回调。
 
-API reference
-*************
+API 参考
+***********
 
 .. doxygengroup:: bt_mesh_op_agg_cli

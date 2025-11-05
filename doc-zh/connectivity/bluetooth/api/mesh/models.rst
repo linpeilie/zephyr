@@ -1,13 +1,12 @@
 .. _bluetooth_mesh_models:
 
-Mesh models
-###########
+网状模型
+########
 
-Foundation models
-*****************
+基础模型
+********
 
-The Bluetooth Mesh specification defines foundation models that can be
-used by network administrators to configure and diagnose mesh nodes.
+蓝牙网状规范定义了基础模型，网络管理员可以使用这些模型来配置和诊断网状节点。
 
 .. toctree::
    :maxdepth: 1
@@ -33,11 +32,10 @@ used by network administrators to configure and diagnose mesh nodes.
    srpl_cli
    srpl_srv
 
-Model specification models
-**************************
+模型规范模型
+************
 
-In addition to the foundation models defined in the Bluetooth Mesh specification, the Bluetooth Mesh
-Model Specification defines several models, some of which are implemented in Zephyr:
+除了蓝牙网状规范中定义的基础模型外，蓝牙网状模型规范还定义了几个模型，其中一些在 Zephyr 中实现：
 
 .. toctree::
    :maxdepth: 1

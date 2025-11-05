@@ -1,36 +1,29 @@
 .. _bluetooth_mesh_models_rpr_srv:
 
-Remote Provisioning Server
-##########################
+远程配置服务器
+########################
 
-The Remote Provisioning Server model is a foundation model defined by the Bluetooth
-mesh specification. It is enabled with the
-:kconfig:option:`CONFIG_BT_MESH_RPR_SRV` option.
+远程配置服务器模型是蓝牙网状规范定义的基础模型。它通过
+:kconfig:option:`CONFIG_BT_MESH_RPR_SRV` 选项启用。
 
-The Remote Provisioning Server model is introduced in the Bluetooth Mesh Protocol
-Specification version 1.1, and is used to support the functionality of remotely
-provisioning devices into a mesh network.
+远程配置服务器模型在蓝牙网状协议规范版本 1.1 中引入，用于支持远程配置设备到网状网络的功能。
 
-The Remote Provisioning Server does not have an API of its own, but relies on a
-:ref:`bluetooth_mesh_models_rpr_cli` to control it. The Remote Provisioning Server
-model only accepts messages encrypted with the node's device key.
+远程配置服务器没有自己的 API，但依赖 :ref:`bluetooth_mesh_models_rpr_cli` 来控制它。远程配置服务器模型仅接受使用节点设备密钥加密的消息。
 
-If present, the Remote Provisioning Server model must be instantiated on the primary element.
+如果存在，远程配置服务器模型必须在主元素上实例化。
 
-Note that after refreshing the device key, node address or Composition Data through a Node
-Provisioning Protocol Interface (NPPI) procedure, the :c:member:`bt_mesh_prov.reprovisioned`
-callback is triggered. See section :ref:`bluetooth_mesh_models_rpr_cli` for further details.
+请注意，通过节点配置协议接口 (NPPI) 过程刷新设备密钥、节点地址或组合数据后，将触发 :c:member:`bt_mesh_prov.reprovisioned` 回调。有关更多详细信息，请参见 :ref:`bluetooth_mesh_models_rpr_cli` 部分。
 
-Limitations
+限制
 -----------
 
-The following limitations apply to Remote Provisioning Server model:
+远程配置服务器模型适用以下限制：
 
-* Provisioning of unprovisioned device using PB-GATT is not supported.
-* All Node Provisioning Protocol Interface (NPPI) procedures are supported. However, if the composition data of a device gets changed after device firmware update (see :ref:`firmware effect <bluetooth_mesh_dfu_firmware_effect>`), it is not possible for the device to remain provisioned. The device should be unprovisioned if its composition data is expected to change.
+* 不支持使用 PB-GATT 配置未配置设备。
+* 支持所有节点配置协议接口 (NPPI) 过程。但是，如果设备在固件更新后组合数据发生更改（参见 :ref:`固件影响 <bluetooth_mesh_dfu_firmware_effect>`），设备无法保持配置状态。如果预期组合数据会更改，设备应该取消配置。
 
 
-API reference
-*************
+API 参考
+***********
 
 .. doxygengroup:: bt_mesh_rpr_srv

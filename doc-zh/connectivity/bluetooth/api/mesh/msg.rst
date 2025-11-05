@@ -1,13 +1,13 @@
 .. _bluetooth_mesh_msg:
 
-Message
-#######
+消息
+########
 
-The Bluetooth Mesh message provides set of structures, macros and functions used
-for preparing message buffers, managing message and acknowledged message
-contexts.
+蓝牙网状消息提供了一组结构、宏和函数，用于
+准备消息缓冲区、管理消息和确认消息
+上下文。
 
-API reference
-*************
+API 参考
+********
 
 .. doxygengroup:: bt_mesh_msg

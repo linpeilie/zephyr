@@ -1,10 +1,10 @@
 .. _bluetooth_microphone:
 
-Bluetooth Microphone Control
-############################
+蓝牙麦克风控制
+##############
 
 
-API Reference
-*************
+API 参考
+********
 
 .. doxygengroup:: bt_micp

@@ -1,26 +1,17 @@
 .. _bluetooth_mesh_models_cfg_cli:
 
-Configuration Client
+配置客户端
 ####################
 
-The Configuration Client model is a foundation model defined by the Bluetooth Mesh
-specification. It provides functionality for configuring most parameters of a
-mesh node, including encryption keys, model configuration and feature
-enabling.
+配置客户端模型是蓝牙网状规范定义的基础模型。它提供配置网状节点大多数参数的功能，包括加密密钥、模型配置和功能启用。
 
-The Configuration Client model communicates with a
-:ref:`bluetooth_mesh_models_cfg_srv` model using the device key of the target
-node. The Configuration Client model may communicate with servers on other
-nodes or self-configure through the local Configuration Server model.
+配置客户端模型使用目标节点的设备密钥与 :ref:`bluetooth_mesh_models_cfg_srv` 模型通信。配置客户端模型可以与其他节点上的服务器通信或通过本地配置服务器模型进行自配置。
 
-All configuration functions in the Configuration Client API have ``net_idx``
-and ``addr`` as their first parameters. These should be set to the network
-index and primary unicast address that the target node was provisioned with.
+配置客户端 API 中的所有配置函数都有 ``net_idx`` 和 ``addr`` 作为其第一个参数。这些应设置为目标节点配置时使用的网络索引和主单播地址。
 
-The Configuration Client model is optional, and it must only be instantiated on the
-primary element if present in the Composition Data.
+配置客户端模型是可选的，如果存在于组合数据中，则只能在主元素上实例化。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_cfg_cli

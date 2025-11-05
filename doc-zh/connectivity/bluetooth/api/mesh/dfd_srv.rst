@@ -1,39 +1,24 @@
 .. _bluetooth_mesh_dfd_srv:
 
-Firmware Distribution Server
+固件分发服务器
 ############################
 
-The Firmware Distribution Server model implements the Distributor role for the
-:ref:`bluetooth_mesh_dfu` subsystem. It extends the :ref:`bluetooth_mesh_blob_srv`, which it uses to
-receive the firmware image binary from the Initiator node. It also instantiates a
-:ref:`bluetooth_mesh_dfu_cli`, which it uses to distribute firmware updates throughout the mesh
-network.
+固件分发服务器模型为 :ref:`bluetooth_mesh_dfu` 子系统实现分发者角色。它扩展了 :ref:`bluetooth_mesh_blob_srv`，用于从中继节点接收固件镜像二进制文件。它还实例化了一个 :ref:`bluetooth_mesh_dfu_cli`，用于在整个网状网络中分发固件更新。
 
 .. note::
 
-   Currently, the Firmware Distribution Server supports out-of-band (OOB) retrieval of firmware
-   images over SMP service only.
+   目前，固件分发服务器仅支持通过 SMP 服务进行固件镜像的带外 (OOB) 检索。
 
-The Firmware Distribution Server does not have an API of its own, but relies on a Firmware
-Distribution Client model on a different device to give it information and trigger image
-distribution and upload.
+固件分发服务器没有自己的 API，但依赖于不同设备上的固件分发客户端模型向其提供信息并触发镜像分发和上传。
 
-Firmware slots
+固件槽
 **************
 
-The Firmware Distribution Server is capable of storing multiple firmware images for distribution.
-Each slot contains a separate firmware image with metadata, and can be distributed to other mesh
-nodes in the network in any order. The contents, format and size of the firmware images are vendor
-specific, and may contain data from other vendors. The application should never attempt to execute
-or modify them.
+固件分发服务器能够存储多个固件镜像用于分发。每个槽包含一个带元数据的独立固件镜像，并且可以按任何顺序分发到网络中的其他网状节点。固件镜像的内容、格式和大小是供应商特定的，可能包含来自其他供应商的数据。应用程序不应尝试执行或修改它们。
 
-The slots are managed remotely by a Firmware Distribution Client, which can both upload new slots
-and delete old ones. The application is notified of changes to the slots through the Firmware
-Distribution Server's callbacks (:cpp:type:`bt_mesh_fd_srv_cb`). While the metadata for each
-firmware slot is stored internally, the application must provide a :ref:`bluetooth_mesh_blob_stream`
-for reading and writing the firmware image.
+固件槽由固件分发客户端远程管理，该客户端既可以上传新槽也可以删除旧槽。应用程序通过固件分发服务器的回调 (:cpp:type:`bt_mesh_fd_srv_cb`) 获知槽的更改。虽然每个固件槽的元数据都存储在内部，但应用程序必须提供一个 :ref:`bluetooth_mesh_blob_stream` 来读取和写入固件镜像。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_dfd_srv

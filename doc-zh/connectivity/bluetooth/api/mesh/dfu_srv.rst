@@ -1,130 +1,83 @@
 .. _bluetooth_mesh_dfu_srv:
 
-Firmware Update Server
+固件更新服务器
 ######################
 
-The Firmware Update Server model implements the Target node functionality of the
-:ref:`bluetooth_mesh_dfu` subsystem. It extends the :ref:`bluetooth_mesh_blob_srv`, which it uses to
-receive the firmware image binary from the Distributor node.
+固件更新服务器模型实现 :ref:`bluetooth_mesh_dfu` 子系统的目标节点功能。它扩展了 :ref:`bluetooth_mesh_blob_srv`，用于从分发者节点接收固件镜像二进制文件。
 
-Together with the extended BLOB Transfer Server model, the Firmware Update Server model implements
-all the required functionality for receiving firmware updates over the mesh network, but does not
-provide any functionality for storing, applying or verifying the images.
+与扩展的 BLOB 传输服务器模型一起，固件更新服务器模型实现了通过网状网络接收固件更新所需的所有功能，但不提供任何存储、应用或验证镜像的功能。
 
-Firmware images
+固件镜像
 ***************
 
-The Firmware Update Server holds a list of all the updatable firmware images on the device. The full
-list shall be passed to the server through the ``_imgs`` parameter in
-:c:macro:`BT_MESH_DFU_SRV_INIT`, and must be populated before the Bluetooth Mesh subsystem is
-started. Each firmware image in the image list must be independently updatable, and should have its
-own firmware ID.
+固件更新服务器保存设备上所有可更新固件镜像的列表。完整列表应通过 :c:macro:`BT_MESH_DFU_SRV_INIT` 中的 ``_imgs`` 参数传递给服务器，并且必须在启动蓝牙网状子系统之前填充。图像列表中的每个固件镜像必须独立可更新，并应有自己的固件 ID。
 
-For instance, a device with an upgradable bootloader, an application and a peripheral chip with
-firmware update capabilities could have three entries in the firmware image list, each with their
-own separate firmware ID.
+例如，具有可升级引导加载程序的设备、应用程序和具有固件更新功能的外设芯片可以在固件镜像列表中有三个条目，每个都有自己的独立固件 ID。
 
-Receiving transfers
+接收传输
 *******************
 
-The Firmware Update Server model uses a BLOB Transfer Server model on the same element to transfer
-the binary image. The interaction between the Firmware Update Server, BLOB Transfer Server and
-application is described below:
+固件更新服务器模型使用同一元素上的 BLOB 传输服务器模型来传输二进制镜像。固件更新服务器、BLOB 传输服务器和应用程序之间的交互如下所述：
 
 .. figure:: images/dfu_srv.svg
    :align: center
-   :alt: Bluetooth Mesh Firmware Update Server transfer
+   :alt: 蓝牙网状固件更新服务器传输
 
-   Bluetooth Mesh Firmware Update Server transfer
+   蓝牙网状固件更新服务器传输
 
-Transfer check
+传输检查
 ==============
 
-The transfer check is an optional pre-transfer check the application can perform on incoming
-firmware image metadata. The Firmware Update Server performs the transfer check by calling the
-:c:member:`check <bt_mesh_dfu_srv_cb.check>` callback.
+传输检查是应用程序可以对传入固件镜像元数据执行的可选传输前检查。固件更新服务器通过调用 :c:member:`check <bt_mesh_dfu_srv_cb.check>` 回调来执行传输检查。
 
-The result of the transfer check is a pass/fail status return and the expected
-:c:enum:`bt_mesh_dfu_effect`. The DFU effect return parameter will be communicated back to the
-Distributor, and should indicate what effect the firmware update will have on the mesh state of the
-device.
+传输检查的结果是通过/失败状态返回和预期的 :c:enum:`bt_mesh_dfu_effect`。DFU 效果返回参数将通信回分发者，并应指示固件更新对设备网状状态的影响。
 
 .. _bluetooth_mesh_dfu_srv_comp_data_and_models_metadata:
 
-Composition Data and Models Metadata
+组合数据和模型元数据
 ------------------------------------
 
-If the transfer will cause the device to change its Composition Data or become
-unprovisioned, this should be communicated through the effect parameter of the metadata check.
+如果传输将导致设备更改其组合数据或变为未配置，这应通过元数据检查的效果参数传达。
 
-When the transfer will cause the Composition Data to change, and the
-:ref:`bluetooth_mesh_models_rpr_srv` is supported, the Composition Data of the new firmware image
-will be represented by Composition Data Pages 128, 129, and 130. The Models Metadata of the new
-firmware image will be represented by Models Metadata Page 128. Composition Data Pages 0, 1 and 2,
-and Models Metadata Page 0, will represent the Composition Data and the Models Metadata of the old
-firmware image until the device is reprovisioned with Node Provisioning Protocol Interface (NPPI)
-procedures using the :ref:`bluetooth_mesh_models_rpr_cli`.
+当传输将导致组合数据更改，并且支持 :ref:`bluetooth_mesh_models_rpr_srv` 时，新固件镜像的组合数据将由组合数据页面 128、129 和 130 表示。新固件镜像的模型元数据将由模型元数据页面 128 表示。组合数据页面 0、1 和 2，以及模型元数据页面 0，将代表旧固件镜像的组合数据和模型元数据，直到使用 :ref:`bluetooth_mesh_models_rpr_cli` 通过节点配置协议接口 (NPPI) 程序重新配置设备。
 
-The application must call functions :c:func:`bt_mesh_comp_change_prepare` and
-:c:func:`bt_mesh_models_metadata_change_prepare` to store the existing Composition Data and Models
-Metadata pages before booting into the firmware with the updated Composition Data and Models
-Metadata. The old Composition Data will then be loaded into Composition Data Pages 0, 1 and 2,
-while the Composition Data in the new firmware will be loaded into Composition Data Pages 128, 129
-and 130. The Models Metadata for the old image will be loaded into Models Metadata Page 0, and the
-Models Metadata for the new image will be loaded into Models Metadata Page 128.
+应用程序必须调用函数 :c:func:`bt_mesh_comp_change_prepare` 和 :c:func:`bt_mesh_models_metadata_change_prepare` 来存储现有组合数据和模型元数据页面，然后才能启动到具有更新组合数据和模型元数据的固件中。然后旧组合数据将加载到组合数据页面 0、1 和 2中，而新固件中的组合数据将加载到组合数据页面 128、129 和 130 中。旧镜像的模型元数据将加载到模型元数据页面 0 中，新镜像的模型元数据将加载到模型元数据页面 128 中。
 
-Limitation:
+限制：
 
-* It is not possible to change the Composition Data of the device and keep the device provisioned
-  and working with the old firmware after the new firmware image is applied.
+* 不可能在应用新固件镜像后更改设备的组合数据并保持设备配置并使用旧固件工作。
 
-Start
+开始
 =====
 
-The Start procedure prepares the application for the incoming transfer. It'll contain information
-about which image is being updated, as well as the update metadata.
+开始程序为传入传输准备应用程序。它将包含有关正在更新哪个镜像以及更新元数据的信息。
 
-The Firmware Update Server :c:member:`start <bt_mesh_dfu_srv_cb.start>` callback must return a
-pointer to the BLOB Writer the BLOB Transfer Server will send the BLOB to.
+固件更新服务器 :c:member:`start <bt_mesh_dfu_srv_cb.start>` 回调必须返回一个指向 BLOB 写入器的指针，BLOB 传输服务器将向其发送 BLOB。
 
-BLOB transfer
+BLOB 传输
 =============
 
-After the setup stage, the Firmware Update Server prepares the BLOB Transfer Server for the incoming
-transfer. The entire firmware image is transferred to the BLOB Transfer Server, which passes the
-image to its assigned BLOB Writer.
+设置阶段后，固件更新服务器为传入传输准备 BLOB 传输服务器。整个固件镜像传输到 BLOB 传输服务器，该服务器将镜像传递到其分配的 BLOB 写入器。
 
-At the end of the BLOB transfer, the Firmware Update Server calls its
-:c:member:`end <bt_mesh_dfu_srv_cb.end>` callback.
+在 BLOB 传输结束时，固件更新服务器调用其 :c:member:`end <bt_mesh_dfu_srv_cb.end>` 回调。
 
-Image verification
+镜像验证
 ==================
 
-After the BLOB transfer has finished, the application should verify the image in any way it can to
-ensure that it is ready for being applied.  Once the image has been verified, the application calls
-:c:func:`bt_mesh_dfu_srv_verified`.
+BLOB 传输完成后，应用程序应以任何方式验证镜像，以确保它准备好被应用。一旦镜像被验证，应用程序调用 :c:func:`bt_mesh_dfu_srv_verified`。
 
-If the image can't be verified, the application calls :c:func:`bt_mesh_dfu_srv_rejected`.
+如果镜像无法验证，应用程序调用 :c:func:`bt_mesh_dfu_srv_rejected`。
 
-Applying the image
+应用镜像
 ==================
 
-Finally, if the image was verified, the Distributor may instruct the Firmware Update Server to apply
-the transfer. This is communicated to the application through the :c:member:`apply
-<bt_mesh_dfu_srv_cb.apply>` callback. The application should swap the image and start running with
-the new firmware. The firmware image table should be updated to reflect the new firmware ID of the
-updated image.
+最后，如果镜像被验证，分发者可以指示固件更新服务器应用传输。这通过 :c:member:`apply <bt_mesh_dfu_srv_cb.apply>` 回调传达给应用程序。应用程序应交换镜像并开始运行新固件。应更新固件镜像表以反映更新镜像的新固件 ID。
 
-When the transfer applies to the mesh application itself, the device might have to reboot as part of
-the swap. This restart can be performed from inside the apply callback, or done asynchronously.
-After booting up with the new firmware, the firmware image table should be updated before the
-Bluetooth Mesh subsystem is started.
+当传输应用于网状应用程序本身时，设备可能必须作为交换的一部分重启。此重启可以从应用回调内部执行，或异步完成。使用新固件启动后，应在启动蓝牙网状子系统之前更新固件镜像表。
 
-The Distributor will read out the firmware image table to confirm that the transfer was successfully
-applied. If the metadata check indicated that the device would become unprovisioned, the Target node
-is not required to respond to this check.
+分发者将读出固件镜像表以确认传输已成功应用。如果元数据检查指示设备将变为未配置，目标节点不需要响应此检查。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_dfu_srv

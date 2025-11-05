@@ -1,24 +1,23 @@
 .. _bluetooth_mesh_blob_cli:
 
-BLOB Transfer Client
+BLOB 传输客户端
 ####################
 
-The Binary Large Object (BLOB) Transfer Client is the sender of the BLOB transfer. It supports
-sending BLOBs of any size to any number of Target nodes, in both Push BLOB Transfer Mode and Pull
-BLOB Transfer Mode.
+二进制大对象 (BLOB) 传输客户端是 BLOB 传输的发送方。它支持
+以推 BLOB 传输模式和拉 BLOB 传输模式向任意数量的目标节点发送任意大小的 BLOB。
 
-Usage
+用法
 *****
 
-Initialization
+初始化
 ==============
 
-The BLOB Transfer Client is instantiated on an element with a set of event handler callbacks:
+BLOB 传输客户端在元素上实例化，具有一组事件处理程序回调：
 
 .. code-block:: C
 
    static const struct bt_mesh_blob_cli_cb blob_cb = {
-         /* Callbacks */
+         /* 回调 */
    };
 
    static struct bt_mesh_blob_cli blob_cli = {
@@ -29,13 +28,10 @@ The BLOB Transfer Client is instantiated on an element with a set of event handl
          BT_MESH_MODEL_BLOB_CLI(&blob_cli),
    };
 
-Transfer context
+传输上下文
 ================
 
-Both the transfer capabilities retrieval procedure and the BLOB transfer uses an instance of a
-:c:struct:`bt_mesh_blob_cli_inputs` to determine how to perform the transfer. The BLOB Transfer Client
-Inputs structure must at least be initialized with a list of targets, an application key and a time
-to live (TTL) value before it is used in a procedure:
+传输能力检索过程和 BLOB 传输都使用 :c:struct:`bt_mesh_blob_cli_inputs` 实例来确定如何执行传输。BLOB 传输客户端输入结构在用于程序之前至少必须用目标列表、应用密钥和生存时间 (TTL) 值初始化：
 
 .. code-block:: c
 
@@ -54,75 +50,55 @@ to live (TTL) value before it is used in a procedure:
    sys_slist_append(&inputs.targets, &targets[1].n);
    sys_slist_append(&inputs.targets, &targets[2].n);
 
-Note that all BLOB Transfer Servers in the transfer must be bound to the chosen application key.
+请注意，传输中的所有 BLOB 传输服务器都必须绑定到所选的应用密钥。
 
 
-Group address
+组地址
 -------------
 
-The application may additionally specify a group address in the context structure. If the group is
-not :c:macro:`BT_MESH_ADDR_UNASSIGNED`, the messages in the transfer will be sent to the group
-address, instead of being sent individually to each Target node. Mesh Manager must ensure that all
-Target nodes having the BLOB Transfer Server model subscribe to this group address.
+应用程序可以在上下文结构中额外指定一个组地址。如果组不是
+:c:macro:`BT_MESH_ADDR_UNASSIGNED`，传输中的消息将发送到组
+地址，而不是单独发送到每个目标节点。网状管理器必须确保所有
+具有 BLOB 传输服务器模型的目标节点都订阅此组地址。
 
-Using group addresses for transferring the BLOBs can generally increase the transfer speed, as the
-BLOB Transfer Client sends each message to all Target nodes at the same time. However, sending
-large, segmented messages to group addresses in Bluetooth Mesh is generally less reliable than
-sending them to unicast addresses, as there is no transport layer acknowledgment mechanism for
-groups. This can lead to longer recovery periods at the end of each block, and increases the risk of
-losing Target nodes. Using group addresses for BLOB transfers will generally only pay off if the
-list of Target nodes is extensive, and the effectiveness of each addressing strategy will vary
-heavily between different deployments and the size of the chunks.
+使用组地址传输 BLOB 通常可以提高传输速度，因为
+BLOB 传输客户端同时将每条消息发送到所有目标节点。但是，向蓝牙网状中的组地址发送大型分段消息通常不如
+发送到单播地址可靠，因为组没有传输层确认机制。这可能导致每个块末尾的恢复期变长，并增加失去目标节点的风险。使用组地址进行 BLOB 传输通常只有在目标节点列表很长的情况下才会得到回报，每种寻址策略的有效性在不同的部署和数据块大小之间会有很大差异。
 
-Transfer timeout
+传输超时
 ----------------
 
-If a Target node fails to respond to an acknowledged message within the BLOB Transfer Client's time
-limit, the Target node is dropped from the transfer. The application can reduce the chances of this
-by giving the BLOB Transfer Client extra time through the context structure. The extra time may be
-set in 10-second increments, up to 182 hours, in addition to the base time of 20 seconds. The wait
-time scales automatically with the transfer TTL.
+如果目标节点在 BLOB 传输客户端的时间限制内未对确认消息做出响应，则该目标节点将从传输中移除。应用程序可以通过上下文结构为 BLOB 传输客户端提供额外时间来降低这种可能性。额外时间可以 10 秒为增量设置，最长 182 小时，除了 20 秒的基础时间之外。等待时间随传输 TTL 自动缩放。
 
-Note that the BLOB Transfer Client only moves forward with the transfer in following cases:
+请注意，BLOB 传输客户端仅在以下情况下继续传输：
 
-* All Target nodes have responded.
-* A node has been removed from the list of Target nodes.
-* The BLOB Transfer Client times out.
+* 所有目标节点都已响应。
+* 节点已从目标节点列表中移除。
+* BLOB 传输客户端超时。
 
-Increasing the wait time will increase this delay.
+增加等待时间会增加此延迟。
 
-BLOB transfer capabilities retrieval
+BLOB 传输能力检索
 ====================================
 
-It is generally recommended to retrieve BLOB transfer capabilities before starting a transfer. The
-procedure populates the transfer capabilities from all Target nodes with the most liberal set of
-parameters that allows all Target nodes to participate in the transfer. Any Target nodes that fail
-to respond, or respond with incompatible transfer parameters, will be dropped.
+通常建议在开始传输之前检索 BLOB 传输能力。该程序用允许所有目标节点参与传输的最宽松的参数集从所有目标节点填充传输能力。任何未能响应或响应不兼容传输参数的目标节点都将被移除。
 
-Target nodes are prioritized according to their order in the list of Target nodes. If a Target node
-is found to be incompatible with any of the previous Target nodes, for instance by reporting a
-non-overlapping block size range, it will be dropped. Lost Target nodes will be reported through the
-:c:member:`lost_target <bt_mesh_blob_cli_cb.lost_target>` callback.
+目标节点根据它们在目标节点列表中的顺序进行优先级排序。如果发现目标节点与任何先前目标节点不兼容，例如通过报告不重叠的块大小范围，它将被移除。丢失的目标节点将通过 :c:member:`lost_target <bt_mesh_blob_cli_cb.lost_target>` 回调报告。
 
-The end of the procedure is signalled through the :c:member:`caps <bt_mesh_blob_cli_cb.caps>`
-callback, and the resulting capabilities can be used to determine the block and chunk sizes required
-for the BLOB transfer.
+程序结束通过 :c:member:`caps <bt_mesh_blob_cli_cb.caps>`
+回调发出信号，结果能力可用于确定 BLOB 传输所需的块和数据块大小。
 
-BLOB transfer
+BLOB 传输
 =============
 
-The BLOB transfer is started by calling :c:func:`bt_mesh_blob_cli_send` function, which (in addition
-to the aforementioned transfer inputs) requires a set of transfer parameters and a BLOB stream
-instance. The transfer parameters include the 64-bit BLOB ID, the BLOB size, the transfer mode, the
-block size in logarithmic representation and the chunk size. The BLOB ID is application defined, but
-must match the BLOB ID the BLOB Transfer Servers have been started with.
+通过调用 :c:func:`bt_mesh_blob_cli_send` 函数启动 BLOB 传输，该函数（除了
+上述传输输入）需要一组传输参数和一个 BLOB 流实例。传输参数包括 64 位 BLOB ID、BLOB 大小、传输模式、对数表示的块大小和数据块大小。BLOB ID 由应用程序定义，但必须与 BLOB 传输服务器启动时使用的 BLOB ID 匹配。
 
-The transfer runs until it either completes successfully for at least one Target node, or it is
-cancelled. The end of the transfer is communicated to the application through the :c:member:`end
-<bt_mesh_blob_cli_cb.end>` callback. Lost Target nodes will be reported through the
-:c:member:`lost_target <bt_mesh_blob_cli_cb.lost_target>` callback.
+传输运行直到至少一个目标节点成功完成或被取消。传输结束通过 :c:member:`end
+<bt_mesh_blob_cli_cb.end>` 回调通知应用程序。丢失的目标节点将通过
+:c:member:`lost_target <bt_mesh_blob_cli_cb.lost_target>` 回调报告。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_blob_cli

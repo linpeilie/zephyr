@@ -1,19 +1,13 @@
 .. _bluetooth_mesh_dfu:
 
-Device Firmware Update (DFU)
+设备固件更新 (DFU)
 ############################
 
-Bluetooth Mesh supports the distribution of firmware images across a mesh network. The Bluetooth
-mesh DFU subsystem implements the Bluetooth Mesh Device Firmware Update Model specification version
-1.0.
+蓝牙网状支持在整个网状网络中分发固件镜像。蓝牙网状 DFU 子系统实现了蓝牙网状设备固件更新模型规范版本 1.0。
 
-Bluetooth Mesh DFU implements a distribution mechanism for firmware images, and does not put any
-restrictions on the size, format or usage of the images. The primary design goal of the subsystem is
-to provide the qualifiable parts of the Bluetooth Mesh DFU specification, and leave the usage,
-firmware validation and deployment to the application.
+蓝牙网状 DFU 实现了固件镜像的分发机制，并且对镜像的大小、格式或使用没有任何限制。该子系统的主要设计目标是提供蓝牙网状 DFU 规范的可验证部分，并将使用、固件验证和部署留给应用程序。
 
-The DFU specification is implemented in the Zephyr Bluetooth Mesh DFU subsystem as three separate
-models:
+DFU 规范在 Zephyr 蓝牙网状 DFU 子系统中作为三个独立的模型实现：
 
 .. toctree::
    :maxdepth: 1
@@ -22,354 +16,213 @@ models:
    dfu_cli
    dfd_srv
 
-Overview
+概述
 ********
 
-DFU roles
+DFU 角色
 =========
 
-The Bluetooth Mesh DFU subsystem defines three different roles the mesh nodes have to assume in the
-distribution of firmware images:
+蓝牙网状 DFU 子系统定义了网状节点在固件镜像分发过程中必须承担的三种不同角色：
 
-Target node
-   Target node is the receiver and user of the transferred firmware images. All its functionality is
-   implemented by the :ref:`bluetooth_mesh_dfu_srv` model. A transfer may be targeting any number of
-   Target nodes, and they will all be updated concurrently.
+目标节点
+   目标节点是传输固件镜像的接收者和使用者。其所有功能由 :ref:`bluetooth_mesh_dfu_srv` 模型实现。传输可以针对任意数量的目标节点，它们都将同时更新。
 
-Distributor
-   The Distributor role serves two purposes in the DFU process. First, it's acting as the Target
-   node in the Upload Firmware procedure, then it distributes the uploaded image to other Target
-   nodes as the Distributor. The Distributor does not select the parameters of the transfer, but
-   relies on an Initiator to give it a list of Target nodes and transfer parameters. The Distributor
-   functionality is implemented in two models, :ref:`bluetooth_mesh_dfd_srv` and
-   :ref:`bluetooth_mesh_dfu_cli`. The :ref:`bluetooth_mesh_dfd_srv` is responsible for communicating
-   with the Initiator, and the :ref:`bluetooth_mesh_dfu_cli` is responsible for distributing the
-   image to the Target nodes.
+分发者
+   分发者角色在 DFU 过程中服务于两个目的。首先，它在上载固件程序中充当目标节点，然后将上载的镜像分发给其他目标节点作为分发者。分发者不选择传输参数，但依赖中继者向其提供目标节点列表和传输参数。分发者功能在两个模型中实现，:ref:`bluetooth_mesh_dfd_srv` 和 :ref:`bluetooth_mesh_dfu_cli`。:ref:`bluetooth_mesh_dfd_srv` 负责与中继者通信，:ref:`bluetooth_mesh_dfu_cli` 负责将镜像分发给目标节点。
 
-Initiator
-   The Initiator role is typically implemented by the same device that implements the Bluetooth Mesh
-   :ref:`Provisioner <bluetooth_mesh_provisioning>` and :ref:`Configurator
-   <bluetooth_mesh_models_cfg_cli>` roles. The Initiator needs a full overview of the potential
-   Target nodes and their firmware, and will control (and initiate) all firmware updates. The
-   Initiator role is not implemented in the Zephyr Bluetooth Mesh DFU subsystem.
+中继者
+   中继者角色通常由实现蓝牙网状 :ref:`配置者 <bluetooth_mesh_provisioning>` 和 :ref:`配置器
+   <bluetooth_mesh_models_cfg_cli>` 角色的同一设备实现。中继者需要全面了解潜在目标节点及其固件，并将控制（和启动）所有固件更新。中继者角色在 Zephyr 蓝牙网状 DFU 子系统中未实现。
 
 .. figure:: images/dfu_roles_mesh.svg
    :align: center
-   :alt: Graphic overview of the DFU roles mesh nodes can have during the process of image
-         distribution
+   :alt: 图示网状节点在镜像分发过程中可以拥有的 DFU 角色概览
 
-   DFU roles and the associated Bluetooth Mesh models
+   DFU 角色和相关的蓝牙网状模型
 
-Bluetooth Mesh applications may combine the DFU roles in any way they'd like, and even take on
-multiple instances of the same role by instantiating the models on separate elements. For instance,
-the Distributor and Initiator role can be combined by instantiating the
-:ref:`bluetooth_mesh_dfu_cli` on the Initiator node and calling its API directly.
+蓝牙网状应用程序可以以任何方式组合 DFU 角色，甚至可以通过在单独元素上实例化模型来承担同一角色的多个实例。例如，可以通过在中继者节点上实例化 :ref:`bluetooth_mesh_dfu_cli` 并直接调用其 API 来组合分发者和中继者角色。
 
-It's also possible to combine the Initiator and Distributor devices into a single device, and
-replace the Firmware Distribution Server model with a proprietary mechanism that will access the
-Firmware Update Client model directly, e.g. over a serial protocol.
+也可以将中继者和分发者设备组合到单个设备中，并用将直接访问固件更新客户端模型（例如通过串行协议）的专有机制替换固件分发服务器模型。
 
 .. note::
-   All DFU models instantiate one or more :ref:`bluetooth_mesh_blob`, and may need to be spread over
-   multiple elements for certain role combinations.
+   所有 DFU 模型实例化一个或多个 :ref:`bluetooth_mesh_blob`，对于某些角色组合可能需要分布在多个元素上。
 
-Stages
+阶段
 ======
 
-The Bluetooth Mesh DFU process is designed to act in three stages:
+蓝牙网状 DFU 过程设计为在三个阶段中执行：
 
-Upload stage
-   First, the image is uploaded to a Distributor in a mesh network by an external entity, such as a
-   phone or gateway (the Initiator). During the Upload stage, the Initiator transfers the firmware
-   image and all its metadata to the Distributor node inside the mesh network. The Distributor
-   stores the firmware image and its metadata persistently, and awaits further instructions from the
-   Initiator. The time required to complete the upload process depends on the size of the image.
-   After the upload completes, the Initiator can disconnect from the network during the much more
-   time-consuming Distribution stage. Once the firmware has been uploaded to the Distributor, the
-   Initiator may trigger the Distribution stage at any time.
+上传阶段
+   首先，镜像由外部实体（如手机或网关（中继者））上载到网状网络中的分发者。在上传阶段期间，中继者将固件镜像及其所有元数据传输到网状网络内的分发者节点。分发者持久存储固件镜像及其元数据，并等待中继者的进一步指令。完成上载过程所需的时间取决于镜像的大小。上载完成后，中继者可以在更耗时的分发阶段期间断开与网络的连接。一旦固件已上载到分发者，中继者可以随时触发的分发阶段。
 
-Firmware Capability Check stage (optional)
-  Before starting the Distribution stage, the Initiator may optionally check if Target nodes can
-  accept the new firmware. Nodes that do not respond, or respond that they can't receive the new
-  firmware, are excluded from the firmware distribution process.
+固件能力检查阶段（可选）
+  在开始分发阶段之前，中继者可以选择性地检查目标节点是否可以接受新固件。不响应的节点或响应无法接收新固件的节点将从固件分发过程中排除。
 
-Distribution stage
-   Before the firmware image can be distributed, the Initiator transfers the list of Target nodes
-   and their designated firmware image index to the Distributor. Next, it tells the Distributor to
-   start the firmware distributon process, which runs in the background while the Initiator and the
-   mesh network perform other duties. Once the firmware image has been transferred to the Target
-   nodes, the Distributor may ask them to apply the firmware image immediately and report back with
-   their status and new firmware IDs.
+分发阶段
+   在固件镜像可以分发之前，中继者将目标节点列表及其指定固件镜像索引传输给分发者。接下来，它告诉分发者开始固件分发过程，该过程在后台运行，而中继者和网状网络执行其他任务。一旦固件镜像已传输到目标节点，分发者可以要求它们立即应用固件镜像并报告其状态和新固件 ID。
 
-Firmware images
+固件镜像
 ===============
 
-All updatable parts of a mesh node's firmware should be represented as a firmware image. Each Target
-node holds a list of firmware images, each of which should be independently updatable and
-identifiable.
+网状节点固件的所有可更新部分都应表示为固件镜像。每个目标节点持有一个固件镜像列表，每个都应独立可更新和可识别。
 
-Firmware images are represented as a BLOB (the firmware itself) with the following additional
-information attached to it:
+固件镜像表示为 BLOB（固件本身），并附加以下附加信息：
 
-Firmware ID
-   The firmware ID is used to identify a firmware image. The Initiator node may ask the Target nodes
-   for a list of its current firmware IDs to determine whether a newer version of the firmware is
-   available. The format of the firmware ID is vendor specific, but generally, it should include
-   enough information for an Initiator node with knowledge of the format to determine the type of
-   image as well as its version. The firmware ID is optional, and its max length is determined by
-   :kconfig:option:`CONFIG_BT_MESH_DFU_FWID_MAXLEN`.
+固件 ID
+   固件 ID 用于标识固件镜像。中继者节点可以向目标节点请求其当前固件 ID 列表，以确定是否有更新版本的固件可用。固件 ID 的格式是供应商特定的，但一般来说，它应该包含足够的信息，以便具有格式知识的中继者节点确定镜像的类型以及其版本。固件 ID 是可选的，其最大长度由 :kconfig:option:`CONFIG_BT_MESH_DFU_FWID_MAXLEN` 确定。
 
-Firmware metadata
-   The firmware metadata is used by the Target node to determine whether it should accept an
-   incoming firmware update, and what the effect of the update would be. The metadata format is
-   vendor specific, and should contain all information the Target node needs to verify the image, as
-   well as any preparation the Target node has to make before the image is applied. Typical metadata
-   information can be image signatures, changes to the node's Composition Data and the format of the
-   BLOB. The Target node may perform a metadata check before accepting incoming transfers to
-   determine whether the transfer should be started. The firmware metadata can be discarded by the
-   Target node after the metadata check, as other nodes will never request the metadata from the
-   Target node. The firmware metadata is optional, and its maximum length is determined by
-   :kconfig:option:`CONFIG_BT_MESH_DFU_METADATA_MAXLEN`.
+固件元数据
+   固件元数据由目标节点用于确定是否应接受传入固件更新，以及更新的效果是什么。元数据格式是供应商特定的，应包含目标节点验证镜像所需的所有信息，以及目标节点在应用镜像之前必须进行的任何准备。典型的元数据信息可以是镜像签名、节点组合数据的更改和 BLOB 的格式。目标节点可以在接受传入传输之前执行元数据检查，以确定是否应启动传输。目标节点可以在元数据检查后丢弃固件元数据，因为其他节点永远不会从目标节点请求元数据。固件元数据是可选的，其最大长度由 :kconfig:option:`CONFIG_BT_MESH_DFU_METADATA_MAXLEN` 确定。
 
-   The Bluetooth Mesh DFU subsystem in Zephyr provides its own metadata format
-   (:c:struct:`bt_mesh_dfu_metadata`) together with a set of related functions that can be used by
-   an end product. The support for it is enabled using the
-   :kconfig:option:`CONFIG_BT_MESH_DFU_METADATA` option. The format of the metadata is presented in
-   the table below.
+   Zephyr 中的蓝牙网状 DFU 子系统提供自己的元数据格式 (:c:struct:`bt_mesh_dfu_metadata`) 以及可由最终产品使用的一组相关函数。对其的支持使用 :kconfig:option:`CONFIG_BT_MESH_DFU_METADATA` 选项启用。元数据格式在下表中呈现。
 
 +------------------------+--------------+----------------------------------------+
-| Field                  | Size (Bytes) | Description                            |
+| 字段                   | 大小 (字节)  | 描述                                   |
 +========================+==============+========================================+
-| New firmware version   | 8 B          | 1 B: Major version                     |
-|                        |              | 1 B: Minor version                     |
-|                        |              | 2 B: Revision                          |
-|                        |              | 4 B: Build number                      |
+| 新固件版本             | 8 B          | 1 B: 主版本                            |
+|                        |              | 1 B: 次要版本                          |
+|                        |              | 2 B: 修订                              |
+|                        |              | 4 B: 构建号                            |
 +------------------------+--------------+----------------------------------------+
-| New firmware size      | 3 B          | Size in bytes for a new firmware       |
+| 新固件大小             | 3 B          | 新固件的字节大小                      |
 +------------------------+--------------+----------------------------------------+
-| New firmware core type | 1 B          | Bit field:                             |
-|                        |              | Bit 0: Application core                |
-|                        |              | Bit 1: Network core                    |
-|                        |              | Bit 2: Applications specific BLOB.     |
-|                        |              | Other bits: RFU                        |
+| 新固件核心类型         | 1 B          | 位字段:                                |
+|                        |              | 位 0: 应用核心                         |
+|                        |              | 位 1: 网络核心                         |
+|                        |              | 位 2: 应用特定 BLOB。                  |
+|                        |              | 其他位: RFU                            |
 +------------------------+--------------+----------------------------------------+
-| Hash of incoming       | 4 B          | Lower 4 octets of AES-CMAC             |
-| composition data       | (Optional)   | (app-specific-key, composition data).  |
-|                        |              | This field is present, if Bit 0 is set |
-|                        |              | in the New firmware core type field.   |
+| 传入组合数据的哈希     | 4 B          | AES-CMAC 的低 4 字节                   |
+|                        | (可选)       | (应用特定密钥，组合数据)。            |
+|                        |              | 如果在新固件核心类型字段中设置了位 0，  |
+|                        |              | 则此字段存在。                         |
 +------------------------+--------------+----------------------------------------+
-| New number of elements | 2 B          | Number of elements on the node         |
-|                        | (Optional)   | after firmware is applied.             |
-|                        |              | This field is present, if Bit 0 is set |
-|                        |              | in the New firmware core type field.   |
+| 新元素数量             | 2 B          | 应用固件后节点上的元素数量            |
+|                        | (可选)       |                                        |
+|                        |              | 如果在新固件核心类型字段中设置了位 0，  |
+|                        |              | 则此字段存在。                         |
 +------------------------+--------------+----------------------------------------+
-| Application-specific   | <variable>   | Application-specific data to allow     |
-| data for new firmware  | (Optional)   | application to execute some            |
-|                        |              | vendor-specific behaviors using        |
-|                        |              | this data before it can respond        |
-|                        |              | with a status message.                 |
+| 新固件的应用特定数据   | <variable>   | 应用程序特定数据，允许应用程序执行一些|
+|                        | (可选)       | 供应商特定行为，使用此数据             |
+|                        |              | 然后才能用状态消息响应。               |
 +------------------------+--------------+----------------------------------------+
 
   .. note::
 
-      The AES-CMAC algorithm serves as a hashing function with a fixed key and is not used for
-      encryption in Bluetooth Mesh DFU metadata. The resulting hash is not secure since the key is
-      known.
+      AES-CMAC 算法用作具有固定密钥的哈希函数，在蓝牙网状 DFU 元数据中不用于加密。生成的哈希不安全，因为密钥是已知的。
 
-Firmware URI
-   The firmware URI gives the Initiator information about where firmware updates for the image can
-   be found. The URI points to an online resource the Initiator can interact with to get new
-   versions of the firmware. This allows Initiators to perform updates for any node in the mesh
-   network by interacting with the web server pointed to in the URI. The URI must point to a
-   resource using the ``http`` or ``https`` schemes, and the targeted web server must behave
-   according to the Firmware Check Over HTTPS procedure defined by the specification. The firmware
-   URI is optional, and its max length is determined by
-   :kconfig:option:`CONFIG_BT_MESH_DFU_URI_MAXLEN`.
+固件 URI
+   固件 URI 为中继者提供关于在哪里可以找到镜像固件更新的信息。URI 指向中继者可以与之交互以获取固件新版本的在线资源。这允许中继者通过与 URI 中指向的 Web 服务器交互来对网状网络中的任何节点执行更新。URI 必须指向使用 ``http`` 或 ``https` 方案的资源，目标 Web 服务器必须根据规范定义的通过 HTTPS 检查固件程序进行操作。固件 URI 是可选的，其最大长度由 :kconfig:option:`CONFIG_BT_MESH_DFU_URI_MAXLEN` 确定。
 
    .. note::
 
-      The out-of-band distribution mechanism is not supported.
+      不支持带外分发机制。
 
 .. _bluetooth_mesh_dfu_firmware_effect:
 
-Firmware effect
+固件效果
 ---------------
 
-A new image may have the Composition Data Page 0 different from the one allocated on a Target node.
-This may have an effect on the provisioning data of the node and how the Distributor finalizes the
-DFU. Depending on the availability of the Remote Provisioning Server model on the old and new image,
-the device may either boot up unprovisioned after applying the new firmware or require to be
-re-provisioned. The complete list of available options is defined in :c:enum:`bt_mesh_dfu_effect`:
+新镜像可能具有与目标节点上分配的组合数据页面 0 不同的组合数据页面 0。这可能对节点的配置数据以及分发者如何完成 DFU 产生影响。根据旧镜像和新镜像上的远程配置服务器模型的可用性，设备在应用新固件后可能以未配置状态启动或需要重新配置。:c:enum:`bt_mesh_dfu_effect` 中定义了可用选项的完整列表：
 
 :c:enumerator:`BT_MESH_DFU_EFFECT_NONE`
-   The device stays provisioned after the new firmware is programmed. This effect is chosen if the
-   composition data of the new firmware doesn't change.
+   设备在新固件编程后保持配置状态。如果新固件的组合数据不更改，则选择此效果。
 :c:enumerator:`BT_MESH_DFU_EFFECT_COMP_CHANGE_NO_RPR`
-   This effect is chosen when the composition data changes and the device doesn't support the remote
-   provisioning. The new composition data takes place only after re-provisioning.
+   当组合数据更改且设备不支持远程配置时选择此效果。新组合数据仅在重新配置后生效。
 :c:enumerator:`BT_MESH_DFU_EFFECT_COMP_CHANGE`
-   This effect is chosen when the composition data changes and the device supports the remote
-   provisioning. In this case, the device stays provisioned and the new composition data takes place
-   after re-provisioning using the Remote Provisioning models.
+   当组合数据更改且设备支持远程配置时选择此效果。在这种情况下，设备保持配置状态，新组合数据在使用远程配置模型重新配置后生效。
 :c:enumerator:`BT_MESH_DFU_EFFECT_UNPROV`
-  This effect is chosen if the composition data in the new firmware changes, the device does not
-  support the remote provisioning, and the new composition data takes effect after applying the
-  firmware. The effect can also be chosen, if it is necessary to unprovision the device for
-  application-specific reasons.
+  如果新固件中的组合数据更改，设备不支持远程配置，且新组合数据在应用固件后生效，则选择此效果。如果出于应用程序特定原因需要取消配置设备，也可以选择此效果。
 
-When the Target node receives the Firmware Update Firmware Metadata Check message, the Firmware
-Update Server model calls the :c:member:`bt_mesh_dfu_srv_cb.check` callback, the application can
-then process the metadata and provide the effect value. If the effect is
-:c:enumerator:`BT_MESH_DFU_EFFECT_COMP_CHANGE`, the application must call functions
-:c:func:`bt_mesh_comp_change_prepare` and :c:func:`bt_mesh_models_metadata_change_prepare` to
-prepare the Composition Data Page and Models Metadata Page contents before applying the new
-firmware image. See :ref:`bluetooth_mesh_dfu_srv_comp_data_and_models_metadata` for more
-information.
+当目标节点接收到固件更新固件元数据检查消息时，固件更新服务器模型调用 :c:member:`bt_mesh_dfu_srv_cb.check` 回调，应用程序然后可以处理元数据并提供效果值。如果效果是 :c:enumerator:`BT_MESH_DFU_EFFECT_COMP_CHANGE`，应用程序必须调用函数 :c:func:`bt_mesh_comp_change_prepare` 和 :c:func:`bt_mesh_models_metadata_change_prepare` 来准备组合数据页面和模型元数据页面内容，然后才能应用新固件镜像。有关更多信息，请参阅 :ref:`bluetooth_mesh_dfu_srv_comp_data_and_models_metadata`。
 
 
-DFU procedures
+DFU 程序
 **************
 
-The DFU protocol is implemented as a set of procedures that must be performed in a certain order.
+DFU 协议实现为一组必须按特定顺序执行的过程。
 
-The Initiator controls the Upload stage of the DFU protocol, and all Distributor side handling of
-the upload subprocedures is implemented in the :ref:`bluetooth_mesh_dfd_srv`.
+中继者控制 DFU 协议的上传阶段，所有分发者端的上传子程序处理都在 :ref:`bluetooth_mesh_dfd_srv` 中实现。
 
-The Distribution stage is controlled by the Distributor, as implemented by the
-:ref:`bluetooth_mesh_dfu_cli`. The Target node implements all handling of these procedures in the
-:ref:`bluetooth_mesh_dfu_srv`, and notifies the application through a set of callbacks.
+分发阶段由分发者控制，如 :ref:`bluetooth_mesh_dfu_cli` 所实现。目标节点在 :ref:`bluetooth_mesh_dfu_srv` 中实现所有这些程序的处理，并通过一组回调通知应用程序。
 
 .. figure:: images/dfu_stages_procedures_mesh.svg
    :align: center
-   :alt: Overview of DFU stages and procedures
+   :alt: DFU 阶段和程序概览
 
-   DFU stages and procedures as seen from the Distributor
+   从分发者角度看到的 DFU 阶段和程序
 
-Uploading the firmware
+上载固件
 ======================
 
-The Upload Firmware procedure uses the :ref:`bluetooth_mesh_blob` to transfer the firmware image
-from the Initiator to the Distributor. The Upload Firmware procedure works in two steps:
+上载固件程序使用 :ref:`bluetooth_mesh_blob` 将固件镜像从中继者传输到分发者。上载固件程序分两步工作：
 
-1. The Initiator generates a BLOB ID, and sends it to the Distributor's Firmware Distribution Server
-   along with the firmware information and other input parameters of the BLOB transfer. The Firmware
-   Distribution Server stores the information, and prepares its BLOB Transfer Server for the
-   incoming transfer before it responds with a status message to the Initiator.
-#. The Initiator's BLOB Transfer Client model transfers the firmware image to the Distributor's BLOB
-   Transfer Server, which stores the image in a predetermined flash partition.
+1. 中继者生成 BLOB ID，并将其连同固件信息和 BLOB 传输的其他输入参数一起发送到分发者的固件分发服务器。固件分发服务器存储信息，并为其 BLOB 传输服务器准备传入传输，然后向中继者响应状态消息。
+2. 中继者的 BLOB 传输客户端模型将固件镜像传输到分发者的 BLOB 传输服务器，该服务器将镜像存储在预定的闪存分区中。
 
-When the BLOB transfer finishes, the firmware image is ready for distribution. The Initiator may
-upload several firmware images to the Distributor, and ask it to distribute them in any order or at
-any time. Additional procedures are available for querying and deleting firmware images from the
-Distributor.
+当 BLOB 传输完成时，固件镜像准备分发。中继者可以将多个固件镜像上载到分发者，并要求它以任何顺序或任何时间分发它们。有其他程序可用于从分发者查询和删除固件镜像。
 
-The following Distributor's capabilities related to firmware images can be configured using the
-configuration options:
+与固件镜像相关的以下分发者能力可以使用配置选项进行配置：
 
-* :kconfig:option:`CONFIG_BT_MESH_DFU_SLOT_CNT`: Amount of image slots available on the device.
-* :kconfig:option:`CONFIG_BT_MESH_DFD_SRV_SLOT_MAX_SIZE`: Maximum allowed size for each image.
-* :kconfig:option:`CONFIG_BT_MESH_DFD_SRV_SLOT_SPACE`: Available space for all images.
+* :kconfig:option:`CONFIG_BT_MESH_DFU_SLOT_CNT`: 设备上可用的镜像槽数量。
+* :kconfig:option:`CONFIG_BT_MESH_DFD_SRV_SLOT_MAX_SIZE`: 每个镜像的最大允许大小。
+* :kconfig:option:`CONFIG_BT_MESH_DFD_SRV_SLOT_SPACE`: 所有镜像的可用空间。
 
-Populating the Distributor's receivers list
+填充分发者的接收器列表
 ===========================================
 
-Before the Distributor can start distributing the firmware image, it needs a list of Target nodes to
-send the image to. The Initiator gets the full list of Target nodes either by querying the potential
-targets directly, or through some external authority. The Initiator uses this information to
-populate the Distributor's receivers list with the address and relevant firmware image index of each
-Target node. The Initiator may send one or more Firmware Distribution Receivers Add messages to
-build the Distributor's receivers list, and a Firmware Distribution Receivers Delete All message to
-clear it.
+在分发者可以开始分发固件镜像之前，它需要一个目标节点列表来发送镜像。中继者通过直接查询潜在目标或通过某个外部权威来获取完整的目标节点列表。中继者使用此信息用每个目标节点的地址和相关固件镜像索引填充分发者的接收器列表。中继者可以发送一个或多个固件分发接收器添加消息来构建分发者的接收器列表，以及固件分发接收器删除所有消息来清除它。
 
-The maximum number of receivers that can be added to the Distributor is configured through the
-:kconfig:option:`CONFIG_BT_MESH_DFD_SRV_TARGETS_MAX` configuration option.
+可以添加到分发者的接收器最大数量通过 :kconfig:option:`CONFIG_BT_MESH_DFD_SRV_TARGETS_MAX` 配置选项配置。
 
-Initiating the distribution
+启动分发
 ===========================
 
-Once the Distributor has stored a firmware image and received a list of Target nodes, the Initiator
-may initiate the distribution procedure. The BLOB transfer parameters for the distribution are
-passed to the Distributor along with an update policy. The update policy decides whether the
-Distributor should request that the firmware is applied on the Target nodes or not. The Distributor
-stores the transfer parameters and starts distributing the firmware image to its list of Target
-nodes.
+一旦分发者已存储固件镜像并接收目标节点列表，中继者可以启动分发程序。分发的 BLOB 传输参数与更新策略一起传递给分发者。更新策略决定分发者是否应请求在目标节点上应用固件。分发者存储传输参数并开始向其目标节点列表分发固件镜像。
 
-Firmware distribution
+固件分发
 ---------------------
 
-The Distributor's Firmware Update Client model uses its BLOB Transfer Client model's broadcast
-subsystem to communicate with all Target nodes. The firmware distribution is performed with the
-following steps:
+分发者的固件更新客户端模型使用其 BLOB 传输客户端模型的广播子系统与所有目标节点通信。固件分发通过以下步骤执行：
 
-1. The Distributor's Firmware Update Client model generates a BLOB ID and sends it to each Target
-   node's Firmware Update Server model, along with the other BLOB transfer parameters, the Target
-   node firmware image index and the firmware image metadata. Each Target node performs a metadata
-   check and prepares their BLOB Transfer Server model for the transfer, before sending a status
-   response to the Firmware Update Client, indicating if the firmware update will have any effect on
-   the Bluetooth Mesh state of the node.
-#. The Distributor's BLOB Transfer Client model transfers the firmware image to all Target nodes.
-#. Once the BLOB transfer has been received, the Target nodes' applications verify that the firmware
-   is valid by performing checks such as signature verification or image checksums against the image
-   metadata.
-#. The Distributor's Firmware Update Client model queries all Target nodes to ensure that they've
-   all verified the firmware image.
+1. 分发者的固件更新客户端模型生成 BLOB ID 并将其发送到每个目标节点的固件更新服务器模型，连同其他 BLOB 传输参数、目标节点固件镜像索引和固件镜像元数据。每个目标节点执行元数据检查并准备其 BLOB 传输服务器模型进行传输，然后向固件更新客户端发送状态响应，指示固件更新是否对节点的蓝牙网状状态有任何影响。
+2. 分发者的 BLOB 传输客户端模型将固件镜像传输到所有目标节点。
+3. 一旦接收到 BLOB 传输，目标节点的应用程序通过执行签名验证或图像校验和等检查相对于图像元数据的固件是否有效来验证固件。
+4. 分发者的固件更新客户端模型查询所有目标节点以确保它们都已验证固件镜像。
 
-If the distribution procedure completed with at least one Target node reporting that the image has
-been received and verified, the distribution procedure is considered successful.
+如果分发程序完成且至少有一个目标节点报告镜像已接收和验证，则认为分发程序成功。
 
 .. note::
-   The firmware distribution procedure only fails if *all* Target nodes are lost. It is up to the
-   Initiator to request a list of failed Target nodes from the Distributor and initiate additional
-   attempts to update the lost Target nodes after the current attempt is finished.
+   固件分发程序仅在*所有*目标节点丢失时失败。由中继者负责从分发者请求失败目标节点列表，并在当前尝试完成后启动额外尝试来更新丢失的目标节点。
 
-Suspending the distribution
+暂停分发
 ---------------------------
 
-The Initiator can also request the Distributor to suspend the firmware distribution. In this case,
-the Distributor will stop sending any messages to Target nodes. When the firmware distribution is
-resumed, the Distributor will continue sending the firmware from the last successfully transferred
-block.
+中继者也可以请求分发者暂停固件分发。在这种情况下，分发者将停止向目标节点发送任何消息。当固件分发恢复时，分发者将从最后一个成功传输的块继续发送固件。
 
-Applying the firmware image
+应用固件镜像
 ===========================
 
-If the Initiator requested it, the Distributor can initiate the Apply Firmware on Target Node
-procedure on all Target nodes that successfully received and verified the firmware image. The Apply
-Firmware on Target Node procedure takes no parameters, and to avoid ambiguity, it should be
-performed before a new transfer is initiated. The Apply Firmware on Target Node procedure consists
-of the following steps:
+如果中继者请求，分发者可以在所有成功接收和验证固件镜像的目标节点上启动在目标节点上应用固件程序。在目标节点上应用固件程序不接受参数，为避免歧义，应在新传输启动之前执行。在目标节点上应用固件程序包括以下步骤：
 
-1. The Distributor's Firmware Update Client model instructs all Target nodes that have verified the
-   firmware image to apply it. The Target nodes' Firmware Update Server models respond with a status
-   message before calling their application's ``apply`` callback.
-#. The Target node's application performs any preparations needed before applying the transfer, such
-   as storing a snapshot of the Composition Data or clearing its configuration.
-#. The Target node's application swaps the current firmware with the new image and updates its
-   firmware image list with the new firmware ID.
-#. The Distributor's Firmware Update Client model requests the full list of firmware images from
-   each Target node, and scans through the list to make sure that the new firmware ID has replaced
-   the old.
+1. 分发者的固件更新客户端模型指示所有已验证固件镜像的目标节点应用它。目标节点的固件更新服务器模型在调用其应用程序的 ``apply`` 回调之前用状态消息响应。
+2. 目标节点的应用程序执行应用传输之前所需的任何准备，例如存储组合数据的快照或清除其配置。
+3. 目标节点的应用程序将当前固件与新镜像交换，并使用新固件 ID 更新其固件镜像列表。
+4. 分发者的固件更新客户端模型从每个目标节点请求完整固件镜像列表，并扫描列表以确保新固件 ID 已替换旧固件 ID。
 
 .. note::
-   During the metadata check in the distribution procedure, the Target node may have reported that
-   it will become unprovisioned after the firmware image is applied. In this case, the Distributor's
-   Firmware Update Client model will send a request for the full firmware image list, and expect no
-   response.
+   在分发程序的元数据检查期间，目标节点可能已报告在应用固件镜像后它将变为未配置状态。在这种情况下，分发者的固件更新客户端模型将发送完整固件镜像列表的请求，并且不期望响应。
 
-Cancelling the distribution
+取消分发
 ===========================
 
-The firmware distribution can be cancelled at any time by the Initiator. In this case, the
-Distributor starts the cancelling procedure by sending a cancelling message to all Target nodes. The
-Distributor waits for the response from all Target nodes. Once all Target nodes have replied, or the
-request has timed out, the distribution procedure is cancelled. After this the distribution
-procedure can be started again from the ``Firmware distribution`` section.
+中继者可以随时取消固件分发。在这种情况下，分发者通过向所有目标节点发送取消消息来启动取消程序。分发者等待所有目标节点的响应。一旦所有目标节点都已响应或请求超时，分发程序被取消。之后，分发程序可以从 ``固件分发`` 部分再次启动。
 
 
-API reference
+API 参考
 *************
 
-This section lists the types common to the Device Firmware Update mesh models.
+本节列出了设备固件更新网状模型通用的类型。
 
 .. doxygengroup:: bt_mesh_dfd
 

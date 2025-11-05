@@ -1,30 +1,23 @@
 .. _bluetooth_mesh_models_rpr_cli:
 
-Remote Provisioning Client
-##########################
+远程配置客户端
+########################
 
-The Remote Provisioning Client model is a foundation model defined by the Bluetooth
-mesh specification. It is enabled with the
-:kconfig:option:`CONFIG_BT_MESH_RPR_CLI` option.
+远程配置客户端模型是蓝牙网状规范定义的基础模型。它通过
+:kconfig:option:`CONFIG_BT_MESH_RPR_CLI` 选项启用。
 
-The Remote Provisioning Client model is introduced in the Bluetooth Mesh Protocol
-Specification version 1.1.
-This model provides functionality to remotely provision devices into a mesh network, and perform
-Node Provisioning Protocol Interface procedures by interacting with mesh nodes that support the
-:ref:`bluetooth_mesh_models_rpr_srv` model.
+远程配置客户端模型在蓝牙网状协议规范版本 1.1 中引入。该模型提供将设备远程配置到网状网络中的功能，并通过与支持
+:ref:`bluetooth_mesh_models_rpr_srv` 模型的网状节点交互来执行节点配置协议接口过程。
 
-The Remote Provisioning Client model communicates with a Remote Provisioning Server model
-using the device key of the node containing the target Remote Provisioning Server model instance.
+远程配置客户端模型使用包含目标远程配置服务器模型实例的节点的设备密钥与远程配置服务器模型进行通信。
 
-If present, the Remote Provisioning Client model must be instantiated on the primary
-element.
+如果存在，远程配置客户端模型必须在主元素上实例化。
 
-Scanning
-********
+扫描
+******
 
-The scanning procedure is used to scan for unprovisioned devices located nearby the Remote
-Provisioning Server. The Remote Provisioning Client starts a scan procedure by using the
-:c:func:`bt_mesh_rpr_scan_start` call:
+扫描过程用于扫描位于远程配置服务器附近的未配置设备。远程配置客户端通过调用
+:c:func:`bt_mesh_rpr_scan_start` 启动扫描过程：
 
 .. code-block:: C
 
@@ -53,24 +46,14 @@ Provisioning Server. The Remote Provisioning Client starts a scan procedure by u
 
       bt_mesh_rpr_scan_start(&rpr_cli, &srv, uuid, timeout, max_devs, &status);
 
-The above example shows pseudo code for starting a scan procedure on the target Remote Provisioning
-Server node. This procedure will start a ten-second, multiple-device scanning where the generated
-scan report will contain a maximum of three unprovisioned devices. If the UUID argument was
-specified, the same procedure would only scan for the device with the corresponding UUID. After the
-procedure completes, the server sends the scan report that will be handled in the client's
-:c:member:`bt_mesh_rpr_cli.scan_report` callback.
+上述示例显示了在目标远程配置服务器节点上启动扫描过程的伪代码。此过程将启动一个十秒的多设备扫描，其中生成的扫描报告最多包含三个未配置设备。如果指定了 UUID 参数，相同的过程将仅扫描具有相应 UUID 的设备。过程完成后，服务器发送扫描报告，该报告将在客户端的 :c:member:`bt_mesh_rpr_cli.scan_report` 回调中处理。
 
-Additionally, the Remote Provisioning Client model also supports extended scanning with the
-:c:func:`bt_mesh_rpr_scan_start_ext` call. Extended scanning supplements regular scanning by
-allowing the Remote Provisioning Server to report additional data for a specific device. The Remote
-Provisioning Server will use active scanning to request a scan response from the unprovisioned
-device if it is supported by the unprovisioned device.
+此外，远程配置客户端模型还支持通过 :c:func:`bt_mesh_rpr_scan_start_ext` 调用进行扩展扫描。扩展扫描通过允许远程配置服务器为特定设备报告额外数据来补充常规扫描。如果未配置设备支持，远程配置服务器将使用主动扫描从未配置设备请求扫描响应。
 
-Provisioning
-************
+配置
+********
 
-The Remote Provisioning Client starts a provisioning procedure by using the
-:c:func:`bt_mesh_provision_remote` call:
+远程配置客户端通过调用 :c:func:`bt_mesh_provision_remote` 启动配置过程：
 
 .. code-block:: C
 
@@ -88,29 +71,21 @@ The Remote Provisioning Client starts a provisioning procedure by using the
 
       bt_mesh_provision_remote(&rpr_cli, &srv, uuid, net_idx, addr);
 
-The above example shows pseudo code for remotely provisioning a device through a Remote Provisioning
-Server node. This procedure will attempt to provision the device with the corresponding UUID, and
-assign the address 0x0006 to its primary element using the network key located at index zero.
+上述示例显示通过远程配置服务器节点远程配置设备的伪代码。此过程将尝试配置具有相应 UUID 的设备，并使用索引零处的网络键为其主元素分配地址 0x0006。
 
 .. note::
-   During the remote provisioning, the same :c:struct:`bt_mesh_prov` callbacks are triggered as for
-   ordinary provisioning. See section :ref:`bluetooth_mesh_provisioning` for further details.
+   在远程配置期间，与普通配置一样会触发相同的 :c:struct:`bt_mesh_prov` 回调。有关更多详细信息，请参见 :ref:`bluetooth_mesh_provisioning` 部分。
 
-Re-provisioning
-***************
+重新配置
+****************
 
-In addition to scanning and provisioning functionality, the Remote Provisioning Client also provides
-means to reconfigure node addresses, device keys and Composition Data on devices that support the
-:ref:`bluetooth_mesh_models_rpr_srv` model. This is provided through the Node Provisioning Protocol
-Interface (NPPI) which supports the following three procedures:
+除了扫描和配置功能外，远程配置客户端还提供了重新配置支持 :ref:`bluetooth_mesh_models_rpr_srv` 模型的设备上的节点地址、设备密钥和组合数据的方法。这通过节点配置协议接口 (NPPI) 提供，支持以下三个过程：
 
-* Device Key Refresh procedure: Used to change the device key of the Target node without a need to
-  reconfigure the node.
-* Node Address Refresh procedure: Used to change the node’s device key and unicast address.
-* Node Composition Refresh procedure: Used to change the device key of the node, and to add or
-  delete models or features of the node.
+* 设备密钥刷新过程：用于更改目标节点的设备密钥，而无需重新配置节点。
+* 节点地址刷新过程：用于更改节点的设备密钥和单播地址。
+* 节点组合刷新过程：用于更改节点的设备密钥，以及添加或删除节点的模型或功能。
 
-The three NPPI procedures can be initiated with the :c:func:`bt_mesh_reprovision_remote` call:
+三个 NPPI 过程可以通过 :c:func:`bt_mesh_reprovision_remote` 调用启动：
 
 .. code-block:: C
 
@@ -126,15 +101,9 @@ The three NPPI procedures can be initiated with the :c:func:`bt_mesh_reprovision
 
       bt_mesh_reprovision_remote(&rpr_cli, &srv, new_addr, composition_changed);
 
-The above example shows pseudo code for triggering a Node Address Refresh procedure on the Target
-node. The specific procedure is not chosen directly, but rather through the other parameters that
-are inputted. In the example we can see that the current unicast address of the Target is 0x0006,
-while the new address is set to 0x0009. If the two addresses were the same, and the
-``composition_changed`` flag was set to true, this code would instead trigger a Node Composition
-Refresh procedure. If the two addresses were the same, and the ``composition_changed`` flag was set
-to false, this code would trigger a Device Key Refresh procedure.
+上述示例显示了在目标节点上触发节点地址刷新过程的伪代码。具体过程不是直接选择的，而是通过输入的其他参数来选择的。在示例中，我们可以看到目标的当前单播地址是 0x0006，而新地址设置为 0x0009。如果两个地址相同，并且 ``composition_changed`` 标志设置为 true，则此代码将改为触发节点组合刷新过程。如果两个地址相同，并且 ``composition_changed`` 标志设置为 false，则此代码将触发设备密钥刷新过程。
 
-API reference
-*************
+API 参考
+***********
 
 .. doxygengroup:: bt_mesh_rpr_cli

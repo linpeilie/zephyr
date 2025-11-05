@@ -1,10 +1,10 @@
 .. _bluetooth_le_audio_arch:
 
-LE Audio Stack
-##############
+LE Audio 协议栈
+###############
 
 .. graphviz::
-   :caption: Bluetooth Audio Architecture
+   :caption: 蓝牙音频架构
 
    digraph bluetooth_audio_arch {
       r [shape=record, width=5, height=3
@@ -15,41 +15,38 @@ LE Audio Stack
          ];
    }
 
-Overall design
-**************
+总体设计
+********
 
-The overall design of the LE Audio stack is that the implementation follows the specifications
-as closely as possible,
-both in terms of structure but also naming.
-Most API functions are prefixed by the specification acronym
-(e.g. ``bt_bap`` for the Basic Audio Profile (BAP) and ``bt_vcp`` for the Volume Control Profile
-(VCP)). The functions are then further prefixed with the specific role from each profile where
-applicable (e.g. :c:func:`bt_bap_unicast_client_discover` and :c:func:`bt_vcp_vol_rend_set_vol`).
-There are usually a function per procedure defined by the profile or service specifications,
-and additional helper or meta functions that do not correspond to procedures.
+LE Audio 协议栈的总体设计是实现尽可能遵循规范，
+无论是在结构方面还是在命名方面。
+大多数 API 函数都以规范缩略词作为前缀
+（例如，``bt_bap`` 表示基本音频配置文件 (BAP)，``bt_vcp`` 表示音量控制配置文件
+(VCP)）。然后函数会进一步加上每个配置文件中适用的特定角色前缀（例如 :c:func:`bt_bap_unicast_client_discover` 和 :c:func:`bt_vcp_vol_rend_set_vol`）。
+通常每个配置文件或服务规范定义的过程都有一个函数，
+以及额外的辅助或元函数，这些函数不对应于过程。
 
-The structure of the files generally also follow this,
-where BAP related files are prefixed with ``bap`` and VCP related files are prefixed with ``vcp``.
-If the file is specific for a profile role, the role is also embedded in the file name.
+文件的结构通常也遵循这一原则，
+其中 BAP 相关文件以 ``bap`` 为前缀，VCP 相关文件以 ``vcp`` 为前缀。
+如果文件特定于某个配置文件角色，则角色也会嵌入文件名中。
 
-Generic Audio Framework (GAF)
-*****************************
-The Generic Audio Framework (GAF) is considered the middleware of the Bluetooth
-LE Audio architecture. The GAF contains the profiles and services that allows
-higher layer applications and profiles to set up streams, change volume, control
-media and telephony and more. The GAF builds on GATT, GAP and isochronous
-channels (ISO).
+通用音频框架 (GAF)
+*****************
+通用音频框架 (GAF) 被认为是蓝牙
+LE Audio 架构的中间件。GAF 包含允许
+上层应用程序和配置文件建立流、更改音量、控制
+媒体和电话等的配置文件和服务。GAF 构建在 GATT、GAP 和等时通道 (ISO) 之上。
 
-GAF uses GAP to connect, advertise and synchronize to other devices.
-GAF uses GATT to configure streams, associate streams with content
-(e.g. media or telephony), control volume and more.
-GAF uses ISO for the audio streams themselves, both as unicast (connected)
-audio streams or broadcast (unconnected) audio streams.
+GAF 使用 GAP 连接到其他设备、广播和同步。
+GAF 使用 GATT 配置流、将流与内容关联
+（例如媒体或电话）、控制音量等。
+GAF 使用 ISO 处理音频流本身，既可以作为单播（连接）
+音频流，也可以作为广播（未连接）音频流。
 
-GAF mandates the use of the LC3 codec, but also supports other codecs.
+GAF 强制使用 LC3 编解码器，但也支持其他编解码器。
 
 .. graphviz::
-   :caption: Generic Audio Framework (GAF)
+   :caption: 通用音频框架 (GAF)
 
    digraph gaf {
       node [shape=record];
@@ -85,11 +82,11 @@ GAF mandates the use of the LC3 codec, but also supports other codecs.
 
       subgraph gaf_layer {
          cluster=true;
-         label="Generic Audio Framework";
+         label="通用音频框架";
 
          subgraph transition_and_coordination_control_layer {
             cluster=true;
-            label="Transition and Coordination Control";
+            label="转换和协调控制";
             style=dashed;
 
             subgraph cap_layer {
@@ -109,7 +106,7 @@ GAF mandates the use of the LC3 codec, but also supports other codecs.
 
          subgraph stream_control_layer {
             cluster=true;
-            label="Stream Control";
+            label="流控制";
             style=dashed;
 
             subgraph bap_layer {
@@ -124,7 +121,7 @@ GAF mandates the use of the LC3 codec, but also supports other codecs.
 
          subgraph content_control_layer {
             cluster=true;
-            label="Content Control";
+            label="内容控制";
             style=dashed;
 
             subgraph mcp_layer {
@@ -144,7 +141,7 @@ GAF mandates the use of the LC3 codec, but also supports other codecs.
 
          subgraph rendering_and_capture_control_layer {
             cluster=true;
-            label="Rendering and Capture Control";
+            label="渲染和捕获控制";
             style=dashed;
 
             subgraph micp_layer {
@@ -194,13 +191,13 @@ GAF mandates the use of the LC3 codec, but also supports other codecs.
       CSIS -> VCP_AICS;
    }
 
-The top-level profiles TMAP and HAP are not part of the GAF, but rather provide
-top-level requirements for how to use the GAF.
+顶级配置文件 TMAP 和 HAP 不是 GAF 的一部分，而是提供
+如何使用 GAF 的顶级要求。
 
-GAF and the top layer profiles gave been implemented in Zephyr with the following structure.
+GAF 和顶层配置文件已在 Zephyr 中实现，结构如下。
 
 .. graphviz::
-   :caption: Zephyr Generic Audio Framework
+   :caption: Zephyr 通用音频框架
 
    digraph gaf {
       node [shape=record];
@@ -237,13 +234,13 @@ GAF and the top layer profiles gave been implemented in Zephyr with the followin
 
       subgraph gaf_layer {
          cluster=true;
-         label="Generic Audio Framework";
+         label="通用音频框架";
          AUDIO_H [label="audio.h"];
          LC3_H [label="lc3.h"];
 
          subgraph transition_and_coordination_control_layer {
             cluster=true;
-            label="Transition and Coordination Control";
+            label="转换和协调控制";
             style=dashed;
 
             subgraph cap_layer {
@@ -263,7 +260,7 @@ GAF and the top layer profiles gave been implemented in Zephyr with the followin
 
          subgraph stream_control_layer {
             cluster=true;
-            label="Stream Control";
+            label="流控制";
             style=dashed;
 
             subgraph bap_layer {
@@ -278,7 +275,7 @@ GAF and the top layer profiles gave been implemented in Zephyr with the followin
 
          subgraph content_control_layer {
             cluster=true;
-            label="Content Control";
+            label="内容控制";
             style=dashed;
 
             subgraph mcp_layer {
@@ -301,7 +298,7 @@ GAF and the top layer profiles gave been implemented in Zephyr with the followin
 
          subgraph rendering_and_capture_control_layer {
             cluster=true;
-            label="Rendering and Capture Control";
+            label="渲染和捕获控制";
             style=dashed;
 
             subgraph micp_layer {
@@ -352,959 +349,946 @@ GAF and the top layer profiles gave been implemented in Zephyr with the followin
       CSIP_H -> VCP_H;
    }
 
-Profile Dependencies
-====================
+配置文件依赖关系
+================
 
-The LE Audio profiles depend on other profiles and services, as outlined in the following tables.
-In these tables 'Server' refers to acting in the GATT server role, and 'Client' refers to acting in the GATT client role for the specific
-service.
-If a profile role depends on another profile that depends on a service, then that dependency is implicitly also applied to that profile.
-For example, if the CAP Acceptor uses the BAP Unicast Server role, then the requirements on the ASCS Server and PACS Server also apply to the CAP Acceptor.
+LE Audio 配置文件依赖于其他配置文件和服务，如下表所述。
+在这些表中，"Server"指的是在 GATT 服务器角色中行动，"Client"指的是在 GATT 客户端角色中针对特定
+服务行动。
+如果一个配置文件角色依赖于另一个依赖于服务的配置文件，则该依赖关系也隐含地适用于该配置文件。
+例如，如果 CAP 接受器使用 BAP 单播服务器角色，则 ASCS 服务器和 PACS 服务器的要求也适用于 CAP 接受器。
 
-The dependencies for Stream Control (BAP) are in the following table.
+流控制 (BAP) 的依赖关系如下表所示。
 
-.. table:: BAP dependencies
+.. table:: BAP 依赖关系
    :widths: auto
    :align: center
 
    +--------------------+----------------+----------------+------------------+----------------+----------------+---------------------+
-   |                    | Unicast Server | Unicast Client | Broadcast Source | Broadcast Sink | Scan Delegator | Broadcast Assistant |
+   |                    | 单播服务器     | 单播客户端     | 广播源           | 广播接收器     | 扫描委托器     | 广播助手            |
    +====================+================+================+==================+================+================+=====================+
-   | BAP Scan Delegator |                |                |                  | M              |                |                     |
+   | BAP 扫描委托器     |                |                |                  | M              |                |                     |
    +--------------------+----------------+----------------+------------------+----------------+----------------+---------------------+
-   | ASCS Client        |                | M              |                  |                |                |                     |
+   | ASCS 客户端        |                | M              |                  |                |                |                     |
    +--------------------+----------------+----------------+------------------+----------------+----------------+---------------------+
-   | ASCS Server        | M              |                |                  |                |                |                     |
+   | ASCS 服务器        | M              |                |                  |                |                |                     |
    +--------------------+----------------+----------------+------------------+----------------+----------------+---------------------+
-   | PACS Client        |                | M              |                  |                |                | O                   |
+   | PACS 客户端        |                | M              |                  |                |                | O                   |
    +--------------------+----------------+----------------+------------------+----------------+----------------+---------------------+
-   | PACS Server        | M              |                |                  | M              |                |                     |
+   | PACS 服务器        | M              |                |                  | M              |                |                     |
    +--------------------+----------------+----------------+------------------+----------------+----------------+---------------------+
-   | BASS Client        |                |                |                  |                |                | M                   |
+   | BASS 客户端        |                |                |                  |                |                | M                   |
    +--------------------+----------------+----------------+------------------+----------------+----------------+---------------------+
-   | BASS Server        |                |                |                  |                | M              |                     |
+   | BASS 服务器        |                |                |                  |                | M              |                     |
    +--------------------+----------------+----------------+------------------+----------------+----------------+---------------------+
 
-Note:
+注意：
 
-* As the table shows, the Broadcast Source role has no dependencies on other LE Audio profiles or services
+* 如表所示，广播源角色不依赖于其他 LE Audio 配置文件或服务
 
-The dependencies for Content Control (MCP and CCP) are in the following tables.
+内容控制 (MCP 和 CCP) 的依赖关系如下表所示。
 
-.. table:: MCP dependencies
+.. table:: MCP 依赖关系
    :widths: auto
    :align: center
 
    +-------------+----------------------+----------------------+
-   |             | Media Control Server | Media Control Client |
+   |             | 媒体控制服务器       | 媒体控制客户端       |
    +=============+======================+======================+
-   | GMCS Server | M                    |                      |
+   | GMCS 服务器 | M                    |                      |
    +-------------+----------------------+----------------------+
-   | GMCS Client |                      | M                    |
+   | GMCS 客户端 |                      | M                    |
    +-------------+----------------------+----------------------+
-   | MCS Server  | O                    |                      |
+   | MCS 服务器  | O                    |                      |
    +-------------+----------------------+----------------------+
-   | MCS Client  |                      | O                    |
+   | MCS 客户端  |                      | O                    |
    +-------------+----------------------+----------------------+
-   | OTS Server  | O                    |                      |
+   | OTS 服务器  | O                    |                      |
    +-------------+----------------------+----------------------+
-   | OTS Client  |                      | O                    |
+   | OTS 客户端  |                      | O                    |
    +-------------+----------------------+----------------------+
 
-.. table:: CCP dependencies
+.. table:: CCP 依赖关系
    :widths: auto
    :align: center
 
    +--------------+---------------------+---------------------+
-   |              | Call Control Server | Call Control Client |
+   |              | 通话控制服务器       | 通话控制客户端       |
    +==============+=====================+=====================+
-   | GTBS Server  | M                   |                     |
+   | GTBS 服务器  | M                   |                     |
    +--------------+---------------------+---------------------+
-   | GTBS Client  |                     | M                   |
+   | GTBS 客户端  |                     | M                   |
    +--------------+---------------------+---------------------+
-   | TBS Server   | M                   |                     |
+   | TBS 服务器   | M                   |                     |
    +--------------+---------------------+---------------------+
-   | TBS Client   |                     | M                   |
+   | TBS 客户端   |                     | M                   |
    +--------------+---------------------+---------------------+
 
 
-The dependencies for Rendering Control (MICP and VCP) are in the following tables.
+渲染控制 (MICP 和 VCP) 的依赖关系如下表所示。
 
-.. table:: MICP dependencies
+.. table:: MICP 依赖关系
    :widths: auto
    :align: center
 
    +-------------+-----------------------+-------------------+
-   |             | Microphone Controller | Microphone Device |
+   |             | 麦克风控制器          | 麦克风设备        |
    +=============+=======================+===================+
-   | MICS Server | M                     |                   |
+   | MICS 服务器 | M                     |                   |
    +-------------+-----------------------+-------------------+
-   | MICS Client |                       | M                 |
+   | MICS 客户端 |                       | M                 |
    +-------------+-----------------------+-------------------+
-   | AICS Server | O                     |                   |
+   | AICS 服务器 | O                     |                   |
    +-------------+-----------------------+-------------------+
-   | AICS Client |                       | O                 |
+   | AICS 客户端 |                       | O                 |
    +-------------+-----------------------+-------------------+
 
-.. table:: VCP dependencies
+.. table:: VCP 依赖关系
    :widths: auto
    :align: center
 
    +-------------+------------------+-------------------+
-   |             | Volume Renderer  | Volume Controller |
+   |             | 音量渲染器       | 音量控制器       |
    +=============+==================+===================+
-   | VCS Server  | M                |                   |
+   | VCS 服务器  | M                |                   |
    +-------------+------------------+-------------------+
-   | VCS Client  |                  | M                 |
+   | VCS 客户端  |                  | M                 |
    +-------------+------------------+-------------------+
-   | VOCS Server | O                |                   |
+   | VOCS 服务器 | O                |                   |
    +-------------+------------------+-------------------+
-   | VOCS Client |                  | O                 |
+   | VOCS 客户端 |                  | O                 |
    +-------------+------------------+-------------------+
-   | AICS Server | O                |                   |
+   | AICS 服务器 | O                |                   |
    +-------------+------------------+-------------------+
-   | AICS Client |                  | O                 |
+   | AICS 客户端 |                  | O                 |
    +-------------+------------------+-------------------+
 
-The last element in GAF is Transition and Coordination Control (CAP and CSIP) with the dependencies from the following tables.
+GAF 的最后一个元素是转换和协调控制 (CAP 和 CSIP)，其依赖关系如下表所示。
 
-.. table:: CAP dependencies
+.. table:: CAP 依赖关系
    :widths: auto
    :align: center
 
    +----------------------------+----------+-----------+-----------+
-   |                            | Acceptor | Initiator | Commander |
+   |                            | 接受器   | 启动器    | 命令器    |
    +============================+==========+===========+===========+
-   | CAS Server                 | M        |           | C.8       |
+   | CAS 服务器                 | M        |           | C.8       |
    +----------------------------+----------+-----------+-----------+
-   | CAS Client                 |          | M         | M         |
+   | CAS 客户端                 |          | M         | M         |
    +----------------------------+----------+-----------+-----------+
-   | BAP Unicast Client         |          | C.1       |           |
+   | BAP 单播客户端             |          | C.1       |           |
    +----------------------------+----------+-----------+-----------+
-   | BAP Unicast Server         | C.2      |           |           |
+   | BAP 单播服务器             | C.2      |           |           |
    +----------------------------+----------+-----------+-----------+
-   | BAP Broadcast Source       |          | C.1       |           |
+   | BAP 广播源                 |          | C.1       |           |
    +----------------------------+----------+-----------+-----------+
-   | BAP Broadcast Sink         | C.2      |           |           |
+   | BAP 广播接收器             | C.2      |           |           |
    +----------------------------+----------+-----------+-----------+
-   | BAP Broadcast Assistant    |          |           | C.4, C.6  |
+   | BAP 广播助手               |          |           | C.4, C.6  |
    +----------------------------+----------+-----------+-----------+
-   | BAP Scan Delegator         | C.3      |           | C.6       |
+   | BAP 扫描委托器             | C.3      |           | C.6       |
    +----------------------------+----------+-----------+-----------+
-   | VCP Volume Controller      |          |           | C.6       |
+   | VCP 音量控制器             |          |           | C.6       |
    +----------------------------+----------+-----------+-----------+
-   | VCP Volume Renderer        | O        |           |           |
+   | VCP 音量渲染器             | O        |           |           |
    +----------------------------+----------+-----------+-----------+
-   | MICP Microphone Controller |          |           | C.6       |
+   | MICP 麦克风控制器          |          |           | C.6       |
    +----------------------------+----------+-----------+-----------+
-   | MICP Microphone Device     | O        |           |           |
+   | MICP 麦克风设备            | O        |           |           |
    +----------------------------+----------+-----------+-----------+
-   | CCP Call Control Server    |          | O         |           |
+   | CCP 通话控制服务器         |          | O         |           |
    +----------------------------+----------+-----------+-----------+
-   | CCP Call Control Client    | O        |           | C.6       |
+   | CCP 通话控制客户端         | O        |           | C.6       |
    +----------------------------+----------+-----------+-----------+
-   | MCP Media Control Server   |          | O         |           |
+   | MCP 媒体控制服务器         |          | O         |           |
    +----------------------------+----------+-----------+-----------+
-   | MCP Media Control Client   | O        |           | C.6       |
+   | MCP 媒体控制客户端         | O        |           | C.6       |
    +----------------------------+----------+-----------+-----------+
-   | CSIP Set Coordinator       |          | C.5       | M         |
+   | CSIP 集合协调器            |          | C.5       | M         |
    +----------------------------+----------+-----------+-----------+
-   | CSIP Set Member            | C.7      |           |           |
+   | CSIP 集合成员              | C.7      |           |           |
    +----------------------------+----------+-----------+-----------+
 
-Notes:
+注意：
 
-* C.1: Support at least one of BAP Unicast Client or BAP Broadcast Source
-* C.2: Support at least one of BAP Unicast Server or BAP Broadcast Sink
-* C.3: Mandatory if BAP Broadcast Sink
-* C.4: Mandatory if BAP Scan Delegator
-* C.5: Mandatory if BAP Unicast Client
-* C.6: Support at least one
-* C.7: Mandatory if part of a coordinated set
-* C.8: Mandatory if the Commander transmits CAP announcements
+* C.1: 支持 BAP 单播客户端或 BAP 广播源中的至少一个
+* C.2: 支持 BAP 单播服务器或 BAP 广播接收器中的至少一个
+* C.3: 如果是 BAP 广播接收器则为必需的
+* C.4: 如果是 BAP 扫描委托器则为必需的
+* C.5: 如果是 BAP 单播客户端则为必需的
+* C.6: 支持至少一个
+* C.7: 如果是协调集合的一部分则为必需的
+* C.8: 如果命令器传输 CAP 广播则为必需的
 
 
-.. table:: CSIP dependencies
+.. table:: CSIP 依赖关系
    :widths: auto
    :align: center
 
    +------------+------------+-----------------+
-   |            | Set Member | Set Coordinator |
+   |            | 集合成员   | 集合协调器      |
    +============+============+=================+
-   | CSIS Server| M          |                 |
+   | CSIS 服务器| M          |                 |
    +------------+------------+-----------------+
-   | CSIS Client|            | M               |
+   | CSIS 客户端|            | M               |
    +------------+------------+-----------------+
 
 
-The dependencies of the higher level profiles (GMAP, HAP, PBP and TMAP) are listed in the following tables.
+更高级别配置文件 (GMAP、HAP、PBP 和 TMAP) 的依赖关系如下表所示。
 
-.. table:: GMAP dependencies
+.. table:: GMAP 依赖关系
    :widths: auto
    :align: center
 
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   |                            | Unicast Game Gateway | Unicast Game Terminal | Broadcast Game Sender | Broadcast Game Receiver |
+   |                            | 单播游戏网关         | 单播游戏终端          | 广播游戏发送器        | 广播游戏接收器         |
    +============================+======================+=======================+=======================+=========================+
-   | GMAS Server                | M                    | M                     | O                     | M                       |
+   | GMAS 服务器                | M                    | M                     | O                     | M                       |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | GMAS Client                | M                    | O                     | O                     | O                       |
+   | GMAS 客户端                | M                    | O                     | O                     | O                       |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | CAP Initiator              | M                    |                       | M                     |                         |
+   | CAP 启动器                 | M                    |                       | M                     |                         |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | CAP Acceptor               |                      | M                     |                       | M                       |
+   | CAP 接受器                 |                      | M                     |                       | M                       |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | CAP Commander              | M                    |                       | M                     |                         |
+   | CAP 命令器                 | M                    |                       | M                     |                         |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | BAP Broadcast Source       |                      |                       | M                     |                         |
+   | BAP 广播源                 |                      |                       | M                     |                         |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | BAP Broadcast Sink         |                      |                       |                       | M                       |
+   | BAP 广播接收器             |                      |                       |                       | M                       |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | BAP Unicast Client         | M                    |                       |                       |                         |
+   | BAP 单播客户端             | M                    |                       |                       |                         |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | BAP Unicast Server         |                      | M                     |                       |                         |
+   | BAP 单播服务器             |                      | M                     |                       |                         |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | VCP Volume Controller      | M                    |                       |                       |                         |
+   | VCP 音量控制器             | M                    |                       |                       |                         |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | VCP Volume Renderer        |                      | C.1                   |                       | M                       |
+   | VCP 音量渲染器             |                      | C.1                   |                       | M                       |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | MICP Microphone Controller | O                    |                       |                       |                         |
+   | MICP 麦克风控制器          | O                    |                       |                       |                         |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
-   | MICP Microphone Device     |                      | C.2                   |                       |                         |
+   | MICP 麦克风设备            |                      | C.2                   |                       |                         |
    +----------------------------+----------------------+-----------------------+-----------------------+-------------------------+
 
-Notes:
+注意：
 
-* C.1 Mandatory if the UGT supports the UGT Sink feature
-* C.2 Optional if the UGT supports the UGT Source feature
+* C.1 如果 UGT 支持 UGT 接收器功能则为必需的
+* C.2 如果 UGT 支持 UGT 源功能则为可选的
 
-.. table:: HAP dependencies
+.. table:: HAP 依赖关系
    :widths: auto
    :align: center
 
    +----------------------------+-------------+----------------------------+-------------------------------+
-   |                            | Hearing Aid | Hearing Aid Unicast Client | Hearing Aid Remote Controller |
+   |                            | 助听器      | 助听器单播客户端          | 助听器远程控制器             |
    +============================+=============+============================+===============================+
-   | HAS Client                 |             |                            | M                             |
+   | HAS 客户端                 |             |                            | M                             |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | HAS Server                 | M           |                            |                               |
+   | HAS 服务器                 | M           |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | CAP Initiator              |             | M                          |                               |
+   | CAP 启动器                 |             | M                          |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | CAP Acceptor               | M           |                            |                               |
+   | CAP 接受器                 | M           |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | CAP Commander              |             |                            | M                             |
+   | CAP 命令器                 |             |                            | M                             |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | BAP Unicast Client         |             | M                          |                               |
+   | BAP 单播客户端             |             | M                          |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | BAP Unicast Server         | M           |                            |                               |
+   | BAP 单播服务器             | M           |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | VCP Volume Controller      |             |                            | M                             |
+   | VCP 音量控制器             |             |                            | M                             |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | VCP Volume Renderer        | M           |                            |                               |
+   | VCP 音量渲染器             | M           |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | VOCS Server                | C.1         |                            |                               |
+   | VOCS 服务器                | C.1         |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | AICS Server                | O           |                            |                               |
+   | AICS 服务器                | O           |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | MICP Microphone Controller |             |                            | O                             |
+   | MICP 麦克风控制器          |             |                            | O                             |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | MICP Microphone Device     | C.2         |                            |                               |
+   | MICP 麦克风设备            | C.2         |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | CCP Call Control Client    | O           |                            |                               |
+   | CCP 通话控制客户端         | O           |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | CCP Call Control Server    |             | O                          |                               |
+   | CCP 通话控制服务器         |             | O                          |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | CSIP Set Coordinator       |             | M                          | M                             |
+   | CSIP 集合协调器            |             | M                          | M                             |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | CSIP Set Member            | C.3         |                            |                               |
+   | CSIP 集合成员              | C.3         |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | BAS Server                 | C.4         |                            |                               |
+   | BAS 服务器                 | C.4         |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
-   | IAS Server                 | O           |                            |                               |
+   | IAS 服务器                 | O           |                            |                               |
    +----------------------------+-------------+----------------------------+-------------------------------+
 
-Notes:
+注意：
 
-* C.1 Mandatory if the HA supports the Volume Baslance feature and is part of a Binaural Hearing Aid Set
-* C.2 Mandatory if the HA supports the BAP Audio Source Role
-* C.3 Mandatory if the HA is capable of being part of a Binaural Hearing Aid set
-* C.4 If equipped with batteries
-* C.5 If CCP Call Control Server is supported
+* C.1 如果助听器支持音量平衡功能并且是双耳助听器集合的一部分则为必需的
+* C.2 如果助听器支持 BAP 音频源角色则为必需的
+* C.3 如果助听器能够成为双耳助听器集合的一部分则为必需的
+* C.4 如果配备电池
+* C.5 如果支持 CCP 通话控制服务器
 
-.. table:: PBP dependencies
+.. table:: PBP 依赖关系
    :widths: auto
    :align: center
 
    +-------------------------+-------------------------+-----------------------+----------------------------+
-   |                         | Public Broadcast Source | Public Broadcast sink | Public Broadcast Assistant |
+   |                         | 公共广播源              | 公共广播接收器        | 公共广播助手               |
    +=========================+=========================+=======================+============================+
-   | CAP Initiator           | M                       |                       |                            |
+   | CAP 启动器              | M                       |                       |                            |
    +-------------------------+-------------------------+-----------------------+----------------------------+
-   | CAP Acceptor            |                         | M                     |                            |
+   | CAP 接受器              |                         | M                     |                            |
    +-------------------------+-------------------------+-----------------------+----------------------------+
-   | CAP Commander           |                         |                       | M                          |
+   | CAP 命令器              |                         |                       | M                          |
    +-------------------------+-------------------------+-----------------------+----------------------------+
-   | BAP Broadcast Assistant |                         |                       | M                          |
+   | BAP 广播助手            |                         |                       | M                          |
    +-------------------------+-------------------------+-----------------------+----------------------------+
 
-.. table:: TMAP dependencies
+.. table:: TMAP 依赖关系
    :widths: auto
    :align: center
 
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   |                                   | Call Gateway | Call Terminal | Unicast Media Sender | Unicast Media Receiver | Broadcast Media Sender | Broadcast Media Receiver |
+   |                                   | 通话网关     | 通话终端      | 单播媒体发送器       | 单播媒体接收器         | 广播媒体发送器         | 广播媒体接收器          |
    +===================================+==============+===============+======================+========================+========================+==========================+
-   | TMAS Server                       | M            | M             | M                    | M                      | O                      | M                        |
+   | TMAS 服务器                       | M            | M             | M                    | M                      | O                      | M                        |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | TMAS Client                       | O            | O             | O                    | O                      | O                      | O                        |
+   | TMAS 客户端                       | O            | O             | O                    | O                      | O                      | O                        |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | CAP Initiator                     | M            |               | M                    |                        | M                      |                          |
+   | CAP 启动器                        | M            |               | M                    |                        | M                      |                          |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | CAP Acceptor                      |              | M             |                      | M                      |                        | M                        |
+   | CAP 接受器                        |              | M             |                      | M                      |                        | M                        |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | CAP Commander                     | M            | O             | M                    | O                      | O                      | O                        |
+   | CAP 命令器                        | M            | O             | M                    | O                      | O                      | O                        |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | BAP Broadcast Source              |              |               |                      |                        | M                      |                          |
+   | BAP 广播源                        |              |               |                      |                        | M                      |                          |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | BAP Broadcast Sink                |              |               |                      |                        |                        | M                        |
+   | BAP 广播接收器                    |              |               |                      |                        |                        | M                        |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | BAP Unicast Client                | M            |               | M                    |                        |                        |                          |
+   | BAP 单播客户端                    | M            |               | M                    |                        |                        |                          |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | BAP Unicast Server                |              | M             |                      | M                      |                        |                          |
+   | BAP 单播服务器                    |              | M             |                      | M                      |                        |                          |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | VCP Volume Controller             | M            |               | M                    |                        |                        |                          |
+   | VCP 音量控制器                    | M            |               | M                    |                        |                        |                          |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | VCP Volume Renderer               |              | C.1           |                      | M                      |                        | M                        |
+   | VCP 音量渲染器                    |              | C.1           |                      | M                      |                        | M                        |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | MCP Media Control Server          |              |               | M                    |                        |                        |                          |
+   | MCP 媒体控制服务器                |              |               | M                    |                        |                        |                          |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
-   | CCP Call Control Server           | M            |               |                      |                        |                        |                          |
+   | CCP 通话控制服务器                | M            |               |                      |                        |                        |                          |
    +-----------------------------------+--------------+---------------+----------------------+------------------------+------------------------+--------------------------+
 
-Notes:
+注意：
 
-* C.1 Mandatory to support if the BAP Unicast Server is acting as an Audio Sink
+* C.1 如果 BAP 单播服务器充当音频接收器则必须支持
 
-Bluetooth Audio Stack Status
-============================
+蓝牙音频协议栈状态
+==================
 
-The following table shows the current status and support of the profiles in the
-Bluetooth Audio Stack.
+下表显示了蓝牙音频协议栈中配置文件的当前状态和支持情况。
 
-.. table:: Bluetooth Audio Profile status
+.. table:: 蓝牙音频配置文件状态
    :widths: auto
 
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | Module | Role                          | Version | Added in Release | Status                | Remaining                                        |
+   | 模块   | 角色                          | 版本    | 添加版本         | 状态                  | 剩余工作                                        |
    +========+===============================+=========+==================+=======================+==================================================+
-   | VCP    | Volume Renderer               | 1.0.0   | 2.6              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   | VCP    | 音量渲染器                    | 1.0.0   | 2.6              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Volume Controller             | 1.0.0   | 2.6              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   |        | 音量控制器                    | 1.0.0   | 2.6              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | MICP   | Microphone Device             | 1.0.0   | 2.7              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   | MICP   | 麦克风设备                    | 1.0.0   | 2.7              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Microphone Controller         | 1.0.0   | 2.7              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   |        | 麦克风控制器                  | 1.0.0   | 2.7              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | CSIP   | Set Member                    | 1.0.1   | 3.0              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   | CSIP   | 集合成员                      | 1.0.1   | 3.0              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Set Coordinator               | 1.0.1   | 3.0              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   |        | 集合协调器                    | 1.0.1   | 3.0              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | CCP    | Call Control Server           | 1.0.0   | 3.0              | - Feature complete    | - API refactor (in progress)                     |
-   |        |                               |         |                  | - Shell Module        | - Sample Application (in progress)               |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   | CCP    | 通话控制服务器                | 1.0.0   | 3.0              | - 功能完成            | - API 重构（进行中）                            |
+   |        |                               |         |                  | - Shell 模块          | - 示例应用程序（进行中）                        |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Call Control Client           | 1.0.0   | 3.0              | - Feature complete    | - API refactor (in progress)                     |
-   |        |                               |         |                  | - Shell Module        | - Sample Application (in progress)               |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   |        | 通话控制客户端                | 1.0.0   | 3.0              | - 功能完成            | - API 重构（进行中）                            |
+   |        |                               |         |                  | - Shell 模块          | - 示例应用程序（进行中）                        |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | MCP    | Media Control Server          | 1.0.0   | 3.0              | - Feature complete    | - API refactor                                   |
-   |        |                               |         |                  | - Shell Module        | - Support for multiple instances and connections |
-   |        |                               |         |                  | - BSIM test           | - Sample Application                             |
+   | MCP    | 媒体控制服务器                | 1.0.0   | 3.0              | - 功能完成            | - API 重构                                      |
+   |        |                               |         |                  | - Shell 模块          | - 支持多实例和多连接                            |
+   |        |                               |         |                  | - BSIM 测试           | - 示例应用程序                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Media Control Client          | 1.0.0   | 3.0              | - Feature complete    | - API refactor                                   |
-   |        |                               |         |                  | - Shell Module        | - Sample Application                             |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   |        | 媒体控制客户端                | 1.0.0   | 3.0              | - 功能完成            | - API 重构                                      |
+   |        |                               |         |                  | - Shell 模块          | - 示例应用程序                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | BAP    | Unicast Server                | 1.0.1   | 3.0              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   | BAP    | 单播服务器                    | 1.0.1   | 3.0              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Unicast Client                | 1.0.1   | 3.0              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 单播客户端                    | 1.0.1   | 3.0              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Broadcast Source              | 1.0.1   | 3.0              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 广播源                        | 1.0.1   | 3.0              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Broadcast Sink                | 1.0.1   | 3.0              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 广播接收器                    | 1.0.1   | 3.0              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Scan Delegator                | 1.0.1   | 3.3              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 扫描委托器                    | 1.0.1   | 3.3              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Broadcast Assistant           | 1.0.1   | 3.3              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 广播助手                      | 1.0.1   | 3.3              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | CAP    | Acceptor                      | 1.0.1   | 3.2              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   | CAP    | 接受器                        | 1.0.1   | 3.2              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Initiator                     | 1.0.1   | 3.3              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 启动器                        | 1.0.1   | 3.3              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Commander                     |         |                  | - Feature complete    | - Shell Module                                   |
-   |        |                               |         |                  | - BSIM test           | - Sample Application                             |
+   |        | 命令器                        |         |                  | - 功能完成            | - Shell 模块                                    |
+   |        |                               |         |                  | - BSIM 测试           | - 示例应用程序                                  |
    |        |                               |         |                  |                       |                                                  |
    |        |                               |         |                  |                       |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | HAP    | Hearing Aid                   | 1.0.0   | 3.1              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   | HAP    | 助听器                        | 1.0.0   | 3.1              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        |                               |         |                  | - Sample Application  |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Hearing Aid Unicast Client    | 1.0.0   | 3.1              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 助听器单播客户端              | 1.0.0   | 3.1              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Hearing Aid Remote Controller |         |                  | - WIP                 | - Feature complete                               |
-   |        |                               |         |                  |                       | - Shell Module                                   |
-   |        |                               |         |                  |                       | - BSIM test                                      |
-   |        |                               |         |                  |                       | - Sample Application                             |
+   |        | 助听器远程控制器              |         |                  | - 进行中              | - 功能完成                                      |
+   |        |                               |         |                  |                       | - Shell 模块                                    |
+   |        |                               |         |                  |                       | - BSIM 测试                                     |
+   |        |                               |         |                  |                       | - 示例应用程序                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | TMAP   | Call Gateway                  | 1.0.0   | 3.4              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   | TMAP   | 通话网关                      | 1.0.0   | 3.4              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Call Terminal                 | 1.0.0   | 3.4              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 通话终端                      | 1.0.0   | 3.4              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Unicast Media Sender          | 1.0.0   | 3.4              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 单播媒体发送器                | 1.0.0   | 3.4              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Unicast Media Receiver        | 1.0.0   | 3.4              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 单播媒体接收器                | 1.0.0   | 3.4              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Broadcast Media Sender        | 1.0.0   | 3.4              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 广播媒体发送器                | 1.0.0   | 3.4              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Broadcast Media Receiver      | 1.0.0   | 3.4              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 广播媒体接收器                | 1.0.0   | 3.4              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | PBP    | Public Broadcast Source       | 1.0.0   | 3.5              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   | PBP    | 公共广播源                    | 1.0.0   | 3.5              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Public Broadcast Sink         | 1.0.0   | 3.5              | - Feature complete    |                                                  |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
-   |        |                               |         |                  | - Sample Application  |                                                  |
+   |        | 公共广播接收器                | 1.0.0   | 3.5              | - 功能完成            |                                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
+   |        |                               |         |                  | - 示例应用程序        |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Public Broadcast Assistant    |         |                  |                       | - Feature complete                               |
-   |        |                               |         |                  |                       | - Shell Module                                   |
-   |        |                               |         |                  |                       | - BSIM test                                      |
-   |        |                               |         |                  |                       | - Sample Application                             |
+   |        | 公共广播助手                  |         |                  |                       | - 功能完成                                      |
+   |        |                               |         |                  |                       | - Shell 模块                                    |
+   |        |                               |         |                  |                       | - BSIM 测试                                     |
+   |        |                               |         |                  |                       | - 示例应用程序                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   | GMAP   | Unicast Game Gateway          | 1.0.1   | 3.5              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   | GMAP   | 单播游戏网关                  | 1.0.1   | 3.5              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        |                               |         |                  |                       |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Unicast Game Terminal         | 1.0.1   | 3.5              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   |        | 单播游戏终端                  | 1.0.1   | 3.5              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        |                               |         |                  |                       |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Broadcast Game Sender         | 1.0.1   | 3.5              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   |        | 广播游戏发送器                | 1.0.1   | 3.5              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        |                               |         |                  |                       |                                                  |
    |        +-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
-   |        | Broadcast Game Receiver       | 1.0.1   | 3.5              | - Feature complete    | - Sample Application                             |
-   |        |                               |         |                  | - Shell Module        |                                                  |
-   |        |                               |         |                  | - BSIM test           |                                                  |
+   |        | 广播游戏接收器                | 1.0.1   | 3.5              | - 功能完成            | - 示例应用程序                                  |
+   |        |                               |         |                  | - Shell 模块          |                                                  |
+   |        |                               |         |                  | - BSIM 测试           |                                                  |
    |        |                               |         |                  |                       |                                                  |
    +--------+-------------------------------+---------+------------------+-----------------------+--------------------------------------------------+
 
-Using the Bluetooth Audio Stack
-===============================
+使用蓝牙音频协议栈
+==================
 
-To use any of the profiles in the Bluetooth Audio Stack, including the top-level
-profiles outside of GAF, :kconfig:option:`CONFIG_BT_AUDIO` shall be enabled.
-This Kconfig option allows the enabling of the individual profiles inside of the
-Bluetooth Audio Stack. Each profile can generally be enabled on its own, but
-enabling higher-layer profiles (such as CAP, TMAP and HAP) will typically
-require enabling some of the lower layer profiles.
+要使用蓝牙音频协议栈中的任何配置文件，包括 GAF 之外的顶级
+配置文件，必须启用 :kconfig:option:`CONFIG_BT_AUDIO`。
+此 Kconfig 选项允许启用蓝牙音频协议栈内的各个配置文件。每个配置文件通常可以单独启用，但
+启用高层配置文件（如 CAP、TMAP 和 HAP）通常
+需要启用一些低层配置文件。
 
-It is, however, possible to create a device that uses e.g. only Stream Control
-(with just the BAP), without using any of the content control or
-rendering/capture control profiles, or vice versa. Using the higher layer
-profiles will however typically provide a better user experience and better
-interoperability with other devices.
+但是，可以创建仅使用例如流控制
+（仅使用 BAP）的设备，而不使用任何内容控制或
+渲染/捕获控制配置文件，反之亦然。但是，使用高层
+配置文件通常会提供更好的用户体验和更好的
+与其他设备的互操作性。
 
-Common Audio Profile (CAP)
---------------------------
+通用音频配置文件 (CAP)
+----------------------
 
-The Common Audio Profile introduces restrictions and requirements on the lower layer profiles.
-The procedures in CAP works on one or more streams for one or more devices. Is it thus possible via
-CAP to do a single function call to setup multiple streams across multiple devices.
+通用音频配置文件对低层配置文件引入限制和要求。
+CAP 中的过程在一个或多个设备的一个或多个流上工作。因此可以通过
+CAP 进行单个函数调用来设置跨多个设备的多个流。
 
-The figure below shows a complete structure of the procedures in CAP and
-how they correspond to procedures from the other profiles. The circles with I, A and C show whether
-the procedure has active involvement or requirements from the CAP Initiator, CAP Accept and CAP
-Commander roles respectively.
+下图显示了 CAP 中过程的完整结构
+以及它们如何对应其他配置文件中的过程。带有 I、A 和 C 的圆圈分别显示
+该过程是否涉及 CAP 启动器、CAP 接受器和 CAP
+命令器角色的主动参与或要求。
 
 .. figure:: img/cap_proc.svg
    :align: center
-   :alt: Common Audio Profile Procedures
+   :alt: 通用音频配置文件过程
 
-   Common Audio Profile Procedures
+   通用音频配置文件过程
 
-The API reference for CAP can be found in :ref:`Common Audio Profile <bluetooth_cap>`.
+CAP 的 API 参考可以在 :ref:`通用音频配置文件 <bluetooth_cap>` 中找到。
 
-Stream Control (BAP)
---------------------
+流控制 (BAP)
+------------
 
-Stream control is implemented by the Basic Audio Profile. This profile
-defines multiple roles:
+流控制由基本音频配置文件实现。该配置文件
+定义多个角色：
 
-* Unicast Client
-* Unicast Server
-* Broadcast Source
-* Broadcast Sink
-* Scan Delegator
-* Broadcast Assistant
+* 单播客户端
+* 单播服务器
+* 广播源
+* 广播接收器
+* 扫描委托器
+* 广播助手
 
-Each role can be enabled individually, and it is possible to support more than
-one role.
+每个角色可以单独启用，并且可以支持多个
+角色。
 
-Notes about the stream control services
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+关于流控制服务的说明
+~~~~~~~~~~~~~~~~~~~
 
-There are 3 services primarily used by stream control using the Basic Audio Profile.
+使用基本音频配置文件的流控制主要使用 3 个服务。
 
-Audio Stream Control Service (ASCS)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+音频流控制服务 (ASCS)
+^^^^^^^^^^^^^^^^^^^^^
 
-ASCS is a service used exclusively for setting up unicast streams,
-and is located on the BAP Unicast Server device.
-The service exposes one or more endpoints that can either be a sink or source endpoint,
-from the perspective of the Unicast Server.
-That means a sink endpoint is always audio from the Unicast Client to the Unicast Server,
-and a source endpoint is always from the Unicast Server to the Unicast Client.
+ASCS 是专门用于建立单播流的服务，
+位于 BAP 单播服务器设备上。
+该服务公开一个或多个端点，这些端点可以是接收器或源端点，
+从单播服务器的角度来看。
+这意味着接收器端点总是来自单播客户端到单播服务器的音频，
+源端点总是来自单播服务器到单播客户端的音频。
 
-Unlike most other GATT services,
-ASCS require that each characteristic in the service has unique data per client.
-This means that if a Unicast Server is connected to multiple Unicast Clients,
-the Unicast Clients are not able to see or control the endpoints configured by the other clients.
-For example if a person's smartphone is streaming audio to a headset,
-then the same person will not be able to see or control that stream from their smartwatch.
+与大多数其他 GATT 服务不同，
+ASCS 要求服务中的每个特征对每个客户端都有唯一的数据。
+这意味着如果单播服务器连接到多个单播客户端，
+单播客户端无法查看或控制其他客户端配置的端点。
+例如，如果一个人的智能手机正在向耳机流式传输音频，
+那么同一个人将无法从智能手表查看或控制该流。
 
-Broadcast Audio Scan Service (BASS)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+广播音频扫描服务 (BASS)
+^^^^^^^^^^^^^^^^^^^^^
 
-BASS is a service that is exclusively used by the Scan Delegator and Broadcast Assistant.
-The main purpose of the service is to offload scanning from low power peripherals to e.g. phones
-and PCs.
-Unlike ASCS where the data is required to be unique per client,
-the data in BASS (called receive states) are (usually) shared among all connected clients.
-That means it is possible for a person to tell their headphones to synchronize to a
-Broadcast Source using their phone,
-and then later tell their headphones to stop synchronizing using their smartwatch.
+BASS 是仅由扫描委托器和广播助手使用的服务。
+该服务的主要目的是将扫描从低功耗外设卸载到例如手机
+和 PC。
+与 ASCS 要求每个客户端的数据必须唯一不同，
+BASS 中的数据（称为接收状态）通常在所有连接的客户端之间共享。
+这意味着一个人可以让他们的耳机使用手机同步到
+广播源，
+然后 later 告诉他们的耳机使用智能手表停止同步。
 
-A Broadcast Assistant can be any device,
-and may only support this one role without any audio capabilities.
-This allows legacy devices that do not support periodic advertisements or isochronous channels to
-still provide an interface and scan offloading for peripherals.
-The Bluetooth SIG have provided a guide on how to develop such legacy Broadcast Assistants that can
-be found at
-https://www.bluetooth.com/bluetooth-resources/developing-auracast-receivers-with-an-assistant-application-for-legacy-smartphones/.
-An important note about this guide is that many operating systems (especially on phones),
-do not allow generic usage of the BASS UUID,
-effectively making it impossible to implement your own Broadcast Assistant,
-because you cannot access the BASS.
+广播助手可以是任何设备，
+并且可能只支持这一个角色而无需任何音频功能。
+这允许不支持定期广播或等时通道的传统设备
+仍然可以为外设提供接口和扫描卸载。
+蓝牙 SIG 提供了一个关于如何开发此类传统广播助手的指南，
+可以在以下网址找到
+https://www.bluetooth.com/bluetooth-resources/developing-auracast-receivers-with-an-assistant-application-for-legacy-smartphones/。
+关于此指南的一个重要提示是许多操作系统（特别是在手机上），
+不允许普遍使用 BASS UUID，
+实际上使得无法实现你自己的广播助手，
+因为你无法访问 BASS。
 
-Published Audio Capabilities Service (PACS)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+发布音频能力服务 (PACS)
+^^^^^^^^^^^^^^^^^^^^^^^
 
-PACS is used to expose a device's audio capabilities in Published Audio Capabilities (PAC) records.
-PACS is used by nearly all roles,
-where the Unicast Client and Broadcast Assistant will act as PACS clients,
-and Unicast Server and Broadcast Sink will act as PACS servers.
-These records contain information about the codec, and which values are supported by each codec.
-The values for the LC3 codec are defined by the Bluetooth Assigned numbers
-(https://www.bluetooth.com/specifications/assigned-numbers/), and the values for other codecs such
-as SBC are left undefined/implementation specific for BAP.
+PACS 用于在发布音频能力 (PAC) 记录中公开设备的音频能力。
+PACS 几乎被所有角色使用，
+其中单播客户端和广播助手将充当 PACS 客户端，
+单播服务器和广播接收器将充当 PACS 服务器。
+这些记录包含编解码器信息，以及每个编解码器支持哪些值。
+LC3 编解码器的值由蓝牙分配号定义
+（https://www.bluetooth.com/specifications/assigned-numbers/），其他编解码器（如
+SBC）的值在 BAP 中未定义/特定于实现。
 
-PACS also usually share the same data between each connected client,
-but by using functions such as :c:func:`bt_pacs_conn_set_available_contexts_for_conn`,
-it is possible to set specific values for specific clients.
+PACS 通常也在每个连接的客户端之间共享相同的数据，
+但通过使用诸如 :c:func:`bt_pacs_conn_set_available_contexts_for_conn` 之类的函数，
+可以为特定客户端设置特定值。
 
-The API reference for stream control can be found in
-:ref:`Bluetooth Audio <bluetooth_audio>`.
-
-
-Rendering and Capture Control
------------------------------
-
-Rendering and capture control is implemented by the Volume Control Profile
-(VCP) and Microphone Control Profile (MICP).
-
-The VCP implementation supports the following roles
-
-* Volume Control Service (VCS) Server
-* Volume Control Service (VCS) Client
-
-The MICP implementation supports the following roles
-
-* Microphone Control Profile (MICP) Microphone Device (server)
-* Microphone Control Profile (MICP) Microphone Controller (client)
-
-The API reference for volume control can be found in
-:ref:`Bluetooth Volume Control <bluetooth_volume>`.
-
-The API reference for Microphone Control can be found in
-:ref:`Bluetooth Microphone Control <bluetooth_microphone>`.
+流控制的 API 参考可以在
+:ref:`蓝牙音频 <bluetooth_audio>` 中找到。
 
 
-Content Control
+渲染和捕获控制
 ---------------
 
-Content control is implemented by the Call Control Profile (CCP) and
-Media Control Profile (MCP).
+渲染和捕获控制由音量控制配置文件
+(VCP) 和麦克风控制配置文件 (MICP) 实现。
 
-The CCP implementation is not yet implemented in Zephyr.
+VCP 实现支持以下角色
 
-The MCP implementation supports the following roles
+* 音量控制服务 (VCS) 服务器
+* 音量控制服务 (VCS) 客户端
 
-* Media Control Service (MCS) Server via the Media Proxy module
-* Media Control Client (MCC)
+MICP 实现支持以下角色
 
-The API reference for media control can be found in
-:ref:`Bluetooth Media Control <bluetooth_media>`.
+* 麦克风控制配置文件 (MICP) 麦克风设备（服务器）
+* 麦克风控制配置文件 (MICP) 麦克风控制器（客户端）
 
-Generic TBS and Generic MCS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+音量控制的 API 参考可以在
+:ref:`蓝牙音量控制 <bluetooth_volume>` 中找到。
 
-Both the Telephone Bearer Service (TBS) used by CCP and the Media Control Service (MCS) used by MCP
-have the concept of generic instances of the services called Generic TBS (GTBS) and
-Generic MCS (GMCS).
+麦克风控制的 API 参考可以在
+:ref:`蓝牙麦克风控制 <bluetooth_microphone>` 中找到。
 
-While these share a common name prefix, the behavior of these two may be significantly different.
 
-Generic TBS
-^^^^^^^^^^^
+内容控制
+--------
 
-The TBS spec defines GTBS as
+内容控制由通话控制配置文件 (CCP) 和
+媒体控制配置文件 (MCP) 实现。
 
-   GTBS provides a single point of access and exposes a representation of its internal telephone
-   bearers into a single telephone bearer.
-   This service provides telephone status and control of the device as a single unit with a
-   single set of characteristics.
-   It is left up to the implementation to determine what telephone bearer a characteristic of
-   GTBS represents at any time.
-   There is no specified manner of representing a characteristic from each individual TBS that
-   resides on the device to the same characteristic of the GTBS.
+CCP 实现尚未在 Zephyr 中实现。
 
-   For example, if there is more than one TBS on a device and each has a unique telephone bearer
-   name (e.g., Name1 and Name2),
-   the way the GTBS represents the telephone bearer name is left up to the implementation.
-   GTBS is suited for clients that do not need to access or control all the
-   information available on specific telephone bearers.
+MCP 实现支持以下角色
 
-This means that a GTBS instance represents one or more telephone bearers.
-A telephone bearer could be any application on a device that can handle (telephone) calls,
-such as the default Call application on a smartphone,
-but also other applications such as Signal, Discord, Teams, Slack, etc.
+* 通过媒体代理模块的媒体控制服务 (MCS) 服务器
+* 媒体控制客户端 (MCC)
 
-GTBS may be standalone (i.e.the device only has a GTBS instance without any TBS instances),
-and the behavior of the GTBS is mostly left up to the implementation.
-In Zephyr the implementation of GBTS is that it contains some generic information,
-such as the provider name which is defined to  simply be "Generic TBS",
-but the majority of the information in the GTBS instance in Zephyr has been implemented to be a
-union of the data of the other bearers.
-For example if you have a bearer for regular phone calls and
-Teams and have an active call in both bearers,
-then each of those bearers will report a single call,
-but the GTBS instance will report 2 calls,
-making it possible for a simple Call Control Client to control all calls from a single bearer.
-Similarly the supported URIs for each bearer are also made into a union in GTBS, and when placing
-a call using the GTBS the server will pick the most suited bearer depending on the URI.
-For example calls with URI ``tel`` would go to the regular phone application,
-and calls with the URI ``skype`` would go to the Teams application.
+媒体控制的 API 参考可以在
+:ref:`蓝牙媒体控制 <bluetooth_media>` 中找到。
 
-In conclusion the GTBS implementation in Zephyr is a union of the non-generic telephone bearers.
+通用 TBS 和通用 MCS
+~~~~~~~~~~~~~~~~~~~
 
-Generic MCS
-^^^^^^^^^^^
+CCP 使用的电话承载者服务 (TBS) 和 MCP 使用的媒体控制服务 (MCS)
+都具有称为通用 TBS (GTBS) 和
+通用 MCS (GMCS) 的服务通用实例概念。
 
-The MCS spec defines GMCS as
+虽然这些共享一个通用名称前缀，但这两个的行为可能显著不同。
 
-   The GMCS provides status and control of media playback for the device as a single unit.
-   An MCS instance describes and controls the media playback for a
-   specific media player within the device.
-   A device implements MCS instances to allow clients to access the
-   separate internal media player entities.
+通用 TBS
+^^^^^^^^
 
-and where the behavior of GMCS is defined as
+TBS 规范将 GTBS 定义为
 
-   ... the behavior of MCS and GMCS is identical,
-   and all the characteristics and the characteristics' behaviors are the same.
-   The term “MCS” is used throughout the document.
-   Unless otherwise specifically stated in this specification,
-   the same meaning applies to GMCS as well.
+   GTBS 提供单一访问点，并将其内部电话
+   承载者表示为单个电话承载者。
+   此服务以具有单一
+   特征集的单个单元提供设备电话状态和控制。
+   留待实现来确定 GTBS 的特征在
+   任何时间代表什么电话承载者。
+   没有指定的方式将驻留在设备上的每个单独 TBS 的特征
+   表示为 GTBS 的相同特征。
 
-This means that a GMCS instance works the same way as an MCS instance,
-and it follows that GMCS
+   例如，如果设备上有多个 TBS，每个都有唯一的电话承载者
+   名称（例如，Name1 和 Name2），
+   GTBS 表示电话承载者名称的方式留待实现。
+   GTBS 适合不需要访问或控制
+   特定电话承载者上所有可用信息的客户端。
 
-   controls the media playback for a specific media player within the device
+这意味着 GTBS 实例代表一个或多个电话承载者。
+电话承载者可能是设备上可以处理（电话）呼叫的任何应用程序，
+例如智能手机上的默认呼叫应用程序，
+但也可以是诸如 Signal、Discord、Teams、Slack 等其他应用程序。
 
-A media player on a device could be anything that plays media,
-such as a Spotify or Youtube application on a smartphone.
-Thus if a device has multiple MCS instances,
-then each of these control media for that specific application,
-but the GMCS also controls media playback for a specific media player.
-GMCS can thus be considered a pointer to a specific MCS instance,
-and control either e.g. Spotify or Youtube, but not both.
+GTBS 可能是独立的（即设备只有一个 GTBS 实例而没有任何 TBS 实例），
+GTBS 的行为主要留待实现。
+在 Zephyr 中，GBTS 的实现包含一些通用信息，
+例如提供商名称，被定义为简单地是"通用 TBS"，
+但 Zephyr 中 GTBS 实例的大部分信息已被实现为
+其他承载者数据的并集。
+例如，如果你有一个用于常规电话呼叫和
+Teams 的承载者，并且两个承载者中都有活动呼叫，
+那么每个承载者都将报告单个呼叫，
+但 GTBS 实例将报告 2 个呼叫，
+使得简单的呼叫控制客户端能够从单个承载者控制所有呼叫。
+同样，每个承载者支持的 URI 在 GTBS 中也被合并为并集，使用 GTBS 放置呼叫时，服务器将根据 URI 选择最合适的承载者。
+例如，带有 URI ``tel`` 的呼叫将转到常规电话应用程序，
+带有 URI ``skype`` 的呼叫将转到 Teams 应用程序。
 
-The MCS spec does however provide an example of GMCS where a device can
+总之，Zephyr 中的 GTBS 实现是非通用电话承载者的并集。
 
-   Implement a GMCS that provides status and control of media playback for the device as a whole.
+通用 MCS
+^^^^^^^^
 
-Which may indicate that an implementation may use GMCS to represent all media players with GMCS and
-not a specific media player as stated above. In the case where a device does not have any MCS
-instances and only GMCS, then GMCS will point to a generic instance.
+MCS 规范将 GMCS 定义为
 
-The Zephyr implementation of MCS and GMCS is incomplete,
-and currently only supports instantiating a single instance that can either be an MCS or GMCS.
-This means that the implementation is neither complete nor spec-compliant.
+   GMCS 为设备作为单一单元提供媒体播放状态和控制。
+   MCS 实例描述和控制设备内
+   特定媒体播放器的媒体播放。
+   设备实现 MCS 实例以允许客户端访问
+   单独的内部媒体播放实体。
 
-Difference between GTBS and GMCS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GMCS 的行为定义为
 
-The definitions and implementations of GTBS and GMCS as stated above are notably different.
-GTBS works as a union between the other TBS instances (if any),
-and GMCS works as a pointer to a specific MCS instance (if any).
-This effectively means that a simple Call Control Client can control all calls just using GTBS,
-but a Media Control Client may only be able to control a single player using GMCS.
+   ... MCS 和 GMCS 的行为是相同的，
+   所有特征和特征行为都是相同的。
+   文档中通篇使用术语"MCS"。
+   除非本规范另有特别说明，
+   GMCS 同样适用。
 
-Coordinated Sets
-----------------
+这意味着 GMCS 实例的工作方式与 MCS 实例相同，
+因此 GMCS
 
-Coordinated Sets is implemented by the Coordinated Sets Identification Profile
-(CSIP).
+   控制设备内特定媒体播放器的媒体播放
 
-The CSIP implementation supports the following roles
+设备上的媒体播放器可以是任何播放媒体的东西，
+例如智能手机上的 Spotify 或 Youtube 应用程序。
+因此，如果设备有多个 MCS 实例，
+那么每个实例都控制该特定应用程序的媒体，
+但 GMCS 也控制特定媒体播放器的媒体播放。
+因此 GMCS 可以被视为特定 MCS 实例的指针，
+并控制例如 Spotify 或 Youtube，但不能同时控制两者。
 
-* Coordinated Set Identification Service (CSIP) Set Member
-* Coordinated Set Identification Service (CSIP) Set Coordinator
+但是，MCS 规范确实提供了一个 GMCS 示例，其中设备可以
 
-The API reference for media control can be found in
-:ref:`Bluetooth Coordinated Sets <bluetooth_coordinated_sets>`.
+   实现一个为整个设备提供媒体播放状态和控制的 GMCS。
 
-Specification correctness and data location
--------------------------------------------
+这可能表明实现可以使用 GMCS 表示所有媒体播放器，
+而不是如上所述的特定媒体播放器。如果设备没有 MCS
+实例而只有 GMCS，那么 GMCS 将指向通用实例。
 
-The implementations are designed to ensure specification compliance as much as possible.
-When a specification introduces a requirement with e.g. a **shall** then the implementation should
-attempt to ensure that this requirement is always followed.
-Depending on the context of this,
-the implementation ensures this by rejecting invalid parameters from the application,
-or from the remote devices.
+Zephyr 中 MCS 和 GMCS 的实现是不完整的，
+目前只支持实例化一个实例，可以是 MCS 或 GMCS。
+这意味着实现既不完整也不符合规范。
 
-Some requirements from the specifications are not or can not be handled by the stack itself for
-various reasons.
-One reason when the stack cannot handle a requirement is if the data related to the requirement is
-exclusively controlled by the application.
-An example of this is the advertising data,
-where multiple service have requirements for what to advertise and when,
-but where both the advertising state and data is exclusively controlled by the application.
+GTBS 和 GMCS 之间的区别
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-Oppositely there are also requirements from the specification,
-where the data related to the requirement is exclusively controlled by the stack.
-An example of this is the Volume Control Service (VCS) state,
-where the specifications mandata that the VCP Volume Renderer (VCS server) modify the values
-without a choice,
-e.g. when setting the absolutely volume.
-In cases like this the application is only notified about the change with a callback,
-but cannot reject the request (the stack will reject any invalid requests).
+如上所述，GTBS 和 GMCS 的定义和实现明显不同。
+GTBS 用作其他 TBS 实例（如果有）之间的并集，
+GMCS 用作特定 MCS 实例（如果有）的指针。
+实际上，这意味着简单的呼叫控制客户端可以使用 GTBS 控制所有呼叫，
+但媒体控制客户端可能只能使用 GMCS 控制单个播放器。
 
-Generally when the data is simple (like the VCS state which only take up a few bytes),
-the data is kept in and controlled by the stack,
-as this can ensure that the requirements can be handled by the stack,
-making it easier to use a profile role correctly.
-When the data is more complex (e.g. the PAC records),
-the data may be kept by the application and the stack only contains a reference to it.
-When the data is very application specific (e.g. advertising data),
-the data is kept in and controlled by the application.
+协调集合
+--------
 
-As a rule of thumb, the return types of the callbacks for each profile implementation indicate
-whether the data is controlled by the stack or the application.
-For example all the callbacks for the VCP Volume Renderer have the return type of ``void``,
-but the return type of the BAP Unicast Server callbacks are ``int``,
-indicating that the application not only controls a lot of the Unicast Server data,
-but can also reject the requests.
-The choice of what the return type of the callbacks often depend on the specifications,
-and how much control the role has in a given context.
+协调集合由协调集合识别配置文件
+(CSIP) 实现。
 
-Things worth knowing or considering when using LE Audio
-=======================================================
+CSIP 实现支持以下角色
 
-This section describes a few tings to consider when contributing to or using LE Audio in Zephyr.
-The things described by this section are not unique to Zephyr as they are defined by the
-specifications.
+* 协调集合识别服务 (CSIP) 集合成员
+* 协调集合识别服务 (CSIP) 集合协调器
 
-Security requirements
----------------------
+媒体控制的 API 参考可以在
+:ref:`蓝牙协调集合 <bluetooth_coordinated_sets>` 中找到。
 
-All LE Audio services require Security Level 2 but where the key must be 128-bit and derived via an
-OOB method or via LE Secure connections.
-There is no Core-spec defined way of reporting this in GATT,
-as ATT does not have a specific error code for missing OOB method or LE Secure Connections
-(although there is a way to report wrong key size).
+规范正确性和数据位置
+--------------------
 
-In Zephyr we do not force the device to always use these, as a device that uses LE Audio may also
-use other profiles and services that do not require such security.
-We guard all access to services using a custom security check implemented in
-:zephyr_file:`subsys/bluetooth/audio/audio.c`, where all LE Audio services must use the
-internal :c:macro:`BT_AUDIO_CHRC` macro for proper security verification.
+实现旨在尽可能确保符合规范。
+当规范引入例如 **shall** 的要求时，实现应
+尝试确保始终遵循此要求。
+根据上下文，
+实现通过拒绝来自应用程序或
+远程设备的无效参数来确保这一点。
 
-Access to the LTK for encrypted SIRKs in CSIS
----------------------------------------------
+由于各种原因，规范中的一些要求不能或无法由堆栈本身处理。
+堆栈无法处理要求的原因之一是与要求相关的数据
+完全由应用程序控制。
+这方面的例子是广告数据，
+其中多个服务对何时以及要广告什么有要求，
+但广告状态和数据都完全由应用程序控制。
 
-The Coordinated Set Identification Service (CSIS) may encrypt the SIRK (set identity resolving key).
-The process of encrypting the SIRK requires the LTK as the encryption key,
-which is typically not exposed to higher layer implementations such as CSIS.
-This does not have any effect on the security though.
+相反，规范中也有要求，
+其中与要求相关的数据完全由堆栈控制。
+这方面的例子是音量控制服务 (VCS) 状态，
+其中规范要求 VCP 音量渲染器（VCS 服务器）修改值
+无需选择，
+例如在设置绝对音量时。
+在这种情况下，应用程序只通过回调被通知更改，
+但不能拒绝请求（堆栈将拒绝任何无效请求）。
 
-MTU requirements
-----------------
+通常，当数据简单（如只占用几个字节的 VCS 状态）时，
+数据保存在堆栈中并由堆栈控制，
+因为这可以确保要求可以由堆栈处理，
+使正确使用配置文件角色变得更容易。
+当数据更复杂（例如 PAC 记录）时，
+数据可能由应用程序保存，堆栈只包含对它的引用。
+当数据非常特定于应用程序（例如广告数据）时，
+数据保存在应用程序中并由其控制。
 
-The Basic Audio Profile (BAP) has a requirement that both sides shall support a minimum ATT_MTU of
-at least 64 on the unenhanced ATT bearer or at least one enhanced ATT bearer.
-The requirement comes from the preferred (or sometimes mandatory) use of GATT Write Without
-Response, and where support for Write Long Characteristic Value is optional in most cases.
+根据经验，每个配置文件实现的回调返回类型表明
+数据是由堆栈还是应用程序控制。
+例如，VCP 音量渲染器的所有回调的返回类型都是 ``void``，
+但 BAP 单播服务器回调的返回类型是 ``int``，
+表明应用程序不仅控制大量单播服务器数据，
+还可以拒绝请求。
+回调返回类型的选择通常取决于规范，
+以及角色在给定上下文中的控制程度。
 
-If a ASCS device supports values larger than the minimum ATT_MTU of 64 octets, then it shall support
-Read long Characteristic Value by setting :kconfig:option:`CONFIG_BT_ATT_PREPARE_COUNT` to a
-non-zero value.
+使用 LE Audio 时值得了解或考虑的事项
+====================================
 
-LE Audio resources
-##################
+本节描述了在为 Zephyr 中的 LE Audio 做贡献或使用 LE Audio 时需要考虑的一些事项。
+本节描述的事项并非 Zephyr 所独有，因为它们由规范定义。
 
-This section contains some links and reference to resources that are useful for either contributors
-to the LE Audio Stack in Zephyr, LE Audio application developers or both.
+安全要求
+--------
 
-The LE audio channel on Discord
-*******************************
+所有 LE Audio 服务都需要安全级别 2，但密钥必须是 128 位，并通过
+OOB 方法或通过 LE 安全连接派生。
+GATT 中没有核心规范定义的方式来报告这一点，
+因为 ATT 没有专门针对缺少 OOB 方法或 LE 安全连接的错误代码
+（尽管有报告错误密钥大小的方法）。
 
-Zephyr has a specific Discord channel for LE Audio development, which is open to all.
-Find it here at https://discordapp.com/channels/720317445772017664/1207326649591271434 or simply
-search for "bt-audio" from within Discord.
-Since the ``#bt-audio`` channel is open for all,
-we cannot discuss any specifications that are in development in that channel.
-For discussions that require a Bluetooth SIG membership we refer to the ``#bt-sig``
-Discord channel found at https://discordapp.com/channels/720317445772017664/869172014018097162.
+在 Zephyr 中，我们不强制设备始终使用这些，因为使用 LE Audio 的设备也可能
+使用不需要此类安全的其他配置文件和服务。
+我们使用在 :zephyr_file:`subsys/bluetooth/audio/audio.c` 中实现的自定义安全检查来保护对服务的所有访问，
+其中所有 LE Audio 服务都必须使用内部 :c:macro:`BT_AUDIO_CHRC` 宏进行适当的安全验证。
 
-Zephyr weekly meetings
-**********************
+CSIS 中加密 SIRK 的 LTK 访问权限
+--------------------------------
 
-Anyone who is a Bluetooth SIG member and a Zephyr member can join the weekly meetings where we
-discuss and plan the development of LE Audio in Zephyr. You can find the time of the meetings by
-joining the Bluetooth-sig group at https://lists.zephyrproject.org/g/Bluetooth-sig.
+协调集合识别服务 (CSIS) 可能加密 SIRK（集合身份解析密钥）。
+加密 SIRK 的过程需要 LTK 作为加密密钥，
+这通常不会暴露给诸如 CSIS 的上层实现。
+不过这不会对安全性产生任何影响。
 
-Github project
-**************
+MTU 要求
+--------
 
-LE Audio in Zephyr has its own Github project available at
-https://github.com/orgs/zephyrproject-rtos/projects/26.
-The project is mostly automated,
-and the LE Audio contributors almost only rely on the automated workflows
-to present the state of development.
-Anyone is able to pick any of the open issues and work on it.
-If you cannot assign the issue to yourself,
-please leave a comment in the issue itself or ping the Discord channel for help.
+基本音频配置文件 (BAP) 要求双方在非增强 ATT 承载者上支持至少 64 的最小 ATT_MTU，或至少一个增强 ATT 承载者。
+该要求来自首选（或有时强制）使用 GATT 无响应写入，
+在大多数情况下，对写入长特征值的支持是可选的。
 
-Bluetooth SIG errata for LE Audio
+如果 ASCS 设备支持大于最小 ATT_MTU 64 字节的值，则它应通过将 :kconfig:option:`CONFIG_BT_ATT_PREPARE_COUNT` 设置为非零值来支持读取长特征值。
+
+LE Audio 资源
+#############
+
+本节包含一些链接和对资源的引用，这些链接和引用对 Zephyr 中 LE Audio 堆栈的贡献者、LE Audio 应用程序开发者或两者都有用。
+
+Discord 上的 LE 音频频道
+************************
+
+Zephyr 有一个专门的 Discord 频道用于 LE Audio 开发，对所有人开放。
+在这里找到它 https://discordapp.com/channels/720317445772017664/1207326649591271434 或简单地在 Discord 中搜索"bt-audio"。
+由于 ``#bt-audio`` 频道对所有人开放，
+我们无法在该频道中讨论任何正在开发中的规范。
+对于需要蓝牙 SIG 会员资格的讨论，我们参考 ``#bt-sig``
+Discord 频道 https://discordapp.com/channels/720317445772017664/869172014018097162。
+
+Zephyr 周会
+***********
+
+任何蓝牙 SIG 成员和 Zephyr 成员都可以参加每周会议，讨论和规划 Zephyr 中 LE Audio 的开发。你可以通过加入 Bluetooth-sig 组找到会议时间 https://lists.zephyrproject.org/g/Bluetooth-sig。
+
+Github 项目
+**********
+
+Zephyr 中的 LE Audio 有自己的 Github 项目，位于
+https://github.com/orgs/zephyrproject-rtos/projects/26。
+该项目大部分是自动化的，
+LE Audio 贡献者几乎只依赖自动化工作流
+来展示开发状态。
+任何人都可以选择任何开放问题并处理它。
+如果你无法将问题分配给自己，
+请在问题本身中留下评论或在 Discord 频道中ping以寻求帮助。
+
+LE Audio 的蓝牙 SIG 勘误表
+*************************
+
+LE Audio 有许多规范，
+其中几个仍在更新和开发中。
+要获得 LE Audio 规范勘误表的概述，你可以访问
+
+* 通用音频 (GA) 勘误表 https://bluetooth.atlassian.net/wiki/spaces/GA/pages/1634402349/GAWG+Errata+Lists
+* 助听器 (HA) 勘误表 https://bluetooth.atlassian.net/wiki/spaces/HA/pages/1634140216/HA+WG+Errata+List
+* 音频、电话和汽车 (ATA) 勘误表 https://bluetooth.atlassian.net/wiki/spaces/ATA/pages/1668481034/ATA+Errata+Lists
+
+访问勘误表需要蓝牙 SIG 会员资格。
+
+LE Audio 的蓝牙 SIG 工作组
+***********************
+
+蓝牙 SIG 中有 3 个与 LE Audio 相关的工作组：
+
+* 通用音频 (GA) https://www.bluetooth.org/groups/group.aspx?gId=665
+* 助听器 (HA) https://www.bluetooth.org/groups/group.aspx?gId=605
+* 音频、电话和汽车 (ATA) https://www.bluetooth.org/groups/group.aspx?gId=659
+
+通过加入这些组，你还将收到来自其各自邮件列表的电子邮件，
+其中处理多个问题和讨论。
+工作组还有预定的每周会议，
+处理问题和规范的开发。
+
+访问蓝牙 SIG 工作组需要蓝牙 SIG 会员资格。
+
+LE Audio 书籍
+*************
+
+LE Audio 有一本免费电子书 https://www.bluetooth.com/bluetooth-resources/le-audio-book/。
+该书于 2022 年 1 月发布，
+因此在一些规范定稿之前，
+也在一些已发布规范更新之前。
+尽管如此，该书仍为许多概念和想法提供了很好的解释，
+但请参考各个规范以获取技术信息。
+
+蓝牙 SIG 信息论文、报告和指南
 *********************************
 
-There are many specifications for LE Audio,
-and several of them are still being updated and developed.
-To get an overview of the errata for the LE Audio specifications you can visit
-
-* Generic Audio (GA) errata https://bluetooth.atlassian.net/wiki/spaces/GA/pages/1634402349/GAWG+Errata+Lists
-* Hearing Aid (HA) errata https://bluetooth.atlassian.net/wiki/spaces/HA/pages/1634140216/HA+WG+Errata+List
-* Audio, Telephony and Automotive (ATA) errata https://bluetooth.atlassian.net/wiki/spaces/ATA/pages/1668481034/ATA+Errata+Lists
-
-Access to errata requires a Bluetooth SIG membership.
-
-Bluetooth SIG working groups for LE Audio
-*****************************************
-
-There are 3 working groups in the Bluetooth SIG related to LE Audio:
-
-* Generic Audio (GA) https://www.bluetooth.org/groups/group.aspx?gId=665
-* Hearing Aid (HA) https://www.bluetooth.org/groups/group.aspx?gId=605
-* Audio, Telephony, and Automotive (ATA) https://www.bluetooth.org/groups/group.aspx?gId=659
-
-By joining these groups you will also get emails from their respective mailing lists,
-where multiple questions and discussions are handled.
-The working groups also have scheduled weekly meetings,
-where issues and the development of the specifications are handled.
-
-Access to the Bluetooth SIG working groups requires a Bluetooth SIG membership.
-
-The LE Audio Book
-*****************
-
-There is a free ebook on LE Audio at https://www.bluetooth.com/bluetooth-resources/le-audio-book/.
-The book was released in January 2022,
-and thus before some of the specifications were finalized,
-but also before some of the released updates to the specifications.
-Nevertheless the book still provides a good explanation for many of the concepts and ideas,
-but please refer to the individual specifications for technical information.
-
-Bluetooth SIG informational papers, reports and guides
-******************************************************
-
-The Bluetooth SIG occasionally release new informational papers, report and guides.
-These can be found at https://www.bluetooth.com/bluetooth-resources/?tags=le-audio&keyword.
-Here you will also find the aforementioned LE Audio book, among many other good resources.
+蓝牙 SIG 偶尔会发布新的信息论文、报告和指南。
+这些可以在 https://www.bluetooth.com/bluetooth-resources/?tags=le-audio&keyword 找到。
+在这里你还可以找到上述 LE Audio 书，以及许多其他优秀资源。

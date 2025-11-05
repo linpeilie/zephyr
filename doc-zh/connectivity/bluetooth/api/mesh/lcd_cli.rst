@@ -1,24 +1,17 @@
 .. _bluetooth_mesh_lcd_cli:
 
-Large Composition Data Client
+大组合数据客户端
 #############################
 
-The Large Composition Data Client model is a foundation model defined by the Bluetooth Mesh
-specification. The model is optional, and is enabled through the
-:kconfig:option:`CONFIG_BT_MESH_LARGE_COMP_DATA_CLI` option.
+大组合数据客户端模型是蓝牙网状规范定义的基础模型。该模型是可选的，通过 :kconfig:option:`CONFIG_BT_MESH_LARGE_COMP_DATA_CLI` 选项启用。
 
-The Large Composition Data Client model was introduced in the Bluetooth Mesh Protocol Specification
-version 1.1, and supports the functionality of reading pages of Composition Data that do not fit in
-a Config Composition Data Status message and reading the metadata of the model instances on a node
-that supports the :ref:`bluetooth_mesh_lcd_srv` model.
+大组合数据客户端模型在蓝牙网状协议规范版本 1.1 中引入，支持读取不适合配置组合数据状态消息的组合数据页面以及读取支持 :ref:`bluetooth_mesh_lcd_srv` 模型的节点上模型实例元数据的功能。
 
-The Large Composition Data Client model communicates with a Large Composition Data Server model
-using the device key of the node containing the target Large Composition Data Server model instance.
+大组合数据客户端模型使用包含目标大组合数据服务器模型实例的节点的设备密钥与大组合数据服务器模型通信。
 
-If present, the Large Composition Data Client model must only be instantiated on the primary
-element.
+如果存在，大组合数据客户端模型只能在主元素上实例化。
 
-API reference
+API 参考
 *************
 
 .. doxygengroup:: bt_mesh_large_comp_data_cli

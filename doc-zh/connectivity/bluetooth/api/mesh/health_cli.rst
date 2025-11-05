@@ -1,25 +1,17 @@
 .. _bluetooth_mesh_models_health_cli:
 
-Health Client
+健康客户端
 #############
 
-The Health Client model interacts with a Health Server model to read out
-diagnostics and control the node's attention state.
+健康客户端模型与健康服务器模型交互以读取诊断信息并控制节点的注意状态。
 
-All message passing functions in the Health Client API have ``cli`` as
-their first parameter. This is a pointer to the client model instance to be
-used in this function call. The second parameter is the ``ctx`` or message
-context. Message context contains netkey index, appkey index and unicast
-address that the target node uses.
+健康客户端 API 中的所有消息传递函数都将 ``cli`` 作为其第一个参数。这是指向要在此次函数调用中使用的客户端模型实例的指针。第二个参数是 ``ctx`` 或消息上下文。消息上下文包含目标节点使用的网络密钥索引、应用程序密钥索引和单播地址。
 
-The Health Client model is optional, and may be instantiated on any element.
-However, if a Health Client model is instantiated on an element other than the
-primary, an instance must also be present on the primary element.
+健康客户端模型是可选的，可以在任何元素上实例化。但是，如果健康客户端模型在主元素以外的元素上实例化，则主元素上也必须存在一个实例。
 
-See :ref:`bluetooth_mesh_health_faults` for a list of specification defined
-fault values.
+有关规范定义的故障值列表，请参见 :ref:`bluetooth_mesh_health_faults`。
 
-API reference
-*************
+API 参考
+***********
 
 .. doxygengroup:: bt_mesh_health_cli

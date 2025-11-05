@@ -1,11 +1,11 @@
 .. _bluetooth_audio:
 
-Bluetooth Audio
-###############
+蓝牙音频
+#########
 
 
-API Reference
-*************
+API 参考
+********
 
 .. doxygengroup:: bt_audio
 .. doxygengroup:: bt_audio_codec_cfg

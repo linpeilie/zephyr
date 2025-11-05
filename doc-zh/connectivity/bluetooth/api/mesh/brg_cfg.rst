@@ -1,162 +1,140 @@
 .. _bluetooth_mesh_brg_cfg:
 
-Subnet Bridge
+网状桥
 #############
 
-With Bluetooth Mesh Protocol Specification version 1.1, the Bluetooth Mesh Subnet Bridge feature was
-introduced.
-This feature allows mesh networks to use subnets for area isolation, but to also allow communication
-between specific devices in different, adjacent subnets without compromising security.
+随着蓝牙网状协议规范版本 1.1 的推出，蓝牙网状网状桥功能被
+引入。
+此功能允许网状网络使用子网进行区域隔离，但也允许特定设备在不同、相邻的子网中进行通信
+而不损害安全性。
 
-The Bluetooth Mesh Subnet Bridge feature makes it possible for selected nodes in the network to act
-as Subnet Bridges, allowing controlled communication by relaying messages between nodes in adjacent
-subnets.
+蓝牙网状网状桥功能使网络中的选定节点能够充当
+网状桥，通过在相邻
+子网中的节点之间中继消息来允许受控通信。
 
-The Subnet Bridge feature includes two models:
+网状桥功能包括两个模型：
 
 - :ref:`bluetooth_mesh_models_brg_cfg_srv`
 - :ref:`bluetooth_mesh_models_brg_cfg_cli`
 
-The Bridge Configuration Server model is mandatory for supporting the Subnet Bridge feature.
-The Bridge Configuration Client model is optional and allows nodes to configure the Subnet Bridge on
-other nodes.
-These models define the necessary states, messages, and behaviors for configuring and managing the
-Subnet Bridge feature.
+桥接配置服务器模型对于支持网状桥功能是强制的。
+桥接配置客户端模型是可选的，允许节点在其他节点上配置网状桥。
+这些模型定义了配置和管理网状桥功能所需的状态、消息和行为。
 
-The configuration and management of the Subnet Bridge feature are handled using the Bridge
-Configuration Server and Client models.
-A node implementing the Bridge Configuration Client model can act as a *Configuration Manager* for
-the Subnet Bridge feature.
+网状桥功能的配置和管理使用桥接
+配置服务器和客户端模型处理。
+实现桥接配置客户端模型的节点可以充当网状桥功能的*配置管理器*。
 
-Concepts
+概念
 ********
 
-To get a better understanding of the Subnet Bridge feature and its capabilities, an overview of a
-few concepts is needed.
+为了更好地理解网状桥功能及其能力，需要概述一些概念。
 
-Subnet
+子网
 ======
 
-A subnet is a group of nodes within a mesh network that share a common network key, enabling them to
-communicate securely at the network layer.
-Each subnet operates independently, with nodes exchanging messages exclusively within that group.
-A node may belong to multiple subnets at the same time.
+子网是网状网络内共享公共网络密钥的一组节点，使它们能够
+在网络层安全通信。
+每个子网独立运行，节点仅在该组内交换消息。
+一个节点可以同时属于多个子网。
 
-Subnet Bridge node
+网状桥节点
 ==================
 
-A Subnet Bridge node is a node in a Bluetooth Mesh network that belongs to multiple subnets and has
-a Subnet Bridge functionality enabled. Subnet bridging can be performed only by such a node. The
-Subnet Bridge node connects the subnets, and allows communication between them by relaying
-messages across the subnet groups.
+网状桥节点是蓝牙网状网络中的节点，属于多个子网并具有
+网状桥功能启用。只有这样的节点才能执行网状桥接。网状桥节点连接子网，并通过在子网组之间中继消息允许它们之间的通信。
 
-The Subnet Bridge node has a primary subnet, based on the primary NetKey, which handles the
-IV Update procedure and propagates updates to other subnets.
-The secondary subnets, on which messages are relayed, are referred to as *bridged subnets*.
+网状桥节点具有基于主 NetKey 的主子网，该主网处理
+IV 更新过程并将更新传播到其他子网。
+在其上中继消息的辅助子网被称为*桥接子网*。
 
-Bridging Table
+桥接表
 ==============
 
-The Bridging Table contains the entries for the subnets that are bridged by the node, and is managed
-by the Bridge Configuration Server model.
+桥接表包含由节点桥接的子网的条目，并由桥接配置服务器模型管理。
 
-The maximum number of entries in the bridging table is defined by the
-:kconfig:option:`CONFIG_BT_MESH_BRG_TABLE_ITEMS_MAX` option, which defaults to the minimum value of
-16, with a maximum possible size of 255.
+桥接表中的最大条目数由
+:kconfig:option:`CONFIG_BT_MESH_BRG_TABLE_ITEMS_MAX` 选项定义，默认值为最小值
+16，最大可能大小为 255。
 
-Enabling or disabling the Subnet Bridge feature
+启用或禁用网状桥功能
 ***********************************************
 
-The Bridge Configuration Client (or Configuration Manager) can enable or disable the Subnet Bridge
-feature on a node by sending a **Subnet Bridge Set** message to the Bridge Configuration
-Server model on the target node, using the :c:func:`bt_mesh_brg_cfg_cli_set` function.
+桥接配置客户端（或配置管理器）可以通过向目标节点上的桥接配置
+服务器模型发送**网状桥设置**消息来启用或禁用节点上的网状桥功能，使用 :c:func:`bt_mesh_brg_cfg_cli_set` 函数。
 
-Adding or removing subnets
+添加或移除子网
 **************************
 
-The Bridge Configuration Client can add or remove an entry from the Bridging Table by sending a
-**Bridging Table Add** or **Bridging Table Remove** message to the Bridge Configuration
-Server model on the target node, calling the :c:func:`bt_mesh_brg_cfg_cli_table_add` or
-:c:func:`bt_mesh_brg_cfg_cli_table_remove` functions.
+桥接配置客户端可以通过向目标节点上的桥接配置
+服务器模型发送**桥接表添加**或**桥接表移除**消息来添加或移除桥接表中的条目，调用 :c:func:`bt_mesh_brg_cfg_cli_table_add` 或
+:c:func:`bt_mesh_brg_cfg_cli_table_remove` 函数。
 
 .. _bluetooth_mesh_brg_cfg_states:
 
-Subnet Bridge states
+网状桥状态
 ********************
 
-The Subnet Bridge has the following states:
+网状桥具有以下状态：
 
-- *Subnet Bridge*: This state indicates whether the Subnet Bridge feature is enabled or disabled on
-  the node.
-  The Bridge Configuration Client can retrieve this information by sending a **Subnet Bridge Get**
-  message to the Bridge Configuration Server using the :c:func:`bt_mesh_brg_cfg_cli_get` function.
+- *网状桥*：此状态指示网状桥功能在节点上是启用还是禁用。
+  桥接配置客户端可以通过使用 :c:func:`bt_mesh_brg_cfg_cli_get` 函数向桥接配置服务器发送**网状桥获取**消息来检索此信息。
 
-- *Bridging Table*: This state holds the bridging table. The Client can request a list of
-  entries from a Bridging Table by sending a **Bridging Table Get** message to the target node using
-  the :c:func:`bt_mesh_brg_cfg_cli_table_get` function.
+- *桥接表*：此状态保存桥接表。客户端可以通过使用
+  :c:func:`bt_mesh_brg_cfg_cli_table_get` 函数向目标节点发送**桥接表获取**消息来请求桥接表的条目列表。
 
-  The Client can get a list of subnets currently bridged by a Subnet Bridge by sending a
-  **Bridged Subnets Get** message to the target Server by calling the
-  :c:func:`bt_mesh_brg_cfg_cli_subnets_get` function.
+  客户端可以通过调用
+  :c:func:`bt_mesh_brg_cfg_cli_subnets_get` 函数向目标服务器发送**桥接子网获取**消息来获取当前由网状桥桥接的子网列表。
 
-- *Bridging Table Size*: This state reports the maximum number of entries the Bridging Table can
-  store. The Client can retrieve this information by sending a **Bridging Table Size Get** message
-  using the :c:func:`bt_mesh_brg_cfg_cli_table_size_get` function.
-  This is a read-only state.
+- *桥接表大小*：此状态报告桥接表可以存储的最大条目数。客户端可以通过使用 :c:func:`bt_mesh_brg_cfg_cli_table_size_get` 函数发送**桥接表大小获取**消息来检索此信息。
+  这是一个只读状态。
 
-Subnet bridging and replay protection
+网状桥接和重放保护
 *************************************
 
-The Subnet Bridge feature enables message relaying between subnets and requires effective replay
-protection to ensure network security. Key considerations to take into account are described below.
+网状桥功能启用子网之间的消息中继，并需要有效的重放保护来确保网络安全。要考虑的关键注意事项如下所述。
 
-Relay buffer considerations
+中继缓冲区注意事项
 ===========================
 
-When a message is relayed between subnets by a Subnet Bridge, it is allocated from the relay buffer
-pool. The number of relay buffers are configurable using the
-:kconfig:option:`CONFIG_BT_MESH_RELAY_BUF_COUNT` Kconfig option.
+当消息由网状桥在子网之间中继时，它是从中继缓冲区
+池中分配的。中继缓冲区的数量可以使用
+:kconfig:option:`CONFIG_BT_MESH_RELAY_BUF_COUNT` Kconfig 选项进行配置。
 
-When :kconfig:option:`CONFIG_BT_MESH_ADV_EXT` is enabled, messages will be transmitted using the
-relay advertising sets. The number of advertising sets are configurable using the
-:kconfig:option:`CONFIG_BT_MESH_RELAY_ADV_SETS` Kconfig option.
+当 :kconfig:option:`CONFIG_BT_MESH_ADV_EXT` 启用时，消息将使用
+中继广告集进行传输。广告集的数量可以使用
+:kconfig:option:`CONFIG_BT_MESH_RELAY_ADV_SETS` Kconfig 选项进行配置。
 
-Both the relay buffer pool and advertising sets can be used even if the relay feature
-:kconfig:option:`CONFIG_BT_MESH_RELAY` is disabled.
+即使中继功能
+:kconfig:option:`CONFIG_BT_MESH_RELAY` 被禁用，中继缓冲区池和广告集都可以使用。
 
-Replay protection and Bridging Table
+重放保护和桥接表
 ====================================
 
-A Subnet Bridge node must implement replay protection for all Access and Transport Control messages
-sent to bridged subnets.
+网状桥节点必须对发送到桥接子网的所有接入和传输控制消息实现重放保护。
 
-The Replay Protection List (RPL) works with the Bridging Table to ensure security:
+重放保护列表 (RPL) 与桥接表一起工作以确保安全：
 
-- The Subnet Bridge stores the latest IVISeq for each source address authorized to send messages to
-  bridged subnets.
+- 网状桥为每个被授权向桥接子网发送消息的源地址存储最新的 IVISeq。
 
-- Messages with an IVISeq less than or equal to the stored value are discarded, while valid messages
-  update the stored IVISeq before being relayed.
+- 具有小于或等于存储值的 IVISeq 的消息被丢弃，而有效消息在中继之前更新存储的 IVISeq。
 
-To ensure proper operation, it is important that the RPL and Bridging Table are synchronized,
-as every bridged message must pass through the replay protection mechanism before being relayed.
+为了确保正常操作，RPL 和桥接表同步很重要，
+因为每个桥接消息在中继之前必须通过重放保护机制。
 
 .. note::
 
-   The RPL size should scale with the Bridging Table. As the number of bridged subnets grows,
-   more source addresses and IVISeq values must be tracked, requiring a larger RPL to maintain
-   effective replay protection.
+   RPL 大小应该与桥接表缩放。随着桥接子网数量的增长，
+   必须跟踪更多的源地址和 IVISeq 值，需要更大的 RPL 来维护有效的重放保护。
 
-Subnet Bridge and Directed Forwarding
+网状桥和定向转发
 *************************************
 
-Bluetooth Mesh Directed Forwarding (MDF) enables efficient routing between nodes across subnets by
-optimizing relay paths. While MDF can enhance Subnet Bridging by handling path discovery and
-forwarding, the current implementation does not support this feature.
+蓝牙网状定向转发 (MDF) 通过优化中继路径来实现跨子网节点之间的高效路由。虽然 MDF 可以通过处理路径发现和转发来增强网状桥接，但当前实现不支持此功能。
 
-API reference
+API 参考
 *************
 
-This section contains types and defines common to the Bridge Configuration models.
+本节包含桥接配置模型通用的类型和定义。
 
 .. doxygengroup:: bt_mesh_brg_cfg

@@ -1,10 +1,10 @@
 .. _bluetooth_cap:
 
-Common Audio Profile
-####################
+通用音频配置文件
+################
 
 
-API Reference
-*************
+API 参考
+********
 
 .. doxygengroup:: bt_cap
