@@ -1,14 +1,12 @@
 .. _west-build-flash-debug:
 
-Building, Flashing and Debugging
-################################
+构建、烧录和调试
+################
 
-Zephyr provides several :ref:`west extension commands <west-extensions>` for
-building, flashing, and interacting with Zephyr programs running on a board:
-``build``, ``flash``, ``debug``, ``debugserver`` and ``attach``.
+Zephyr为构建、烧录和与运行在板上的Zephyr程序交互提供了多个:ref:`west扩展命令<west-extensions>`：
+``build``、``flash``、``debug``、``debugserver``和``attach``。
 
-For information on adding board support for the flashing and debugging
-commands, see :ref:`flash-and-debug-support` in the board porting guide.
+有关为烧录和调试命令添加板级支持的信息，请参见板卡移植指南中的:ref:`flash-and-debug-support`。
 
 .. Add a per-page contents at the top of the page. This page is nested
    deeply enough that it doesn't have any subheadings in the main nav.
@@ -20,293 +18,226 @@ commands, see :ref:`flash-and-debug-support` in the board porting guide.
 
 .. _west-building:
 
-Building: ``west build``
+构建: ``west build``
 ************************
 
-.. tip:: Run ``west build -h`` for a quick overview.
+.. tip:: 运行``west build -h``以快速了解概览。
 
-The ``build`` command helps you build Zephyr applications from source. You can
-use :ref:`west config <west-config-cmd>` to configure its behavior.
+``build``命令帮助您从源代码构建Zephyr应用程序。您可以使用:ref:`west配置<west-config-cmd>`来配置其行为。
 
-Its default behavior tries to "do what you mean":
+其默认行为尝试"做您想要的"：
 
-- If there is a Zephyr build directory named :file:`build` in your current
-  working directory, it is incrementally re-compiled. The same is true if you
-  run ``west build`` from a Zephyr build directory.
+- 如果您当前工作目录中有一个名为:file:`build`的Zephyr构建目录，它将被增量重新编译。如果您从Zephyr构建目录运行``west build``，情况也是如此。
 
-- Otherwise, if you run ``west build`` from a Zephyr application's source
-  directory and no build directory is found, a new one is created and the
-  application is compiled in it.
+- 否则，如果您从Zephyr应用程序的源目录运行``west build``且没有找到构建目录，将创建一个新目录，应用程序将在其中编译。
 
-Basics
+基础知识
 ======
 
-The easiest way to use ``west build`` is to go to an application's root
-directory (i.e. the folder containing the application's :file:`CMakeLists.txt`)
-and then run::
+使用``west build``的最简单方法是转到应用程序的根目录（即包含应用程序:file:`CMakeLists.txt`的文件夹），然后运行::
 
   west build -b <BOARD>
 
-Where ``<BOARD>`` is the name of the board you want to build for. This is
-exactly the same name you would supply to CMake if you were to invoke it with:
-``cmake -DBOARD=<BOARD>``.
+其中``<BOARD>``是您要构建的板卡名称。这与您调用CMake时将提供的名称完全相同：``cmake -DBOARD=<BOARD>``。
 
 .. tip::
 
-   You can use the :ref:`west boards <west-boards>` command to list all
-   supported boards.
+   您可以使用:ref:`west boards <west-boards>`命令列出所有支持的板卡。
 
-A build directory named :file:`build` will be created, and the application will
-be compiled there after ``west build`` runs CMake to create a build system in
-that directory. If ``west build`` finds an existing build directory, the
-application is incrementally re-compiled there without re-running CMake. You
-can force CMake to run again with ``--cmake``.
+将创建一个名为:file:`build`的构建目录，在``west build``运行CMake在该目录中创建构建系统后，应用程序将在那里编译。如果``west build``找到现有的构建目录，应用程序将在那里增量重新编译，而不会重新运行CMake。您可以使用``--cmake``强制CMake再次运行。
 
-You don't need to use the ``--board`` option if you've already got an existing
-build directory; ``west build`` can figure out the board from the CMake cache.
-For new builds, the ``--board`` option, :envvar:`BOARD` environment variable,
-or ``build.board`` configuration option are checked (in that order).
+如果您已经有一个现有的构建目录，则不需要使用``--board``选项；``west build``可以从CMake缓存中找出板卡。对于新构建，将依次检查``--board``选项、:envvar:`BOARD`环境变量或``build.board``配置选项。
 
 .. _west-multi-domain-builds:
 
-Sysbuild (multi-domain builds)
+Sysbuild（多域构建）
 ==============================
 
-:ref:`sysbuild` can be used to create a multi-domain build system combining
-multiple images for a single or multiple boards.
+:ref:`sysbuild`可用于创建多域构建系统，为单个或多个板卡组合多个镜像。
 
-Use ``--sysbuild`` to select the :ref:`sysbuild` build infrastructure with
-``west build`` to build multiple domains.
+使用``--sysbuild``选择带有``west build``的:ref:`sysbuild`构建基础架构来构建多个域。
 
-More detailed information regarding the use of sysbuild can be found in the
-:ref:`sysbuild` guide.
+有关使用sysbuild的更多详细信息，可以在:ref:`sysbuild`指南中找到。
 
 .. tip::
 
-   The ``build.sysbuild`` configuration option can be enabled to tell
-   ``west build`` to default build using sysbuild.
-   ``--no-sysbuild`` can be used to disable sysbuild for a specific build.
+   可以启用``build.sysbuild``配置选项来告诉``west build``默认使用sysbuild构建。
+   ``--no-sysbuild``可用于为特定构建禁用sysbuild。
 
-``west build`` will build all domains through the top-level build folder of the
-domains specified by sysbuild.
+``west build``将通过sysbuild指定的域的顶级构建文件夹构建所有域。
 
-A single domain from a multi-domain project can be built by using ``--domain``
-argument.
+多域项目中的单个域可以通过使用``--domain``参数来构建。
 
-Examples
+示例
 ========
 
-Here are some ``west build`` usage examples, grouped by area.
+以下是按区域分组的一些``west build``使用示例。
 
-Forcing CMake to Run Again
+强制CMake重新运行
 --------------------------
 
-To force a CMake re-run, use the ``--cmake`` (or ``-c``) option::
+要强制CMake重新运行，请使用``--cmake``（或``-c``）选项::
 
   west build -c
 
-Setting a Default Board
+设置默认板卡
 -----------------------
 
-To configure ``west build`` to build for the ``reel_board`` by default::
+要配置``west build``默认构建``reel_board``::
 
   west config build.board reel_board
 
-(You can use any other board supported by Zephyr here; it doesn't have to be
-``reel_board``.)
+（您可以在此处使用Zephyr支持的任何其他板卡；不一定是``reel_board``。）
 
 .. _west-building-dirs:
 
-Setting Source and Build Directories
+设置源目录和构建目录
 ------------------------------------
 
-To set the application source directory explicitly, give its path as a
-positional argument::
+要显式设置应用程序源目录，请将其路径作为位置参数提供::
 
   west build -b <BOARD> path/to/source/directory
 
-To set the build directory explicitly, use ``--build-dir`` (or ``-d``)::
+要显式设置构建目录，请使用``--build-dir``（或``-d``）::
 
   west build -b <BOARD> --build-dir path/to/build/directory
 
-To change the default build directory from :file:`build`, use the
-``build.dir-fmt`` configuration option. This lets you name build
-directories using format strings, like this::
+要将默认构建目录从:file:`build`更改为其他目录，请使用``build.dir-fmt``配置选项。这允许您使用格式字符串命名构建目录，如下所示::
 
   west config build.dir-fmt "build/{board}/{app}"
 
-With the above, running ``west build -b reel_board samples/hello_world`` will
-use build directory :file:`build/reel_board/hello_world`.  See
-:ref:`west-building-config` for more details on this option.
+使用上述配置，运行``west build -b reel_board samples/hello_world``将使用构建目录:file:`build/reel_board/hello_world`。有关此选项的更多详细信息，请参见:ref:`west-building-config`。
 
-Setting the Build System Target
+设置构建系统目标
 -------------------------------
 
-To specify the build system target to run, use ``--target`` (or ``-t``).
+要指定要运行的构建系统目标，请使用``--target``（或``-t``）。
 
-For example, on host platforms with QEMU, you can use the ``run`` target to
-build and run the :zephyr:code-sample:`hello_world` sample for the emulated
-:zephyr:board:`qemu_x86 <qemu_x86>` board in one command::
+例如，在带有QEMU的主机平台上，您可以使用``run``目标在一个命令中构建并运行模拟:zephyr:board:`qemu_x86 <qemu_x86>`板卡的:zephyr:code-sample:`hello_world`示例::
 
   west build -b qemu_x86 -t run samples/hello_world
 
-As another example, to use ``-t`` to list all build system targets::
+另一个示例，使用``-t``列出所有构建系统目标::
 
   west build -t help
 
-As a final example, to use ``-t`` to run the ``pristine`` target, which deletes
-all the files in the build directory::
+最后一个示例，使用``-t``运行``pristine``目标，该目标删除构建目录中的所有文件::
 
   west build -t pristine
 
 .. _west-building-pristine:
 
-Pristine Builds
+全新构建
 ---------------
 
-A *pristine* build directory is essentially a new build directory. All
-byproducts from previous builds have been removed.
+*pristine*构建目录本质上是一个新的构建目录。所有先前构建的副产物都已被移除。
 
-To force ``west build`` make the build directory pristine before re-running
-CMake to generate a build system, use the ``--pristine=always`` (or
-``-p=always``) option.
+要强制``west build``在重新运行CMake生成构建系统之前使构建目录保持原始状态，请使用``--pristine=always``（或``-p=always``）选项。
 
-Giving ``--pristine`` or ``-p`` without a value has the same effect as giving
-it the value ``always``. For example, these commands are equivalent::
+不提供值而给出``--pristine``或``-p``与为其提供值``always`具有相同的效果。例如，以下命令是等效的::
 
   west build -p -b reel_board samples/hello_world
   west build -p=always -b reel_board samples/hello_world
 
-By default, ``west build`` makes no attempt to detect if the build directory
-needs to be made pristine. This can lead to errors if you do something like
-try to reuse a build directory for a different ``--board``.
+默认情况下，``west build``不会尝试检测是否需要使构建目录保持原始状态。如果您执行诸如尝试为不同的``--board`重用构建目录之类的操作，这可能会导致错误。
 
-Using ``--pristine=auto`` makes ``west build`` detect some of these situations
-and make the build directory pristine before trying the build.
+使用``--pristine=auto`使``west build`检测这些情况中的一些，并在尝试构建之前使构建目录保持原始状态。
 
 .. tip::
 
-   You can run ``west config build.pristine always`` to always do a pristine
-   build, or ``west config build.pristine never`` to disable the heuristic.
-   See the ``west build`` :ref:`west-building-config` for details.
+   您可以运行``west config build.pristine always``来始终进行原始构建，或运行``west config build.pristine never`来禁用启发式算法。有关详细信息，请参见``west build``:ref:`west-building-config`。
 
 .. _west-building-verbose:
 
-Verbose Builds
+详细构建
 --------------
 
-To print the CMake and compiler commands run by ``west build``, use the global
-west verbosity option, ``-v``::
+要打印由``west build`运行的CMake和编译器命令，请使用全局west详细选项``-v``::
 
   west -v build -b reel_board samples/hello_world
 
 .. _west-building-generator:
 .. _west-building-cmake-args:
 
-One-Time CMake Arguments
+一次性CMake参数
 ------------------------
 
-To pass additional arguments to the CMake invocation performed by ``west
-build``, pass them after a ``--`` at the end of the command line.
+要向由``west build`执行的CMake调用传递附加参数，请在命令行末尾的``--`之后传递它们。
 
 .. important::
 
-   Passing additional CMake arguments like this forces ``west build`` to re-run
-   the CMake build configuration step, even if a build system has already been
-   generated.  This will make incremental builds slower (but still much faster
-   than building from scratch).
+   像这样传递额外的CMake参数会强制``west build`重新运行CMake构建配置步骤，即使已经生成了构建系统。这将使增量构建变慢（但仍然比从头构建快得多）。
 
-   After using ``--`` once to generate the build directory, use ``west build -d
-   <build-dir>`` on subsequent runs to do incremental builds.
+   使用``--``一次生成构建目录后，在后续运行中使用``west build -d
+   <build-dir>``进行增量构建。
 
-   Alternatively, make your CMake arguments permanent as described in the next
-   section; it will not slow down incremental builds.
+   或者，按照下一节所述使您的CMake参数永久化；这不会减慢增量构建。
 
-For example, to use the Unix Makefiles CMake generator instead of Ninja (which
-``west build`` uses by default), run::
+例如，要使用Unix Makefiles CMake生成器而不是Ninja（这是
+``west build``的默认生成器），请运行::
 
   west build -b reel_board -- -G'Unix Makefiles'
 
-To use Unix Makefiles and set `CMAKE_VERBOSE_MAKEFILE`_ to ``ON``::
+要使用Unix Makefiles并将`CMAKE_VERBOSE_MAKEFILE`_设置为``ON``::
 
   west build -b reel_board -- -G'Unix Makefiles' -DCMAKE_VERBOSE_MAKEFILE=ON
 
-Notice how the ``--`` only appears once, even though multiple CMake arguments
-are given. All command-line arguments to ``west build`` after a ``--`` are
-passed to CMake.
+请注意，即使给出多个CMake参数，``--``也只出现一次。所有
+``west build``命令行中``--``之后的参数都会传递给CMake。
 
 .. _west-building-dtc-overlay-file:
 
-To set :ref:`DTC_OVERLAY_FILE <important-build-vars>` to
-:file:`enable-modem.overlay`, using that file as a
-:ref:`devicetree overlay <dt-guide>`::
+要设置:ref:`DTC_OVERLAY_FILE <important-build-vars>`为
+:file:`enable-modem.overlay`，将该文件作为
+:ref:`设备树覆盖 <dt-guide>`使用::
 
   west build -b reel_board -- -DDTC_OVERLAY_FILE=enable-modem.overlay
 
-To merge the :file:`file.conf` Kconfig fragment into your build's
-:file:`.config`::
+要将:file:`file.conf` Kconfig片段合并到构建的
+:file:`.config`中::
 
   west build -- -DEXTRA_CONF_FILE=file.conf
 
 .. _west-building-cmake-config:
 
-Permanent CMake Arguments
+永久CMake参数
 -------------------------
 
-The previous section describes how to add CMake arguments for a single ``west
-build`` command. If you want to save CMake arguments for ``west build`` to use
-every time it generates a new build system instead, you should use the
-``build.cmake-args`` configuration option. Whenever ``west build`` runs CMake
-to generate a build system, it splits this option's value according to shell
-rules and includes the results in the ``cmake`` command line.
+上一节描述了如何为单个``west build``命令添加CMake参数。如果你想保存``west build``在每次生成新构建系统时要使用的CMake参数，你应该使用``build.cmake-args``配置选项。每当``west build``运行CMake生成构建系统时，它会根据shell规则拆分此选项的值，并将结果包含在``cmake``命令行中。
 
-Remember that, by default, ``west build`` **tries to avoid generating a new
-build system if one is present** in your build directory. Therefore, you need
-to either delete any existing build directories or do a :ref:`pristine build
-<west-building-pristine>` after setting ``build.cmake-args`` to make sure it
-will take effect.
+请记住，默认情况下，``west build``**尝试避免在构建目录中已有构建系统时生成新的构建系统**。因此，你需要删除任何现有的构建目录或在设置``build.cmake-args``之后执行:ref:`原始构建<west-building-pristine>`以确保其生效。
 
-For example, to always enable :makevar:`CMAKE_EXPORT_COMPILE_COMMANDS`, you can
-run::
+例如，要始终启用:makevar:`CMAKE_EXPORT_COMPILE_COMMANDS`，你可以运行::
 
   west config build.cmake-args -- -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-(The extra ``--`` is used to force the rest of the command to be treated as a
-positional argument. Without it, :ref:`west config <west-config-cmd>` would
-treat the ``-DVAR=VAL`` syntax as a use of its ``-D`` option.)
+（额外的``--``用于强制将命令的其余部分视为位置参数。如果没有它，:ref:`west config <west-config-cmd>`会将``-DVAR=VAL``语法视为其``-D``选项的用法。）
 
-To enable :makevar:`CMAKE_VERBOSE_MAKEFILE`, so CMake always produces a verbose
-build system::
+要启用:makevar:`CMAKE_VERBOSE_MAKEFILE`，使CMake始终生成详细的构建系统::
 
   west config build.cmake-args -- -DCMAKE_VERBOSE_MAKEFILE=ON
 
-To save more than one argument in ``build.cmake-args``, use a single string
-whose value can be split into distinct arguments (``west build`` uses the
-Python function `shlex.split()`_ internally to split the value).
+要在``build.cmake-args``中保存多个参数，请使用一个可以拆分为不同参数的字符串值（``west build``在内部使用Python函数`shlex.split()`_来拆分该值）。
 
 .. _shlex.split(): https://docs.python.org/3/library/shlex.html#shlex.split
 
-For example, to enable both :makevar:`CMAKE_EXPORT_COMPILE_COMMANDS` and
+例如，要同时启用:makevar:`CMAKE_EXPORT_COMPILE_COMMANDS`和
 :makevar:`CMAKE_VERBOSE_MAKEFILE`::
 
   west config build.cmake-args -- "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_VERBOSE_MAKEFILE=ON"
 
-If you want to save your CMake arguments in a separate file instead, you can
-combine CMake's ``-C <initial-cache>`` option with ``build.cmake-args``. For
-instance, another way to set the options used in the previous example is to
-create a file named :file:`~/my-cache.cmake` with the following contents:
+如果你想将CMake参数保存在单独的文件中，可以将CMake的``-C <initial-cache>``选项与``build.cmake-args`结合使用。例如，设置前一个示例中使用的选项的另一种方法是创建一个名为:file:`~/my-cache.cmake`的文件，内容如下：
 
 .. code-block:: cmake
 
    set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "")
    set(CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "")
 
-Then run::
+然后运行::
 
   west config build.cmake-args "-C ~/my-cache.cmake"
 
-See the `cmake(1) manual page`_ and the `set() command`_ documentation for
-more details.
+有关更多详细信息，请参见`cmake(1)手册页`_和`set()命令`_文档。
 
 .. _cmake(1) manual page:
    https://cmake.org/cmake/help/latest/manual/cmake.1.html
@@ -314,62 +245,57 @@ more details.
 .. _set() command:
    https://cmake.org/cmake/help/latest/command/set.html
 
-Build tool arguments
+构建工具参数
 --------------------
 
-Use ``-o`` to pass options to the underlying build tool.
+使用``-o``向下层构建工具传递选项。
 
-This works with both ``ninja`` (:ref:`the default <west-building-generator>`)
-and ``make`` based build systems.
+这适用于基于``ninja``（:ref:`默认值 <west-building-generator>`）
+和``make``的构建系统。
 
-For example, to pass ``-dexplain`` to ``ninja``::
+例如，要将``-dexplain``传递给``ninja``::
 
   west build -o=-dexplain
 
-As another example, to pass ``--keep-going`` to ``make``::
+另一个例子，要将``--keep-going``传递给``make``::
 
   west build -o=--keep-going
 
-Note that using ``-o=--foo`` instead of ``-o --foo`` is required to prevent
-``--foo`` from being treated as a ``west build`` option.
+请注意，需要使用``-o=--foo``而不是``-o --foo``来防止``--foo``被``west build``选项处理。
 
-Build parallelism
+构建并行性
 -----------------
 
-By default, ``ninja`` uses all of your cores to build, while ``make`` uses only
-one. You can control this explicitly with the ``-j`` option supported by both
-tools.
+默认情况下，``ninja``使用所有核心进行构建，而``make``只使用一个核心。你可以使用两个工具都支持的``-j``选项显式控制这一点。
 
-For example, to build with 4 cores::
+例如，使用4个核心进行构建::
 
   west build -o=-j4
 
-The ``-o`` option is described further in the previous section.
+前一节中进一步描述了``-o``选项。
 
-Build a single domain
+构建单个域
 ---------------------
 
-In a multi-domain build with :zephyr:code-sample:`hello_world` and `MCUboot`_, you can use
-``--domain hello_world`` to only build this domain::
+在使用:zephyr:code-sample:`hello_world`和`MCUboot`_的多域构建中，你可以使用``--domain hello_world``仅构建此域::
 
   west build --sysbuild --domain hello_world
 
-The ``--domain`` argument can be combined with the ``--target`` argument to
-build the specific target for the target, for example::
+``--domain``参数可以与``--target``参数结合使用来构建特定目标，例如::
 
   west build --sysbuild --domain hello_world --target help
 
-Use a snippet
+使用代码片段
 -------------
 
-See :ref:`using-snippets`.
+参见:ref:`using-snippets`。
 
 .. _west-building-config:
 
-Configuration Options
+配置选项
 =====================
 
-You can :ref:`configure <west-config-cmd>` ``west build`` using these options.
+你可以使用这些选项:ref:`配置<west-config-cmd>` ``west build``。
 
 .. NOTE: docs authors: keep this table sorted alphabetically
 
@@ -377,508 +303,362 @@ You can :ref:`configure <west-config-cmd>` ``west build`` using these options.
    :widths: 10 30
    :header-rows: 1
 
-   * - Option
-     - Description
+   * - 选项
+     - 描述
    * - ``build.board``
-     - String. If given, this the board used by :ref:`west build
-       <west-building>` when ``--board`` is not given and ``BOARD``
-       is unset in the environment.
+     - 字符串。如果提供，这是当未给出``--board``且``BOARD``
+       在环境中未设置时由:ref:`west build
+       <west-building>`使用的板卡。
    * - ``build.board_warn``
-     - Boolean, default ``true``. If ``false``, disables warnings when
-       ``west build`` can't figure out the target board.
+     - 布尔值，默认为``true``。如果为``false``，当
+       ``west build``无法确定目标板卡时禁用警告。
    * - ``build.cmake-args``
-     - String. If present, the value will be split according to shell rules and
-       passed to CMake whenever a new build system is generated. See
-       :ref:`west-building-cmake-config`.
+     - 字符串。如果存在，该值将根据shell规则拆分，并
+       在生成新构建系统时传递给CMake。参见
+       :ref:`west-building-cmake-config`。
    * - ``build.dir-fmt``
-     - String, default ``build``. The build folder format string, used by
-       west whenever it needs to create or locate a build folder. The currently
-       available arguments are:
+     - 字符串，默认为``build``。构建目录格式字符串，west
+       需要创建或定位构建目录时使用。当前可用的参数有：
 
-         - ``west_topdir``: The absolute path to the west workspace, as
-           returned by the ``west_topdir`` command
-         - ``board``: The board name
-         - ``source_dir``: Path to the CMake source directory, relative to the
-           current working directory. If the current working directory is
-           inside the source directory, this is an empty string. If no source
-           directory is specified, it defaults to current working directory.
-           E.g. if ``west build ../app`` is run from ``<west_topdir>/app1``,
-           ``source_dir`` resolves to ``../app`` (which is the relative path
-           to the current working dir).
-         - ``source_dir_workspace``: Path to the source directory, relative to
-           ``west_topdir`` (if it is inside the workspace). Otherwise, it is
-           relative to the filesystem root (``/`` on Unix, respectively
-           ``C:/`` on Windows).
-           E.g. if ``west build ../app`` is run from ``<west_topdir>/app1``,
-           ``source_dir`` resolves to ``app`` (which is the relative path to
-           the west workspace dir).
-         - ``app``: The name of the source directory.
+         - ``west_topdir``: west工作区的绝对路径，由
+           ``west_topdir``命令返回
+         - ``board``: 板卡名称
+         - ``source_dir``: CMake源目录的路径，相对于
+           当前工作目录。如果当前工作目录在源目录内，
+           这是一个空字符串。如果没有指定源目录，它默认为当前工作目录。
+           例如，如果从``<west_topdir>/app1``运行``west build ../app``，
+           ``source_dir``解析为``../app``（这是相对于
+           当前工作目录的路径）。
+         - ``source_dir_workspace``: 源目录的路径，相对于
+           ``west_topdir``（如果它在工作区内）。否则，它相对于
+           文件系统根目录（Unix上为``/``，Windows上为
+           ``C:/``）。
+           例如，如果从``<west_topdir>/app1``运行``west build ../app``，
+           ``source_dir``解析为``app``（这是相对于
+           west工作区目录的路径）。
+         - ``app``: 源目录的名称。
    * - ``build.generator``
-     - String, default ``Ninja``. The `CMake Generator`_ to use to create a
-       build system. (To set a generator for a single build, see the
-       :ref:`above example <west-building-generator>`)
+     - 字符串，默认为``Ninja``。用于创建构建系统的
+       `CMake Generator`_。（要为单个构建设置生成器，请参见
+       :ref:`上述示例 <west-building-generator>`）
    * - ``build.guess-dir``
-     - String, instructs west whether to try to guess what build folder to use
-       when ``build.dir-fmt`` is in use and not enough information is available
-       to resolve the build folder name. Can take these values:
+     - 字符串，指示west是否尝试猜测当使用``build.dir-fmt``且
+       没有足够信息解析构建目录名称时要使用的构建目录。可以采用这些值：
 
-         - ``never`` (default): Never try to guess, bail out instead and
-           require the user to provide a build folder with ``-d``.
-         - ``runners``: Try to guess the folder when using any of the 'runner'
-           commands.  These are typically all commands that invoke an external
-           tool, such as ``flash`` and ``debug``.
+         - ``never``（默认）：从不尝试猜测，而是退出并
+           要求用户使用``-d``提供构建目录。
+         - ``runners``:在使用任何'runner'命令时尝试猜测目录。
+           这些通常是调用外部工具的所有命令，如``flash``和``debug``。
    * - ``build.pristine``
-     - String. Controls the way in which ``west build`` may clean the build
-       folder before building. Can take the following values:
+     - 字符串。控制``west build``在构建前可能如何清理构建目录。可以采用以下值：
 
-         - ``never`` (default): Never automatically make the build folder
-           pristine.
-         - ``auto``:  ``west build`` will automatically make the build folder
-           pristine before building, if a build system is present and the build
-           would fail otherwise (e.g. the user has specified a different board
-           or application from the one previously used to make the build
-           directory).
-         - ``always``: Always make the build folder pristine before building, if
-           a build system is present.
+         - ``never``（默认）：从不自动使构建目录保持原始状态。
+         - ``auto``:  如果存在构建系统且否则构建将失败（例如
+           用户指定了与之前用于创建构建目录的板卡或应用程序不同
+           的板卡或应用程序），``west build``将在构建前自动使
+           构建目录保持原始状态。
+         - ``always``: 如果存在构建系统，始终在构建前使构建目录保持原始状态。
    * - ``build.sysbuild``
-     - Boolean, default ``false``. If ``true``, build application using the
-       sysbuild infrastructure.
+     - 布尔值，默认为``false``。如果为``true``，使用sysbuild
+       基础架构构建应用程序。
 
 .. _west-flashing:
 
-Flashing: ``west flash``
+烧录: ``west flash``
 ************************
 
-.. tip:: Run ``west flash -h`` for additional help.
+.. tip:: 运行``west flash -h``获取额外帮助。
 
-Basics
+基础知识
 ======
 
-From a Zephyr build directory, re-build the binary and flash it to
-your board::
+从Zephyr构建目录，重新构建二进制文件并将其烧录到您的板卡::
 
   west flash
 
-Without options, the behavior is the same as ``ninja flash`` (or
-``make flash``, etc.).
+不带选项时，行为与``ninja flash``（或``make flash`等）相同。
 
-To specify the build directory, use ``--build-dir`` (or ``-d``)::
+要指定构建目录，请使用``--build-dir``（或``-d`）::
 
   west flash --build-dir path/to/build/directory
 
-If you don't specify the build directory, ``west flash`` searches for one in
-:file:`build`, then the current working directory. If you set the
-``build.dir-fmt`` configuration option (see :ref:`west-building-dirs`), ``west
-flash`` searches there instead of :file:`build`.
+如果您不指定构建目录，``west flash``会在:file:`build`中搜索，然后搜索当前工作目录。如果您设置了``build.dir-fmt``配置选项（请参见:ref:`west-building-dirs`），则``west flash``会在那里而不是:file:`build`中搜索。
 
-Choosing a Runner
+选择运行器
 =================
 
-If your board's Zephyr integration supports flashing with multiple
-programs, you can specify which one to use using the ``--runner`` (or
-``-r``) option. For example, if West flashes your board with
-``nrfjprog`` by default, but it also supports JLink, you can override
-the default with::
+如果您的板卡的Zephyr集成支持使用多个程序进行烧录，您可以使用``--runner``（或``-r`）选项指定使用哪一个。例如，如果West默认使用``nrfjprog`烧录您的板卡，但它也支持JLink，您可以使用以下方法覆盖默认设置::
 
   west flash --runner jlink
 
-You can override the default flash runner at build time by using the
-``BOARD_FLASH_RUNNER`` CMake variable, and the debug runner with
-``BOARD_DEBUG_RUNNER``.
+您可以在构建时通过使用``BOARD_FLASH_RUNNER` CMake变量覆盖默认烧录运行器，使用``BOARD_DEBUG_RUNNER`覆盖调试运行器。
 
-For example::
+例如::
 
-  # Set the default runner to "jlink", overriding the board's
-  # usual default.
+  # 将默认运行器设置为"jlink"，覆盖板卡的通常默认设置。
   west build [...] -- -DBOARD_FLASH_RUNNER=jlink
 
-See :ref:`west-building-cmake-args` and :ref:`west-building-cmake-config` for
-more information on setting CMake arguments.
+有关设置CMake参数的更多信息，请参见:ref:`west-building-cmake-args`和:ref:`west-building-cmake-config`。
 
-See :ref:`west-runner` below for more information on the ``runner``
-library used by West. The list of runners which support flashing can
-be obtained with ``west flash -H``; if run from a build directory or
-with ``--build-dir``, this will print additional information on
-available runners for your board.
+有关``runner`的更多信息，请参见下面的:ref:`west-runner`
+库。使用``west flash -H`可以获取支持烧录的运行器列表；如果从构建目录运行或使用``--build-dir`，这将打印有关您板卡可用运行器的其他信息。
 
-Configuration Overrides
+配置覆盖
 =======================
 
-The CMake cache contains default values West uses while flashing, such
-as where the board directory is on the file system, the path to the
-zephyr binaries to flash in several formats, and more. You can
-override any of this configuration at runtime with additional options.
+CMake缓存包含West在烧录时使用的默认值，如板卡目录在文件系统上的位置、以多种格式烧录的zephyr二进制文件的路径等。您可以通过附加选项在运行时覆盖任何这些配置。
 
-For example, to override the HEX file containing the Zephyr image to
-flash (assuming your runner expects a HEX file), but keep other
-flash configuration at default values::
+例如，要覆盖包含要烧录的Zephyr镜像的HEX文件（假设您的运行器期望HEX文件），但将其他烧录配置保持为默认值::
 
   west flash --hex-file path/to/some/other.hex
 
-The ``west flash -h`` output includes a complete list of overrides
-supported by all runners.
+``west flash -h``输出包括所有运行器支持的覆盖项的完整列表。
 
-Runner-Specific Overrides
+特定于运行器的覆盖
 =========================
 
-Each runner may support additional options related to flashing. For
-example, some runners support an ``--erase`` flag, which mass-erases
-the flash storage on your board before flashing the Zephyr image.
+每个运行器可能支持与烧录相关的附加选项。例如，某些运行器支持``--erase`标志，在烧录Zephyr镜像之前对您板卡上的闪存存储进行大块擦除。
 
-To view all of the available options for the runners your board
-supports, as well as their usage information, use ``--context`` (or
-``-H``)::
+要查看您板卡支持的运行器的所有可用选项及其使用信息，请使用``--context``（或``-H`）::
 
   west flash --context
 
 .. important::
 
-   Note the capital H in the short option name. This re-runs the build
-   in order to ensure the information displayed is up to date!
+   注意短选项名称中的大写H。这将重新运行构建以确保显示的信息是最新的！
 
-When running West outside of a build directory, ``west flash -H`` just
-prints a list of runners. You can use ``west flash -H -r
-<runner-name>`` to print usage information for options supported by
-that runner.
+当在构建目录外运行West时，``west flash -H`仅打印运行器列表。您可以使用``west flash -H -r <runner-name>`打印该运行器支持的选项的使用信息。
 
-For example, to print usage information about the ``jlink`` runner::
+例如，要打印关于``jlink`运行器的使用信息::
 
   west flash -H -r jlink
 
 .. _west-multi-domain-flashing:
 
-Multi-domain flashing
+多域烧录
 =====================
 
-When a :ref:`west-multi-domain-builds` folder is detected, then ``west flash``
-will flash all domains in the order defined by sysbuild.
+当检测到:ref:`west-multi-domain-builds`文件夹时，``west flash``将按sysbuild定义的顺序烧录所有域。
 
-It is possible to flash the image from a single domain in a multi-domain project
-by using ``--domain``.
+在多域项目中，可以通过使用``--domain`来仅烧录来自单个域的镜像。
 
-For example, in a multi-domain build with :zephyr:code-sample:`hello_world` and
-`MCUboot`_, you can use the ``--domain hello_world`` domain to only flash
-only the image from this domain::
+例如，在使用:zephyr:code-sample:`hello_world`和`MCUboot`_的多域构建中，您可以使用``--domain hello_world`域仅烧录此域的镜像::
 
   west flash --domain hello_world
 
 .. _west-debugging:
 
-Configuration Options
-=====================
-
-You can :ref:`configure <west-config-cmd>` ``west flash`` using these options.
-
-.. NOTE: docs authors: keep this table sorted alphabetically
-
-.. list-table::
-   :widths: 10 30
-   :header-rows: 1
-
-   * - Option
-     - Description
-   * - ``flash.rebuild``
-     - Boolean, default ``true``. If ``false``, do not rebuild on west flash.
-
-Debugging: ``west debug``, ``west debugserver``
+调试: ``west debug``、``west debugserver``
 ***********************************************
 
 .. tip::
 
-   Run ``west debug -h`` or ``west debugserver -h`` for additional help.
+   运行``west debug -h``或``west debugserver -h``获取额外帮助。
 
-Basics
+基础知识
 ======
 
-From a Zephyr build directory, to attach a debugger to your board and
-open up a debug console (e.g. a GDB session)::
+从Zephyr构建目录，要将调试器连接到您的板卡并打开调试控制台（例如GDB会话）::
 
   west debug
 
-To attach a debugger to your board and open up a local network port
-you can connect a debugger to (e.g. an IDE debugger)::
+要将调试器连接到您的板卡并打开本地网络端口，您可以将调试器连接到（例如IDE调试器）::
 
   west debugserver
 
-Without options, the behavior is the same as ``ninja debug`` and
-``ninja debugserver`` (or ``make debug``, etc.).
+不带选项时，行为与``ninja debug``和``ninja debugserver``（或``make debug`等）相同。
 
-To specify the build directory, use ``--build-dir`` (or ``-d``)::
+要指定构建目录，请使用``--build-dir``（或``-d`）::
 
   west debug --build-dir path/to/build/directory
   west debugserver --build-dir path/to/build/directory
 
-If you don't specify the build directory, these commands search for one in
-:file:`build`, then the current working directory. If you set the
-``build.dir-fmt`` configuration option (see :ref:`west-building-dirs`), ``west
-debug`` searches there instead of :file:`build`.
+如果您不指定构建目录，这些命令会在:file:`build`中搜索，然后搜索当前工作目录。如果您设置了``build.dir-fmt``配置选项（请参见:ref:`west-building-dirs`），则``west debug`会在那里而不是:file:`build`中搜索。
 
-Choosing a Runner
+选择运行器
 =================
 
-If your board's Zephyr integration supports debugging with multiple
-programs, you can specify which one to use using the ``--runner`` (or
-``-r``) option. For example, if West debugs your board with
-``pyocd-gdbserver`` by default, but it also supports JLink, you can
-override the default with::
+如果您的板卡的Zephyr集成支持使用多个程序进行调试，您可以使用``--runner``（或``-r`）选项指定使用哪一个。例如，如果West默认使用``pyocd-gdbserver`调试您的板卡，但它也支持JLink，您可以使用以下方法覆盖默认设置::
 
   west debug --runner jlink
   west debugserver --runner jlink
 
-See :ref:`west-runner` below for more information on the ``runner``
-library used by West. The list of runners which support debugging can
-be obtained with ``west debug -H``; if run from a build directory or
-with ``--build-dir``, this will print additional information on
-available runners for your board.
+有关West使用的``runner`库的更多信息，请参见下面的:ref:`west-runner`。使用``west debug -H`可以获取支持调试的运行器列表；如果从构建目录运行或使用``--build-dir`，这将打印有关您板卡可用运行器的其他信息。
 
-Configuration Overrides
+配置覆盖
 =======================
 
-The CMake cache contains default values West uses for debugging, such
-as where the board directory is on the file system, the path to the
-zephyr binaries containing symbol tables, and more. You can override
-any of this configuration at runtime with additional options.
+CMake缓存包含West用于调试的默认值，如板卡目录在文件系统上的位置、包含符号表的zephyr二进制文件的路径等。您可以通过附加选项在运行时覆盖任何这些配置。
 
-For example, to override the ELF file containing the Zephyr binary and
-symbol tables (assuming your runner expects an ELF file), but keep
-other debug configuration at default values::
+例如，要覆盖包含Zephyr二进制文件和符号表的ELF文件（假设您的运行器期望ELF文件），但将其他调试配置保持为默认值::
 
   west debug --elf-file path/to/some/other.elf
   west debugserver --elf-file path/to/some/other.elf
 
-The ``west debug -h`` output includes a complete list of overrides
-supported by all runners.
+``west debug -h``输出包括所有运行器支持的覆盖项的完整列表。
 
-Runner-Specific Overrides
+特定于运行器的覆盖
 =========================
 
-Each runner may support additional options related to debugging. For
-example, some runners support flags which allow you to set the network
-ports used by debug servers.
+每个运行器可能支持与调试相关的附加选项。例如，某些运行器支持允许您设置调试服务器使用的网络端口的标志。
 
-To view all of the available options for the runners your board
-supports, as well as their usage information, use ``--context`` (or
-``-H``)::
+要查看您板卡支持的运行器的所有可用选项及其使用信息，请使用``--context``（或``-H`）::
 
   west debug --context
 
-(The command ``west debugserver --context`` will print the same output.)
+（命令``west debugserver --context`将打印相同的输出。）
 
 .. important::
 
-   Note the capital H in the short option name. This re-runs the build
-   in order to ensure the information displayed is up to date!
+   注意短选项名称中的大写H。这将重新运行构建以确保显示的信息是最新的！
 
-When running West outside of a build directory, ``west debug -H`` just
-prints a list of runners. You can use ``west debug -H -r
-<runner-name>`` to print usage information for options supported by
-that runner.
+当在构建目录外运行West时，``west debug -H`仅打印运行器列表。您可以使用``west debug -H -r <runner-name>`打印该运行器支持的选项的使用信息。
 
-For example, to print usage information about the ``jlink`` runner::
+例如，要打印关于``jlink`运行器的使用信息::
 
   west debug -H -r jlink
 
 .. _west-multi-domain-debugging:
 
-Multi-domain debugging
-======================
+多域调试
+=====================
 
-``west debug`` can only debug a single domain at a time. When a
-:ref:`west-multi-domain-builds` folder is detected, ``west debug``
-will debug the ``default`` domain specified by sysbuild.
+``west debug``一次只能调试一个域。当检测到:ref:`west-multi-domain-builds`文件夹时，``west debug`将调试sysbuild指定的``default`域。
 
-The default domain will be the application given as the source directory.
-See the following example::
+默认域将是作为源目录给出的应用程序。请参见以下示例::
 
   west build --sysbuild path/to/source/directory
 
-For example, when building ``hello_world`` with `MCUboot`_ using sysbuild,
-``hello_world`` becomes the default domain::
+例如，当使用sysbuild构建带有`MCUboot`_的``hello_world``时，``hello_world``成为默认域::
 
   west build --sysbuild samples/hello_world
 
-So to debug ``hello_world`` you can do::
+因此，要调试``hello_world``您可以执行::
 
   west debug
 
-or::
+或::
 
   west debug --domain hello_world
 
-If you wish to debug MCUboot, you must explicitly specify MCUboot as the domain
-to debug::
+如果你希望调试MCUboot，你必须显式指定MCUboot作为要调试的域::
 
   west debug --domain mcuboot
 
 .. _west-runner:
 
-Configuration Options
-=====================
-
-You can :ref:`configure <west-config-cmd>` ``west debug`` and
-:ref:`configure <west-config-cmd>` ``west debugserver`` using these options.
-
-.. NOTE: docs authors: keep this table sorted alphabetically
-
-.. list-table::
-   :widths: 10 30
-   :header-rows: 1
-
-   * - Option
-     - Description
-   * - ``debug.rebuild``
-     - Boolean, default ``true``. If ``false``, do not rebuild on west debug.
-   * - ``debugserver.rebuild``
-     - Boolean, default ``true``. If ``false``, do not rebuild on west debugserver.
-
-Flash and debug runners
+烧录和调试运行器
 ***********************
 
-The flash and debug commands use Python wrappers around various
-:ref:`flash-debug-host-tools`. These wrappers are all defined in a Python
-library at :zephyr_file:`scripts/west_commands/runners`. Each wrapper is
-called a *runner*. Runners can flash and/or debug Zephyr programs.
+烧录和调试命令使用围绕各种:ref:`flash-debug-host-tools`的Python包装器。这些包装器都在:zephyr_file:`scripts/west_commands/runners`的Python库中定义。每个包装器称为*运行器*。运行器可以烧录和/或调试Zephyr程序。
 
-The central abstraction within this library is ``ZephyrBinaryRunner``, an
-abstract class which represents runners. The set of available runners is
-determined by the imported subclasses of ``ZephyrBinaryRunner``.
-``ZephyrBinaryRunner`` is available in the ``runners.core`` module; individual
-runner implementations are in other submodules, such as ``runners.nrfjprog``,
-``runners.openocd``, etc.
+该库中的核心抽象是``ZephyrBinaryRunner``，一个表示运行器的抽象类。可用运行器的集合由``ZephyrBinaryRunner`的导入子类决定。``ZephyrBinaryRunner``在``runners.core``模块中可用；单独的运行器实现在其他子模块中，如``runners.nrfjprog``、``runners.openocd`等。
 
-Running Robot Framework tests: ``west robot``
+运行Robot框架测试: ``west robot``
 *********************************************
 
-.. tip:: Run ``west robot -h`` for additional help.
+.. tip:: 运行``west robot -h``获取额外帮助。
 
-Basics
+基础知识
 ======
 
-Currently the command supports only one runner which is using ``renode-test``,
-(essentially a wrapper for running Robot tests in Renode), but can be
-easily extended by adding other runners.
+目前该命令仅支持一个使用``renode-test``的运行器（本质上是用于在Renode中运行Robot测试的包装器），但可以通过添加其他运行器轻松扩展。
 
-From a Zephyr build directory, to run a Robot test suite::
+从Zephyr构建目录，要运行Robot测试套件::
 
   west robot --runner=renode-robot --testsuite path/to/testsuite.robot
 
-This will run all tests from testsuite.robot and print output provided
-by Robot Framework.
+这将运行testsuite.robot中的所有测试，并打印Robot框架提供的输出。
 
-To pass additional parameters to Renode use ``--renode-robot-args`` switch.
-For example to show Renode logs in addition to Robot Framework's output:
+要向Renode传递附加参数，请使用``--renode-robot-args``开关。
+例如，除了Robot框架的输出外，还要显示Renode日志:
 
   west robot --runner=renode-robot --testsuite path/to/testsuite.robot --renode-robot-arg="--show-log"
 
-Runner-Specific Overrides
+特定于运行器的覆盖
 =========================
 
-To view all of the available options for the Robot runners your board
-supports, as well as their usage information, use ``--context`` (or
-``-H``)::
+要查看您板卡支持的Robot运行器的所有可用选项及其使用信息，请使用``--context``（或``-H`）::
+
 
   west robot --runner=renode-robot --context
 
 
-To view all available options "renode-test" runner supports, use::
+要查看"renode-test"运行器支持的所有可用选项，请使用::
 
   west robot --runner=renode-robot --renode-robot-help
 
-Simulating a board with: ``west simulate``
+使用以下命令仿真板卡: ``west simulate``
 ******************************************
 
-Basics
+基础知识
 ======
 
-Currently the command supports only one runner which is using Renode,
-but can be easily extended by adding other runners.
+目前该命令仅支持一个使用Renode的运行器，但可以通过添加其他运行器轻松扩展。
 
-From a Zephyr build directory, to run the built binary::
+从Zephyr构建目录，要运行构建的二进制文件::
 
   west simulate --runner=renode
 
-This will start Renode and configure simulation based on a default ``.resc`` script
-for the current platform with the zephyr.elf file loaded by default. The simulation
-then can be started by typing "start" or "s" in Renode's Monitor. This can also be
-done by passing a command to Renode, using an argument provided by the runner:
+这将启动Renode并根据当前平台的默认``.resc``脚本配置仿真，默认加载zephyr.elf文件。然后可以通过在Renode的Monitor中输入"start"或"s"来启动仿真。这也可以通过向Renode传递运行器提供的参数来实现:
 
   west simulate --runner=renode --renode-command start
 
-To pass an argument to Renode itself, for example to start Renode in console mode
-instead of a separate window:
+要向Renode本身传递参数，例如在控制台模式下启动Renode而不是单独的窗口:
 
   west simulate --runner=renode --renode-arg="--console"
 
-From that point on Renode can be used normally in both console and window modes.
-For details on using Renode see `Renode - documentation`_.
+从那时起，Renode可以在控制台和窗口模式下正常使用。
+有关使用Renode的详细信息，请参见`Renode - 文档`_。
 
 .. _Renode - documentation:
    https://docs.renode.io
 
-Runner-Specific Overrides
+特定于运行器的覆盖
 =========================
 
-To view all of the available options supported by the runners, as well
-as their usage information, use ``--context`` (or ``-H``)::
+要查看运行器支持的所有可用选项及其使用信息，请使用``--context``（或``-H`）::
 
   west simulate --runner=renode --context
 
-To view all available options Renode supports, use::
+要查看Renode支持的所有可用选项，请使用::
 
   west simulate --runner=renode --renode-help
 
-Out of tree runners
+树外运行器
 *******************
 
-:ref:`Zephyr modules <modules>` can have external runners discovered by adding python
-files in their :ref:`module.yml <modules-runners>`. Create an external runner class by
-inheriting from ``ZephyrBinaryRunner`` and implement all abstract methods.
+:ref:`Zephyr模块<modules>`可以通过在:ref:`module.yml <modules-runners>`中添加python文件来发现外部运行器。通过从``ZephyrBinaryRunner``继承并实现所有抽象方法来创建外部运行器类。
 
 .. note::
 
-   Support for custom out-of-tree runners makes the ``runners.core`` module part of
-   the public API and backwards incompatible changes need to undergo the
-   :ref:`deprecation process <breaking_api_changes>`.
+   对自定义树外运行器的支持使``runners.core`模块成为公共API的一部分，需要进行
+   :ref:`弃用过程<breaking_api_changes>`的向后不兼容更改。
 
-Hacking
+黑客技术
 *******
 
-This section documents the ``runners.core`` module used by the
-flash and debug commands. This is the core abstraction used to implement
-support for these features.
+本节记录烧录和调试命令使用的``runners.core``模块。这是用于实现这些功能支持的核心抽象。
 
-Developers can add support for new ways to flash and debug Zephyr programs by
-implementing additional runners. To get this support into upstream Zephyr, the
-runner should be added into a new or existing ``runners`` module, and imported
-from :file:`runners/__init__.py`.
+开发人员可以通过实现附加运行器来添加对Zephyr程序进行烧录和调试的新方法的支持。要将此支持引入上游Zephyr，应将运行器添加到新的或现有的``runners``模块中，并从:file:`runners/__init__.py`导入。
 
 .. note::
 
-   The test cases in :zephyr_file:`scripts/west_commands/tests` add unit test
-   coverage for the runners package and individual runner classes.
+   :zephyr_file:`scripts/west_commands/tests`中的测试用例为运行器包和单独的运行器类添加了单元测试覆盖率。
 
-   Please try to add tests when adding new runners. Note that if your
-   changes break existing test cases, CI testing on upstream pull
-   requests will fail.
+   请尝试在添加新运行器时添加测试。请注意，如果您
+   的更改破坏了现有测试用例，上游pull
+   请求上的CI测试将失败。
 
 .. automodule:: runners.core
    :members:
 
-Doing it By Hand
+手动操作
 ****************
 
-If you prefer not to use West to flash or debug your board, simply
-inspect the build directory for the binaries output by the build
-system. These will be named something like ``zephyr/zephyr.elf``,
-``zephyr/zephyr.hex``, etc., depending on your board's build system
-integration. These binaries may be flashed to a board using
-alternative tools of your choice, or used for debugging as needed,
-e.g. as a source of symbol tables.
+如果你更喜欢不使用West来烧录或调试你的板卡，只需检查构建目录中构建系统输出的二进制文件。这些文件将根据你板卡的构建系统集成命名为类似``zephyr/zephyr.elf``、``zephyr/zephyr.hex``等。这些二进制文件可以使用你选择的替代工具烧录到板卡上，或根据需要用于调试，例如作为符号表的来源。
 
-By default, these West commands rebuild binaries before flashing and
-debugging. This can of course also be accomplished using the usual
-targets provided by Zephyr's build system (in fact, that's how these
-commands do it).
+默认情况下，这些West命令在烧录和调试之前重新构建二进制文件。当然，这也可以使用Zephyr构建系统提供的常规目标来完成（实际上，这就是这些命令的执行方式）。
 
 .. _cmake(1):
    https://cmake.org/cmake/help/latest/manual/cmake.1.html

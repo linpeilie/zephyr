@@ -1,12 +1,9 @@
 .. _west-manifests:
 
-West Manifests
-##############
+West 清单文件 (West Manifests)
+##################################
 
-This page contains detailed information about west's multiple repository model,
-manifest files, and the ``west manifest`` command. For API documentation on the
-``west.manifest`` module, see :ref:`west-apis-manifest`. For a more general
-introduction and command overview, see :ref:`west-basics`.
+本页面包含关于 west 的多仓库模型 (multiple repository model)、清单文件 (manifest files) 以及 ``west manifest`` 命令的详细信息。有关 ``west.manifest`` 模块的 API 文档,请参阅 :ref:`west-apis-manifest`。有关更通用的介绍和命令概览,请参阅 :ref:`west-basics`。
 
 .. only:: html
 
@@ -15,67 +12,44 @@ introduction and command overview, see :ref:`west-basics`.
 
 .. _west-mr-model:
 
-Multiple Repository Model
-*************************
+多仓库模型 (Multiple Repository Model)
+*****************************************
 
-West's view of the repositories in a :term:`west workspace`, and their
-history, looks like the following figure (though some parts of this example are
-specific to upstream Zephyr's use of west):
+West 对 :term:`west workspace` 中仓库及其历史记录的视图如下图所示(尽管此示例的某些部分特定于上游 Zephyr 对 west 的使用):
 
 .. figure:: west-mr-model.png
    :align: center
-   :alt: West multi-repo history
+   :alt: West 多仓库历史
    :figclass: align-center
 
-   West multi-repo history
+   West 多仓库历史
 
-The history of the manifest repository is the line of Git commits which is
-"floating" on top of the gray plane. Parent commits point to child commits
-using solid arrows. The plane below contains the Git commit history of the
-repositories in the workspace, with each project repository boxed in by a
-rectangle. Parent/child commit relationships in each repository are also shown
-with solid arrows.
+清单仓库 (manifest repository) 的历史记录是"漂浮"在灰色平面之上的 Git 提交线。父提交使用实线箭头指向子提交。下面的平面包含工作空间中仓库的 Git 提交历史,每个项目仓库都用矩形框起来。每个仓库中的父/子提交关系也用实线箭头表示。
 
-The commits in the manifest repository (again, for upstream Zephyr this is the
-zephyr repository itself) each have a manifest file. The manifest file in each
-commit specifies the corresponding commits which it expects in each of the
-project repositories. This relationship is shown using dotted line arrows in the
-diagram. Each dotted line arrow points from a commit in the manifest repository
-to a corresponding commit in a project repository.
+清单仓库中的提交(对于上游 Zephyr 来说,这是 zephyr 仓库本身)都有一个清单文件。每个提交中的清单文件指定了它期望在每个项目仓库中对应的提交。这种关系在图中用虚线箭头表示。每个虚线箭头从清单仓库中的提交指向项目仓库中的相应提交。
 
-Notice the following important details:
+请注意以下重要细节:
 
-- Projects can be added (like ``P1`` between manifest repository
-  commits ``D`` and ``E``) and removed (``P2`` between the same
-  manifest repository commits)
+- 项目可以被添加(如清单仓库提交 ``D`` 和 ``E`` 之间的 ``P1``)和删除(同样在这两个清单仓库提交之间的 ``P2``)
 
-- Project and manifest repository histories don't have to move
-  forwards or backwards together:
+- 项目和清单仓库的历史记录不必一起向前或向后移动:
 
-  - ``P2`` stays the same from ``A → B``, as do ``P1`` and ``P3`` from ``F →
-    G``.
-  - ``P3`` moves forward from ``A → B``.
-  - ``P3`` moves backward from ``C → D``.
+  - ``P2`` 在 ``A → B`` 期间保持不变,``P1`` 和 ``P3`` 在 ``F → G`` 期间也是如此。
+  - ``P3`` 在 ``A → B`` 期间向前移动。
+  - ``P3`` 在 ``C → D`` 期间向后移动。
 
-  One use for moving backward in project history is to "revert" a regression by
-  going back to a revision before it was introduced.
+  向后移动项目历史记录的一个用途是通过返回到引入回归之前的修订版本来"回退"回归。
 
-- Project repository commits can be "skipped": ``P3`` moves forward
-  multiple commits in its history from ``B → C``.
+- 项目仓库提交可以被"跳过": ``P3`` 在 ``B → C`` 期间在其历史记录中向前移动了多个提交。
 
-- In the above diagram, no project repository has two revisions "at
-  the same time": every manifest file refers to exactly one commit in
-  the projects it cares about. This can be relaxed by using a branch
-  name as a manifest revision, at the cost of being able to bisect
-  manifest repository history.
+- 在上图中,没有项目仓库在"同一时间"有两个修订版本:每个清单文件都只引用它所关心的项目中的一个确切提交。通过使用分支名称作为清单修订版本可以放宽这一点,代价是能够对清单仓库历史记录进行二分查找。
 
 .. _west-manifest-files:
 
-Manifest Files
-**************
+清单文件 (Manifest Files)
+****************************
 
-West manifests are YAML files. Manifests have a top-level ``manifest`` section
-with some subsections, like this:
+West 清单是 YAML 文件。清单有一个顶级 ``manifest`` 部分,包含一些子部分,如下所示:
 
 .. code-block:: yaml
 
@@ -93,31 +67,20 @@ with some subsections, like this:
      group-filter:
        # a list of project groups to enable or disable
 
-In YAML terms, the manifest file contains a mapping, with a ``manifest``
-key. Any other keys and their contents are ignored (west v0.5 also required a
-``west`` key, but this is ignored starting with v0.6).
+就 YAML 术语而言,清单文件包含一个映射 (mapping),具有一个 ``manifest`` 键。任何其他键及其内容都会被忽略(west v0.5 还需要一个 ``west`` 键,但从 v0.6 开始被忽略)。
 
-The manifest contains subsections, like ``defaults``, ``remotes``,
-``projects``, and ``self``. In YAML terms, the value of the ``manifest`` key is
-also a mapping, with these "subsections" as keys. As of west v0.10, all of
-these "subsection" keys are optional.
+清单包含子部分,如 ``defaults``、``remotes``、``projects`` 和 ``self``。就 YAML 术语而言,``manifest`` 键的值也是一个映射,这些"子部分"作为键。从 west v0.10 开始,所有这些"子部分"键都是可选的。
 
-The ``projects`` value is a list of repositories managed by west and associated
-metadata. We'll discuss it soon, but first we will describe the ``remotes``
-section, which can be used to save typing in the ``projects`` list.
+``projects`` 值是 west 管理的仓库及相关元数据的列表。我们很快会讨论它,但首先我们将描述 ``remotes`` 部分,它可用于在 ``projects`` 列表中节省输入。
 
-Remotes
-=======
+远程仓库 (Remotes)
+=====================
 
-The ``remotes`` subsection contains a sequence which specifies the base URLs
-where projects can be fetched from.
+``remotes`` 子部分包含一个序列,指定可以从中获取项目的基本 URL。
 
-Each ``remotes`` element has a name and a "URL base". These are used to form
-the complete Git fetch URL for each project. A project's fetch URL can be set
-by appending a project-specific path onto a remote URL base. (As we'll see
-below, projects can also specify their complete fetch URLs.)
+每个 ``remotes`` 元素都有一个名称和一个"URL 基础"。这些用于为每个项目形成完整的 Git 获取 URL。可以通过将项目特定的路径附加到远程 URL 基础来设置项目的获取 URL。(正如我们将在下面看到的,项目也可以指定其完整的获取 URL。)
 
-For example:
+例如:
 
 .. code-block:: yaml
 
@@ -129,41 +92,31 @@ For example:
        - name: remote2
          url-base: https://git.example.com/base2
 
-The ``remotes`` keys and their usage are in the following table.
+``remotes`` 的键及其用法如下表所示。
 
-.. list-table:: remotes keys
+.. list-table:: remotes 键
    :header-rows: 1
    :widths: 1 5
 
-   * - Key
-     - Description
+   * - 键
+     - 描述
 
    * - ``name``
-     - Mandatory; a unique name for the remote.
+     - 必需;远程仓库的唯一名称。
 
    * - ``url-base``
-     - A prefix that is prepended to the fetch URL for each
-       project with this remote.
+     - 添加到具有此远程仓库的每个项目的获取 URL 的前缀。
 
-Above, two remotes are given, with names ``remote1`` and ``remote2``. Their URL
-bases are respectively ``https://git.example.com/base1`` and
-``https://git.example.com/base2``. You can use SSH URL bases as well; for
-example, you might use ``git@example.com:base1`` if ``remote1`` supported Git
-over SSH as well. Anything acceptable to Git will work.
+在上面的示例中,定义了两个远程仓库,名称分别为 ``remote1`` 和 ``remote2``。它们的 URL 基础分别为 ``https://git.example.com/base1`` 和 ``https://git.example.com/base2``。您也可以使用 SSH URL 基础;例如,如果 ``remote1`` 也支持通过 SSH 进行 Git 操作,您可以使用 ``git@example.com:base1``。任何 Git 可接受的内容都可以使用。
 
 .. _west-manifests-projects:
 
-Projects
-========
+项目 (Projects)
+==================
 
-The ``projects`` subsection contains a sequence describing the project
-repositories in the west workspace. Every project has a unique name. You can
-specify what Git remote URLs to use when cloning and fetching the projects,
-what revisions to track, and where the project should be stored on the local
-file system. Note that west projects :ref:`are different from modules
-<modules-vs-projects>`.
+``projects`` 子部分包含一个序列,描述 west 工作空间中的项目仓库。每个项目都有一个唯一的名称。您可以指定克隆和获取项目时使用的 Git 远程 URL、要跟踪的修订版本以及项目应存储在本地文件系统中的位置。请注意,west 项目 :ref:`与模块不同 <modules-vs-projects>`。
 
-Here is an example. We'll assume the ``remotes`` given above.
+这是一个示例。我们将假设使用上面给出的 ``remotes``。
 
 .. Note: if you change this example, keep the equivalent manifest below in
    sync.
@@ -188,141 +141,89 @@ Here is an example. We'll assume the ``remotes`` given above.
          url: https://github.com/user/project-three
          revision: abcde413a111
 
-In this manifest:
+在此清单中:
 
-- ``proj1`` has remote ``remote1``, so its Git fetch URL is
-  ``https://git.example.com/base1/proj1``. The remote ``url-base`` is appended
-  with a ``/`` and the project ``name`` to form the URL.
+- ``proj1`` 的远程仓库为 ``remote1``,因此其 Git 获取 URL 为 ``https://git.example.com/base1/proj1``。远程 ``url-base`` 与项目 ``name`` 之间用 ``/`` 连接以形成 URL。
 
-  Locally, this project will be cloned at path ``extra/project-1`` relative to
-  the west workspace's root directory, since it has an explicit ``path``
-  attribute with this value.
+  在本地,此项目将被克隆到相对于 west 工作空间根目录的路径 ``extra/project-1``,因为它有一个具有此值的显式 ``path`` 属性。
 
-  Since the project has no ``revision`` specified, ``master`` is used by
-  default. The current tip of this branch will be fetched and checked out as a
-  detached ``HEAD`` when west next updates this project.
+  由于该项目没有指定 ``revision``,默认使用 ``master``。当 west 下次更新此项目时,将获取此分支的当前提示并作为分离的 ``HEAD`` 检出。
 
-- ``proj2`` has a ``remote`` and a ``repo-path``, so its fetch URL is
-  ``https://git.example.com/base2/my-path``. The ``repo-path`` attribute, if
-  present, overrides the default ``name`` when forming the fetch URL.
+- ``proj2`` 有一个 ``remote`` 和一个 ``repo-path``,因此其获取 URL 为 ``https://git.example.com/base2/my-path``。``repo-path`` 属性(如果存在)在形成获取 URL 时会覆盖默认的 ``name``。
 
-  Since the project has no ``path`` attribute, its ``name`` is used by
-  default. It will be cloned into a directory named ``proj2``. The commit
-  pointed to by the ``v1.3`` tag will be checked out when west updates the
-  project.
+  由于该项目没有 ``path`` 属性,默认使用其 ``name``。它将被克隆到名为 ``proj2`` 的目录中。当 west 更新项目时,将检出 ``v1.3`` 标签指向的提交。
 
-- ``proj3`` has an explicit ``url``, so it will be fetched from
-  ``https://github.com/user/project-three``.
+- ``proj3`` 有一个显式的 ``url``,因此将从 ``https://github.com/user/project-three`` 获取。
 
-  Its local path defaults to its name, ``proj3``. Commit ``abcde413a111`` will
-  be checked out when it is next updated.
+  其本地路径默认为其名称 ``proj3``。下次更新时将检出提交 ``abcde413a111``。
 
-The available project keys and their usage are in the following table.
-Sometimes we'll refer to the ``defaults`` subsection; it will be described
-next.
+可用的项目键及其用法如下表所示。有时我们会引用 ``defaults`` 子部分;它将在下一节中描述。
 
-.. list-table:: projects elements keys
+.. list-table:: projects 元素的键
    :header-rows: 1
    :widths: 1 5
 
-   * - Key(s)
-     - Description
+   * - 键
+     - 描述
 
    * - ``name``
-     - Mandatory; a unique name for the project. The name cannot be one of the
-       reserved values "west" or "manifest". The name must be unique in the
-       manifest file.
+     - 必需;项目的唯一名称。名称不能是保留值"west"或"manifest"之一。名称在清单文件中必须是唯一的。
 
    * - ``description``
-     - Optional, an informational description of the project. Added in
-       west v1.2.0.
+     - 可选,项目的信息性描述。在 west v1.2.0 中添加。
 
    * - ``remote``, ``url``
-     - Mandatory (one of the two, but not both).
+     - 必需(二者之一,但不能同时使用)。
 
-       If the project has a ``remote``, that remote's ``url-base`` will be
-       combined with the project's ``name`` (or ``repo-path``, if it has one)
-       to form the fetch URL instead.
+       如果项目有 ``remote``,则该远程仓库的 ``url-base`` 将与项目的 ``name``(或 ``repo-path``,如果有的话)组合以形成获取 URL。
 
-       If the project has a ``url``, that's the complete fetch URL for the
-       remote Git repository.
+       如果项目有 ``url``,那就是远程 Git 仓库的完整获取 URL。
 
-       If the project has neither, the ``defaults`` section must specify a
-       ``remote``, which will be used as the project's remote. Otherwise,
-       the manifest is invalid.
+       如果项目两者都没有,``defaults`` 部分必须指定 ``remote``,它将用作项目的远程仓库。否则,清单无效。
 
    * - ``repo-path``
-     - Optional. If given, this is concatenated on to the remote's
-       ``url-base`` instead of the project's ``name`` to form its fetch URL.
-       Projects may not have both ``url`` and ``repo-path`` attributes.
+     - 可选。如果给定,这将与远程的 ``url-base`` 连接,而不是项目的 ``name`` 来形成其获取 URL。项目不能同时具有 ``url`` 和 ``repo-path`` 属性。
 
    * - ``revision``
-     - Optional. The Git revision that ``west update`` should
-       check out. This will be checked out as a detached HEAD by default, to
-       avoid conflicting with local branch names. If not given, the
-       ``revision`` value from the ``defaults`` subsection will be used if
-       present.
+     - 可选。``west update`` 应该检出的 Git 修订版本。默认情况下,这将作为分离的 HEAD 检出,以避免与本地分支名称冲突。如果未给出,将使用 ``defaults`` 子部分中的 ``revision`` 值(如果存在)。
 
-       A project revision can be a branch, tag, or SHA.
+       项目修订版本可以是分支、标签或 SHA。
 
-       The default ``revision`` is ``master`` if not otherwise specified.
+       如果未另行指定,默认 ``revision`` 为 ``master``。
 
-       Using ``HEAD~0`` [#f1]_ as the ``revision`` will cause west to keep the current
-       state of the project.
+       使用 ``HEAD~0`` [#f1]_ 作为 ``revision`` 将导致 west 保持项目的当前状态。
 
    * - ``path``
-     - Optional. Relative path specifying where to clone the repository
-       locally, relative to the top directory in the west workspace. If missing,
-       the project's ``name`` is used as a directory name.
+     - 可选。指定在本地克隆仓库的相对路径,相对于 west 工作空间中的顶级目录。如果缺失,项目的 ``name`` 将用作目录名。
 
    * - ``clone-depth``
-     - Optional. If given, a positive integer which creates a shallow history
-       in the cloned repository limited to the given number of commits. This
-       can only be used if the ``revision`` is a branch or tag.
+     - 可选。如果给定,一个正整数,它会在克隆的仓库中创建一个浅历史记录,限制为给定的提交数量。只有当 ``revision`` 是分支或标签时才能使用此选项。
 
    * - ``west-commands``
-     - Optional. If given, a relative path to a YAML file within the project
-       which describes additional west commands provided by that project. This
-       file is named :file:`west-commands.yml` by convention. See
-       :ref:`west-extensions` for details.
+     - 可选。如果给定,是项目中 YAML 文件的相对路径,该文件描述了该项目提供的其他 west 命令。按照惯例,此文件名为 :file:`west-commands.yml`。详见 :ref:`west-extensions`。
 
    * - ``import``
-     - Optional. If ``true``, imports projects from manifest files in the
-       given repository into the current manifest. See
-       :ref:`west-manifest-import` for details.
+     - 可选。如果为 ``true``,则从给定仓库中的清单文件导入项目到当前清单。详见 :ref:`west-manifest-import`。
 
    * - ``groups``
-     - Optional, a list of groups the project belongs to. See
-       :ref:`west-manifest-groups` for details.
+     - 可选,项目所属的组列表。详见 :ref:`west-manifest-groups`。
 
    * - ``submodules``
-     - Optional. You can use this to make ``west update`` also update `Git
-       submodules`_ defined by the project. See
-       :ref:`west-manifest-submodules` for details.
+     - 可选。您可以使用此选项使 ``west update`` 也更新项目定义的 `Git submodules`_。详见 :ref:`west-manifest-submodules`。
 
    * - ``userdata``
-     - Optional. The value is an arbitrary YAML value. See
-       :ref:`west-project-userdata`.
+     - 可选。该值是任意的 YAML 值。详见 :ref:`west-project-userdata`。
 
-.. rubric:: Footnotes
+.. rubric:: 脚注
 
-.. [#f1] In git, HEAD is a reference, whereas HEAD~<n> is a valid revision but
-         not a reference. West fetches references, such as refs/heads/main or
-         HEAD, and commits not available locally, but will not fetch commits if
-         they are already available.
-         HEAD~0 is resolved to a specific commit that is locally available, and
-         therefore west will simply checkout the locally available commit,
-         identified by HEAD~0.
+.. [#f1] 在 git 中,HEAD 是一个引用,而 HEAD~<n> 是一个有效的修订版本但不是引用。West 获取引用,如 refs/heads/main 或 HEAD,以及本地不可用的提交,但如果提交在本地已经可用,则不会获取它们。HEAD~0 被解析为本地可用的特定提交,因此 west 将简单地检出由 HEAD~0 标识的本地可用提交。
 
 .. _Git submodules: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 
-Defaults
-========
+默认值 (Defaults)
+====================
 
-The ``defaults`` subsection can provide default values for project
-attributes. In particular, the default remote name and revision can be
-specified here. Another way to write the same manifest we have been describing
-so far using ``defaults`` is:
+``defaults`` 子部分可以为项目属性提供默认值。特别是,可以在这里指定默认的远程仓库名称和修订版本。使用 ``defaults`` 编写我们一直在描述的相同清单的另一种方法是:
 
 .. code-block:: yaml
 
@@ -352,30 +253,27 @@ so far using ``defaults`` is:
          url: https://github.com/user/project-three
          revision: abcde413a111
 
-The available ``defaults`` keys and their usage are in the following table.
+可用的 ``defaults`` 键及其用法如下表所示。
 
-.. list-table:: defaults keys
+.. list-table:: defaults 键
    :header-rows: 1
    :widths: 1 5
 
-   * - Key
-     - Description
+   * - 键
+     - 描述
 
    * - ``remote``
-     - Optional. This will be used for a project's ``remote`` if it does not
-       have a ``url`` or ``remote`` key set.
+     - 可选。如果项目没有设置 ``url`` 或 ``remote`` 键,则将使用此值作为项目的 ``remote``。
 
    * - ``revision``
-     - Optional. This will be used for a project's ``revision`` if it does
-       not have one set. If not given, the default is ``master``.
+     - 可选。如果项目没有设置修订版本,则将使用此值。如果未给出,默认值为 ``master``。
 
-Self
-====
+自身 (Self)
+=============
 
-The ``self`` subsection can be used to control the manifest repository itself.
+``self`` 子部分可用于控制清单仓库本身。
 
-As an example, let's consider this snippet from the zephyr repository's
-:file:`west.yml`:
+作为示例,让我们考虑 zephyr 仓库的 :file:`west.yml` 中的这个片段:
 
 .. code-block:: yaml
 
@@ -385,196 +283,136 @@ As an example, let's consider this snippet from the zephyr repository's
        path: zephyr
        west-commands: scripts/west-commands.yml
 
-This ensures that the zephyr repository is cloned into path ``zephyr``, though
-as explained above that would have happened anyway if cloning from the default
-manifest URL, ``https://github.com/zephyrproject-rtos/zephyr``. Since the
-zephyr repository does contain extension commands, its ``self`` entry declares
-the location of the corresponding :file:`west-commands.yml` relative to the
-repository root.
+这确保 zephyr 仓库被克隆到路径 ``zephyr`` 中,尽管如上所述,如果从默认清单 URL ``https://github.com/zephyrproject-rtos/zephyr`` 克隆,无论如何都会发生这种情况。由于 zephyr 仓库确实包含扩展命令,其 ``self`` 条目声明了相应的 :file:`west-commands.yml` 相对于仓库根目录的位置。
 
-The available ``self`` keys and their usage are in the following table.
+可用的 ``self`` 键及其用法如下表所示。
 
-.. list-table:: self keys
+.. list-table:: self 键
    :header-rows: 1
    :widths: 1 5
 
-   * - Key
-     - Description
+   * - 键
+     - 描述
 
    * - ``path``
-     - Optional. The path ``west init`` should clone the manifest repository
-       into, relative to the west workspace topdir.
+     - 可选。``west init`` 应将清单仓库克隆到的路径,相对于 west 工作空间的顶级目录。
 
-       If not given, the basename of the path component in the manifest
-       repository URL will be used by default. For example, if the URL is
-       ``https://git.example.com/project-repo``, the manifest repository would
-       be cloned to the directory :file:`project-repo`.
+       如果未给出,默认情况下将使用清单仓库 URL 中路径组件的基本名称。例如,如果 URL 是 ``https://git.example.com/project-repo``,清单仓库将被克隆到目录 :file:`project-repo`。
 
    * - ``west-commands``
-     - Optional. This is analogous to the same key in a project sequence
-       element.
+     - 可选。这类似于项目序列元素中的同名键。
 
    * - ``import``
-     - Optional. This is also analogous to the ``projects`` key, but allows
-       importing projects from other files in the manifest repository. See
-       :ref:`west-manifest-import`.
+     - 可选。这也类似于 ``projects`` 键,但允许从清单仓库中的其他文件导入项目。详见 :ref:`west-manifest-import`。
 
 .. _west-manifest-schema-version:
 
-Version
-=======
+版本 (Version)
+================
 
-The ``version`` subsection declares that the manifest file uses features which
-were introduced in some version of west. Attempts to load the manifest with
-older versions of west will fail with an error message that explains the
-minimum required version of west which is needed.
+``version`` 子部分声明清单文件使用了在某个 west 版本中引入的功能。尝试使用较旧版本的 west 加载清单将失败,并显示错误消息,说明所需的 west 最低版本。
 
-Here is an example:
+这是一个示例:
 
 .. code-block:: yaml
 
    manifest:
-     # Marks that this file uses version 0.10 of the west manifest
-     # file format.
+     # 标记此文件使用 west 清单文件格式的 0.10 版本。
      #
-     # An attempt to load this manifest file with west v0.8.0 will
-     # fail with an error message saying that west v0.10.0 or
-     # later is required.
+     # 尝试使用 west v0.8.0 加载此清单文件将失败,
+     # 并显示错误消息,说明需要 west v0.10.0 或更高版本。
      version: "0.10"
 
-The pykwalify schema :file:`manifest-schema.yml` in the `west source code
-repository`_ is used to validate the manifest section.
+`west 源代码仓库`_ 中的 pykwalify 模式 :file:`manifest-schema.yml` 用于验证清单部分。
 
 .. _west source code repository:
    https://github.com/zephyrproject-rtos/west
 
-Here is a table with the valid ``version`` values, along with information
-about the manifest file features that were introduced in that version.
+以下是一个包含有效 ``version`` 值的表格,以及有关该版本中引入的清单文件功能的信息。
 
 .. list-table::
    :header-rows: 1
    :widths: 1 4
 
    * - ``version``
-     - New features
+     - 新功能
 
    * - ``"0.7"``
-     - Initial support for the ``version`` feature. All manifest file features
-       that are not otherwise mentioned in this table were introduced in
-       west v0.7.0 or earlier.
+     - 对 ``version`` 功能的初始支持。此表中未另行提及的所有清单文件功能都是在 west v0.7.0 或更早版本中引入的。
 
    * - ``"0.8"``
-     - Support for ``import: path-prefix:`` (:ref:`west-manifest-import-map`)
+     - 支持 ``import: path-prefix:`` (:ref:`west-manifest-import-map`)
 
    * - ``"0.9"``
-     - **Use of west v0.9.x is discouraged**.
+     - **不建议使用 west v0.9.x**。
 
-       This schema version is provided to allow users to explicitly request
-       compatibility with west :ref:`west_0_9_0`. However, west
-       :ref:`west_0_10_0` and later have incompatible behavior for features
-       that were introduced in west v0.9.0. You should ignore version "0.9" if
-       possible.
+       提供此模式版本以允许用户显式请求与 west :ref:`west_0_9_0` 的兼容性。但是,west :ref:`west_0_10_0` 及更高版本对于 west v0.9.0 中引入的功能具有不兼容的行为。如果可能,您应该忽略版本"0.9"。
 
    * - ``"0.10"``
 
-     - Support for:
+     - 支持:
 
-       - ``submodules:`` in ``projects:`` (:ref:`west-manifest-submodules`)
-       - ``manifest: group-filter:``, and ``groups:`` in ``projects:``
-         (:ref:`west-manifest-groups`)
-       - The ``import:`` feature now supports ``allowlist:`` and
-         ``blocklist:``; these are respectively recommended as replacements for
-         older names as part of a general Zephyr-wide inclusive language
-         change. The older key names are still supported for backwards
-         compatibility. (:ref:`west-manifest-import`,
-         :ref:`west-manifest-import-map`)
+       - ``projects:`` 中的 ``submodules:`` (:ref:`west-manifest-submodules`)
+       - ``manifest: group-filter:`` 和 ``projects:`` 中的 ``groups:`` (:ref:`west-manifest-groups`)
+       - ``import:`` 功能现在支持 ``allowlist:`` 和 ``blocklist:``;作为 Zephyr 全面包容性语言更改的一部分,建议将它们分别作为旧名称的替代品。为了向后兼容,仍然支持旧的键名。(:ref:`west-manifest-import`, :ref:`west-manifest-import-map`)
 
    * - ``"0.12"``
-     - Support for ``userdata:`` in ``projects:`` (:ref:`west-project-userdata`)
+     - 支持 ``projects:`` 中的 ``userdata:`` (:ref:`west-project-userdata`)
 
    * - ``"0.13"``
-     - Support for ``self: userdata:`` (:ref:`west-project-userdata`)
+     - 支持 ``self: userdata:`` (:ref:`west-project-userdata`)
 
    * - ``"1.0"``
-     - Identical to ``"0.13"``, but available for use by users that
-       do not wish to use a ``"0.x"`` version field.
+     - 与 ``"0.13"`` 相同,但可供不希望使用 ``"0.x"`` 版本字段的用户使用。
 
    * - ``"1.2"``
-     - Support for ``description:`` in ``projects:``
-       (:ref:`west-manifests-projects`)
+     - 支持 ``projects:`` 中的 ``description:`` (:ref:`west-manifests-projects`)
 
 .. note::
 
-   Versions of west without any new features in the manifest file format do not
-   change the list of valid ``version`` values. For example, ``version:
-   "0.11"`` is **not** valid, because west v0.11.x did not introduce new
-   manifest file format features.
+   没有在清单文件格式中引入新功能的 west 版本不会更改有效 ``version`` 值的列表。例如,``version: "0.11"`` 是**无效的**,因为 west v0.11.x 没有引入新的清单文件格式功能。
 
-Quoting the ``version`` value as shown above forces the YAML parser to treat it
-as a string. Without quotes, ``0.10`` in YAML is just the floating point value
-``0.1``. You can omit the quotes if the value is the same when cast to string,
-but it's best to include them. Always use quotes if you're not sure.
+如上所示,将 ``version`` 值加上引号会强制 YAML 解析器将其视为字符串。如果没有引号,YAML 中的 ``0.10`` 只是浮点值 ``0.1``。如果值在转换为字符串时相同,您可以省略引号,但最好包含它们。如果不确定,请始终使用引号。
 
-If you do not include a ``version`` in your manifest, each new release of west
-assumes that it should try to load it using the features that were available in
-that release. This may result in error messages that are harder to understand
-if that version of west is too old to load the manifest.
+如果您的清单中不包含 ``version``,每个新版本的 west 都会假设它应该尝试使用该版本中可用的功能来加载它。如果该版本的 west 太旧而无法加载清单,这可能会导致更难理解的错误消息。
 
-Group-filter
-============
+组过滤器 (Group-filter)
+==========================
 
-See :ref:`west-manifest-groups`.
+详见 :ref:`west-manifest-groups`。
 
 .. _west-active-inactive-projects:
 
-Active and Inactive Projects
-****************************
+活动和非活动项目 (Active and Inactive Projects)
+**************************************************
 
-Projects defined in the west manifest can be *inactive* or *active*. The
-difference is that an inactive project is generally ignored by west. For
-example, ``west update`` will not update inactive projects, and ``west list``
-will not print information about them by default. As another example, any
-:ref:`west-manifest-import` in an inactive project will be ignored by west.
+west 清单中定义的项目可以是*非活动的*或*活动的*。区别在于非活动项目通常会被 west 忽略。例如,``west update`` 不会更新非活动项目,``west list`` 默认情况下不会打印有关它们的信息。再比如,非活动项目中的任何 :ref:`west-manifest-import` 都会被 west 忽略。
 
-There are two ways to make a project inactive:
+有两种方法可以使项目非活动:
 
-1. Using the ``manifest.project-filter`` configuration option. If a project is
-   made active or inactive using this option, then the rules related to making
-   a project inactive using its ``groups:`` are ignored. That is, if a regular
-   expression in ``manifest.project-filter`` applies to a project, the
-   project's groups have no effect on whether it is active or inactive.
+1. 使用 ``manifest.project-filter`` 配置选项。如果使用此选项使项目处于活动或非活动状态,则与使用其 ``groups:`` 使项目非活动相关的规则将被忽略。也就是说,如果 ``manifest.project-filter`` 中的正则表达式适用于项目,则项目的组对其是否处于活动或非活动状态没有影响。
 
-   See the entry for this option in :ref:`west-config-index` for details.
+   有关详细信息,请参阅 :ref:`west-config-index` 中此选项的条目。
 
-2. Otherwise, if a project has groups, and they are all disabled, then the
-   project is inactive.
+2. 否则,如果项目有组,并且它们都被禁用,则该项目是非活动的。
 
-   See the following section for details.
+   详见以下部分。
 
 .. _west-manifest-groups:
 
-Project Groups
-**************
+项目组 (Project Groups)
+**************************
 
-You can use the ``groups`` and ``group-filter`` keys briefly described
-:ref:`above <west-manifest-files>` to place projects into groups, and to
-enable or disable groups.
+您可以使用 :ref:`上面 <west-manifest-files>` 简要描述的 ``groups`` 和 ``group-filter`` 键将项目放入组中,并启用或禁用组。
 
-For example, this lets you run a ``west forall`` command only on the projects
-in the group by using ``west forall --group``. This can also let you make
-projects inactive; see the previous section for more information on inactive
-projects.
+例如,这允许您使用 ``west forall --group`` 仅在组中的项目上运行 ``west forall`` 命令。这也可以让您使项目非活动;有关非活动项目的更多信息,请参阅上一节。
 
-The next section introduces project groups. The following section describes
-:ref:`west-enabled-disabled-groups`. There are some basic examples in
-:ref:`west-project-group-examples`. Finally, :ref:`west-group-filter-imports`
-provides a simplified overview of how ``group-filter`` interacts with the
-:ref:`west-manifest-import` feature.
+下一节介绍项目组。以下部分描述 :ref:`west-enabled-disabled-groups`。:ref:`west-project-group-examples` 中有一些基本示例。最后,:ref:`west-group-filter-imports` 提供了 ``group-filter`` 如何与 :ref:`west-manifest-import` 功能交互的简化概述。
 
-Groups Basics
-=============
+组基础知识 (Groups Basics)
+==============================
 
-The ``groups:`` and ``group-filter:`` keys appear in the manifest like this:
+``groups:`` 和 ``group-filter:`` 键在清单中如下所示:
 
 .. code-block:: yaml
 
@@ -584,13 +422,11 @@ The ``groups:`` and ``group-filter:`` keys appear in the manifest like this:
          groups: ...
      group-filter: ...
 
-The ``groups`` key's value is a list of group names. Group names are strings.
+``groups`` 键的值是组名列表。组名是字符串。
 
-You can enable or disable project groups using ``group-filter``. Projects whose
-groups are all disabled, and which are not otherwise made active by a
-``manifest.project-filter`` configuration option, are inactive.
+您可以使用 ``group-filter`` 启用或禁用项目组。所有组都被禁用且未通过 ``manifest.project-filter`` 配置选项使其处于活动状态的项目是非活动的。
 
-For example, in this manifest fragment:
+例如,在此清单片段中:
 
 .. code-block:: yaml
 
@@ -605,48 +441,39 @@ For example, in this manifest fragment:
           - groupC
       - name: project-3
 
-The projects are in these groups:
+项目所在的组为:
 
-- ``project-1``: one group, named ``groupA``
-- ``project-2``: two groups, named ``groupB`` and ``groupC``
-- ``project-3``: no groups
+- ``project-1``: 一个组,名为 ``groupA``
+- ``project-2``: 两个组,名为 ``groupB`` 和 ``groupC``
+- ``project-3``: 没有组
 
-Project group names must not contain commas (,), colons (:), or whitespace.
+项目组名称不得包含逗号 (,)、冒号 (:) 或空格。
 
-Group names must not begin with a dash (-) or the plus sign (+), but they may
-contain these characters elsewhere in their names. For example, ``foo-bar`` and
-``foo+bar`` are valid groups, but ``-foobar`` and ``+foobar`` are not.
+组名不得以短横线 (-) 或加号 (+) 开头,但它们可以在名称的其他位置包含这些字符。例如,``foo-bar`` 和 ``foo+bar`` 是有效的组,但 ``-foobar`` 和 ``+foobar`` 无效。
 
-Group names are otherwise arbitrary strings. Group names are case sensitive.
+组名在其他方面是任意字符串。组名区分大小写。
 
-As a restriction, no project may use both ``import:`` and ``groups:``. (This
-is necessary to avoid some pathological edge cases.)
+作为限制,任何项目都不能同时使用 ``import:`` 和 ``groups:``。(这对于避免某些病态的边缘情况是必要的。)
 
 .. _west-enabled-disabled-groups:
 
-Enabled and Disabled Project Groups
-===================================
+已启用和已禁用的项目组 (Enabled and Disabled Project Groups)
+================================================================
 
-All project groups are enabled by default. You can enable or disable groups in
-both your manifest file and :ref:`west-config`.
+默认情况下,所有项目组都是启用的。您可以在清单文件和 :ref:`west-config` 中启用或禁用组。
 
-Within a manifest file, ``manifest: group-filter:`` is a YAML list of groups to
-enable and disable.
+在清单文件中,``manifest: group-filter:`` 是一个要启用和禁用的组的 YAML 列表。
 
-To enable a group, prefix its name with a plus sign (+). For example,
-``groupA`` is enabled in this manifest fragment:
+要启用组,请在其名称前加上加号 (+)。例如,在此清单片段中,``groupA`` 已启用:
 
 .. code-block:: yaml
 
    manifest:
      group-filter: [+groupA]
 
-Although this is redundant for groups that are already enabled by default, it
-can be used to override settings in an imported manifest file. See
-:ref:`west-group-filter-imports` for more information.
+尽管这对于默认已启用的组来说是多余的,但它可用于覆盖导入的清单文件中的设置。有关更多信息,请参阅 :ref:`west-group-filter-imports`。
 
-To disable a group, prefix its name with a dash (-). For example, ``groupA``
-and ``groupB`` are disabled in this manifest fragment:
+要禁用组,请在其名称前加上短横线 (-)。例如,在此清单片段中,``groupA`` 和 ``groupB`` 已禁用:
 
 .. code-block:: yaml
 
@@ -655,8 +482,7 @@ and ``groupB`` are disabled in this manifest fragment:
 
 .. note::
 
-   Since ``group-filter`` is a YAML list, you could have written this fragment
-   as follows:
+   由于 ``group-filter`` 是一个 YAML 列表,您可以这样编写此片段:
 
    .. code-block:: yaml
 
@@ -665,43 +491,31 @@ and ``groupB`` are disabled in this manifest fragment:
           - -groupA
           - -groupB
 
-   However, this syntax is harder to read and therefore discouraged.
+   但是,这种语法更难阅读,因此不建议使用。
 
-In addition to the manifest file, you can control which groups are enabled and
-disabled using the ``manifest.group-filter`` configuration option. This option
-is a comma-separated list of groups to enable and/or disable.
+除了清单文件之外,您还可以使用 ``manifest.group-filter`` 配置选项控制启用和禁用哪些组。此选项是要启用和/或禁用的组的逗号分隔列表。
 
-To enable a group, add its name to the list prefixed with ``+``. To disable a
-group, add its name prefixed with ``-``. For example, setting
-``manifest.group-filter`` to ``+groupA,-groupB`` enables ``groupA``, and
-disables ``groupB``.
+要启用组,请将其名称以 ``+`` 为前缀添加到列表中。要禁用组,请添加以 ``-`` 为前缀的名称。例如,将 ``manifest.group-filter`` 设置为 ``+groupA,-groupB`` 会启用 ``groupA`` 并禁用 ``groupB``。
 
-The value of the configuration option overrides any data in the manifest file.
-You can think of this as if the ``manifest.group-filter`` configuration option
-is appended to the ``manifest: group-filter:`` list from YAML, with "last entry
-wins" semantics.
+配置选项的值会覆盖清单文件中的任何数据。您可以将其视为 ``manifest.group-filter`` 配置选项被附加到 YAML 中的 ``manifest: group-filter:`` 列表,并具有"最后一个条目获胜"的语义。
 
 .. _west-project-group-examples:
 
-Project Group Examples
-======================
+项目组示例 (Project Group Examples)
+======================================
 
-This section contains example situations involving project groups and active
-projects. The examples use both ``manifest: group-filter:`` YAML lists and
-``manifest.group-filter`` configuration lists, to show how they work together.
+本节包含涉及项目组和活动项目的示例情况。这些示例使用 ``manifest: group-filter:`` YAML 列表和 ``manifest.group-filter`` 配置列表,以展示它们如何协同工作。
 
-Note that the ``defaults`` and ``remotes`` data in the following manifests
-isn't relevant except to make the examples complete and self-contained.
+请注意,以下清单中的 ``defaults`` 和 ``remotes`` 数据与使示例完整和独立无关。
 
 .. note::
 
-   In all of the examples that follow, the ``manifest.project-filter`` option
-   is assumed to be unset.
+   在以下所有示例中,假设 ``manifest.project-filter`` 选项未设置。
 
-Example 1: no disabled groups
------------------------------
+示例 1: 没有禁用的组 (Example 1: no disabled groups)
+---------------------------------------------------------
 
-The entire manifest file is:
+整个清单文件是:
 
 .. code-block:: yaml
 
@@ -722,17 +536,14 @@ The entire manifest file is:
        - name: example-remote
          url-base: https://git.example.com
 
-The ``manifest.group-filter`` configuration option is not set (you can ensure
-this by running ``west config -D manifest.group-filter``).
+``manifest.group-filter`` 配置选项未设置(您可以通过运行 ``west config -D manifest.group-filter`` 来确保这一点)。
 
-No groups are disabled, because all groups are enabled by default. Therefore,
-all three projects (``foo``, ``bar``, and ``baz``) are active. Note that there
-is no way to make project ``baz`` inactive, since it has no groups.
+没有组被禁用,因为默认情况下所有组都是启用的。因此,所有三个项目(``foo``、``bar`` 和 ``baz``)都是活动的。请注意,没有办法使项目 ``baz`` 非活动,因为它没有组。
 
-Example 2: Disabling one group via manifest
--------------------------------------------
+示例 2: 通过清单禁用一个组 (Example 2: Disabling one group via manifest)
+-----------------------------------------------------------------------------
 
-The entire manifest file is:
+整个清单文件是:
 
 .. code-block:: yaml
 
@@ -754,16 +565,14 @@ The entire manifest file is:
        - name: example-remote
          url-base: https://git.example.com
 
-The ``manifest.group-filter`` configuration option is not set (you can ensure
-this by running ``west config -D manifest.group-filter``).
+``manifest.group-filter`` 配置选项未设置(您可以通过运行 ``west config -D manifest.group-filter`` 来确保这一点)。
 
-Since ``groupA`` is disabled, project ``foo`` is inactive. Project ``bar`` is
-active, because ``groupB`` is enabled.
+由于 ``groupA`` 被禁用,项目 ``foo`` 是非活动的。项目 ``bar`` 是活动的,因为 ``groupB`` 已启用。
 
-Example 3: Disabling multiple groups via manifest
--------------------------------------------------
+示例 3: 通过清单禁用多个组 (Example 3: Disabling multiple groups via manifest)
+-----------------------------------------------------------------------------------
 
-The entire manifest file is:
+整个清单文件是:
 
 .. code-block:: yaml
 
@@ -785,16 +594,14 @@ The entire manifest file is:
        - name: example-remote
          url-base: https://git.example.com
 
-The ``manifest.group-filter`` configuration option is not set (you can ensure
-this by running ``west config -D manifest.group-filter``).
+``manifest.group-filter`` 配置选项未设置(您可以通过运行 ``west config -D manifest.group-filter`` 来确保这一点)。
 
-Both ``foo`` and ``bar`` are inactive, because all of their groups are
-disabled.
+``foo`` 和 ``bar`` 都是非活动的,因为它们的所有组都被禁用了。
 
-Example 4: Disabling a group via configuration
-----------------------------------------------
+示例 4: 通过配置禁用组 (Example 4: Disabling a group via configuration)
+--------------------------------------------------------------------------
 
-The entire manifest file is:
+整个清单文件是:
 
 .. code-block:: yaml
 
@@ -814,19 +621,14 @@ The entire manifest file is:
        - name: example-remote
          url-base: https://git.example.com
 
-The ``manifest.group-filter`` configuration option is set to ``-groupA`` (you
-can ensure this by running ``west config manifest.group-filter -- -groupA``;
-the extra ``--`` is required so the argument parser does not treat ``-groupA``
-as a command line option ``-g`` with value ``roupA``).
+``manifest.group-filter`` 配置选项设置为 ``-groupA``(您可以通过运行 ``west config manifest.group-filter -- -groupA`` 来确保这一点;额外的 ``--`` 是必需的,以便参数解析器不会将 ``-groupA`` 视为命令行选项 ``-g`` 且值为 ``roupA``)。
 
-Project ``foo`` is inactive because ``groupA`` has been disabled by the
-``manifest.group-filter`` configuration option. Project ``bar`` is active
-because ``groupB`` is enabled.
+项目 ``foo`` 是非活动的,因为 ``groupA`` 已通过 ``manifest.group-filter`` 配置选项禁用。项目 ``bar`` 是活动的,因为 ``groupB`` 已启用。
 
-Example 5: Overriding a disabled group via configuration
---------------------------------------------------------
+示例 5: 通过配置覆盖已禁用的组 (Example 5: Overriding a disabled group via configuration)
+-----------------------------------------------------------------------------------------------
 
-The entire manifest file is:
+整个清单文件是:
 
 .. code-block:: yaml
 
@@ -849,19 +651,16 @@ The entire manifest file is:
        - name: example-remote
          url-base: https://git.example.com
 
-The ``manifest.group-filter`` configuration option is set to ``+groupA`` (you
-can ensure this by running ``west config manifest.group-filter +groupA``).
+``manifest.group-filter`` 配置选项设置为 ``+groupA``(您可以通过运行 ``west config manifest.group-filter +groupA`` 来确保这一点)。
 
-In this case, ``groupA`` is enabled: the ``manifest.group-filter``
-configuration option has higher precedence than the ``manifest: group-filter:
-[-groupA]`` content in the manifest file.
+在这种情况下,``groupA`` 已启用:``manifest.group-filter`` 配置选项的优先级高于清单文件中的 ``manifest: group-filter: [-groupA]`` 内容。
 
-Therefore, projects ``foo`` and ``bar`` are both active.
+因此,项目 ``foo`` 和 ``bar`` 都是活动的。
 
-Example 6: Overriding multiple disabled groups via configuration
-----------------------------------------------------------------
+示例 6: 通过配置覆盖多个已禁用的组 (Example 6: Overriding multiple disabled groups via configuration)
+----------------------------------------------------------------------------------------------------------
 
-The entire manifest file is:
+整个清单文件是:
 
 .. code-block:: yaml
 
@@ -884,19 +683,16 @@ The entire manifest file is:
        - name: example-remote
          url-base: https://git.example.com
 
-The ``manifest.group-filter`` configuration option is set to
-``+groupA,+groupB`` (you can ensure this by running ``west config
-manifest.group-filter "+groupA,+groupB"``).
+``manifest.group-filter`` 配置选项设置为 ``+groupA,+groupB``(您可以通过运行 ``west config manifest.group-filter "+groupA,+groupB"`` 来确保这一点)。
 
-In this case, both ``groupA`` and ``groupB`` are enabled, because the
-configuration value overrides the manifest file for both groups.
+在这种情况下,``groupA`` 和 ``groupB`` 都已启用,因为配置值会覆盖清单文件中的两个组。
 
-Therefore, projects ``foo`` and ``bar`` are both active.
+因此,项目 ``foo`` 和 ``bar`` 都是活动的。
 
-Example 7: Disabling multiple groups via configuration
-------------------------------------------------------
+示例 7: 通过配置禁用多个组 (Example 7: Disabling multiple groups via configuration)
+--------------------------------------------------------------------------------------
 
-The entire manifest file is:
+整个清单文件是:
 
 .. code-block:: yaml
 
@@ -917,43 +713,34 @@ The entire manifest file is:
        - name: example-remote
          url-base: https://git.example.com
 
-The ``manifest.group-filter`` configuration option is set to
-``-groupA,-groupB`` (you can ensure this by running ``west config
-manifest.group-filter -- "-groupA,-groupB"``).
+``manifest.group-filter`` 配置选项设置为 ``-groupA,-groupB``(您可以通过运行 ``west config manifest.group-filter -- "-groupA,-groupB"`` 来确保这一点)。
 
-In this case, both ``groupA`` and ``groupB`` are disabled.
+在这种情况下,``groupA`` 和 ``groupB`` 都被禁用。
 
-Therefore, projects ``foo`` and ``bar`` are both inactive.
+因此,项目 ``foo`` 和 ``bar`` 都是非活动的。
 
 .. _west-group-filter-imports:
 
-Group Filters and Imports
-=========================
+组过滤器和导入 (Group Filters and Imports)
+============================================
 
-This section provides a simplified description of how the ``manifest:
-group-filter:`` value behaves when combined with :ref:`west-manifest-import`.
-For complete details, see :ref:`west-manifest-formal`.
+本节提供了 ``manifest: group-filter:`` 值与 :ref:`west-manifest-import` 结合使用时的简化描述。有关完整详细信息,请参阅 :ref:`west-manifest-formal`。
 
 .. warning::
 
-   The below semantics apply to west v0.10.0 and later. West v0.9.x semantics
-   are different, and combining ``group-filter`` with ``import`` in west v0.9.x
-   is discouraged.
+   以下语义适用于 west v0.10.0 及更高版本。West v0.9.x 的语义不同,不建议在 west v0.9.x 中将 ``group-filter`` 与 ``import`` 结合使用。
 
-In short:
+简而言之:
 
-- if you only import one manifest, any groups it disables in its
-  ``group-filter`` are also disabled in your manifest
-- you can override this in your manifest file's ``manifest: group-filter:``
-  value, your workspace's ``manifest.group-filter`` configuration option, or
-  both
+- 如果您只导入一个清单,它在其 ``group-filter`` 中禁用的任何组在您的清单中也被禁用
+- 您可以在清单文件的 ``manifest: group-filter:`` 值、工作空间的 ``manifest.group-filter`` 配置选项或两者中覆盖此设置
 
-Here are some examples.
+以下是一些示例。
 
-Example 1: no overrides
------------------------
+示例 1: 没有覆盖 (Example 1: no overrides)
+----------------------------------------------
 
-You are using this :file:`parent/west.yml` manifest:
+您正在使用这个 :file:`parent/west.yml` 清单:
 
 .. code-block:: yaml
 
@@ -968,7 +755,7 @@ You are using this :file:`parent/west.yml` manifest:
          groups:
            - unstable
 
-And :file:`child/west.yml` contains:
+:file:`child/west.yml` 包含:
 
 .. code-block:: yaml
 
@@ -983,19 +770,16 @@ And :file:`child/west.yml` contains:
          groups:
            - unstable
 
-Only ``child`` and ``project-2`` are active in the resolved manifest.
+在解析的清单中,只有 ``child`` 和 ``project-2`` 是活动的。
 
-The ``unstable`` group is disabled in :file:`child/west.yml`, and that is not
-overridden in :file:`parent/west.yml`. Therefore, the final ``group-filter``
-for the resolved manifest is ``[-unstable]``.
+``unstable`` 组在 :file:`child/west.yml` 中被禁用,并且在 :file:`parent/west.yml` 中没有被覆盖。因此,解析清单的最终 ``group-filter`` 为 ``[-unstable]``。
 
-Since ``project-1`` and ``project-3`` are in the ``unstable`` group and are not
-in any other group, they are inactive.
+由于 ``project-1`` 和 ``project-3`` 在 ``unstable`` 组中且不在任何其他组中,因此它们是非活动的。
 
-Example 2: overriding an imported ``group-filter`` via manifest
----------------------------------------------------------------
+示例 2: 通过清单覆盖导入的 ``group-filter`` (Example 2: overriding an imported ``group-filter`` via manifest)
+----------------------------------------------------------------------------------------------------------------
 
-You are using this :file:`parent/west.yml` manifest:
+您正在使用这个 :file:`parent/west.yml` 清单:
 
 .. code-block:: yaml
 
@@ -1011,7 +795,7 @@ You are using this :file:`parent/west.yml` manifest:
          groups:
            - unstable
 
-And :file:`child/west.yml` contains:
+:file:`child/west.yml` 包含:
 
 .. code-block:: yaml
 
@@ -1028,22 +812,18 @@ And :file:`child/west.yml` contains:
          groups:
            - unstable
 
-Only the ``child``, ``project-1``, and ``project-3`` projects are active.
+只有 ``child``、``project-1`` 和 ``project-3`` 项目是活动的。
 
-The ``[-unstable]`` group filter in :file:`child/west.yml` is overridden in
-:file:`parent/west.yml`, so the ``unstable`` group is enabled. Since
-``project-1`` and ``project-3`` are in the ``unstable`` group, they are active.
+:file:`child/west.yml` 中的 ``[-unstable]`` 组过滤器在 :file:`parent/west.yml` 中被覆盖,因此 ``unstable`` 组已启用。由于 ``project-1`` 和 ``project-3`` 在 ``unstable`` 组中,因此它们是活动的。
 
-The same :file:`parent/west.yml` file disables the ``optional`` group, so
-``project-2`` is inactive.
+同一个 :file:`parent/west.yml` 文件禁用了 ``optional`` 组,因此 ``project-2`` 是非活动的。
 
-The final group filter specified by :file:`parent/west.yml` is
-``[+unstable,-optional]``.
+:file:`parent/west.yml` 指定的最终组过滤器为 ``[+unstable,-optional]``。
 
-Example 3: overriding an imported ``group-filter`` via configuration
---------------------------------------------------------------------
+示例 3: 通过配置覆盖导入的 ``group-filter`` (Example 3: overriding an imported ``group-filter`` via configuration)
+-----------------------------------------------------------------------------------------------------------------------
 
-You are using this :file:`parent/west.yml` manifest:
+您正在使用这个 :file:`parent/west.yml` 清单:
 
 .. code-block:: yaml
 
@@ -1096,13 +876,10 @@ The final group filter specified by :file:`parent/west.yml` and the
 
 .. _west-manifest-submodules:
 
-Git Submodules in Projects
-**************************
+项目中的 Git 子模块 (Git Submodules in Projects)
+***************************************************
 
-You can use the ``submodules`` keys briefly described :ref:`above
-<west-manifest-files>` to force ``west update`` to also handle any `Git
-submodules`_ configured in project's git repository. The ``submodules`` key can
-appear inside ``projects``, like this:
+您可以使用 :ref:`上面 <west-manifest-files>` 简要描述的 ``submodules`` 键来强制 ``west update`` 还处理项目 git 仓库中配置的任何 `Git submodules`_。``submodules`` 键可以出现在 ``projects`` 内部,如下所示:
 
 .. code-block:: YAML
 
@@ -1111,23 +888,184 @@ appear inside ``projects``, like this:
        - name: some-project
          submodules: ...
 
-The ``submodules`` key can be a boolean or a list of mappings. We'll describe
-these in order.
+``submodules`` 键可以是布尔值或映射列表。我们将按顺序描述这些。
 
-Option 1: Boolean
-=================
+选项 1: 布尔值 (Option 1: Boolean)
+====================================
 
-This is the easiest way to use ``submodules``.
+这是使用 ``submodules`` 的最简单方法。
 
-If ``submodules`` is ``true`` as a ``projects`` attribute, ``west update`` will
-recursively update the project's Git submodules whenever it updates the project
-itself. If it's ``false`` or missing, it has no effect.
+如果 ``submodules`` 作为 ``projects`` 属性为 ``true``,``west update`` 将在更新项目本身时递归更新项目的 Git 子模块。如果它是 ``false`` 或缺失,则不起作用。
 
-For example, let's say you have a source code repository ``foo``, which has
-some submodules, and you want ``west update`` to keep all of them in sync,
-along with another project named ``bar`` in the same workspace.
+例如,假设您有一个源代码仓库 ``foo``,它有一些子模块,您希望 ``west update`` 将它们全部保持同步,同时在同一工作空间中还有另一个名为 ``bar`` 的项目。
 
-You can do that with this manifest file:
+您可以使用此清单文件来实现:
+
+.. code-block:: yaml
+
+   manifest:
+     projects:
+       - name: foo
+         submodules: true
+       - name: bar
+
+在这里,``west update`` 将初始化和更新 ``foo`` 中的所有子模块。如果 ``bar`` 有任何子模块,它们将被忽略,因为 ``bar`` 没有 ``submodules`` 值。
+
+选项 2: 映射列表 (Option 2: List of mappings)
+===============================================
+
+``submodules`` 键可以是映射列表,每个所需子模块一个列表元素。列出的每个子模块都会递归更新。您仍然可以使用 ``git`` 命令手动跟踪和更新未列出的子模块;无论是否存在,west 都会完全忽略它们。
+
+``path`` 键必须完全匹配一个子模块相对于其父 west 项目的路径,如 ``git submodule status`` 的输出中所示。``name`` 键是可选的,目前不被 west 使用;它也不会传递给 ``git submodule`` 命令。``name`` 键在 west 版本 0.9.0 中曾短暂地是强制性的,但在 0.9.1 中变为可选。
+
+例如,假设您有一个源代码仓库 ``foo``,它有许多子模块,您希望 ``west update`` 保持其中一些但不是全部同步,同时在同一工作空间中还有另一个名为 ``bar`` 的项目。
+
+您可以使用此清单文件来实现:
+
+.. code-block:: yaml
+
+   manifest:
+     projects:
+       - name: foo
+         submodules:
+           - path: path/to/foo-first-sub
+           - name: foo-second-sub
+             path: path/to/foo-second-sub
+       - name: bar
+
+在这里,``west update`` 将递归初始化和更新 ``foo`` 中路径为 ``path/to/foo-first-sub`` 和 ``path/to/foo-second-sub`` 的子模块。``bar`` 中的任何子模块仍然被忽略。
+
+.. _west-project-userdata:
+
+仓库用户数据 (Repository user data)
+*************************************
+
+West 版本 v0.12 及更高版本支持项目中的可选 ``userdata`` 键。
+
+West 版本 v0.13 及更高版本在 ``manifest: self:`` 部分支持此键。
+
+它旨在供需要用户特定项目元数据的程序使用。除了将其解析为 YAML 之外,west 本身完全忽略该值。
+
+键的值是任意 YAML。West 解析该值并使其作为相应 ``west.manifest.Project`` 对象的 ``userdata`` 属性通过 :ref:`west-apis` 可供程序访问。
+
+示例清单片段:
+
+.. code-block:: yaml
+
+   manifest:
+     projects:
+       - name: foo
+       - name: bar
+         userdata: a-string
+       - name: baz
+         userdata:
+           key: value
+     self:
+       userdata: blub
+
+示例 Python 用法:
+
+.. code-block:: python
+
+   manifest = west.manifest.Manifest.from_file()
+
+   foo, bar, baz = manifest.get_projects(['foo', 'bar', 'baz'])
+
+   foo.userdata # None
+   bar.userdata # 'a-string'
+   baz.userdata # {'key': 'value'}
+   manifest.userdata # 'blub'
+
+.. _west-manifest-import:
+
+清单导入 (Manifest Imports)
+*****************************
+
+您可以使用上面简要描述的 ``import`` 键将其他清单文件中的项目包含到您的 :file:`west.yml` 中。此键可以是 ``project`` 或 ``self`` 部分属性:
+
+.. code-block:: yaml
+
+   manifest:
+     projects:
+       - name: some-project
+         import: ...
+     self:
+       import: ...
+
+您可以使用 "self: import:" 从包含 :file:`west.yml` 的仓库加载其他文件。您可以使用 "project: ... import:" 从该项目的 Git 历史记录中定义的其他文件加载。
+
+West 按以下顺序从各个清单文件解析最终清单:
+
+#. ``self`` 中的导入文件
+#. 您的 :file:`west.yml` 文件
+#. ``projects`` 中的导入文件
+
+在解析过程中,west 会忽略已在其他文件中定义的项目。例如,您的 :file:`west.yml` 中名为 ``foo`` 的项目会使 west 忽略从 ``projects`` 列表中导入的其他名为 ``foo`` 的项目。
+
+``import`` 键可以是布尔值、路径、映射或序列。我们将按顺序使用示例来描述这些:
+
+- :ref:`布尔值 <west-manifest-import-bool>`
+   - :ref:`west-manifest-ex1.1`
+   - :ref:`west-manifest-ex1.2`
+   - :ref:`west-manifest-ex1.3`
+- :ref:`相对路径 <west-manifest-import-path>`
+   - :ref:`west-manifest-ex2.1`
+   - :ref:`west-manifest-ex2.2`
+   - :ref:`west-manifest-ex2.3`
+- :ref:`带有附加配置的映射 <west-manifest-import-map>`
+   - :ref:`west-manifest-ex3.1`
+   - :ref:`west-manifest-ex3.2`
+   - :ref:`west-manifest-ex3.3`
+   - :ref:`west-manifest-ex3.4`
+- :ref:`路径和映射的序列 <west-manifest-import-seq>`
+   - :ref:`west-manifest-ex4.1`
+   - :ref:`west-manifest-ex4.2`
+
+更 :ref:`正式的描述 <west-manifest-formal>` 将在示例之后最后给出。
+
+故障排除说明 (Troubleshooting Note)
+=====================================
+
+如果您正在使用此功能并发现 west 的行为令人困惑,请尝试 :ref:`解析您的清单 <west-manifest-resolve>` 以查看导入完成后的最终结果。
+
+.. _west-manifest-import-bool:
+
+选项 1: 布尔值 (Option 1: Boolean)
+====================================
+
+这是使用 ``import`` 的最简单方法。
+
+如果 ``import`` 作为 ``projects`` 属性为 ``true``,west 将从该项目根目录中的 :file:`west.yml` 文件导入项目。如果它是 ``false`` 或缺失,则不起作用。例如,此清单将从修订版本 ``v1.0`` 的 ``p1`` git 仓库导入 :file:`west.yml`:
+
+.. code-block:: yaml
+
+   manifest:
+     # ...
+     projects:
+       - name: p1
+         revision: v1.0
+         import: true    # 从 p1 的 v1.0 git 标签导入 west.yml
+       - name: p2
+         import: false   # 不从 p2 导入任何内容。
+       - name: p3        # 也不从 p3 导入任何内容。
+
+在 ``self`` 内将 ``import`` 设置为 ``true`` 或 ``false`` 是错误的,如下所示:
+
+.. code-block:: yaml
+
+   manifest:
+     # ...
+     self:
+       import: true  # 错误
+
+.. _west-manifest-ex1.1:
+
+示例 1.1: Zephyr 发行版的下游 (Example 1.1: Downstream of a Zephyr release)
+-------------------------------------------------------------------------------
+
+您有一个源代码仓库,希望与 Zephyr v1.14.1 LTS 一起使用。您想使用 west 维护整个项目。您不想修改任何主线仓库。
+
+换句话说,您想要的 west 工作空间如下所示:
 
 .. code-block:: yaml
 
@@ -1359,7 +1297,34 @@ You can do this with the following :file:`my-repo/west.yml`:
          import: true
 
 You can then create the workspace on your computer like this, assuming
-``my-repo`` is hosted at ``https://git.example.com/my-repo``:
+   my-downstream/
+   ├── .west/                     # west 目录
+   ├── zephyr/                    # 主线 zephyr 仓库
+   │   └── west.yml               # 导入此文件的 v1.14.1 版本
+   ├── modules/                   # 来自主线 zephyr 的模块
+   │   ├── hal/
+   │   └── [...其他目录..]
+   ├── [ ... 其他项目 ...]  # 其他主线仓库
+   └── my-repo/                   # 您的下游仓库
+       ├── west.yml               # 主清单,导入 zephyr/west.yml v1.14.1
+       └── [...其他文件..]
+
+您可以使用以下 :file:`my-repo/west.yml` 来实现:
+
+.. code-block:: yaml
+
+   # my-repo/west.yml:
+   manifest:
+     remotes:
+       - name: zephyrproject-rtos
+         url-base: https://github.com/zephyrproject-rtos
+     projects:
+       - name: zephyr
+         remote: zephyrproject-rtos
+         revision: v1.14.1
+         import: true
+
+然后,您可以在计算机上创建工作空间,假设 ``my-repo`` 托管在 ``https://git.example.com/my-repo``:
 
 .. code-block:: console
 
@@ -1367,22 +1332,18 @@ You can then create the workspace on your computer like this, assuming
    cd my-downstream
    west update
 
-After ``west init``, :file:`my-downstream/my-repo` will be cloned.
+执行 ``west init`` 后,:file:`my-downstream/my-repo` 将被克隆。
 
-After ``west update``, all of the projects defined in the ``zephyr``
-repository's :file:`west.yml` at revision ``v1.14.1`` will be cloned into
-:file:`my-downstream` as well.
+执行 ``west update`` 后,``zephyr`` 仓库的 :file:`west.yml` 在修订版本 ``v1.14.1`` 中定义的所有项目也将被克隆到 :file:`my-downstream` 中。
 
-You can add and commit any code to :file:`my-repo` you please at this point,
-including your own Zephyr applications, drivers, etc. See :ref:`application`.
+此时,您可以在 :file:`my-repo` 中添加和提交任何您想要的代码,包括您自己的 Zephyr 应用程序、驱动程序等。详见 :ref:`application`。
 
 .. _west-manifest-ex1.2:
 
-Example 1.2: "Rolling release" Zephyr downstream
-------------------------------------------------
+示例 1.2: "滚动发布" Zephyr 下游 (Example 1.2: "Rolling release" Zephyr downstream)
+----------------------------------------------------------------------------------------
 
-This is similar to :ref:`west-manifest-ex1.1`, except we'll use ``revision:
-main`` for the zephyr repository:
+这类似于 :ref:`west-manifest-ex1.1`,只是我们将为 zephyr 仓库使用 ``revision: main``:
 
 .. code-block:: yaml
 
@@ -1397,7 +1358,7 @@ main`` for the zephyr repository:
          revision: main
          import: true
 
-You can create the workspace in the same way:
+您可以以相同的方式创建工作空间:
 
 .. code-block:: console
 
@@ -1405,35 +1366,23 @@ You can create the workspace in the same way:
    cd my-downstream
    west update
 
-This time, whenever you run ``west update``, the special :ref:`manifest-rev
-<west-manifest-rev>` branch in the ``zephyr`` repository will be updated to
-point at a newly fetched ``main`` branch tip from the URL
-https://github.com/zephyrproject-rtos/zephyr.
+这次,每当您运行 ``west update`` 时,``zephyr`` 仓库中的特殊 :ref:`manifest-rev <west-manifest-rev>` 分支将更新为指向从 URL https://github.com/zephyrproject-rtos/zephyr 新获取的 ``main`` 分支提示。
 
-The contents of :file:`zephyr/west.yml` at the new ``manifest-rev`` will then
-be used to import projects from Zephyr. This lets you stay up to date with the
-latest changes in the Zephyr project. The cost is that running ``west update``
-will not produce reproducible results, since the remote ``main`` branch can
-change every time you run it.
+然后,新 ``manifest-rev`` 处的 :file:`zephyr/west.yml` 内容将用于从 Zephyr 导入项目。这使您可以与 Zephyr 项目的最新更改保持同步。代价是运行 ``west update`` 不会产生可重现的结果,因为远程 ``main`` 分支每次运行时都可能发生变化。
 
-It's also important to understand that west **ignores your working tree's**
-:file:`zephyr/west.yml` entirely when resolving imports. West always uses the
-contents of imported manifests as they were committed to the latest
-``manifest-rev`` when importing from a project.
+同样重要的是要理解,在解析导入时,west **完全忽略您工作树的** :file:`zephyr/west.yml`。从项目导入时,West 始终使用导入清单的内容,因为它们已提交到最新的 ``manifest-rev``。
 
-You can only import manifest from the file system if they are in your manifest
-repository's working tree. See :ref:`west-manifest-ex2.2` for an example.
+只有当它们在清单仓库的工作树中时,您才能从文件系统导入清单。有关示例,请参阅 :ref:`west-manifest-ex2.2`。
 
 .. _west-manifest-ex1.3:
 
-Example 1.3: Downstream of a Zephyr release, with module fork
--------------------------------------------------------------
+示例 1.3: Zephyr 发行版的下游,带有模块分支 (Example 1.3: Downstream of a Zephyr release, with module fork)
+---------------------------------------------------------------------------------------------------------------
 
-This manifest is similar to the one in :ref:`west-manifest-ex1.1`, except it:
+此清单类似于 :ref:`west-manifest-ex1.1` 中的清单,除了它:
 
-- is a downstream of Zephyr 2.0
-- includes a downstream fork of the :file:`modules/hal/nordic`
-  :ref:`module <modules>` which was included in that release
+- 是 Zephyr 2.0 的下游
+- 包括 :file:`modules/hal/nordic` :ref:`模块 <modules>` 的下游分支,该模块包含在该发行版中
 
 .. code-block:: yaml
 
@@ -1445,16 +1394,16 @@ This manifest is similar to the one in :ref:`west-manifest-ex1.1`, except it:
        - name: my-remote
          url-base: https://git.example.com
      projects:
-       - name: hal_nordic         # higher precedence
+       - name: hal_nordic         # 更高的优先级
          remote: my-remote
          revision: my-sha
          path: modules/hal/nordic
        - name: zephyr
          remote: zephyrproject-rtos
          revision: v2.0.0
-         import: true             # imported projects have lower precedence
+         import: true             # 导入的项目具有较低的优先级
 
-   # subset of zephyr/west.yml contents at v2.0.0:
+   # v2.0.0 时 zephyr/west.yml 内容的子集:
    manifest:
      defaults:
        remote: zephyrproject-rtos
@@ -1463,44 +1412,34 @@ This manifest is similar to the one in :ref:`west-manifest-ex1.1`, except it:
          url-base: https://github.com/zephyrproject-rtos
      projects:
      # ...
-     - name: hal_nordic           # lower precedence, values ignored
+     - name: hal_nordic           # 较低的优先级,值被忽略
        path: modules/hal/nordic
        revision: another-sha
 
-With this manifest file, the project named ``hal_nordic``:
+使用此清单文件,名为 ``hal_nordic`` 的项目:
 
-- is cloned from ``https://git.example.com/hal_nordic`` instead of
-  ``https://github.com/zephyrproject-rtos/hal_nordic``.
-- is updated to commit ``my-sha`` by ``west update``, instead of
-  the mainline commit ``another-sha``
+- 从 ``https://git.example.com/hal_nordic`` 克隆,而不是从 ``https://github.com/zephyrproject-rtos/hal_nordic`` 克隆。
+- 通过 ``west update`` 更新到提交 ``my-sha``,而不是主线提交 ``another-sha``
 
-In other words, when your top-level manifest defines a project, like
-``hal_nordic``, west will ignore any other definition it finds later on while
-resolving imports.
+换句话说,当您的顶级清单定义一个项目时,如 ``hal_nordic``,west 将忽略在解析导入时稍后找到的任何其他定义。
 
-This does mean you have to copy the ``path: modules/hal/nordic`` value into
-:file:`my-repo/west.yml` when defining ``hal_nordic`` there. The value from
-:file:`zephyr/west.yml` is ignored entirely. See :ref:`west-manifest-resolve`
-for troubleshooting advice if this gets confusing in practice.
+这确实意味着在 :file:`my-repo/west.yml` 中定义 ``hal_nordic`` 时,您必须将 ``path: modules/hal/nordic`` 值复制到其中。:file:`zephyr/west.yml` 中的值将被完全忽略。如果这在实践中令人困惑,请参阅 :ref:`west-manifest-resolve` 以获取故障排除建议。
 
-When you run ``west update``, west will:
+当您运行 ``west update`` 时,west 将:
 
-- update zephyr's ``manifest-rev`` to point at the ``v2.0.0`` tag
-- import :file:`zephyr/west.yml` at that ``manifest-rev``
-- locally check out the ``v2.0.0`` revisions for all zephyr projects except
-  ``hal_nordic``
-- update ``hal_nordic`` to ``my-sha`` instead of ``another-sha``
+- 更新 zephyr 的 ``manifest-rev`` 以指向 ``v2.0.0`` 标签
+- 在该 ``manifest-rev`` 处导入 :file:`zephyr/west.yml`
+- 在本地检出除 ``hal_nordic`` 之外的所有 zephyr 项目的 ``v2.0.0`` 修订版本
+- 将 ``hal_nordic`` 更新到 ``my-sha`` 而不是 ``another-sha``
 
 .. _west-manifest-import-path:
 
-Option 2: Relative path
-=======================
+选项 2: 相对路径 (Option 2: Relative path)
+============================================
 
-The ``import`` value can also be a relative path to a manifest file or a
-directory containing manifest files. The path is relative to the root directory
-of the ``projects`` or ``self`` repository the ``import`` key appears in.
+``import`` 值也可以是清单文件或包含清单文件的目录的相对路径。该路径相对于 ``import`` 键出现的 ``projects`` 或 ``self`` 仓库的根目录。
 
-Here is an example:
+这是一个示例:
 
 .. code-block:: yaml
 
@@ -1515,27 +1454,20 @@ Here is an example:
      self:
        import: submanifests
 
-This will import the following:
+这将导入以下内容:
 
-- the contents of :file:`project-1/west.yml` at ``manifest-rev``, which points
-  at tag ``v1.0`` after running ``west update``
-- any YAML files in the directory tree :file:`project-2/p2-manifests`
-  at the latest commit in the ``main`` branch, as fetched by ``west update``,
-  sorted by file name
-- YAML files in :file:`submanifests` in your manifest repository,
-  as they appear on your file system, sorted by file name
+- :file:`project-1/west.yml` 在 ``manifest-rev`` 处的内容,该分支在运行 ``west update`` 后指向标签 ``v1.0``
+- 目录树 :file:`project-2/p2-manifests` 中的任何 YAML 文件,位于 ``main`` 分支的最新提交处(由 ``west update`` 获取),按文件名排序
+- 清单仓库中 :file:`submanifests` 里的 YAML 文件,这些文件来自您的文件系统,按文件名排序
 
-Notice how ``projects`` imports get data from Git using ``manifest-rev``, while
-``self`` imports get data from your file system. This is because as usual, west
-leaves version control for your manifest repository up to you.
+请注意 ``projects`` 导入如何使用 ``manifest-rev`` 从 Git 获取数据,而 ``self`` 导入从您的文件系统获取数据。这是因为如常,west 将清单仓库的版本控制留给您。
 
 .. _west-manifest-ex2.1:
 
-Example 2.1: Downstream of a Zephyr release with explicit path
---------------------------------------------------------------
+示例 2.1: Zephyr 发行版的下游,带有显式路径 (Example 2.1: Downstream of a Zephyr release with explicit path)
+-------------------------------------------------------------------------------------------------------
 
-This is an explicit way to write an equivalent manifest to the one in
-:ref:`west-manifest-ex1.1`.
+这是编写与 :ref:`west-manifest-ex1.1` 中清单等效的显式方式。
 
 .. code-block:: yaml
 
@@ -1549,20 +1481,16 @@ This is an explicit way to write an equivalent manifest to the one in
          revision: v1.14.1
          import: west.yml
 
-The setting ``import: west.yml`` means to use the file :file:`west.yml` inside
-the ``zephyr`` project. This example is contrived, but shows the idea.
+设置 ``import: west.yml`` 意味着使用 ``zephyr`` 项目内的 :file:`west.yml` 文件。这个示例是人为构造的,但展示了这个想法。
 
-This can be useful in practice when the name of the manifest file you want to
-import is not :file:`west.yml`.
+当您想要导入的清单文件名称不是 :file:`west.yml` 时,这在实践中可能很有用。
 
 .. _west-manifest-ex2.2:
 
-Example 2.2: Downstream with directory of manifest files
---------------------------------------------------------
+示例 2.2: 带有清单文件目录的下游 (Example 2.2: Downstream with directory of manifest files)
+-------------------------------------------------------------------------------------------
 
-Your Zephyr downstream has a lot of additional repositories. So many, in fact,
-that you want to split them up into multiple manifest files, but keep track of
-them all in a single manifest repository, like this:
+您的 Zephyr 下游有很多额外的仓库。事实上,数量如此之多,以至于您想将它们拆分到多个清单文件中,但将它们全部保存在一个清单仓库中,如下所示:
 
 .. code-block:: none
 
@@ -1573,12 +1501,9 @@ them all in a single manifest repository, like this:
    │   └── 03-applications.yml
    └── west.yml
 
-You want to add all the files in :file:`my-repo/submanifests` to the main
-manifest file, :file:`my-repo/west.yml`, in addition to projects in
-:file:`zephyr/west.yml`. You want to track the latest development code
-in the Zephyr repository's ``main`` branch instead of using a fixed revision.
+您想将 :file:`my-repo/submanifests` 中的所有文件添加到主清单文件 :file:`my-repo/west.yml` 中,以及 :file:`zephyr/west.yml` 中的项目。您想跟踪 Zephyr 仓库 ``main`` 分支中的最新开发代码,而不是使用固定的修订版本。
 
-Here's how:
+方法如下:
 
 .. code-block:: yaml
 
@@ -1595,7 +1520,7 @@ Here's how:
      self:
        import: submanifests
 
-Manifest files are imported in this order during resolution:
+清单文件在解析期间按以下顺序导入:
 
 #. :file:`my-repo/submanifests/01-libraries.yml`
 #. :file:`my-repo/submanifests/02-vendor-hals.yml`
@@ -1605,36 +1530,24 @@ Manifest files are imported in this order during resolution:
 
 .. note::
 
-   The :file:`.yml` file names are prefixed with numbers in this example to
-   make sure they are imported in the specified order.
+   此示例中的 :file:`.yml` 文件名以数字为前缀,以确保它们按指定顺序导入。
 
-   You can pick arbitrary names. West sorts files in a directory by name before
-   importing.
+   您可以选择任意名称。West 在导入之前按名称对目录中的文件进行排序。
 
-Notice how the manifests in :file:`submanifests` are imported *before*
-:file:`my-repo/west.yml` and :file:`zephyr/west.yml`. In general, an ``import``
-in the ``self`` section is processed before the manifest files in ``projects``
-and the main manifest file.
+请注意,:file:`submanifests` 中的清单是在 :file:`my-repo/west.yml` 和 :file:`zephyr/west.yml` **之前** 导入的。通常,``self`` 部分中的 ``import`` 在 ``projects`` 中的清单文件和主清单文件之前处理。
 
-This means projects defined in :file:`my-repo/submanifests` take highest
-precedence. For example, if :file:`01-libraries.yml` defines ``hal_nordic``,
-the project by the same name in :file:`zephyr/west.yml` is simply ignored. As
-usual, see :ref:`west-manifest-resolve` for troubleshooting advice.
+这意味着在 :file:`my-repo/submanifests` 中定义的项目具有最高优先级。例如,如果 :file:`01-libraries.yml` 定义了 ``hal_nordic``,则 :file:`zephyr/west.yml` 中同名的项目将被简单地忽略。如常,请参阅 :ref:`west-manifest-resolve` 以获取故障排除建议。
 
-This may seem strange, but it allows you to redefine projects "after the fact",
-as we'll see in the next example.
+这可能看起来很奇怪,但它允许您"事后"重新定义项目,正如我们将在下一个示例中看到的那样。
 
 .. _west-manifest-ex2.3:
 
-Example 2.3: Continuous Integration overrides
----------------------------------------------
+示例 2.3: 持续集成覆盖 (Example 2.3: Continuous Integration overrides)
+-------------------------------------------------------------------------
 
-Your continuous integration system needs to fetch and test multiple
-repositories in your west workspace from a developer's forks instead of your
-mainline development trees, to see if the changes all work well together.
+您的持续集成系统需要从开发人员的分支而不是主线开发树中获取并测试 west 工作空间中的多个仓库,以查看这些更改是否能够很好地协同工作。
 
-Starting with :ref:`west-manifest-ex2.2`, the CI scripts add a
-file :file:`00-ci.yml` in :file:`my-repo/submanifests`, with these contents:
+从 :ref:`west-manifest-ex2.2` 开始,CI 脚本在 :file:`my-repo/submanifests` 中添加一个文件 :file:`00-ci.yml`,其内容如下:
 
 .. code-block:: yaml
 
@@ -1648,55 +1561,36 @@ file :file:`00-ci.yml` in :file:`my-repo/submanifests`, with these contents:
          url: https://github.com/a-developer/application
          revision: another-pull-request-branch
 
-The CI scripts run ``west update`` after generating this file in
-:file:`my-repo/submanifests`. The projects defined in :file:`00-ci.yml` have
-higher precedence than other definitions in :file:`my-repo/submanifests`,
-because the name :file:`00-ci.yml` comes before the other file names.
+CI 脚本在 :file:`my-repo/submanifests` 中生成此文件后运行 ``west update``。:file:`00-ci.yml` 中定义的项目具有比 :file:`my-repo/submanifests` 中其他定义更高的优先级,因为名称 :file:`00-ci.yml` 排在其他文件名之前。
 
-Thus, ``west update`` always checks out the developer's branches in the
-projects named ``a-vendor-hal`` and ``an-application``, even if those same
-projects are also defined elsewhere.
+因此,``west update`` 始终检出开发人员在名为 ``a-vendor-hal`` 和 ``an-application`` 的项目中的分支,即使这些相同的项目也在其他地方定义。
 
 .. _west-manifest-import-map:
 
-Option 3: Mapping
-=================
+选项 3: 映射 (Option 3: Mapping)
+==================================
 
-The ``import`` key can also contain a mapping with the following keys:
+``import`` 键也可以包含一个映射,具有以下键:
 
-- ``file``: Optional. The name of the manifest file or directory to import.
-  This defaults to :file:`west.yml` if not present.
-- ``name-allowlist``: Optional. If present, a name or sequence of project names
-  to include.
-- ``path-allowlist``: Optional. If present, a path or sequence of project paths
-  to match against. This is a shell-style globbing pattern, currently
-  implemented with `pathlib`_. Note that this means case sensitivity is
-  platform specific.
-- ``name-blocklist``: Optional. Like ``name-allowlist``, but contains project
-  names to exclude rather than include.
-- ``path-blocklist``: Optional. Like ``path-allowlist``, but contains project
-  paths to exclude rather than include.
-- ``path-prefix``: Optional (new in v0.8.0). If given, this will be prepended
-  to the project's path in the workspace, as well as the paths of any imported
-  projects. This can be used to place these projects in a subdirectory of the
-  workspace.
+- ``file``: 可选。要导入的清单文件或目录的名称。如果不存在,则默认为 :file:`west.yml`。
+- ``name-allowlist``: 可选。如果存在,是要包含的项目名称或项目名称序列。
+- ``path-allowlist``: 可选。如果存在,是要匹配的路径或项目路径序列。这是一个 shell 样式的通配符模式,目前使用 `pathlib`_ 实现。请注意,这意味着大小写敏感性是平台特定的。
+- ``name-blocklist``: 可选。类似于 ``name-allowlist``,但包含要排除而不是包含的项目名称。
+- ``path-blocklist``: 可选。类似于 ``path-allowlist``,但包含要排除而不是包含的项目路径。
+- ``path-prefix``: 可选(v0.8.0 中的新功能)。如果给定,这将被添加到项目在工作空间中的路径之前,以及任何导入项目的路径之前。这可用于将这些项目放置在工作空间的子目录中。
 
 .. _re: https://docs.python.org/3/library/re.html
 .. _pathlib:
    https://docs.python.org/3/library/pathlib.html#pathlib.PurePath.match
 
-Allowlists override blocklists if both are given. For example, if a project is
-blocked by path, then allowed by name, it will still be imported.
+如果同时给出,允许列表将覆盖阻止列表。例如,如果某个项目被路径阻止,然后通过名称允许,它仍将被导入。
 
 .. _west-manifest-ex3.1:
 
-Example 3.1: Downstream with name allowlist
--------------------------------------------
+示例 3.1: 带名称允许列表的下游 (Example 3.1: Downstream with name allowlist)
+-----------------------------------------------------------------------------
 
-Here is a pair of manifest files, representing a mainline and a
-downstream. The downstream doesn't want to use all the mainline
-projects, however. We'll assume the mainline :file:`west.yml` is
-hosted at ``https://git.example.com/mainline/manifest``.
+这是一对清单文件,代表主线和下游。但是,下游不想使用所有主线项目。我们假设主线 :file:`west.yml` 托管在 ``https://git.example.com/mainline/manifest``。
 
 .. code-block:: yaml
 
@@ -1809,12 +1703,10 @@ An equivalent manifest in a single file would be:
 
 .. _west-manifest-ex3.3:
 
-Example 3.3: Downstream with path blocklist
--------------------------------------------
+示例 3.3: 带路径阻止列表的下游 (Example 3.3: Downstream with path blocklist)
+-----------------------------------------------------------------------------
 
-Here's an example showing how to block all vendor HALs from mainline by
-common path prefix in the workspace, add your own version for the chip
-you're targeting, and keep everything else.
+以下是一个示例,展示如何通过工作空间中的通用路径前缀阻止主线的所有供应商 HAL,为您的目标芯片添加您自己的版本,并保留其他所有内容。
 
 .. code-block:: yaml
 
@@ -1968,10 +1860,10 @@ This example manifest is equivalent to the manifest in
 
 .. _west-manifest-ex4.2:
 
-Example 4.2: Import order illustration
---------------------------------------
+示例 4.2: 导入顺序示例 (Example 4.2: Import order illustration)
+-----------------------------------------------------------------
 
-This more complicated example shows the order that west imports manifest files:
+这个更复杂的示例展示了 west 导入清单文件的顺序:
 
 .. code-block:: yaml
 
@@ -1993,36 +1885,28 @@ This more complicated example shows the order that west imports manifest files:
      defaults:
        remote: my-remote
 
-For this example, west resolves imports in this order:
+对于此示例,west 按以下顺序解析导入:
 
-#. the listed files in :file:`my-repo/submanifests` are first, in the order
-   they occur (e.g. :file:`libraries.yml` comes before
-   :file:`applications.yml`, since this is a sequence of files), since the
-   ``self: import:`` is always imported first
-#. :file:`my-repo/west.yml` is next (with projects ``my-library`` etc. as long
-   as they weren't already defined somewhere in :file:`submanifests`)
-#. :file:`zephyr/west.yml` is after that, since that's the first ``import`` key
-   in the ``projects`` list in :file:`my-repo/west.yml`
-#. files in :file:`another-manifest-repo/submanifests` are last (sorted by file
-   name), since that's the final project ``import``
+#. :file:`my-repo/submanifests` 中列出的文件是第一位的,按它们出现的顺序(例如,:file:`libraries.yml` 在 :file:`applications.yml` 之前,因为这是一个文件序列),因为 ``self: import:`` 总是首先导入
+#. :file:`my-repo/west.yml` 是下一个(包含 ``my-library`` 等项目,只要它们尚未在 :file:`submanifests` 中的某处定义)
+#. :file:`zephyr/west.yml` 在其后,因为这是 :file:`my-repo/west.yml` 中 ``projects`` 列表中的第一个 ``import`` 键
+#. :file:`another-manifest-repo/submanifests` 中的文件是最后的(按文件名排序),因为这是最后一个项目 ``import``
 
 .. _west-manifest-formal:
 
-Manifest Import Details
-=======================
+清单导入详情 (Manifest Import Details)
+========================================
 
-This section describes how west resolves a manifest file that uses ``import`` a
-bit more formally.
+本节更正式地描述了 west 如何解析使用 ``import`` 的清单文件。
 
-Overview
---------
+概述 (Overview)
+-----------------
 
-The ``import`` key can appear in a west manifest's ``projects`` and ``self``
-sections. The general case looks like this:
+``import`` 键可以出现在 west 清单的 ``projects`` 和 ``self`` 部分中。一般情况如下所示:
 
 .. code-block:: yaml
 
-   # Top-level manifest file.
+   # 顶级清单文件。
    manifest:
      projects:
        - name: foo
@@ -2039,23 +1923,17 @@ sections. The general case looks like this:
        import:
          ... # self-import
 
-Import keys are optional. If any of ``import-1, ..., import-N`` are missing,
-west will not import additional manifest data from that project. If
-``self-import`` is missing, no additional files in the manifest repository
-(beyond the top-level file) are imported.
+导入键是可选的。如果 ``import-1, ..., import-N`` 中的任何一个缺失,west 将不会从该项目导入额外的清单数据。如果 ``self-import`` 缺失,则不会导入清单仓库中的其他文件(除顶级文件之外)。
 
-The ultimate outcomes of resolving manifest imports are:
+解析清单导入的最终结果是:
 
-- a ``projects`` list, which is produced by combining the ``projects`` defined
-  in the top-level file with those defined in imported files
+- 一个 ``projects`` 列表,通过组合顶级文件中定义的 ``projects`` 与导入文件中定义的项目而产生
 
-- a set of extension commands, which are drawn from the ``west-commands``
-  keys in the top-level file and any imported files
+- 一组扩展命令,从顶级文件和任何导入文件中的 ``west-commands`` 键中提取
 
-- a ``group-filter`` list, which is produced by combining the top-level and any
-  imported filters
+- 一个 ``group-filter`` 列表,通过组合顶级和任何导入的过滤器而产生
 
-Importing is done in this order:
+导入按以下顺序完成:
 
 #. Manifests from ``self-import`` are imported first.
 #. The top-level manifest file's definitions are handled next.
@@ -2163,70 +2041,57 @@ list ``[]``, since all groups are enabled by default.
 
 .. _west-manifest-cmd:
 
-Manifest Command
-****************
+Manifest 命令 (Manifest Command)
+**********************************
 
-The ``west manifest`` command can be used to manipulate manifest files.
-It takes an action, and action-specific arguments.
+``west manifest`` 命令可用于操作清单文件。它接受一个动作和特定于动作的参数。
 
-The following sections describe each action and provides a basic signature for
-simple uses. Run ``west manifest --help`` for full details on all options.
+以下各节描述每个动作并为简单用例提供基本签名。运行 ``west manifest --help`` 以获取所有选项的完整详细信息。
 
 .. _west-manifest-resolve:
 
-Resolving Manifests
-===================
+解析清单 (Resolving Manifests)
+=================================
 
-The ``--resolve`` action outputs a single manifest file equivalent to your
-current manifest and all its :ref:`imported manifests <west-manifest-import>`:
+``--resolve`` 动作输出一个与您当前清单及其所有 :ref:`导入的清单 <west-manifest-import>` 等效的单个清单文件:
 
 .. code-block:: none
 
    west manifest --resolve [-o outfile]
 
-The main use for this action is to see the "final" manifest contents after
-performing any ``import``\ s.
+此动作的主要用途是在执行任何 ``import`` 后查看"最终"清单内容。
 
-To print detailed information about each imported manifest file and how
-projects are handled during manifest resolution, set the maximum verbosity
-level using ``-v``:
+要打印有关每个导入的清单文件以及在清单解析期间如何处理项目的详细信息,请使用 ``-v`` 设置最大详细程度级别:
 
 .. code-block:: console
 
    west -v manifest --resolve
 
-Freezing Manifests
-==================
+冻结清单 (Freezing Manifests)
+===============================
 
-The ``--freeze`` action outputs a frozen manifest:
+``--freeze`` 动作输出一个冻结的清单:
 
 .. code-block:: none
 
    west manifest --freeze [-o outfile]
 
-A "frozen" manifest is a manifest file where every project's revision is a SHA.
-You can use ``--freeze`` to produce a frozen manifest that's equivalent to your
-current manifest file. The ``-o`` option specifies an output file; if not
-given, standard output is used.
+"冻结的"清单是一个清单文件,其中每个项目的修订版本都是 SHA。您可以使用 ``--freeze`` 生成与当前清单文件等效的冻结清单。``-o`` 选项指定输出文件;如果未给出,则使用标准输出。
 
-Validating Manifests
-====================
+验证清单 (Validating Manifests)
+=================================
 
-The ``--validate`` action either succeeds if the current manifest file is valid,
-or fails with an error:
+如果当前清单文件有效,``--validate`` 动作成功,否则失败并返回错误:
 
 .. code-block:: none
 
    west manifest --validate
 
-The error message can help diagnose errors.
+错误消息可以帮助诊断错误。
 
-Here, "invalid" means that the syntax of the manifest file doesn't follow the
-rules documented on this page.
+在这里,"无效"意味着清单文件的语法不遵循本页面记录的规则。
 
-If your manifest is valid but it's not working the way you want it to, turning
-up the verbosity with ``-v`` is a good way to get detailed information about
-what decisions west made about your manifest, and why:
+如果您的清单有效但工作方式与您期望的不同,使用 ``-v`` 提高详细程度是获取有关 west 对您的清单做出的决策及其原因的详细信息的好方法:
 
 .. code-block:: none
 
@@ -2234,14 +2099,13 @@ what decisions west made about your manifest, and why:
 
 .. _west-manifest-path:
 
-Get the manifest path
-=====================
+获取清单路径 (Get the manifest path)
+======================================
 
-The ``--path`` action prints the path to the top level manifest file:
+``--path`` 动作打印顶级清单文件的路径:
 
 .. code-block:: none
 
    west manifest --path
 
-The output is something like ``/path/to/workspace/west.yml``. The path format
-depends on your operating system.
+输出类似于 ``/path/to/workspace/west.yml``。路径格式取决于您的操作系统。

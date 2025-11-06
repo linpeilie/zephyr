@@ -1,35 +1,25 @@
 .. _test-framework:
 
-Test Framework
-###############
+测试框架
+########
 
-The Zephyr Test Framework (Ztest) provides a simple testing framework intended
-to be used during development.  It provides basic assertion macros and a generic
-test structure.
+Zephyr测试框架（Ztest）提供了一个简单的测试框架，旨在开发期间使用。它提供基本的断言宏和通用测试结构。
 
-The framework can be used in two ways, either as a generic framework for
-integration testing, or for unit testing specific modules.
+该框架可以通过两种方式使用：既可以作为集成测试的通用框架，也可以用于特定模块的单元测试。
 
-Creating a test suite
-*********************
+创建测试套件
+*************
 
-Using Ztest to create a test suite is as easy as calling the :c:macro:`ZTEST_SUITE`. The macro
-accepts the following arguments:
+使用Ztest创建测试套件只需调用:c:macro:`ZTEST_SUITE`宏即可。该宏接受以下参数：
 
-* ``suite_name`` - The name of the suite. This name must be unique within a single binary.
-* :c:type:`ztest_suite_predicate_t` - An optional predicate function to allow choosing when the
-  test will run. The predicate will get a pointer to the global state passed in through
-  :c:func:`ztest_run_all` and should return a boolean to decide if the suite should run.
-* :c:type:`ztest_suite_setup_t` - An optional setup function which returns a test fixture. This
-  will be called and run once per test suite run.
-* :c:type:`ztest_suite_before_t` - An optional before function which will run before every single
-  test in this suite.
-* :c:type:`ztest_suite_after_t` - An optional after function which will run after every single
-  test in this suite.
-* :c:type:`ztest_suite_teardown_t` - An optional teardown function which will run at the end of
-  all the tests in the suite.
+* ``suite_name`` - 套件的名称。此名称在单个二进制文件中必须是唯一的。
+* :c:type:`ztest_suite_predicate_t` - 可选的条件函数，用于选择测试何时运行。条件函数将获得通过:c:func:`ztest_run_all`传递的全局状态的指针，并应返回布尔值来决定套件是否应该运行。
+* :c:type:`ztest_suite_setup_t` - 可选的设置函数，返回测试固件。该函数将在每次测试套件运行期间被调用和执行一次。
+* :c:type:`ztest_suite_before_t` - 可选的前置函数，将在套件中的每个测试之前运行。
+* :c:type:`ztest_suite_after_t` - 可选的后置函数，将在套件中的每个测试之后运行。
+* :c:type:`ztest_suite_teardown_t` - 可选的拆卸函数，将在套件中所有测试结束时运行。
 
-Below is an example of a test suite using a predicate:
+以下是使用条件函数的测试套件示例：
 
 .. code-block:: C
 
@@ -43,31 +33,21 @@ Below is an example of a test suite using a predicate:
 
    ZTEST_SUITE(alternating_suite, predicate, NULL, NULL, NULL, NULL);
 
-Adding tests to a suite
-***********************
+向套件添加测试
+**************
 
-There are 5 macros used to add a test to a suite, they are:
+有5个宏用于向套件添加测试，它们是：
 
-* :c:macro:`ZTEST` ``(suite_name, test_name)`` - Which can be used to add a test by ``test_name`` to a
-  given suite by ``suite_name``.
-* :c:macro:`ZTEST_P` ``(suite_name, test_name)`` - Add a parameterized test to a given suite by specifying
-  the ``suite_name`` and ``test_name``. You can then access the passed parameter within
-  the body of the test using the ``data`` pointer.
-* :c:macro:`ZTEST_USER` ``(suite_name, test_name)`` - Which behaves the same as :c:macro:`ZTEST`, only
-  that when :kconfig:option:`CONFIG_USERSPACE` is enabled, then the test will be run in a userspace
-  thread.
-* :c:macro:`ZTEST_F` ``(suite_name, test_name)`` - Which behaves the same as :c:macro:`ZTEST`, only
-  that the test function will already include a variable named ``fixture`` with the type
-  ``<suite_name>_fixture``.
-* :c:macro:`ZTEST_USER_F` ``(suite_name, test_name)`` - Which combines the fixture feature of
-  :c:macro:`ZTEST_F` with the userspace threading for the test.
+* :c:macro:`ZTEST` ``(suite_name, test_name)`` - 可用于通过``suite_name``给定的套件中添加名为``test_name``的测试。
+* :c:macro:`ZTEST_P` ``(suite_name, test_name)`` - 通过指定``suite_name``和``test_name``向给定套件添加参数化测试。然后，您可以在测试体内使用``data``指针访问传递的参数。
+* :c:macro:`ZTEST_USER` ``(suite_name, test_name)`` - 行为与:c:macro:`ZTEST`相同，唯一的区别是当:kconfig:option:`CONFIG_USERSPACE`启用时，测试将在用户空间线程中运行。
+* :c:macro:`ZTEST_F` ``(suite_name, test_name)`` - 行为与:c:macro:`ZTEST`相同，唯一的区别是测试函数已经包含一个名为``fixture``的变量，其类型为``<suite_name>_fixture``。
+* :c:macro:`ZTEST_USER_F` ``(suite_name, test_name)`` - 结合了:c:macro:`ZTEST_F`的固件功能和测试的用户空间线程功能。
 
-Test fixtures
-=============
+测试固件
+=========
 
-Test fixtures can be used to help simplify repeated test setup operations. In many cases, tests in
-the same suite will require some initial setup followed by some form of reset between each test.
-This is achieved via fixtures in the following way:
+测试固件可用于帮助简化重复的测试设置操作。在许多情况下，同一套件中的测试需要一些初始设置，然后在每次测试之间进行某种形式的重置。这是通过固件按以下方式实现的：
 
 .. code-block:: C
 
@@ -81,7 +61,7 @@ This is achieved via fixtures in the following way:
 
    static void *my_suite_setup(void)
    {
-   	/* Allocate the fixture with 256 byte buffer */
+   	/* 分配带有256字节缓冲区的固件 */
       struct my_suite_fixture *fixture = malloc(sizeof(struct my_suite_fixture) + 255);
 
    	zassume_not_null(fixture, NULL);
@@ -93,7 +73,7 @@ This is achieved via fixtures in the following way:
    static void my_suite_before(void *f)
    {
    	struct my_suite_fixture *fixture = (struct my_suite_fixture *)f;
-   	memset(fixture->buff, 0, fixture->max_size);
+   	zmemset(fixture->buff, 0, fixture->max_size);
    	fixture->size = 0;
    }
 
@@ -110,20 +90,15 @@ This is achieved via fixtures in the following way:
    	zassert_equal(256, fixture->max_size);
    }
 
-Using memory allocated by a test fixture in a userspace thread, such as during execution of
-:c:macro:`ZTEST_USER` or :c:macro:`ZTEST_USER_F`, requires that memory to be declared userspace
-accessible. This is because the fixture memory is owned and initialized by kernel space. The Ztest
-framework provides the :c:macro:`ZTEST_DMEM` and :c:macro:`ZTEST_BMEM` macros for use of such
-user/kernel space shared memory.
+在用户空间线程中使用测试固件分配的内存，例如在执行:c:macro:`ZTEST_USER`或:c:macro:`ZTEST_USER_F`期间，需要将该内存声明为用户空间可访问的。这是因为固件内存由内核空间拥有和初始化。Ztest框架提供了:c:macro:`ZTEST_DMEM`和:c:macro:`ZTEST_BMEM`宏用于这种用户/内核空间共享内存的使用。
 
-Advanced features
-*****************
+高级功能
+********
 
-Test result expectations
-========================
+测试结果期望
+============
 
-Some tests were made to be broken. In cases where the test is expected to fail or skip due to the
-nature of the code, it's possible to annotate the test as such. For example:
+某些测试是为了失败而创建的。在由于代码的性质而预期测试将失败或跳过的情况下，可以将测试标记为如此。例如：
 
   .. code-block:: C
 
@@ -134,27 +109,23 @@ nature of the code, it's possible to annotate the test as such. For example:
     ZTEST_EXPECT_FAIL(my_suite, test_fail);
     ZTEST(my_suite, test_fail)
     {
-      /** This will fail the test */
+      /** 这将使测试失败 */
       zassert_true(false, NULL);
     }
 
     ZTEST_EXPECT_SKIP(my_suite, test_skip);
     ZTEST(my_suite, test_skip)
     {
-      /** This will skip the test */
+      /** 这将跳过测试 */
       zassume_true(false, NULL);
     }
 
-In this example, the above tests should be marked as failed and skipped respectively. Instead,
-Ztest will mark both as passed due to the expectation.
+在这个例子中，上述测试应分别标记为失败和跳过。相反，由于期望，Ztest会将两者都标记为通过。
 
-Test rules
-==========
+测试规则
+========
 
-Test rules are a way to run the same logic for every test and every suite. There are a lot of cases
-where you might want to reset some state for every test in the binary (regardless of which suite is
-currently running). As an example, this could be to reset mocks, reset emulators, flush the UART,
-etc.:
+测试规则是一种为每个测试和每个套件运行相同逻辑的方法。在许多情况下，您可能想要在二进制文件中的每个测试之前重置某些状态（无论当前运行的是哪个套件）。例如，这可能是为了重置模拟器、重置仿真器、刷新UART等：
 
 .. code-block:: C
 
@@ -177,16 +148,10 @@ etc.:
 
    ZTEST_RULE(fff_reset_rule, fff_reset_rule_before, NULL);
 
-A custom ``test_main``
-======================
+自定义 ``test_main``
+==================
 
-While the Ztest framework provides a default :c:func:`test_main` function, it's possible that some
-applications will want to provide custom behavior. This is particularly true if there's some global
-state that the tests depend on and that state either cannot be replicated or is difficult to
-replicate without starting the process over. For example, one such state could be a power sequence.
-Assuming there's a board with several steps in the power-on sequence a test suite can be written
-using the ``predicate`` to control when it would run. In that case, the :c:func:`test_main`
-function can be written as follows:
+虽然Ztest框架提供了默认的:c:func:`test_main`函数，但某些应用程序可能希望提供自定义行为。如果测试依赖的某些全局状态无法复制或在不使用重新启动进程的情况下难以复制，这一点尤其正确。例如，这样的状态可能是电源序列。假设有一个板上电序列包含多个步骤，可以使用``predicate``编写测试套件来控制其运行时间。在这种情况下，:c:func:`test_main`函数可以编写如下：
 
 .. code-block:: C
 
@@ -198,52 +163,45 @@ function can be written as follows:
    {
         struct power_sequence_state state;
 
-        /* Only suites that use a predicate checking for phase == PWR_PHASE_0 will run. */
+        /* 只有使用检查phase == PWR_PHASE_0的条件函数的套件才会运行。 */
         state.phase = PWR_PHASE_0;
         ztest_run_all(&state, false, 1, 1);
 
-        /* Only suites that use a predicate checking for phase == PWR_PHASE_1 will run. */
+        /* 只有使用检查phase == PWR_PHASE_1的条件函数的套件才会运行。 */
         state.phase = PWR_PHASE_1;
         ztest_run_all(&state, false, 1, 1);
 
-        /* Only suites that use a predicate checking for phase == PWR_PHASE_2 will run. */
+        /* 只有使用检查phase == PWR_PHASE_2的条件函数的套件才会运行。 */
         state.phase = PWR_PHASE_2;
         ztest_run_all(&state, false, 1, 1);
 
-        /* Check that all the suites in this binary ran at least once. */
+        /* 检查此二进制文件中的所有套件至少运行过一次。 */
         ztest_verify_all_test_suites_ran();
    }
 
 
-Quick start - Integration testing
-*********************************
+快速入门 - 集成测试
+******************
 
-A simple working base is located at :zephyr_file:`samples/subsys/testsuite/integration`.
-To make a test application for the **bar** component of **foo**, you should copy the
-sample folder to ``tests/foo/bar`` and edit files there adjusting for your test
-application's purposes.
+一个简单的工作基础位于:zephyr_file:`samples/subsys/testsuite/integration`。要为**foo**的**bar**组件创建测试应用程序，您应将示例文件夹复制到``tests/foo/bar``并在那里编辑文件，以适应您的测试应用程序的目的。
 
-To build and execute all applicable test scenarios defined in your test application
-use the :ref:`Twister <twister_script>` tool, for example:
+要构建并执行测试应用程序中定义的所有适用测试场景，请使用:ref:`Twister <twister_script>`工具，例如：
 
 .. code-block:: console
 
     ./scripts/twister -T tests/foo/bar/
 
-To select just one of the test scenarios, run Twister with ``--scenario`` command:
+要仅选择一个测试场景，请使用``--scenario``命令运行Twister：
 
 .. code-block:: console
 
    ./scripts/twister --scenario tests/foo/bar/your.test.scenario.name
 
-In the command line above ``tests/foo/bar`` is the path to your test application and
-``your.test.scenario.name`` references a test scenario defined in :file:`testcase.yaml`
-file, which is like ``sample.testing.ztest`` in the boilerplate test suite sample.
+在上面的命令行中，``tests/foo/bar``是测试应用程序的路径，``your.test.scenario.name``引用在:file:`testcase.yaml`文件中定义的测试场景，这类似于样板测试套件示例中的``sample.testing.ztest``。
 
-See :ref:`Twister test project diagram <twister_test_project_diagram>` for more details
-on how Twister deals with Ztest application.
+有关Twister如何处理Ztest应用程序的更多详细信息，请参见:ref:`Twister测试项目图<twister_test_project_diagram>`。
 
-The sample contains the following files:
+示例包含以下文件：
 
 CMakeLists.txt
 
@@ -276,56 +234,41 @@ src/main.c
 
 
 
-A test application may consist of multiple test suites that
-either can be testing functionality or APIs. Functions implementing a test case
-should follow the guidelines below:
+测试应用程序可以由多个测试套件组成，这些套件可以测试功能或API。实现测试用例的函数应遵循以下准则：
 
-* Test cases function names should be prefixed with **test_**
-* Test cases should be documented using doxygen
-* Test case function names should be unique within the section or component being
-  tested
+* 测试用例函数名应以**test_**前缀开头
+* 测试用例应使用doxygen进行文档化
+* 测试用例函数名在被测试的节或组件中应该是唯一的
 
-For example:
+例如：
 
 .. code-block:: C
 
    /**
-    * @brief Test Asserts
+    * @brief 测试断言
     *
-    * This test case verifies the zassert_true macro.
+    * 此测试用例验证zassert_true宏。
     */
    ZTEST(my_suite, test_assert)
    {
            zassert_true(1, "1 was false");
    }
 
-Listing Tests
-=============
+列出测试
+========
 
-Tests (test applications) in the Zephyr tree consist of many test scenarios that run as
-part of a project and test similar functionality, for example an API or a
-feature. The ``twister`` script can parse the test scenarios, suites and cases in all
-test applications or a subset of them, and can generate reports on a granular
-level, i.e. if test cases have passed or failed or if they were blocked or skipped.
+Zephyr树中的测试（测试应用程序）由许多作为项目一部分运行并测试类似功能的测试场景组成，例如API或功能。``twister``脚本可以解析所有测试应用程序或其中一部分的测试场景、套件和用例，并可以在粒度级别生成报告，即测试用例是否通过或失败，或是否被阻止或跳过。
 
-Twister parses the source files looking for test case names, so you
-can list all kernel test cases, for example, by running:
+Twister解析源文件以查找测试用例名称，因此您可以通过运行以下命令列出所有内核测试用例：
 
 .. code-block:: console
 
    ./scripts/twister --list-tests -T tests/kernel
 
-Skipping Tests
-==============
+跳过测试
+========
 
-Special- or architecture-specific tests cannot run on all
-platforms and architectures, however we still want to count those and
-report them as being skipped.  Because the test inventory and
-the list of tests is extracted from the code, adding
-conditionals inside the test suite is sub-optimal.  Tests that need
-to be skipped for a certain platform or feature need to explicitly
-report a skip using :c:func:`ztest_test_skip` or :c:macro:`Z_TEST_SKIP_IFDEF`. If the test runs,
-it needs to report either a pass or fail.  For example:
+特殊或特定于架构的测试无法在所有平台和架构上运行，但是我们仍希望将这些测试计入并报告为跳过。因为测试清单和测试列表是从代码中提取的，在测试套件内添加条件是次优的。需要为某个平台或功能跳过的测试需要使用:c:func:`ztest_test_skip`或:c:macro:`Z_TEST_SKIP_IFDEF`显式报告跳过。如果测试运行，它需要报告通过或失败。例如：
 
 .. code-block:: C
 
@@ -351,29 +294,17 @@ it needs to report either a pass or fail.  For example:
 
 .. _ztest_unit_testing:
 
-Quick start - Unit testing
-**************************
+快速入门 - 单元测试
+******************
 
-Ztest can be used for unit testing. This means that rather than including the
-entire Zephyr OS for testing a single function, you can focus the testing
-efforts into the specific module in question. This will speed up testing since
-only the module will have to be compiled in, and the tested functions will be
-called directly.
+Ztest可以用于单元测试。这意味着，您可以在不包含整个Zephyr OS来测试单个函数的情况下，将测试工作集中在正在讨论的特定模块上。这将加速测试，因为只需要编译模块，并且被测试的函数将被直接调用。
 
-To setup unit tests you have to add a CMakeLists.txt, a testcases.yml and a
-prj.conf to the directory containing the unit test source files. The resulting
-binary from this directory is build with the -DBOARD=unit_testing. When twister
-is invoked the script zephyr/scripts/pylib/twister/twisterlib/testplan.py
-filters out all testcases.yml in which type: unit is not set. Only unit tests
-are executed with a firmware build with BOARD=unit_testing.
+要设置单元测试，您必须将CMakeLists.txt、testcases.yml和prj.conf添加到包含单元测试源文件的目录。从该目录构建的生成二进制文件使用-DBOARD=unit_testing构建。当调用twister时，脚本zephyr/scripts/pylib/twister/twisterlib/testplan.py会过滤掉所有未设置type: unit的testcases.yml。只有使用BOARD=unit_testing的固件构建才会执行单元测试。
 
 CMakeLists.txt
 ==============
 
-In order to declare the unit tests present in a source folder, you need to add
-the relevant source files to the ``testbinary`` target from the CMake
-:zephyr_file:`unittest <cmake/modules/unittest.cmake>` component. See a minimal
-example below:
+为了声明源文件夹中存在的单元测试，您需要将相关源文件添加到CMake :zephyr_file:`unittest <cmake/modules/unittest.cmake>`组件的``testbinary``目标。请参阅下面的最小示例：
 
 .. code-block:: cmake
 
@@ -383,19 +314,14 @@ example below:
    find_package(Zephyr COMPONENTS unittest REQUIRED HINTS $ENV{ZEPHYR_BASE})
    target_sources(testbinary PRIVATE main.c)
 
-Since you won't be including basic kernel data structures that most code
-depends on, you have to provide function stubs in the test. Ztest provides
-some helpers for mocking functions, as demonstrated below.
+由于您不会包含大多数代码所依赖的基本内核数据结构，您必须在测试中提供函数存根。Ztest提供了一些用于模拟函数的辅助函数，如下所示。
 
-In a unit test, mock objects can simulate the behavior of complex real objects
-and are used to decide whether a test failed or passed by verifying whether an
-interaction with an object occurred, and if required, to assert the order of
-that interaction.
+在单元测试中，模拟对象可以模拟复杂真实对象的行为，并用于通过验证是否与对象发生了交互来决定测试是失败还是通过，并根据需要断言该交互的顺序。
 
 testcases.yaml
 ==============
 
-You have to set the value for the key "type" to "unit" in the testcase.yaml
+您必须在testcase.yaml中为键"type"设置值"unit"
 
 .. code-block:: yaml
 
@@ -407,14 +333,13 @@ You have to set the value for the key "type" to "unit" in the testcase.yaml
 prj.conf
 ========
 
-For unit tests this contains usually only
+对于单元测试，这通常只包含
 
 .. code-block:: kconfig
 
    CONFIG_ZTEST=y
 
-If your unit tests require additional libraries (e.g. math-lib) you will have to
-add them either via the CMakeLists.txt or in the testcase.yaml:
+如果您的单元测试需要额外的库（例如math-lib），您必须通过CMakeLists.txt或在testcase.yaml中添加它们：
 
 .. code-block:: yaml
 
@@ -425,78 +350,43 @@ add them either via the CMakeLists.txt or in the testcase.yaml:
          extra_args:
             - EXTRA_LDFLAGS="-lm"
 
-Examples of unit tests can be found in the :zephyr_file:`tests/unit/` folder.
+单元测试的示例可以在:zephyr_file:`tests/unit/`文件夹中找到。
 
-Best practices for declaring the test suite
+声明测试套件的最佳实践
 *******************************************
 
-*twister* and other validation tools need to obtain the list of
-test cases that a Zephyr *ztest* test image will expose.
+*twister*和其他验证工具需要获取Zephyr *ztest*测试图像将公开的测试用例列表。
 
-.. admonition:: Rationale
+.. admonition:: 理论依据
 
-   This all is for the purpose of traceability. It's not enough to
-   have only a semaphore test application.  We also need to show that we
-   have testpoints for all APIs and functionality, and we trace back
-   to documentation of the API, and functional requirements.
+   这一切都是为了可追溯性。仅仅有一个信号量测试应用程序是不够的。我们还需要表明我们为所有API和功能都有测试点，并追溯到API文档和功能需求。
 
-   The idea is that test reports show results for every test case
-   as passed, failed, blocked, or skipped.  Reporting on only the
-   high-level test application, particularly when tests do too
-   many things, is too vague.
+   我们的想法是测试报告显示每个测试用例的结果为通过、失败、阻止或跳过。仅报告高级测试应用程序，特别是当测试做太多事情时，是过于模糊的。
 
-Other questions:
+其他问题：
 
-- Why not pre-scan with CPP and then parse? or post scan the ELF file?
+- 为什么不使用CPP预扫描然后解析？或后扫描ELF文件？
 
-  If C pre-processing or building fails because of any issue, then we
-  won't be able to tell the subcases.
+  如果C预处理或构建由于任何问题而失败，我们将无法判断子情况。
 
-- Why not declare them in the YAML test configuration?
+- 为什么不在YAML测试配置中声明它们？
 
-  A separate test case description file would be harder to maintain
-  than just keeping the information in the test source files
-  themselves -- only one file to update when changes are made
-  eliminates duplication.
+  单独的测试用例描述文件比将信息保存在测试源文件本身中更难维护——只更新一个文件在更改时消除了重复。
 
-Stress test framework
+压力测试框架
 *********************
 
-Zephyr stress test framework (Ztress) provides an environment for executing user
-functions in multiple priority contexts. It can be used to validate that code is
-resilient to preemptions. The framework tracks the number of executions and preemptions
-for each context. Execution can have various completion conditions like timeout,
-number of executions or number of preemptions.
+Zephyr压力测试框架（Ztress）提供了在多个优先级上下文中执行用户函数的环境。它可用于验证代码对抢占的恢复能力。框架跟踪每个上下文的执行和抢占次数。执行可以有各种完成条件，如超时、执行次数或抢占次数。
 
-The framework is setting up the environment by creating the requested number of threads
-(each on different priority), optionally starting a timer. For each context, a user
-function (different for each context) is called and then the context sleeps for
-a randomized amount of system ticks. The framework is tracking CPU load and adjusts sleeping
-periods to achieve higher CPU load. In order to increase the probability of preemptions,
-the system clock frequency should be relatively high. The default 100 Hz on QEMU x86
-is much too low and it is recommended to increase it to 100 kHz.
+框架通过创建请求数量的线程（每个在不同优先级上）来设置环境，可选择地启动定时器。对于每个上下文，调用用户函数（每个上下文不同），然后上下文休眠随机数量的系统时钟节拍。框架跟踪CPU负载并调整睡眠期间以实现更高的CPU负载。为了增加抢占的概率，系统时钟频率应该相对较高。QEMU x86上的默认100 Hz太低，建议将其增加到100 kHz。
 
-The stress test environment is setup and executed using :c:macro:`ZTRESS_EXECUTE` which
-accepts a variable number of arguments. Each argument is a context that is
-specified by :c:macro:`ZTRESS_TIMER` or :c:macro:`ZTRESS_THREAD` macros. Contexts
-are specified in priority descending order. Each context specifies completion
-conditions by providing the minimum number of executions and preemptions. When all
-conditions are met and the execution has completed, an execution report is printed
-and the macro returns. Note that while the test is executing, a progress report is
-periodically printed.
+使用:c:macro:`ZTRESS_EXECUTE`设置并执行压力测试环境，该宏接受可变数量的参数。每个参数是由:c:macro:`ZTRESS_TIMER`或:c:macro:`ZTRESS_THREAD`宏指定的上下文。上下文按优先级降序指定。每个上下文通过提供最小执行次数和抢占次数来指定完成条件。当满足所有条件且执行完成时，打印执行报告并返回宏。请注意，在测试执行期间，会定期打印进度报告。
 
-Execution can be prematurely completed by specifying a test timeout (:c:func:`ztress_set_timeout`)
-or an explicit abort (:c:func:`ztress_abort`).
+可以通过指定测试超时（:c:func:`ztress_set_timeout`）或显式中止（:c:func:`ztress_abort`）提前完成执行。
 
-User function parameters contains an execution counter and a flag indicating if it is
-the last execution.
+用户函数参数包含执行计数器和指示是否是最后执行的标志。
 
-The example below presents how to setup and run 3 contexts (one of which is k_timer
-interrupt handler context). Completion criteria is set to at least 10000 executions
-of each context and 1000 preemptions of the lowest priority context. Additionally,
-the timeout is configured to complete after 10 seconds if those conditions are not met.
-The last argument of each context is the initial sleep time which will be adjusted throughout
-the test to achieve the highest CPU load.
+下面的示例演示如何设置和运行3个上下文（其中一个是k_timer中断处理程序上下文）。完成标准设置为每个上下文至少10000次执行和最低优先级上下文1000次抢占。此外，如果未满足这些条件，则配置超时在10秒后完成。每个上下文的最后一个参数是初始睡眠时间，在整个测试过程中将调整该时间以实现最高的CPU负载。
 
   .. code-block:: C
 
@@ -505,34 +395,29 @@ the test to achieve the highest CPU load.
                             ZTRESS_THREAD(foo_1, user_data_1, 10000, 0, Z_TIMEOUT_TICKS(20)),
                             ZTRESS_THREAD(foo_2, user_data_2, 10000, 1000, Z_TIMEOUT_TICKS(20)));
 
-Configuration
+配置
 =============
 
-Static configuration of Ztress contains:
+Ztress的静态配置包含：
 
- - :kconfig:option:`CONFIG_ZTRESS_MAX_THREADS` - number of supported threads.
- - :kconfig:option:`CONFIG_ZTRESS_STACK_SIZE` - Stack size of created threads.
- - :kconfig:option:`CONFIG_ZTRESS_REPORT_PROGRESS_MS` - Test progress report interval.
+ - :kconfig:option:`CONFIG_ZTRESS_MAX_THREADS` - 支持的线程数。
+ - :kconfig:option:`CONFIG_ZTRESS_STACK_SIZE` - 创建线程的栈大小。
+ - :kconfig:option:`CONFIG_ZTRESS_REPORT_PROGRESS_MS` - 测试进度报告间隔。
 
-API reference
+API参考
 *************
 
-Running tests
+运行测试
 =============
 
 .. doxygengroup:: ztest_test
 
-Assertions
+断言
 ==========
 
-These macros will instantly fail the test if the related assertion fails.
-When an assertion fails, it will print the current file, line and function,
-alongside a reason for the failure and an optional message. If the config
-:kconfig:option:`CONFIG_ZTEST_ASSERT_VERBOSE` is 0, the assertions will only print the
-file and line numbers, reducing the binary size of the test.
+如果相关断言失败，这些宏将立即使测试失败。当断言失败时，它将打印当前文件、行和函数，以及失败的原因和可选消息。如果配置:kconfig:option:`CONFIG_ZTEST_ASSERT_VERBOSE`为0，断言将只打印文件和行号，减少测试的二进制大小。
 
-Example output for a failed macro from
-``zassert_equal(buf->ref, 2, "Invalid refcount")``:
+失败宏``zassert_equal(buf->ref, 2, "Invalid refcount")``的示例输出：
 
 .. code-block:: none
 
@@ -542,23 +427,19 @@ Example output for a failed macro from
 .. doxygengroup:: ztest_assert
 
 
-Expectations
+期望
 ============
 
-These macros will continue test execution if the related expectation fails and subsequently fail the
-test at the end of its execution.  When an expectation fails, it will print the current file, line,
-and function, alongside a reason for the failure and an optional message but continue executing the
-test. If the config :kconfig:option:`CONFIG_ZTEST_ASSERT_VERBOSE` is 0, the expectations will only print the
-file and line numbers, reducing the binary size of the test.
+如果相关期望失败，这些宏将继续测试执行，并随后在执行结束时使测试失败。当期望失败时，它将打印当前文件、行和函数，以及失败的原因和可选消息，但继续执行测试。如果配置:kconfig:option:`CONFIG_ZTEST_ASSERT_VERBOSE`为0，期望将只打印文件和行号，减少测试的二进制大小。
 
-For example, if the following expectations fail:
+例如，如果以下期望失败：
 
 .. code-block:: C
 
    zexpect_equal(buf->ref, 2, "Invalid refcount");
    zexpect_equal(buf->ref, 1337, "Invalid refcount");
 
-The output will look something like:
+输出将看起来像：
 
 .. code-block:: none
 
@@ -569,17 +450,12 @@ The output will look something like:
 
 .. doxygengroup:: ztest_expect
 
-Assumptions
+假设
 ===========
 
-These macros will instantly skip the test or suite if the related assumption fails.
-When an assumption fails, it will print the current file, line, and function,
-alongside a reason for the failure and an optional message. If the config
-:kconfig:option:`CONFIG_ZTEST_ASSERT_VERBOSE` is 0, the assumptions will only print the
-file and line numbers, reducing the binary size of the test.
+如果相关假设失败，这些宏将立即跳过测试或套件。当假设失败时，它将打印当前文件、行和函数，以及失败的原因和可选消息。如果配置:kconfig:option:`CONFIG_ZTEST_ASSERT_VERBOSE`为0，假设将只打印文件和行号，减少测试的二进制大小。
 
-Example output for a failed macro from
-``zassume_equal(buf->ref, 2, "Invalid refcount")``:
+失败宏``zassume_equal(buf->ref, 2, "Invalid refcount")``的示例输出：
 
 .. code-block::none
 
@@ -598,37 +474,31 @@ Ztress
 
 .. _mocking-fff:
 
-Mocking via FFF
+通过FFF进行模拟
 ===============
 
-Zephyr has integrated with FFF for mocking. See `FFF`_ for documentation. To use it,
-include the relevant header:
+Zephyr已与FFF集成进行模拟。有关文档，请参见`FFF`_。要使用它，请包含相关头文件：
 
 .. code-block:: C
 
    #include <zephyr/fff.h>
 
-Zephyr provides several FFF-based fake drivers which can be used as either stubs or mocks. Fake
-driver instances are configured via :ref:`devicetree` and :ref:`kconfig`. See the following
-devicetree bindings for more information:
+Zephyr提供几个基于FFF的虚假驱动程序，这些驱动程序可以用作存根或模拟。虚假驱动程序实例通过:ref:`devicetree`和:ref:`kconfig`进行配置。有关更多信息，请参见以下设备树绑定：
 
  - :dtcompatible:`zephyr,fake-can`
  - :dtcompatible:`zephyr,fake-eeprom`
 
-Zephyr also has defined extensions to FFF for simplified declarations of fake functions.
-See :ref:`FFF Extensions <fff-extensions>`.
+Zephyr还定义了对FFF的扩展，以简化虚假函数的声明。
+请参见:ref:`FFF扩展 <fff-extensions>`。
 
-Customizing Test Output
+自定义测试输出
 ***********************
-Customization is enabled by setting :kconfig:option:`CONFIG_ZTEST_TC_UTIL_USER_OVERRIDE` to "y"
-and adding a file :file:`tc_util_user_override.h` with your overrides.
+通过将:kconfig:option:`CONFIG_ZTEST_TC_UTIL_USER_OVERRIDE`设置为"y"并添加包含您覆盖的文件:file:`tc_util_user_override.h`来启用自定义。
 
-Add the line ``zephyr_include_directories(my_folder)`` to
-your project's :file:`CMakeLists.txt` to let Zephyr find your header file during builds.
+将行``zephyr_include_directories(my_folder)``添加到项目的:file:`CMakeLists.txt`中，以让Zephyr在构建期间找到您的头文件。
 
-See the file :zephyr_file:`subsys/testsuite/include/zephyr/tc_util.h` to see
-which macros and/or defines can be overridden.
-These will be surrounded by blocks such as:
+请参阅文件:zephyr_file:`subsys/testsuite/include/zephyr/tc_util.h`以查看哪些宏和/或定义可以被覆盖。
+这些将被以下块包围：
 
 .. code-block:: C
 
@@ -638,32 +508,20 @@ These will be surrounded by blocks such as:
 
 .. _ztest_shuffle:
 
-Shuffling Test Sequence
+洗牌测试序列
 ***********************
-By default the tests are sorted and ran in alphanumerical order.  Test cases may
-be dependent on this sequence. Enable :kconfig:option:`CONFIG_ZTEST_SHUFFLE` to
-randomize the order. The output from the test will display the seed for failed
-tests.  For native simulator builds you can provide the seed as an argument to
-twister with ``--seed``.
+默认情况下，测试按字母数字顺序排序和运行。测试用例可能依赖于此序列。启用:kconfig:option:`CONFIG_ZTEST_SHUFFLE`以随机化顺序。测试的输出将显示失败测试的种子。对于本机模拟器构建，您可以将种子作为参数提供给twister，使用``--seed``。
 
 
-Repeating Tests
+重复测试
 ***********************
-By default the tests are executed once. The test cases and test suites
-may be executed multiple times. Enable :kconfig:option:`CONFIG_ZTEST_REPEAT` to
-execute the tests multiple times. By default the multiplication factors are 3, which
-means every test suite is executed 3 times and every test case is executed 3 times. This can
-be changed by the :kconfig:option:`CONFIG_ZTEST_SUITE_REPEAT_COUNT` and
-:kconfig:option:`CONFIG_ZTEST_TEST_REPEAT_COUNT` Kconfig options.
+默认情况下，测试执行一次。测试用例和测试套件可以执行多次。启用:kconfig:option:`CONFIG_ZTEST_REPEAT`以多次执行测试。默认情况下，乘法因子为3，这意味着每个测试套件执行3次，每个测试用例执行3次。这可以通过:kconfig:option:`CONFIG_ZTEST_SUITE_REPEAT_COUNT`和:kconfig:option:`CONFIG_ZTEST_TEST_REPEAT_COUNT` Kconfig选项来更改。
 
-Test Selection
+测试选择
 **************
-For tests built for native simulator, use command line arguments to list
-or select tests to run. The test argument expects a comma separated list
-of ``suite::test`` .  You can substitute the test name with an ``*`` to run all
-tests within a suite.
+对于为本机模拟器构建的测试，使用命令行参数列出或选择要运行的测试。测试参数期望一个逗号分隔的``suite::test``列表。您可以用``*``替换测试名称来运行套件中的所有测试。
 
-For example
+例如
 
 .. code-block:: bash
 
@@ -674,7 +532,7 @@ For example
 
 .. _fff-extensions:
 
-FFF Extensions
+FFF扩展
 **************
 
 .. doxygengroup:: fff_extensions
