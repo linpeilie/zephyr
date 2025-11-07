@@ -1,45 +1,35 @@
 .. _charger_api:
 
-Chargers
-########
+充电器 (Chargers)
+##################
 
-The charger subsystem exposes an API to uniformly access battery charger devices.
+充电器子系统公开了一个 API 以统一访问电池充电器设备。
 
-A charger device, or charger peripheral, is a device used to take external power provided to the
-system as an input and provide power as an output downstream to the battery pack(s) and system.
-The charger device can exist as a module, an integrated circuit, or as a functional block in a power
-management integrated circuit (PMIC).
+充电器设备或充电器外设是一种设备,用于接收提供给系统的外部电源作为输入,并向电池组和系统下游提供电源作为输出。充电器设备可以作为模块、集成电路或电源管理集成电路 (PMIC, Power Management Integrated Circuit) 中的功能模块存在。
 
-The action of charging a battery pack is referred to as a charge cycle. When the charge cycle is
-executed the battery pack is charged according to the charge profile configured on the charger
-device. The charge profile is defined in the battery pack's specification that is provided by the
-manufacturer. On charger devices with a control port, the charge profile can be configured by the
-host controller by setting the relevant properties, and can be adjusted at runtime to respond to
-environmental changes.
+为电池组充电的动作称为充电周期 (charge cycle)。当执行充电周期时,电池组根据充电器设备上配置的充电配置文件 (charge profile) 进行充电。充电配置文件在制造商提供的电池组规格中定义。在具有控制端口的充电器设备上,充电配置文件可以由主机控制器通过设置相关属性进行配置,并且可以在运行时进行调整以响应环境变化。
 
-Basic Operation
-***************
+基本操作 (Basic Operation)
+****************************
 
-Initiating a Charge Cycle
-=========================
+启动充电周期 (Initiating a Charge Cycle)
+=========================================
 
-A charge cycle is initiated or terminated using :c:func:`charger_charge_enable`.
+充电周期通过 :c:func:`charger_charge_enable` 启动或终止。
 
-Properties
-==========
+属性 (Properties)
+==================
 
-Fundamentally, a property is a configurable setting, state, or quantity that a charger device can
-measure.
+从根本上说,属性是充电器设备可以测量的可配置设置、状态或数量。
 
-Chargers typically support multiple properties, such as temperature readings of the battery-pack
-or present-time current/voltage.
+充电器通常支持多个属性,例如电池组的温度读数或当前时间的电流/电压。
 
-Properties are fetched by the client one at a time using :c:func:`charger_get_prop`.
-Properties are set by the client one at a time using :c:func:`charger_set_prop`.
+客户端使用 :c:func:`charger_get_prop` 一次获取一个属性。
+客户端使用 :c:func:`charger_set_prop` 一次设置一个属性。
 
 .. _charger_api_reference:
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: charger_interface

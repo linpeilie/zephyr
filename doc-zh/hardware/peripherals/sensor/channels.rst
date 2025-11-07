@@ -1,19 +1,16 @@
 .. _sensor-channel:
 
-Sensor Channels
-###############
+传感器通道 (Sensor Channels)
+#############################
 
-:dfn:`Channels`, enumerated in :c:enum:`sensor_channel`, are quantities that
-a sensor device can measure.
+:dfn:`通道`，在 :c:enum:`sensor_channel` 中枚举，是传感器设备可以测量的量。
 
-Sensors may have multiple channels, either to represent different axes of
-the same physical property (e.g. acceleration); or because they can measure
-different properties altogether (ambient temperature, pressure and
-humidity). Sensors may have multiple channels of the same measurement type to
-enable measuring many readings of perhaps temperature, light intensity, amperage,
-voltage, or capacitance for example.
+传感器可能有多个通道，要么表示同一物理属性的不同轴(例如加速度)；
+要么因为它们可以测量完全不同的属性(环境温度、压力和湿度)。
+传感器可能有多个相同测量类型的通道，以便测量许多读数，
+例如温度、光强度、电流、电压或电容。
 
-A channel is specified in Zephyr using a :c:struct:`sensor_chan_spec` which is a
-pair containing both the channel type (:c:enum:`sensor_channel`) and channel index.
-At times only :c:enum:`sensor_channel` is used but this should be considered
-historical since the introduction of :c:struct:`sensor_chan_spec` for Zephyr 3.7.
+在 Zephyr 中使用 :c:struct:`sensor_chan_spec` 指定通道，
+它是一个包含通道类型(:c:enum:`sensor_channel`)和通道索引的对。
+有时仅使用 :c:enum:`sensor_channel`，但这应该被视为历史遗留，
+因为 Zephyr 3.7 引入了 :c:struct:`sensor_chan_spec`。

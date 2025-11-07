@@ -1,82 +1,40 @@
 .. _pinctrl-guide:
 
-Pin Control
-###########
+引脚控制 (Pin Control)
+########################
 
-This is a high-level guide to pin control. See :ref:`pinctrl_api` for API
-reference material.
+这是引脚控制的高级指南。API 参考资料请参见 :ref:`pinctrl_api`。
 
-Introduction
-************
+简介 (Introduction)
+********************
 
-The hardware blocks that control pin multiplexing and pin configuration
-parameters such as pin direction, pull-up/down resistors, etc. are named **pin
-controllers**. The pin controller's main users are SoC hardware peripherals,
-since the controller enables exposing peripheral signals, like for example,
-map ``I2C0`` ``SDA`` signal to pin ``PX0``. Not only that, but it usually allows
-configuring certain pin settings that are necessary for the correct functioning
-of a peripheral, for example, the slew-rate depending on the operating
-frequency. The available configuration options are vendor/SoC dependent and can
-range from simple pull-up/down options to more advanced settings such as
-debouncing, low-power modes, etc.
+控制引脚复用和引脚配置参数(如引脚方向、上拉/下拉电阻等)的硬件块被称为 **引脚控制器**。引脚控制器的主要用户是 SoC 硬件外设,因为控制器能够公开外设信号,例如,将 ``I2C0`` ``SDA`` 信号映射到引脚 ``PX0``。不仅如此,它通常还允许配置外设正确运行所需的某些引脚设置,例如,根据工作频率配置压摆率。可用的配置选项取决于供应商/SoC,范围可以从简单的上拉/下拉选项到更高级的设置,如去抖动、低功耗模式等。
 
-The way pin control is implemented in hardware is vendor/SoC specific. It is
-common to find a *centralized* approach, that is, all pin configuration
-parameters are controlled by a single hardware block (typically named pinmux),
-including signal mapping. The figure below illustrates this
-approach. ``PX0`` can be mapped to ``UART0_TX``, ``I2C0_SCK`` or ``SPI0_MOSI``
-depending on the ``AF`` control bits. Other configuration parameters such as
-pull-up/down are controlled in the same block via ``CONFIG`` bits. This model is
-used by several SoC families, such as many from NXP and STM32.
+引脚控制在硬件中的实现方式是供应商/SoC 特定的。常见的是采用 *集中式* 方法,即所有引脚配置参数由单个硬件块(通常称为 pinmux)控制,包括信号映射。下图说明了这种方法。根据 ``AF`` 控制位,``PX0`` 可以映射到 ``UART0_TX``、``I2C0_SCK`` 或 ``SPI0_MOSI``。其他配置参数(如上拉/下拉)通过 ``CONFIG`` 位在同一块中控制。此模型被多个 SoC 系列使用,例如许多来自 NXP 和 STM32 的 SoC。
 
 .. figure:: images/hw-cent-control.svg
 
-    Example of pin control centralized into a single per-pin block
+    集中到单个每引脚块中的引脚控制示例
 
-Other vendors/SoCs use a *distributed* approach. In such case, the pin mapping
-and configuration are controlled by multiple hardware blocks.
-The figure below illustrates a distributed approach where pin
-mapping is controlled by peripherals, such as in Nordic nRF SoCs.
+其他供应商/SoC 使用 *分布式* 方法。在这种情况下,引脚映射和配置由多个硬件块控制。下图说明了一种分布式方法,其中引脚映射由外设控制,例如 Nordic nRF SoC。
 
 .. figure:: images/hw-dist-control.svg
 
-    Example pin control distributed between peripheral registers and per-pin block
+    在外设寄存器和每引脚块之间分布的引脚控制示例
 
-From a user perspective, there is no difference in pin controller usage
-regardless of the hardware implementation: a user will always apply a state.
-The only difference lies in the driver implementation. In general, implementing
-a pin controller driver for a hardware that uses a distributed approach requires
-more effort, since the driver needs to gather knowledge of peripheral dependent
-registers.
+从用户角度来看,无论硬件实现如何,引脚控制器的使用都没有区别:用户总是应用一个状态。唯一的区别在于驱动程序实现。一般来说,为使用分布式方法的硬件实现引脚控制器驱动程序需要更多努力,因为驱动程序需要收集外设相关寄存器的知识。
 
-Pin control vs. GPIO
-====================
+引脚控制与 GPIO (Pin control vs. GPIO)
+=======================================
 
-Some functionality covered by a pin controller driver overlaps with GPIO
-drivers. For example, pull-up/down resistors can usually be enabled by both the
-pin control driver and the GPIO driver. In Zephyr context, the pin control
-driver purpose is to perform peripheral signal multiplexing and configuration of
-other pin parameters required for the correct operation of that peripheral.
-Therefore, the main users of the pin control driver are SoC peripherals. In
-contrast, GPIO drivers are for general purpose control of a pin, that is, when
-its logic level is read or controlled manually.
+引脚控制器驱动程序涵盖的某些功能与 GPIO 驱动程序重叠。例如,上拉/下拉电阻通常可以由引脚控制驱动程序和 GPIO 驱动程序启用。在 Zephyr 上下文中,引脚控制驱动程序的目的是执行外设信号复用以及配置外设正确运行所需的其他引脚参数。因此,引脚控制驱动程序的主要用户是 SoC 外设。相比之下,GPIO 驱动程序用于引脚的通用控制,即手动读取或控制其逻辑电平。
 
-State model
-***********
+状态模型 (State model)
+************************
 
-For a device driver to operate correctly, a certain pin configuration needs to
-be applied. Some device drivers require a static configuration, usually set up
-at initialization time. Others need to change the configuration at runtime
-depending on the operating conditions, for example, to enable a low-power mode
-when suspending the device. Such requirements are modeled using **states**, a
-concept that has been adapted from the one in the Linux kernel. Each device
-driver owns a set of states. Each state has a unique name and contains a full
-pin configuration set (see the figure below). This effectively
-means that states are independent of each other, so they do not need to be
-applied in any specific order. Another advantage of the state model is that it
-isolates device drivers from pin configuration.
+为了使设备驱动程序正确运行,需要应用特定的引脚配置。某些设备驱动程序需要静态配置,通常在初始化时设置。其他驱动程序需要根据运行条件在运行时更改配置,例如,在挂起设备时启用低功耗模式。此类需求使用 **状态** 建模,这是一个从 Linux 内核中改编的概念。每个设备驱动程序拥有一组状态。每个状态都有唯一的名称,并包含完整的引脚配置集(见下图)。这实际上意味着状态彼此独立,因此不需要按任何特定顺序应用。状态模型的另一个优点是它将设备驱动程序与引脚配置隔离。
 
-.. table:: Example pin configuration encoded using the states model
+.. table:: 使用状态模型编码的引脚配置示例
     :align: center
 
     +----+------------------+----+------------------+
@@ -93,17 +51,12 @@ isolates device drivers from pin configuration.
     |    | - Low Power: NO  |    | - Low Power: YES |
     +----+------------------+----+------------------+
 
-Standard states
-===============
+标准状态 (Standard states)
+===========================
 
-The name assigned to pin control states or the number of them is up to the
-device driver requirements. In many cases a single state applied at
-initialization time will be sufficient, but in some other cases more will be
-required. In order to make things consistent, a naming convention has been
-established for the most common use cases. The figure below
-details the standardized states and its purpose.
+分配给引脚控制状态的名称或数量取决于设备驱动程序的要求。在许多情况下,在初始化时应用单个状态就足够了,但在某些其他情况下需要更多状态。为了保持一致性,已为最常见的用例建立了命名约定。下表详细说明了标准化状态及其目的。
 
-.. table:: Standardized state names
+.. table:: 标准化状态名称
     :align: center
 
     +-------------+----------------------------------+-------------------------+
@@ -118,43 +71,24 @@ details the standardized states and its purpose.
     |             |                                  | power or sleep modes    |
     +-------------+----------------------------------+-------------------------+
 
-Note that other standard states could be introduced in the future.
+请注意,将来可能会引入其他标准状态。
 
-Custom states
-=============
+自定义状态 (Custom states)
+===========================
 
-Some device drivers may require using custom states beyond the standard ones. To
-achieve that, the device driver needs to have in its scope definitions for the
-custom state identifiers named as ``PINCTRL_STATE_{STATE_NAME}``, where
-``{STATE_NAME}`` is the capitalized state name. For example, if ``mystate`` has
-to be supported, a definition named ``PINCTRL_STATE_MYSTATE`` needs to be
-in the driver's scope.
+某些设备驱动程序可能需要使用超出标准状态的自定义状态。为了实现这一点,设备驱动程序需要在其作用域中定义名为 ``PINCTRL_STATE_{STATE_NAME}`` 的自定义状态标识符,其中 ``{STATE_NAME}`` 是大写的状态名称。例如,如果必须支持 ``mystate``,则需要在驱动程序的作用域中定义名为 ``PINCTRL_STATE_MYSTATE`` 的定义。
 
 .. note::
-    It is important that custom state identifiers start from
-    :c:macro:`PINCTRL_STATE_PRIV_START`
+    重要的是,自定义状态标识符要从 :c:macro:`PINCTRL_STATE_PRIV_START` 开始
 
-If custom states need to be accessed from outside the driver, for example to
-perform dynamic pin control, custom identifiers should be placed in a header
-that is publicly accessible.
+如果需要从驱动程序外部访问自定义状态,例如执行动态引脚控制,则应将自定义标识符放在可公开访问的头文件中。
 
-Skipping states
-===============
+跳过状态 (Skipping states)
+===========================
 
-In most situations, the states defined in Devicetree will be the ones used in
-the compiled firmware. However, there are some cases where certain states will
-be conditionally used depending on a compilation flag. A typical case is the
-``sleep`` state. This state is only used in practice if
-:kconfig:option:`CONFIG_PM` or :kconfig:option:`CONFIG_PM_DEVICE` is enabled.
-If a firmware variant without these power management configurations is needed,
-one should in theory remove the ``sleep`` state from Devicetree to not waste ROM
-space storing such unused state.
+在大多数情况下,Devicetree 中定义的状态将是编译固件中使用的状态。但是,在某些情况下,某些状态将根据编译标志有条件地使用。一个典型的例子是 ``sleep`` 状态。此状态仅在启用 :kconfig:option:`CONFIG_PM` 或 :kconfig:option:`CONFIG_PM_DEVICE` 时才实际使用。如果需要没有这些电源管理配置的固件变体,理论上应该从 Devicetree 中删除 ``sleep`` 状态,以免浪费 ROM 空间存储这种未使用的状态。
 
-States can be skipped by the ``pinctrl`` Devicetree macros if a definition named
-``PINCTRL_SKIP_{STATE_NAME}`` expanding to ``1`` is present when pin control
-configuration is defined. In case of the ``sleep`` state, the ``pinctrl`` API
-already provides such definition conditional to the availability of device power
-management:
+如果在定义引脚控制配置时存在名为 ``PINCTRL_SKIP_{STATE_NAME}`` 并扩展为 ``1`` 的定义,则 ``pinctrl`` Devicetree 宏可以跳过状态。对于 ``sleep`` 状态,``pinctrl`` API 已经提供了这样的定义,以设备电源管理的可用性为条件:
 
 .. code-block:: c
 
@@ -163,47 +97,26 @@ management:
     #define PINCTRL_SKIP_SLEEP 1
     #endif
 
-Dynamic pin control
-*******************
+动态引脚控制 (Dynamic pin control)
+***********************************
 
-Dynamic pin control refers to the capability of changing pin configuration
-at runtime. This feature can be useful in situations where the same firmware
-needs to run onto slightly different boards, each having a peripheral routed at
-a different set of pins. This feature can be enabled by setting
-:kconfig:option:`CONFIG_PINCTRL_DYNAMIC`.
+动态引脚控制是指在运行时更改引脚配置的能力。此功能在同一固件需要在略有不同的板上运行的情况下很有用,每个板的外设路由到不同的引脚集。可以通过设置 :kconfig:option:`CONFIG_PINCTRL_DYNAMIC` 来启用此功能。
 
 .. note::
 
-    Dynamic pin control should only be used on devices that have not been
-    initialized. Changing pin configurations while a device is operating may
-    lead to unexpected behavior. Since Zephyr does not support device
-    de-initialization yet, this functionality should only be used during early
-    boot stages.
+    动态引脚控制应仅用于尚未初始化的设备。在设备运行时更改引脚配置可能会导致意外行为。由于 Zephyr 尚不支持设备去初始化,因此此功能应仅在早期引导阶段使用。
 
-One of the effects of enabling dynamic pin control is that
-:c:struct:`pinctrl_dev_config` will be stored in RAM instead of ROM (not states
-or pin configurations, though). The user can then use
-:c:func:`pinctrl_update_states` to update the states stored in
-:c:struct:`pinctrl_dev_config` with a new set. This effectively means that the
-device driver will apply the pin configurations stored in the updated states
-when it applies a state.
+启用动态引脚控制的影响之一是 :c:struct:`pinctrl_dev_config` 将存储在 RAM 中而不是 ROM 中(但状态或引脚配置不会)。然后,用户可以使用 :c:func:`pinctrl_update_states` 用新集合更新存储在 :c:struct:`pinctrl_dev_config` 中的状态。这实际上意味着设备驱动程序在应用状态时将应用存储在更新状态中的引脚配置。
 
-Devicetree representation
-*************************
+Devicetree 表示 (Devicetree representation)
+*********************************************
 
-Because Devicetree is meant to describe hardware, it is the natural choice when
-it comes to storing pin control configuration. In the following sections you
-will find an overview on how states and pin configurations are represented in
-Devicetree.
+由于 Devicetree 旨在描述硬件,因此在存储引脚控制配置时,它是自然的选择。在以下各节中,您将找到有关如何在 Devicetree 中表示状态和引脚配置的概述。
 
-States
-======
+状态 (States)
+==============
 
-Given a device, each of its pin control state is represented in Devicetree by
-``pinctrl-N`` properties, being ``N`` the state index starting from zero. The
-``pinctrl-names`` property is then used to assign a unique identifier for each
-state property by index, for example, ``pinctrl-names`` list entry 0 is the name
-for ``pinctrl-0``.
+给定一个设备,其每个引脚控制状态在 Devicetree 中由 ``pinctrl-N`` 属性表示,``N`` 是从零开始的状态索引。然后使用 ``pinctrl-names`` 属性按索引为每个状态属性分配唯一标识符,例如,``pinctrl-names`` 列表条目 0 是 ``pinctrl-0`` 的名称。
 
 .. code-block:: devicetree
 
@@ -219,21 +132,12 @@ for ``pinctrl-0``.
         ...
     };
 
-Pin configuration
-=================
+引脚配置 (Pin configuration)
+=============================
 
-There are multiple ways to represent the pin configurations in Devicetree.
-However, all end up encoding the same information: the pin multiplexing and the
-pin configuration parameters. For example, ``UART_RX`` is mapped to ``PX0`` and
-pull-up is enabled. The representation choice largely depends on each
-vendor/SoC, so the Devicetree binding files for the pin control drivers are the
-best place to look for details.
+在 Devicetree 中表示引脚配置有多种方法。但是,所有方法最终都编码相同的信息:引脚复用和引脚配置参数。例如,``UART_RX`` 映射到 ``PX0`` 并启用上拉。表示选择很大程度上取决于每个供应商/SoC,因此引脚控制驱动程序的 Devicetree 绑定文件是查找详细信息的最佳位置。
 
-A popular and versatile option is shown in the example below. One of the
-advantages of this choice is the grouping capability based on shared pin
-configuration. This allows to reduce the verbosity of the pin control
-definitions. Another advantage is that the pin configuration parameters for a
-particular state are enclosed in a single Devicetree node.
+下面的示例展示了一种流行且通用的选项。此选择的优点之一是基于共享引脚配置的分组能力。这允许减少引脚控制定义的冗长性。另一个优点是特定状态的引脚配置参数封装在单个 Devicetree 节点中。
 
 .. code-block:: devicetree
 
@@ -279,18 +183,11 @@ particular state are enclosed in a single Devicetree node.
         };
     };
 
-Another popular model is based on having a node for each pin configuration and
-state. While this model may lead to shorter board pin control files, it also
-requires to have one node for each pin mapping and state, since in general,
-nodes can not be re-used for multiple states. This method is discouraged if
-autogeneration is not an option.
+另一种流行的模型是基于为每个引脚配置和状态设置一个节点。虽然此模型可能导致更短的板引脚控制文件,但它也需要为每个引脚映射和状态设置一个节点,因为通常,节点不能为多个状态重用。如果无法自动生成,则不建议使用此方法。
 
 .. note::
 
-   Because all Devicetree information is parsed into a C header, it is important
-   to make sure its size is kept to a minimum. For this reason it is important
-   to prefix pre-generated nodes with ``/omit-if-no-ref/``. This prefix makes
-   sure that the node is discarded when not used.
+   由于所有 Devicetree 信息都被解析为 C 头文件,因此确保其大小保持最小很重要。因此,使用 ``/omit-if-no-ref/`` 前缀预生成的节点很重要。此前缀确保在不使用时丢弃节点。
 
 .. code-block:: devicetree
 
@@ -344,13 +241,7 @@ autogeneration is not an option.
 
 .. note::
 
-    It is discouraged to add pin configuration defaults in pre-defined nodes.
-    In general, pin configurations depend on the board design or on the
-    peripheral working conditions, so the decision should be made by the board.
-    For example, enabling a pull-up by default may not always be desired because
-    the board already has one or because its value depends on the operating bus
-    speed. Another downside of defaults is that user may not be aware of them,
-    for example:
+    不建议在预定义节点中添加引脚配置默认值。通常,引脚配置取决于板设计或外设工作条件,因此决定应由板做出。例如,默认启用上拉可能并不总是需要,因为板已经有一个或其值取决于运行总线速度。默认值的另一个缺点是用户可能不知道它们,例如:
 
     .. code-block:: devicetree
 
@@ -360,84 +251,43 @@ autogeneration is not an option.
             bias-pull-up;
         };
 
-Implementation guidelines
-*************************
+实现指南 (Implementation guidelines)
+*************************************
 
-Pin control drivers
-===================
+引脚控制驱动程序 (Pin control drivers)
+=======================================
 
-Pin control drivers need to implement a single function:
-:c:func:`pinctrl_configure_pins`. This function receives an array of pin
-configurations that need to be applied. Furthermore, if
-:kconfig:option:`CONFIG_PINCTRL_STORE_REG` is set, it also receives the associated
-device register address for the given pins. This information may be required by
-some drivers to perform device specific actions.
+引脚控制驱动程序需要实现单个函数::c:func:`pinctrl_configure_pins`。此函数接收需要应用的引脚配置数组。此外,如果设置了 :kconfig:option:`CONFIG_PINCTRL_STORE_REG`,它还会接收给定引脚的关联设备寄存器地址。某些驱动程序可能需要此信息来执行设备特定的操作。
 
-The pin configuration is stored in an opaque type that is vendor/SoC dependent:
-``pinctrl_soc_pin_t``. This type needs to be defined in a header named
-``pinctrl_soc.h`` file that is in the Zephyr's include path. It can range from
-a simple integer value to a struct with multiple fields. ``pinctrl_soc.h`` also
-needs to define a macro named ``Z_PINCTRL_STATE_PINS_INIT`` that accepts two
-arguments: a node identifier and a property name (``pinctrl-N``). With this
-information the macro needs to define an initializer for all pin configurations
-contained within the ``pinctrl-N`` property of the given node.
+引脚配置存储在不透明类型中,该类型取决于供应商/SoC:``pinctrl_soc_pin_t``。此类型需要在名为 ``pinctrl_soc.h`` 的头文件中定义,该文件位于 Zephyr 的包含路径中。它可以从简单的整数值到具有多个字段的结构体。``pinctrl_soc.h`` 还需要定义名为 ``Z_PINCTRL_STATE_PINS_INIT`` 的宏,该宏接受两个参数:节点标识符和属性名称(``pinctrl-N``)。使用此信息,宏需要为给定节点的 ``pinctrl-N`` 属性中包含的所有引脚配置定义初始化器。
 
-Regarding Devicetree pin configuration representation, vendors can decide which
-option is better for their devices. However, the following guidelines should be
-followed:
+关于 Devicetree 引脚配置表示,供应商可以决定哪个选项更适合其设备。但是,应遵循以下指南:
 
-- Use ``pinctrl-N`` (N=0, 1, ...) and ``pinctrl-names`` properties to define pin
-  control states. These properties are defined in
-  :file:`dts/bindings/pinctrl/pinctrl-device.yaml`.
-- Use standard pin configuration properties as defined in
-  :file:`dts/bindings/pinctrl/pincfg-node.yaml`.
+- 使用 ``pinctrl-N`` (N=0, 1, ...) 和 ``pinctrl-names`` 属性定义引脚控制状态。这些属性在 :file:`dts/bindings/pinctrl/pinctrl-device.yaml` 中定义。
+- 使用 :file:`dts/bindings/pinctrl/pincfg-node.yaml` 中定义的标准引脚配置属性。
 
-Representations not following these guidelines may be accepted if they are
-already used by the same vendor in other operating systems, e.g. Linux.
+如果供应商已在其他操作系统(例如 Linux)中使用,则可以接受不遵循这些指南的表示。
 
-Device drivers
-==============
+设备驱动程序 (Device drivers)
+==============================
 
-In this section you will find some tips on how a device driver should use the
-``pinctrl`` API to successfully configure the pins it needs.
+在本节中,您将找到有关设备驱动程序应如何使用 ``pinctrl`` API 成功配置其所需引脚的一些提示。
 
-The device compatible needs to be modified in the corresponding binding so that
-the ``pinctrl-device.yaml`` is included. For example:
+需要在相应的绑定中修改设备兼容性,以便包含 ``pinctrl-device.yaml``。例如:
 
 .. code-block:: yaml
 
     include: [base.yaml, pinctrl-device.yaml]
 
-This file is needed to add ``pinctrl-N`` and ``pinctrl-names`` properties to the
-device.
+此文件用于将 ``pinctrl-N`` 和 ``pinctrl-names`` 属性添加到设备。
 
-From a device driver perspective there are two steps that need to be performed
-to be able to use the ``pinctrl`` API. First, the pin control configuration
-needs to be defined. This includes all states and pins.
-:c:macro:`PINCTRL_DT_DEFINE` or :c:macro:`PINCTRL_DT_INST_DEFINE` macros
-should be used for this purpose. Second, a reference to
-the device instance :c:struct:`pinctrl_dev_config` needs to be stored, since it
-is required to later use the API. This can be achieved using the
-:c:macro:`PINCTRL_DT_DEV_CONFIG_GET` and
-:c:macro:`PINCTRL_DT_INST_DEV_CONFIG_GET` macros.
+从设备驱动程序的角度来看,要能够使用 ``pinctrl`` API,需要执行两个步骤。首先,需要定义引脚控制配置。这包括所有状态和引脚。应使用 :c:macro:`PINCTRL_DT_DEFINE` 或 :c:macro:`PINCTRL_DT_INST_DEFINE` 宏。其次,需要存储对设备实例 :c:struct:`pinctrl_dev_config` 的引用,因为稍后使用 API 时需要它。可以使用 :c:macro:`PINCTRL_DT_DEV_CONFIG_GET` 和 :c:macro:`PINCTRL_DT_INST_DEV_CONFIG_GET` 宏实现此目的。
 
-It is worth to note that the only relationship between a device and its
-associated pin control configuration is based on variable naming conventions.
-The way an instance of :c:struct:`pinctrl_dev_config` is named for a
-corresponding device instance allows to later obtain a reference to it given the
-device's Devicetree node identifier. This allows to minimize ROM usage, since
-only devices requiring pin control will own a reference to a pin control
-configuration.
+值得注意的是,设备与其关联的引脚控制配置之间的唯一关系基于变量命名约定。为相应的设备实例命名 :c:struct:`pinctrl_dev_config` 实例的方式允许稍后在给定设备的 Devicetree 节点标识符的情况下获取对它的引用。这允许最小化 ROM 使用,因为只有需要引脚控制的设备才会拥有对引脚控制配置的引用。
 
-Once the driver has defined the pin control configuration and kept a reference
-to it, it is ready to use the API. The most common way to apply a state is by
-using :c:func:`pinctrl_apply_state`. It is also possible to use the lower level
-function :c:func:`pinctrl_apply_state_direct` to skip state lookup if it is
-cached in advance (e.g. at init time). Since state lookup time is expected to be
-fast, it is recommended to use :c:func:`pinctrl_apply_state`.
+一旦驱动程序定义了引脚控制配置并保留了对它的引用,它就可以使用 API 了。应用状态的最常见方法是使用 :c:func:`pinctrl_apply_state`。如果提前缓存(例如在初始化时),也可以使用较低级别的函数 :c:func:`pinctrl_apply_state_direct` 跳过状态查找。由于状态查找时间预计很快,因此建议使用 :c:func:`pinctrl_apply_state`。
 
-The example below contains a complete example of a device driver that uses the
-``pinctrl`` API.
+下面的示例包含使用 ``pinctrl`` API 的设备驱动程序的完整示例。
 
 .. code-block:: c
 
@@ -489,18 +339,18 @@ The example below contains a complete example of a device driver that uses the
 
 .. _pinctrl_api:
 
-Pin Control API
-****************
+引脚控制 API (Pin Control API)
+********************************
 
 .. doxygengroup:: pinctrl_interface
 
-Dynamic pin control
-====================
+动态引脚控制 (Dynamic pin control)
+====================================
 
 .. doxygengroup:: pinctrl_interface_dynamic
 
 
-Other reference material
-************************
+其他参考资料 (Other reference material)
+*****************************************
 
 - `Introduction to pin muxing and GPIO control under Linux <https://elinux.org/images/a/a7/ELC-2021_Introduction_to_pin_muxing_and_GPIO_control_under_Linux.pdf>`_

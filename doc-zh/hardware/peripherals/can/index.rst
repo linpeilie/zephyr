@@ -1,7 +1,7 @@
 .. _can:
 
-Controller Area Network (CAN)
-#############################
+控制器局域网络 (Controller Area Network, CAN)
+##############################################
 
 .. toctree::
    :maxdepth: 2

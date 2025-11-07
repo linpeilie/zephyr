@@ -1,20 +1,18 @@
-Power Management
-================
+电源管理 (Power Management)
+============================
 
-Power management of sensors is often a non-trivial task as sensors may have multiple power states
-for various channels. Some sensors may allow for low noise, low power, or suspending channels
-potentially saving quite a bit of power at the cost of noise or sampling speed performance. In very
-low power states sensors may lose their state, turning off even the digital logic portion of the device.
+传感器的电源管理通常是一项非常重要的任务，因为传感器可能具有多个不同通道的功耗状态。
+一些传感器可能允许低噪声、低功耗或暂停通道，
+可能以噪声或采样速度性能为代价节省相当多的功耗。
+在非常低的功耗状态下，传感器可能会丢失其状态，甚至关闭设备的数字逻辑部分。
 
-All this is to say that power management of sensors is typically application specific! Often the
-channel states are mutable using :ref:`sensor-attribute`. While total device suspending and resume
-can be done using the power management ref counting APIs if the device implements the necessary
-functionality.
+所有这些都说明传感器的电源管理通常是特定于应用程序的！
+通常可以使用 :ref:`sensor-attribute` 改变通道状态。
+如果设备实现了必要的功能，则可以使用电源管理引用计数 API 完成完全的设备暂停和恢复。
 
-Most likely the API sensors should use for their fully suspended/resume power states is
-:ref:`pm-device-runtime` using explicit calls at an application level to :c:func:`pm_device_runtime_get`
-and :c:func:`pm_device_runtime_put`.
+传感器最可能应该使用的 API 用于其完全暂停/恢复电源状态是
+:ref:`pm-device-runtime`，在应用程序级别使用对 :c:func:`pm_device_runtime_get`
+和 :c:func:`pm_device_runtime_put` 的显式调用。
 
-In the future, with :ref:`sensor-read-and-decode` its possible that automatic management of device power management
-would be possible in the streaming case as the application informs the driver of usage at all times
-through requests to read on given events.
+将来，通过 :ref:`sensor-read-and-decode`，可以在流式情况下自动管理设备电源管理，
+因为应用程序通过在给定事件上读取的请求始终通知驱动程序使用情况。

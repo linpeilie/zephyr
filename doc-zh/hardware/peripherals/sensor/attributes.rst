@@ -1,22 +1,18 @@
 .. _sensor-attribute:
 
-Sensor Attributes
-#################
+传感器属性 (Sensor Attributes)
+###############################
 
-:dfn:`Attributes`, enumerated in :c:enum:`sensor_attribute`, are immutable and
-mutable properties of a sensor and its channels.
+:dfn:`属性`，在 :c:enum:`sensor_attribute` 中枚举，是传感器及其通道的不可变和可变属性。
 
-Attributes allow for obtaining metadata and changing configuration of a sensor.
-Common configuration parameters like channel scale, sampling frequency, adjusting
-channel offsets, signal filtering, power modes, on chip buffers, and event
-handling options are very common. Attributes provide a flexible API for
-inspecting and manipulating such device properties.
+属性允许获取传感器的元数据并更改其配置。
+常见的配置参数如通道比例、采样频率、调整通道偏移、信号滤波、功耗模式、
+片上缓冲区和事件处理选项非常常见。属性为检查和操作此类设备属性提供了灵活的 API。
 
-Attributes are specified using :c:enum:`sensor_attribute` which can be used with
-:c:func:`sensor_attr_get` and :c:func:`sensor_attr_set` to get and set a sensors
-attributes.
+属性使用 :c:enum:`sensor_attribute` 指定，可以与 :c:func:`sensor_attr_get`
+和 :c:func:`sensor_attr_set` 一起使用来获取和设置传感器的属性。
 
-A quick example...
+一个简单的示例...
 
 .. code-block:: c
 

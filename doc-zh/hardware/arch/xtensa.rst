@@ -1,96 +1,80 @@
 .. _xtensa_developer_guide:
 
-Xtensa Developer Guide
-######################
+Xtensa 开发者指南 (Xtensa Developer Guide)
+###########################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-This page contains information on certain aspects when developing for
-Xtensa-based platforms.
+本页面包含为基于 Xtensa 的平台开发时某些方面的信息。
 
-HiFi Audio Engine DSP
-*********************
+HiFi 音频引擎 DSP (HiFi Audio Engine DSP)
+******************************************
 
-The kernel allows threads to use the HiFi Audio Engine DSP registers on boards
-that support these registers. The kernel only supports the use of the HiFi
-registers by threads and not ISRs.
+内核允许线程在支持这些寄存器的板上使用 HiFi 音频引擎 DSP 寄存器。
+内核仅支持线程使用 HiFi 寄存器,不支持 ISR 使用。
 
 .. note::
-    Presently, only the Intel ADSP ACE hardware platforms are configured for
-    HiFi support by default.
+    目前,只有 Intel ADSP ACE 硬件平台默认配置为支持 HiFi。
 
-Concepts
-========
+概念 (Concepts)
+================
 
-The kernel can be configured for an application to leverage the services
-provided by the Xtensa HiFi Audio Engine DSP. Three modes of operation are
-supported, which are described below.
+内核可以配置为应用程序利用 Xtensa HiFi 音频引擎 DSP 提供的服务。
+支持三种操作模式,如下所述。
 
-No HiFi registers mode
-----------------------
+无 HiFi 寄存器模式 (No HiFi registers mode)
+--------------------------------------------
 
-This mode is used when the application has no threads that use the HiFi
-registers. It is the kernel's default HiFi services mode.
+当应用程序没有使用 HiFi 寄存器的线程时使用此模式。这是内核的默认 HiFi 服务模式。
 
-Unshared HiFi registers mode
-----------------------------
+非共享 HiFi 寄存器模式 (Unshared HiFi registers mode)
+------------------------------------------------------
 
-This mode is used when the application has only a single thread that uses the
-HiFi registers. The HiFi registers are left unchanged whenever a context
-switch occurs.
+当应用程序只有一个使用 HiFi 寄存器的线程时使用此模式。
+每当发生上下文切换时,HiFi 寄存器保持不变。
 
 .. note::
-    The behavior is undefined, if two or more threads attempt to use
-    the HiFi registers, as the kernel does not attempt to detect
-    (nor prevent) multiple threads from using these registers.
+    如果两个或更多线程尝试使用 HiFi 寄存器,行为是未定义的,
+    因为内核不会尝试检测(也不会阻止)多个线程使用这些寄存器。
 
-Shared HiFi registers mode
---------------------------
+共享 HiFi 寄存器模式 (Shared HiFi registers mode)
+--------------------------------------------------
 
-This mode is used when the application has two or more threads that use HiFi
-registers. When enabled, the kernel automatically allows all threads to use the
-HiFi registers. Conceptually, it can be sub-divided into two sub-modes--eager
-mode and lazy mode. They will both save and restore the HiFi registers, but
-they differ in when the registers are saved and restored, as well as to where
-they are saved and from where they are restored.
+当应用程序有两个或更多使用 HiFi 寄存器的线程时使用此模式。
+启用后,内核自动允许所有线程使用 HiFi 寄存器。从概念上讲,
+它可以细分为两个子模式——急切模式和延迟模式。
+它们都会保存和恢复 HiFi 寄存器,但它们在何时保存和恢复寄存器、
+以及将它们保存到何处和从何处恢复方面有所不同。
 
-In the eager sharing model, the HiFi registers are saved and restored during
-every thread context switch, regardless of whether the thread used them or not.
-Additional stack space may be required for each thread to account for the extra
-registers that must be saved. This is default of the two models.
+在急切共享模型中,在每次线程上下文切换期间保存和恢复 HiFi 寄存器,
+无论线程是否使用它们。每个线程可能需要额外的栈空间来考虑必须保存的额外寄存器。
+这是两种模型中的默认模型。
 
-In the lazy sharing model, the kernel tracks the thread that 'owns' the
-coprocessor. If the 'owning' thread is switched out, the HiFi registers will
-not be saved until a new thread attempts to use the HiFi, after which that
-new thread becomes the new owner and its HiFi registers are loaded.
+在延迟共享模型中,内核跟踪"拥有"协处理器的线程。
+如果"拥有"线程被切换出去,则在新线程尝试使用 HiFi 之前不会保存 HiFi 寄存器,
+之后该新线程成为新的所有者并加载其 HiFi 寄存器。
 
 .. note::
-    If an SMP system detects that the owner-to-be is still an owner on another
-    CPU, an IPI will be sent to that CPU to initiate the saving of its HiFi
-    registers to memory. The current processor will then spin until the HiFi
-    registers are saved. This spinning may result in sporadically longer
-    delays. For the best performance, it is recommended that a thread
-    using HiFi be pinned to a single CPU.
+    如果 SMP 系统检测到即将成为所有者的线程仍然是另一个 CPU 上的所有者,
+    将向该 CPU 发送 IPI 以启动将其 HiFi 寄存器保存到内存。
+    然后当前处理器将旋转直到 HiFi 寄存器被保存。这种旋转可能导致偶发性较长的延迟。
+    为了获得最佳性能,建议将使用 HiFi 的线程固定到单个 CPU。
 
-Configuration Options
-=====================
+配置选项 (Configuration Options)
+==================================
 
-The unshared HiFi registers mode is selected when configuration option
-:kconfig:option:`CONFIG_XTENSA_HIFI_SHARING` is disabled but configuration
-options :kconfig:option:`CONFIG_XTENSA_HIFI3` and/or
-:kconfig:option:`CONFIG_XTENSA_HIFI4` are enabled.
+当禁用配置选项 :kconfig:option:`CONFIG_XTENSA_HIFI_SHARING`
+但启用配置选项 :kconfig:option:`CONFIG_XTENSA_HIFI3` 和/或
+:kconfig:option:`CONFIG_XTENSA_HIFI4` 时,选择非共享 HiFi 寄存器模式。
 
-The shared HiFi registers mode is selected when the configuration option
-:kconfig:option:`CONFIG_XTENSA_HIFI_SHARING` is enabled in addition to
-configuration options :kconfig:option:`CONFIG_XTENSA_HIFI3` and/or
-:kconfig:option:`CONFIG_XTENSA_HIFI4`. Threads must have sufficient
-stack space for saving the HiFi register values during context switches
-as described above.
+当除了配置选项 :kconfig:option:`CONFIG_XTENSA_HIFI3` 和/或
+:kconfig:option:`CONFIG_XTENSA_HIFI4` 之外还启用配置选项
+:kconfig:option:`CONFIG_XTENSA_HIFI_SHARING` 时,选择共享 HiFi 寄存器模式。
+线程必须具有足够的栈空间以在如上所述的上下文切换期间保存 HiFi 寄存器值。
 
-Both eager and lazy HiFi sharing modes require the configuration option
-:kconfig:option:`CONFIG_XTENSA_HIFI_SHARING` to be enabled. Although eager
-HiFi sharing is the default, it can be explicitly selected by enabling the
-configuration option :kconfig:option:`CONFIG_XTENSA_EAGER_HIFI_SHARING`. To
-select lazy HiFi sharing instead, enable the configuration option
-:kconfig:option:`CONFIG_XTENSA_LAZY_HIFI_SHARING`.
+急切和延迟 HiFi 共享模式都需要启用配置选项
+:kconfig:option:`CONFIG_XTENSA_HIFI_SHARING`。虽然急切 HiFi 共享是默认的,
+但可以通过启用配置选项 :kconfig:option:`CONFIG_XTENSA_EAGER_HIFI_SHARING` 显式选择它。
+要改为选择延迟 HiFi 共享,请启用配置选项
+:kconfig:option:`CONFIG_XTENSA_LAZY_HIFI_SHARING`。

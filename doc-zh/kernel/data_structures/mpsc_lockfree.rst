@@ -1,14 +1,12 @@
 .. _mpsc_lockfree:
 
-Multi Producer Single Consumer Lock Free Queue
-==============================================
+多生产者单消费者无锁队列 (Multi Producer Single Consumer Lock Free Queue)
+==========================================================================
 
-A :dfn:`Multi Producer Single Consumer Lock Free Queue (MPSC)` is an lockfree
-intrusive queue based on atomic pointer swaps as described by Dmitry Vyukov
-at `1024cores <https://www.1024cores.net/home/lock-free-algorithms/queues/intrusive-mpsc-node-based-queue>`_.
+:dfn:`多生产者单消费者无锁队列 (MPSC)` 是一种基于原子指针交换的无锁侵入式队列,由 Dmitry Vyukov 在 `1024cores <https://www.1024cores.net/home/lock-free-algorithms/queues/intrusive-mpsc-node-based-queue>`_ 中描述。
 
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: mpsc_lockfree

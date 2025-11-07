@@ -1,26 +1,20 @@
-Virtual I/O (VIRTIO)
-##########################
+虚拟 I/O (Virtual I/O, VIRTIO)
+##############################
 
-Overview
-********
+概述 (Overview)
+***************
 
-Virtual I/O (VIRTIO) is a protocol used for communication with various devices, typically used in
-virtualized environments. Its main goal is to provide an efficient and standardized mechanism for
-interfacing with virtual devices from within a virtual machine. The communication relies on virtqueues
-and standard transfer methods like PCI or MMIO.
+虚拟 I/O (VIRTIO) 是一种用于与各种设备通信的协议,通常在虚拟化环境中使用。其主要目标是提供一种高效且标准化的机制,用于从虚拟机内与虚拟设备交互。通信依赖于 virtqueue(虚拟队列)和标准传输方法,如 PCI 或 MMIO。
 
-Concepts
-********
+概念 (Concepts)
+****************
 
-Virtio defines various components used during communication and initialization. It specifies both the
-host (named "device" in the specification) and guest (named "driver" in the specification) sides.
-Currently Zephyr can only work as a guest. On top of the facilities exposed by the Virtio driver,
-a driver for a specific device (e.g. network card) can be implemented.
+Virtio 定义了通信和初始化期间使用的各种组件。它指定了主机侧(在规范中称为"device")和客户机侧(在规范中称为"driver")。目前 Zephyr 只能作为客户机工作。在 Virtio 驱动程序公开的功能之上,可以实现特定设备(例如网卡)的驱动程序。
 
-A high-level overview of a system with a Virtio device is shown below.
+下图显示了具有 Virtio 设备的系统的高级概述。
 
 .. graphviz::
-   :caption: Virtual I/O overview
+   :caption: 虚拟 I/O 概述
 
    digraph {
 
@@ -56,100 +50,69 @@ A high-level overview of a system with a Virtio device is shown below.
         device_user -> specific_device_driver;
    }
 
-Configuration space
-===================
-Each device provides configuration space, used for initialization and configuration. It allows
-selection of device and driver features, enabling specific virtqueues and setting their addresses.
-Once the device is configured, most of its configuration cannot be changed without resetting the device.
-The exact layout of the configuration space depends on the transfer method.
+配置空间 (Configuration space)
+===============================
+每个设备都提供配置空间,用于初始化和配置。它允许选择设备和驱动程序特性、启用特定的 virtqueue 并设置它们的地址。一旦设备被配置,其大部分配置在不重置设备的情况下无法更改。配置空间的确切布局取决于传输方法。
 
-Driver and device features
---------------------------
-The configuration space provides a way to negotiate feature bits, determining some non-mandatory
-capabilities of the devices. The exact available feature bits depend on the device and platform.
+驱动程序和设备特性 (Driver and device features)
+-----------------------------------------------
+配置空间提供了一种协商特性位的方法,确定设备的一些非强制性功能。确切的可用特性位取决于设备和平台。
 
-Device-specific configuration
------------------------------
-Some of the devices offer device-specific configuration space, providing additional configuration options.
+设备特定配置 (Device-specific configuration)
+设备特定配置 (Device-specific configuration)
+---------------------------------------------
+一些设备提供设备特定的配置空间,提供额外的配置选项。
 
-Virtqueues
-==========
-The main mechanism used for transferring data between host and guest is a virtqueue. Specific
-devices have different numbers of virtqueues, for example devices supporting bidirectional transfer
-usually have one or more tx/rx virtqueue pairs. Virtio specifies two types of virtqueues: split
-virtqueues and packed virtqueues. Zephyr currently supports only split virtqueues.
+Virtqueue(虚拟队列)
+====================
+主机和客户机之间传输数据的主要机制是 virtqueue。特定设备具有不同数量的 virtqueue,例如支持双向传输的设备通常具有一个或多个 tx/rx virtqueue 对。Virtio 指定了两种类型的 virtqueue:split virtqueue 和 packed virtqueue。Zephyr 目前仅支持 split virtqueue。
 
-Split virtqueues
-----------------
-A split virtqueue consists of three parts: descriptor table, available ring and used ring.
+Split virtqueue(分离式虚拟队列)
+--------------------------------
+Split virtqueue 由三部分组成:描述符表(descriptor table)、可用环(available ring)和已用环(used ring)。
 
-The descriptor table holds descriptors of buffers, that is their physical addresses, lengths and flags.
-Each descriptor is either device writeable or driver writeable. The descriptors can be chained, creating
-descriptor chains. Typically a chain begins with descriptors containing the data for the device to read
-and ends with the device writeable part, where the device places its response.
+描述符表保存缓冲区的描述符,即它们的物理地址、长度和标志。每个描述符要么是设备可写的,要么是驱动程序可写的。描述符可以链接,创建描述符链。通常,一个链以包含供设备读取的数据的描述符开始,以设备可写部分结束,设备在其中放置其响应。
 
-The main part of the available ring is a circular buffer of references (in the form of indexes) to the
-descriptors in the descriptor table. Once the guest decides to send the data to the host, it adds the index of
-the head of the descriptor chain to the top of the available ring.
+可用环的主要部分是对描述符表中描述符的引用(以索引的形式)的循环缓冲区。一旦客户机决定将数据发送到主机,它就会将描述符链头的索引添加到可用环的顶部。
 
-The used ring is similar to the available ring, but it's used by the host to return descriptors to the guest. In
-addition to storing descriptor indexes, it also provides information about the amount of data written to them.
+已用环类似于可用环,但它由主机用于将描述符返回给客户机。除了存储描述符索引外,它还提供有关写入它们的数据量的信息。
 
-Common Virtio libraries
-***********************
+通用 Virtio 库 (Common Virtio libraries)
+*****************************************
 
-Zephyr provides an API for interfacing with Virtio devices and virtqueues, which allows performing necessary operations
-over the lifetime of the Virtio device.
+Zephyr 提供了一个用于与 Virtio 设备和 virtqueue 交互的 API,允许在 Virtio 设备的整个生命周期内执行必要的操作。
 
-Device initialization
-=====================
-Once the Virtio driver finishes performing low-level initialization common to the all devices using a given transfer method,
-like finding device on the bus and mapping Virtio structures, the device specific driver steps in and performs the next
-stages of initialization with the help of the Virtio API.
+设备初始化 (Device initialization)
+===================================
+一旦 Virtio 驱动程序完成了使用给定传输方法的所有设备通用的低级初始化(如在总线上查找设备和映射 Virtio 结构),设备特定驱动程序就会介入并在 Virtio API 的帮助下执行下一阶段的初始化。
 
-The first thing the device-specific driver does is feature bits negotiation. It uses :c:func:`virtio_read_device_feature_bit`
-to determine which features the device offers, and then selects the ones it needs using :c:func:`virtio_write_driver_feature_bit`.
-After all required features have been selected, the device-specific driver calls :c:func:`virtio_commit_feature_bits`. Then, virtqueues
-are initialized with :c:func:`virtio_init_virtqueues`. This function enumerates the virtqueues, invoking the provided callback
-:c:type:`virtio_enumerate_queues` to determine the required size of each virtqueue. Initialization process is finalized by calling
-:c:func:`virtio_finalize_init`. From this point, if none of the functions returned errors, the virtqueues are operational. If the
-specific device provides one, the device-specific config can be obtained by calling :c:func:`virtio_get_device_specific_config`.
+设备特定驱动程序首先进行特性位协商。它使用 :c:func:`virtio_read_device_feature_bit` 来确定设备提供哪些特性,然后使用 :c:func:`virtio_write_driver_feature_bit` 选择它需要的特性。在选择了所有必需的特性后,设备特定驱动程序调用 :c:func:`virtio_commit_feature_bits`。然后,使用 :c:func:`virtio_init_virtqueues` 初始化 virtqueue。此函数枚举 virtqueue,调用提供的回调 :c:type:`virtio_enumerate_queues` 以确定每个 virtqueue 所需的大小。通过调用 :c:func:`virtio_finalize_init` 完成初始化过程。从此时起,如果没有函数返回错误,则 virtqueue 可以运行。如果特定设备提供了设备特定配置,可以通过调用 :c:func:`virtio_get_device_specific_config` 获取。
 
-Virtqueue operation
-===================
-Once the virtqueues are operational, they can be used to send and receive data. To do so, the pointer to the nth
-virtqueue has to be acquired using :c:func:`virtio_get_virtqueue`. To send data consisting of a descriptor chain,
-:c:func:`virtq_add_buffer_chain` has to be used. Along the descriptor chain, it takes pointer to the callback that
-will be invoked once the device returns the given descriptor chain. After that, the virtqueue has to be notified using
-:c:func:`virtio_notify_virtqueue` from the Virtio API.
+Virtqueue 操作 (Virtqueue operation)
+=====================================
+一旦 virtqueue 可以运行,它们就可以用于发送和接收数据。为此,必须使用 :c:func:`virtio_get_virtqueue` 获取第 n 个 virtqueue 的指针。要发送由描述符链组成的数据,必须使用 :c:func:`virtq_add_buffer_chain`。除了描述符链之外,它还接受指向回调的指针,该回调将在设备返回给定的描述符链时被调用。之后,必须使用 Virtio API 中的 :c:func:`virtio_notify_virtqueue` 通知 virtqueue。
 
-Guest-side Virtio drivers
-*************************
-Currently Zephyr provides drivers for Virtio over PCI and Virtio over MMIO and drivers for two devices using virtio - virtiofs, used
-to access the filesystem of the host and virtio-entropy, used as an entropy source.
+客户机侧 Virtio 驱动程序 (Guest-side Virtio drivers)
+*****************************************************
+目前 Zephyr 提供了 Virtio over PCI 和 Virtio over MMIO 的驱动程序,以及使用 virtio 的两个设备的驱动程序 - virtiofs(用于访问主机的文件系统)和 virtio-entropy(用作熵源)。
 
 Virtiofs
 =========
-This driver provides support for `virtiofs <https://virtio-fs.gitlab.io/>`_ - a filesystem allowing a virtual machine guest to access
-a directory on the host. It uses FUSE messages to communicate between the host and the guest in order to perform filesystem operations such as
-opening and reading files. Every time the guest wants to perform some filesystem operation it places in the virtqueue a descriptor chain
-starting with the device readable part, containing the FUSE input header and input data, and ending it with the device writeable part, with place
-for the FUSE output header and output data.
+此驱动程序提供对 `virtiofs <https://virtio-fs.gitlab.io/>`_ 的支持 - 一个允许虚拟机客户机访问主机上目录的文件系统。它使用 FUSE 消息在主机和客户机之间进行通信,以执行文件系统操作,例如打开和读取文件。每次客户机想要执行某些文件系统操作时,它都会在 virtqueue 中放置一个描述符链,以设备可读部分开始(包含 FUSE 输入头和输入数据),并以设备可写部分结束(为 FUSE 输出头和输出数据留出空间)。
 
 Virtio-entropy
 ==============
-This driver allows using virtio-entropy as an entropy source in Zephyr. The operation of this device is simple - the driver places a
-buffer in the virtqueue and receives it back, filled with random data.
+此驱动程序允许在 Zephyr 中使用 virtio-entropy 作为熵源。此设备的操作很简单 - 驱动程序在 virtqueue 中放置一个缓冲区并接收它,填充了随机数据。
 
-Virtio samples
-**************
-A sample showcasing the use of a driver relying on Virtio is provided in :zephyr:code-sample:`virtiofs`. If you wish
-to check code interfacing directly with the Virtio driver, you can check the virtiofs driver, especially :c:func:`virtiofs_init`
-for initialization and :c:func:`virtiofs_send_receive` with the :c:func:`virtiofs_recv_cb` for data transfer to/from
-the Virtio device.
+Virtio 示例 (Virtio samples)
+*****************************
+:zephyr:code-sample:`virtiofs` 中提供了一个展示使用依赖 Virtio 的驱动程序的示例。如果您希望检查直接与 Virtio 驱动程序交互的代码,可以检查 virtiofs 驱动程序,特别是用于初始化的 :c:func:`virtiofs_init` 以及用于与 Virtio 设备之间传输数据的 :c:func:`virtiofs_send_receive` 和 :c:func:`virtiofs_recv_cb`。
+Virtio 示例 (Virtio samples)
+*****************************
+:zephyr:code-sample:`virtiofs` 中提供了一个展示使用依赖 Virtio 的驱动程序的示例。如果您希望检查直接与 Virtio 驱动程序交互的代码,可以检查 virtiofs 驱动程序,特别是用于初始化的 :c:func:`virtiofs_init` 以及用于与 Virtio 设备之间传输数据的 :c:func:`virtiofs_send_receive` 和 :c:func:`virtiofs_recv_cb`。
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: virtio_interface
 .. doxygengroup:: virtqueue_interface

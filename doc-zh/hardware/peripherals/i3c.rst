@@ -1,15 +1,11 @@
 .. _i3c_api:
 
-Improved Inter-Integrated Circuit (I3C) Bus
-###########################################
+改进的集成电路间总线 (Improved Inter-Integrated Circuit, I3C) 总线
+####################################################################
 
-I3C (Improved Inter-Integrated Circuit) is a two-signal shared
-peripheral interface bus.  Devices on the bus can operate in
-two roles: as a "controller" that initiates transactions and
-controls the clock, or as a "target" that responds to transaction
-commands.
+I3C (Improved Inter-Integrated Circuit, 改进的集成电路间总线) 是一种双信号共享外设接口总线。总线上的设备可以以两种角色运行:作为启动事务并控制时钟的"控制器 (controller)",或作为响应事务命令的"目标 (target)"。
 
-Currently, the API is based on `I3C Specification`_ version 1.1.1.
+目前,该 API 基于 `I3C Specification`_ 版本 1.1.1。
 
 .. contents::
     :local:
@@ -17,8 +13,8 @@ Currently, the API is based on `I3C Specification`_ version 1.1.1.
 
 .. _i3c-controller-api:
 
-I3C Controller API
-******************
+I3C 控制器 API (I3C Controller API)
+************************************
 
 Zephyr's I3C controller API is used when an I3C controller controls
 the bus, particularly the start and stop conditions and the clock.

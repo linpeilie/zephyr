@@ -1,9 +1,9 @@
 .. _virtualization:
 
-Virtualization
-##############
+虚拟化 (Virtualization)
+########################
 
-These pages document Zephyr virtualization facilities.
+这些页面记录了 Zephyr 虚拟化功能。
 
 .. toctree::
    :maxdepth: 1

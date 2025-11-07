@@ -1,55 +1,46 @@
 .. _comparator_api:
 
-Comparator
-##########
+比较器 (Comparator)
+####################
 
-Overview
-********
+概述 (Overview)
+****************
 
-An analog comparator compares the voltages of two analog signals connected to its negative and
-positive inputs. If the voltage at the positive input is higher than the negative input, the
-comparator's output will be high, otherwise, it will be low.
+模拟比较器比较连接到其负输入和正输入的两个模拟信号的电压。如果正输入的电压高于负输入,比较器的输出将为高电平,否则将为低电平。
 
-Comparators can typically set a trigger which triggers on output changes. This trigger can
-either invoke a callback, or its status can be polled.
+比较器通常可以设置在输出变化时触发的触发器。此触发器可以调用回调,也可以轮询其状态。
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_COMPARATOR`
 
-Configuration
-*************
+配置 (Configuration)
+*********************
 
-Embedded comparators can typically be configured at runtime. When enabled, an initial
-configuration must be provided using the devicetree. At runtime, comparators can have their
-configuration updated using device driver specific APIs. The configuration will be applied
-when the comparator is resumed.
+嵌入式比较器通常可以在运行时配置。启用时,必须使用设备树提供初始配置。在运行时,比较器可以使用设备驱动程序特定的 API 更新其配置。配置将在比较器恢复时应用。
 
-Power management
-****************
+电源管理 (Power Management)
+*****************************
 
-Comparators are enabled using power management. When resumed, the comparator will actively
-compare its inputs, producing an output and detecting edges. When suspended, the comparator
-will be inactive.
+比较器使用电源管理启用。恢复时,比较器将主动比较其输入,产生输出并检测边沿。挂起时,比较器将处于非活动状态。
 
-Comparator shell
-****************
+比较器 Shell (Comparator Shell)
+********************************
 
-The comparator shell provides the ``comp`` command with a set of subcommands for the
-:ref:`shell <shell_api>` module.
+比较器 shell 为 :ref:`shell <shell_api>` 模块提供了带有一组子命令的 ``comp`` 命令。
 
-The ``comp`` shell command provides the following subcommands:
+``comp`` shell 命令提供以下子命令:
 
-* ``get_output`` See :c:func:`comparator_get_output`
-* ``set_trigger`` See :c:func:`comparator_set_trigger`
-* ``await_trigger`` Awaits trigger using the following flow:
+* ``get_output`` 参见 :c:func:`comparator_get_output`
+* ``set_trigger`` 参见 :c:func:`comparator_set_trigger`
+* ``await_trigger`` 使用以下流程等待触发器:
 
-  * Set trigger callback using :c:func:`comparator_set_trigger_callback`
-  * Await callback or time out after default or optionally provided timeout
-  * Clear trigger callback using :c:func:`comparator_set_trigger_callback`
-* ``trigger_is_pending`` See :c:func:`comparator_trigger_is_pending`
+  * 使用 :c:func:`comparator_set_trigger_callback` 设置触发器回调
+  * 等待回调或在默认或可选提供的超时后超时
+  * 使用 :c:func:`comparator_set_trigger_callback` 清除触发器回调
+* ``trigger_is_pending`` 参见 :c:func:`comparator_trigger_is_pending`
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_SHELL`
 * :kconfig:option:`CONFIG_COMPARATOR_SHELL`
@@ -57,14 +48,14 @@ Related configuration options:
 * :kconfig:option:`CONFIG_COMPARATOR_SHELL_AWAIT_TRIGGER_MAX_TIMEOUT`
 
 .. note::
-   The power management shell can optionally be enabled alongside the comparator shell.
+   电源管理 shell 可以选择性地与比较器 shell 一起启用。
 
-   Related configuration options:
+   相关配置选项:
 
    * :kconfig:option:`CONFIG_PM_DEVICE`
    * :kconfig:option:`CONFIG_PM_DEVICE_SHELL`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: comparator_interface

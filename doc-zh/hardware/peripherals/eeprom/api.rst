@@ -3,20 +3,19 @@
 EEPROM API
 ##########
 
-Overview
-********
+概述 (Overview)
+****************
 
-The EEPROM API provides read and write access to Electrically Erasable
-Programmable Read-Only Memory (EEPROM) devices.
+EEPROM API 提供对电可擦可编程只读存储器(EEPROM)设备的读写访问。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+**********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_EEPROM`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: eeprom_interface

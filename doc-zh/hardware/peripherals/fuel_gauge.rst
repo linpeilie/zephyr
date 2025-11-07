@@ -1,47 +1,41 @@
 .. _fuel_gauge_api:
 
-Fuel Gauge
-##########
+油量计 (Fuel Gauge)
+####################
 
-The fuel gauge subsystem exposes an API to uniformly access battery fuel gauge devices.
+油量计子系统公开了一个 API 以统一访问电池油量计设备。
 
-Basic Operation
-***************
+基本操作 (Basic Operation)
+****************************
 
-Properties
-==========
+属性 (Properties)
+==================
 
-Fundamentally, a property is a quantity that a fuel gauge device can measure.
+从根本上说,属性是油量计设备可以测量的数量。
 
-Fuel gauges typically support multiple properties, such as temperature readings of the battery-pack
-or present-time current/voltage.
+油量计通常支持多个属性,例如电池组的温度读数或当前时间的电流/电压。
 
-Properties are fetched by the client one at a time using :c:func:`fuel_gauge_get_prop`, or fetched
-in a batch using :c:func:`fuel_gauge_get_props`. Buffer properties, e.g. device name, are fetched by
-using :c:func:`fuel_gauge_get_buffer_prop`.
+客户端使用 :c:func:`fuel_gauge_get_prop` 一次获取一个属性,或使用 :c:func:`fuel_gauge_get_props` 批量获取。缓冲区属性(例如设备名称)使用 :c:func:`fuel_gauge_get_buffer_prop` 获取。
 
-Properties are set by the client one at a time using :c:func:`fuel_gauge_set_prop`, or set in a
-batch using :c:func:`fuel_gauge_set_props`.
+客户端使用 :c:func:`fuel_gauge_set_prop` 一次设置一个属性,或使用 :c:func:`fuel_gauge_set_props` 批量设置。
 
-Battery Cutoff
-==============
+电池切断 (Battery Cutoff)
+===========================
 
-Many fuel gauges embedded within battery packs expose a register address that when written to with a
-specific payload will do a battery cutoff. This battery cutoff is often referred to as ship, shelf,
-or sleep mode due to its utility in reducing battery drain while devices are stored or shipped.
+许多嵌入在电池组中的油量计公开了一个寄存器地址,当使用特定有效载荷写入时会执行电池切断。由于其在减少设备存储或运输时的电池消耗方面的实用性,此电池切断通常被称为船运 (ship)、货架 (shelf) 或睡眠 (sleep) 模式。
 
-The fuel gauge API exposes battery cutoff with the :c:func:`fuel_gauge_battery_cutoff` function.
+油量计 API 通过 :c:func:`fuel_gauge_battery_cutoff` 函数公开电池切断功能。
 
-Caching
-=======
+缓存 (Caching)
+===============
 
-The Fuel Gauge API explicitly provides no caching for its clients.
+油量计 API 明确不为其客户端提供缓存。
 
 
 .. _fuel_gauge_api_reference:
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: fuel_gauge_interface
 .. doxygengroup:: fuel_gauge_emulator_backend

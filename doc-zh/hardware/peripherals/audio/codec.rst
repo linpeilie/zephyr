@@ -1,21 +1,21 @@
 .. _audio_codec_api:
 
-Audio Codec
-###########
+音频编解码器 (Audio Codec)
+###########################
 
-Overview
-********
+概述 (Overview)
+****************
 
-The Audio Codec API provides access to digital audio codecs.
+音频编解码器 API 提供对数字音频编解码器的访问。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+**********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_AUDIO_CODEC`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: audio_codec_interface

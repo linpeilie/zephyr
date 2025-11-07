@@ -1,131 +1,108 @@
 .. _can_api:
 
-CAN Controller
-##############
+CAN 控制器 (CAN Controller)
+############################
 
 .. contents::
     :local:
     :depth: 2
 
-Overview
-********
+概述 (Overview)
+****************
 
-Controller Area Network is a two-wire serial bus specified by the
-Bosch CAN Specification, Bosch CAN with Flexible Data-Rate specification and the
-ISO 11898-1:2003 standard.
-CAN is mostly known for its application in the automotive domain. However, it
-is also used in home and industrial automation and other products.
+控制器局域网络是由 Bosch CAN 规范、Bosch CAN with Flexible Data-Rate 规范和
+ISO 11898-1:2003 标准定义的双线串行总线。
+CAN 最为人所知的是其在汽车领域的应用。然而，它也用于家庭和工业自动化以及其他产品。
 
 .. warning::
 
-   CAN controllers can only initialize when the bus is in the idle (recessive)
-   state for at least 11 recessive bits. Therefore you have to make sure that
-   CAN RX is high, at least for a short time. This is also necessary for
-   loopback mode.
+   CAN 控制器只能在总线处于空闲(隐性)状态至少 11 个隐性位时才能初始化。
+   因此，您必须确保 CAN RX 为高电平，至少在短时间内。这对于环回模式也是必需的。
 
-The bit-timing as defined in ISO 11898-1:2003 looks as following:
+ISO 11898-1:2003 中定义的位时序如下所示:
 
 .. image:: timing.svg
    :width: 40%
    :align: center
-   :alt: CAN Timing
+   :alt: CAN 时序
 
-A single bit is split into four segments.
+单个位分为四个段。
 
-* Sync_Seg: The nodes synchronize at the edge of the Sync_Seg. It is always one time quantum in length.
+* Sync_Seg: 节点在 Sync_Seg 的边沿进行同步。它的长度始终为一个时间量子。
 
-* Prop_Seg: The signal propagation delay of the bus and other delays of the transceiver and node.
+* Prop_Seg: 总线的信号传播延迟以及收发器和节点的其他延迟。
 
-* Phase_Seg1 and Phase_Seg2 :Define the sampling point. The bit is sampled at the end of Phase_Seg1.
+* Phase_Seg1 和 Phase_Seg2: 定义采样点。位在 Phase_Seg1 结束时采样。
 
-The bit-rate is calculated from the time of a time quantum and the values
-defined above.
-A bit has the length of Sync_Seg plus Prop_Seg plus Phase_Seg1 plus Phase_Seg2
-multiplied by the time of single time quantum.
-The bit-rate is the inverse of the length of a single bit.
+位速率由时间量子的时间和上面定义的值计算得出。
+位的长度为 Sync_Seg 加 Prop_Seg 加 Phase_Seg1 加 Phase_Seg2 乘以单个时间量子的时间。
+位速率是单个位长度的倒数。
 
-A bit is sampled at the sampling point.
-The sample point is between Phase_Seg1 and PhaseSeg2 and therefore is a
-parameter that the user needs to choose.
-The CiA recommends setting the sample point to 87.5% of the bit.
+位在采样点处采样。
+采样点位于 Phase_Seg1 和 PhaseSeg2 之间，因此是用户需要选择的参数。
+CiA 建议将采样点设置为位的 87.5%。
 
-The resynchronization jump width (SJW) defines the amount of time quantum the
-sample point can be moved.
-The sample point is moved when resynchronization is needed.
+重新同步跳转宽度(SJW)定义了采样点可以移动的时间量子数量。
+当需要重新同步时，采样点会移动。
 
-The timing parameters (SJW, bitrate and sampling point, or bitrate, Prop_Seg,
-Phase_Seg1and Phase_Seg2) are initially set from the device-tree and can be
-changed at run-time from the timing-API.
+时序参数(SJW、位速率和采样点，或位速率、Prop_Seg、Phase_Seg1 和 Phase_Seg2)
+最初从设备树设置，并可以在运行时通过时序 API 进行更改。
 
-CAN uses so-called identifiers to identify the frame instead of addresses to
-identify a node.
-This identifier can either have 11-bit width (Standard or Basic Frame) or
-29-bit in case of an Extended Frame. The Zephyr CAN API supports both Standard
-and Extended identifiers concurrently. A CAN frame starts with a dominant
-Start Of Frame bit. After that, the identifiers follow. This phase is called the
-arbitration phase. During the arbitration phase, write collisions are allowed.
-They resolve by the fact that dominant bits override recessive bits.
-Nodes monitor the bus and notice when their transmission is being overridden and
-in case, abort their transmission.
-This effectively gives lower number identifiers priority over higher number
-identifiers.
+CAN 使用所谓的标识符来识别帧，而不是使用地址来识别节点。
+此标识符可以是 11 位宽(标准或基本帧)或扩展帧情况下的 29 位。
+Zephyr CAN API 同时支持标准和扩展标识符。CAN 帧以显性的帧起始位开始。
+之后是标识符。此阶段称为仲裁阶段。在仲裁阶段，允许写冲突。
+它们通过显性位覆盖隐性位的事实来解决。
+节点监视总线并注意到它们的传输何时被覆盖，在这种情况下，会中止传输。
+这有效地使较低编号的标识符优先于较高编号的标识符。
 
-Filters are used to allowlist identifiers that are of interest for the specific
-node. An identifier that doesn't match any filter is ignored.
-Filters can either match exactly or a specified part of the identifier.
-This method is called masking.
-As an example, a mask with 11 bits set for standard or 29 bits set for extended
-identifiers must match perfectly.
-Bits that are set to zero in the mask are ignored when matching an identifier.
-Most CAN controllers implement a limited number of filters in hardware.
-The number of filters is also limited in Kconfig to save memory.
+过滤器用于白名单对特定节点感兴趣的标识符。不匹配任何过滤器的标识符将被忽略。
+过滤器可以精确匹配或匹配标识符的指定部分。
+这种方法称为掩码。
+例如，对于标准标识符设置了 11 位或对于扩展标识符设置了 29 位的掩码必须完全匹配。
+掩码中设置为零的位在匹配标识符时被忽略。
+大多数 CAN 控制器在硬件中实现了有限数量的过滤器。
+过滤器的数量在 Kconfig 中也受到限制以节省内存。
 
-Errors may occur during transmission. In case a node detects an erroneous frame,
-it partially overrides the current frame with an error-frame.
-Error-frames can either be error passive or error active, depending on the state
-of the controller.
-In case the controller is in error active state, it sends six consecutive
-dominant bits, which is a violation of the stuffing rule that all nodes can
-detect. The sender may resend the frame right after.
+传输过程中可能会发生错误。如果节点检测到错误的帧，
+它会用错误帧部分覆盖当前帧。
+错误帧可以是错误被动或错误主动，具体取决于控制器的状态。
+如果控制器处于错误主动状态，它会发送六个连续的显性位，
+这违反了所有节点都能检测到的填充规则。发送方可能会在之后立即重新发送帧。
 
-An initialized node can be in one of the following states:
+初始化的节点可以处于以下状态之一:
 
-* Error-active
-* Error-passive
-* Bus-off
+* 错误主动(Error-active)
+* 错误被动(Error-passive)
+* 总线关闭(Bus-off)
 
-After initialization, the node is in the error-active state. In this state, the
-node is allowed to send active error frames, ACK, and overload frames.
-Every node has a receive- and transmit-error counter.
-If either the receive- or the transmit-error counter exceeds 127,
-the node changes to error-passive state.
-In this state, the node is not allowed to send error-active frames anymore.
-If the transmit-error counter increases further to 255, the node changes to the
-bus-off state. In this state, the node is not allowed to send any dominant bits
-to the bus. Nodes in the bus-off state may recover after receiving 128
-occurrences of 11 concurrent recessive bits.
+初始化后，节点处于错误主动状态。在此状态下，节点允许发送主动错误帧、ACK 和过载帧。
+每个节点都有接收和发送错误计数器。
+如果接收或发送错误计数器超过 127，节点将变为错误被动状态。
+在此状态下，节点不再允许发送错误主动帧。
+如果发送错误计数器进一步增加到 255，节点将变为总线关闭状态。
+在此状态下，节点不允许向总线发送任何显性位。处于总线关闭状态的节点可以
+在接收到 128 次 11 个并发隐性位后恢复。
 
-You can read more about CAN bus in this
-`CAN Wikipedia article <https://en.wikipedia.org/wiki/CAN_bus>`_.
+您可以在这篇
+`CAN 维基百科文章 <https://en.wikipedia.org/wiki/CAN_bus>`_ 中阅读更多关于 CAN 总线的信息。
 
-Zephyr supports following CAN features:
+Zephyr 支持以下 CAN 功能:
 
-* Standard and Extended Identifiers
-* Filters with Masking
-* Loopback and Silent mode
-* Remote Request
+* 标准和扩展标识符
+* 带掩码的过滤器
+* 环回和静默模式
+* 远程请求
 
-Sending
-*******
+发送 (Sending)
+***************
 
-The following code snippets show how to send data.
+以下代码片段展示了如何发送数据。
 
-
-This basic sample sends a CAN frame with standard identifier 0x123 and eight
-bytes of data. When passing NULL as the callback, as shown in this example,
-the send function blocks until the frame is sent and acknowledged by at least
-one other node or an error occurred. The timeout only takes effect on acquiring
-a mailbox. When a transmitting mailbox is assigned, sending cannot be canceled.
+此基本示例发送一个标准标识符为 0x123 和八个字节数据的 CAN 帧。
+当传递 NULL 作为回调时，如此示例所示，发送函数会阻塞，
+直到帧被发送并被至少一个其他节点确认或发生错误。
+超时仅在获取邮箱时生效。分配传输邮箱后，发送无法取消。
 
 .. code-block:: C
 
@@ -144,11 +121,10 @@ a mailbox. When a transmitting mailbox is assigned, sending cannot be canceled.
   }
 
 
-This example shows how to send a frame with extended identifier 0x1234567 and
-two bytes of data. The provided callback is called when the message is sent, or
-an error occurred. Passing :c:macro:`K_FOREVER` to the timeout causes the
-function to block until a transfer mailbox is assigned to the frame or an error
-occurred. It does not block until the message is sent like the example above.
+此示例展示了如何发送扩展标识符为 0x1234567 和两个字节数据的帧。
+提供的回调在消息发送时或发生错误时被调用。将 :c:macro:`K_FOREVER` 传递给超时
+会导致函数阻塞，直到将传输邮箱分配给帧或发生错误。
+它不会像上面的示例那样阻塞直到消息被发送。
 
 .. code-block:: C
 
@@ -175,15 +151,14 @@ occurred. It does not block until the message is sent like the example above.
           return can_send(can_dev, &frame, K_FOREVER, tx_callback, "Sender 1");
   }
 
-Receiving
-*********
+接收 (Receiving)
+*****************
 
-Frames are only received when they match a filter.
-The following code snippets show how to receive frames by adding filters.
+只有当帧匹配过滤器时才会被接收。
+以下代码片段展示了如何通过添加过滤器来接收帧。
 
-Here we have an example for a receiving callback as used for
-:c:func:`can_add_rx_filter`. The user data argument is passed when the filter is
-added.
+这里有一个用于 :c:func:`can_add_rx_filter` 的接收回调示例。
+在添加过滤器时传递用户数据参数。
 
 .. code-block:: C
 
@@ -192,13 +167,12 @@ added.
           ... do something with the frame ...
   }
 
-The following snippet shows how to add a filter with a callback function.
-It is the most efficient but also the most critical way to receive messages.
-The callback function is called from an interrupt context, which means that the
-callback function should be as short as possible and must not block.
-Adding callback functions is not allowed from userspace context.
+以下片段展示了如何添加带有回调函数的过滤器。
+这是接收消息最有效但也是最关键的方式。
+回调函数从中断上下文调用，这意味着回调函数应该尽可能短并且不能阻塞。
+不允许从用户空间上下文添加回调函数。
 
-The filter for this example is configured to match the identifier 0x123 exactly.
+此示例的过滤器配置为精确匹配标识符 0x123。
 
 .. code-block:: C
 
@@ -215,13 +189,11 @@ The filter for this example is configured to match the identifier 0x123 exactly.
     LOG_ERR("Unable to add rx filter [%d]", filter_id);
   }
 
-Here an example for :c:func:`can_add_rx_filter_msgq` is shown. With this
-function, it is possible to receive frames synchronously. This function can be
-called from userspace context.  The size of the message queue should be as big
-as the expected backlog.
+这里展示了 :c:func:`can_add_rx_filter_msgq` 的示例。
+使用此函数，可以同步接收帧。此函数可以从用户空间上下文调用。
+消息队列的大小应该与预期的积压一样大。
 
-The filter for this example is configured to match the extended identifier
-0x1234567 exactly.
+此示例的过滤器配置为精确匹配扩展标识符 0x1234567。
 
 .. code-block:: C
 
@@ -246,20 +218,19 @@ The filter for this example is configured to match the extended identifier
     ... do something with the frame ...
   }
 
-:c:func:`can_remove_rx_filter` removes the given filter.
+:c:func:`can_remove_rx_filter` 移除给定的过滤器。
 
 .. code-block:: C
 
   can_remove_rx_filter(can_dev, filter_id);
 
-Setting the bitrate
-*******************
+设置位速率 (Setting the bitrate)
+**********************************
 
-The bitrate and sampling point is initially set at runtime. To change it from
-the application, one can use the :c:func:`can_set_timing` API. The :c:func:`can_calc_timing`
-function can calculate timing from a bitrate and sampling point in permille.
-The following example sets the bitrate to 250k baud with the sampling point at
-87.5%.
+位速率和采样点最初在运行时设置。要从应用程序更改它，
+可以使用 :c:func:`can_set_timing` API。:c:func:`can_calc_timing` 函数
+可以根据位速率和千分之几的采样点计算时序。
+以下示例将位速率设置为 250k 波特，采样点为 87.5%。
 
 .. code-block:: C
 
@@ -292,29 +263,26 @@ The following example sets the bitrate to 250k baud with the sampling point at
     LOG_ERR("Failed to start CAN controller");
   }
 
-A similar API exists for calculating and setting the timing for the data phase for CAN FD capable
-controllers. See :c:func:`can_set_timing_data` and :c:func:`can_calc_timing_data`.
+对于支持 CAN FD 的控制器，存在类似的 API 用于计算和设置数据阶段的时序。
+请参阅 :c:func:`can_set_timing_data` 和 :c:func:`can_calc_timing_data`。
 
 SocketCAN
 *********
 
-Zephyr additionally supports SocketCAN, a BSD socket implementation of the
-Zephyr CAN API.
-SocketCAN brings the convenience of the well-known BSD Socket API to
-Controller Area Networks. It is compatible with the Linux SocketCAN
-implementation, where many other high-level CAN projects build on top.
-Note that frames are routed to the network stack instead of passed directly,
-which adds some computation and memory overhead.
+Zephyr 还支持 SocketCAN，这是 Zephyr CAN API 的 BSD socket 实现。
+SocketCAN 将众所周知的 BSD Socket API 的便利性带到了控制器局域网络。
+它与 Linux SocketCAN 实现兼容，许多其他高级 CAN 项目都建立在此基础上。
+请注意，帧会路由到网络堆栈而不是直接传递，这会增加一些计算和内存开销。
 
-Samples
-*******
+示例 (Samples)
+***************
 
-We have two ready-to-build samples demonstrating use of the Zephyr CAN API:
-:zephyr:code-sample:`Zephyr CAN counter sample <can-counter>` and
-:zephyr:code-sample:`SocketCAN sample <socket-can>`.
+我们有两个可立即构建的示例，展示了 Zephyr CAN API 的使用:
+:zephyr:code-sample:`Zephyr CAN counter sample <can-counter>` 和
+:zephyr:code-sample:`SocketCAN sample <socket-can>`。
 
 
-CAN Controller API Reference
-****************************
+CAN 控制器 API 参考 (CAN Controller API Reference)
+***************************************************
 
 .. doxygengroup:: can_controller

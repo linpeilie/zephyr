@@ -1,13 +1,13 @@
 .. _ipm_api:
 
-Inter-Processor Mailbox (IPM)
-#############################
+处理器间邮箱 (Inter-Processor Mailbox, IPM)
+#############################################
 
-Overview
-********
+概述 (Overview)
+****************
 
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: ipm_interface

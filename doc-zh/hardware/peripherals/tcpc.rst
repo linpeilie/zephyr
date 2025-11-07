@@ -1,47 +1,39 @@
 .. _tcpc_api:
 
-USB Type-C Port Controller (TCPC)
-#################################
+USB Type-C 端口控制器 (USB Type-C Port Controller, TCPC)
+##########################################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-`TCPC <tcpc-specification_>`_ (USB Type-C Port Controller)
-The TCPC is a device used to simplify the implementation of a USB-C system
-by providing the following three function:
+`TCPC <tcpc-specification_>`_ (USB Type-C Port Controller, USB Type-C 端口控制器)
+TCPC 是一种用于简化 USB-C 系统实现的设备,通过提供以下三个功能:
 
-* VBUS and VCONN control `USB Type-C <usb-type-c-specification_>`_:
-  The TCPC may provide a Source device, the mechanism to control VBUS sourcing,
-  and a Sink device, the mechanism to control VBUS sinking. A similar mechanism
-  is provided for the control of VCONN.
+* VBUS 和 VCONN 控制 `USB Type-C <usb-type-c-specification_>`_:
+  TCPC 可以为源设备提供控制 VBUS 供电的机制,为接收设备提供控制 VBUS 吸收的机制。为控制 VCONN 提供了类似的机制。
 
-* CC control and sensing:
-  The TCPC implements logic for controlling the CC pin pull-up and pull-down
-  resistors. It also provides a way to sense and report what resistors are
-  present on the CC pin.
+* CC 控制和感测:
+  TCPC 实现用于控制 CC 引脚上拉和下拉电阻的逻辑。它还提供了一种感测和报告 CC 引脚上存在哪些电阻的方法。
 
-* Power Delivery message reception and transmission `USB Power Delivery <usb-pd-specification_>`_:
-  The TCPC sends and receives messages constructed in the TCPM and places them
-  on the CC lines.
+* 电力传输消息接收和传输 `USB Power Delivery <usb-pd-specification_>`_:
+  TCPC 发送和接收在 TCPM 中构造的消息,并将它们放在 CC 线上。
 
 .. _tcpc-api:
 
 TCPC API
 ========
 
-The TCPC device driver functions as the liaison between the TCPC device and the
-application software; this is accomplished by the Zephyr's API provided by the
-device driver that's used to  communicate with and control the TCPC device.
+TCPC 设备驱动程序充当 TCPC 设备和应用程序软件之间的联络;这是通过设备驱动程序提供的 Zephyr API 来实现的,该 API 用于与 TCPC 设备通信并控制它。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+*********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_USBC_TCPC_DRIVER`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: usb_type_c
 .. doxygengroup:: usb_type_c_port_controller_api

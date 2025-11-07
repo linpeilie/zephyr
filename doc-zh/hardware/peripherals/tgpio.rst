@@ -1,20 +1,20 @@
 .. _tgpio_api:
 
 
-Time-aware General-Purpose Input/Output (TGPIO)
-###############################################
+时间感知通用输入/输出 (Time-aware General-Purpose Input/Output, TGPIO)
+########################################################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+*********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_TIMEAWARE_GPIO`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: tgpio_interface

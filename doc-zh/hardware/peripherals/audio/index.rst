@@ -1,7 +1,7 @@
 .. _audio_reference:
 
-Audio
-#####
+音频 (Audio)
+############
 
 .. toctree::
    :maxdepth: 1

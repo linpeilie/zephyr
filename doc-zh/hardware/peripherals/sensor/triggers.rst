@@ -1,13 +1,10 @@
 .. _sensor-trigger:
 
-Sensor Triggers
-###############
+传感器触发器 (Sensor Triggers)
+###############################
 
-:dfn:`Triggers`, enumerated in :c:enum:`sensor_trigger_type`, are sensor
-generated events. Typically sensors allow setting up these events to cause
-digital line signaling for easy capture by a microcontroller. The events can
-then commonly be inspected by reading registers to determine which event caused
-the digital line signaling to occur.
+:dfn:`触发器`，在 :c:enum:`sensor_trigger_type` 中枚举，是传感器生成的事件。
+通常传感器允许设置这些事件以引起数字线路信号，以便微控制器轻松捕获。
+然后可以通过读取寄存器来检查事件，以确定是哪个事件导致数字线路信号发生。
 
-There are many kinds of triggers sensors provide, from informative ones such as
-data ready to physical events such as taps or steps.
+传感器提供多种触发器，从信息性的(如数据就绪)到物理事件(如敲击或步数)。

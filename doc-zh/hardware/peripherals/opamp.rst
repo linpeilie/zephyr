@@ -1,27 +1,24 @@
 .. _opamp_api:
 
-Operational Amplifier (OPAMP)
-#############################
+运算放大器 (Operational Amplifier, OPAMP)
+###########################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-The operational amplifier is an analog device that amplifies differential
-input signals (difference between inverting and non-inverting input) to
-give a resulting output voltage.
+运算放大器是一种模拟设备,用于放大差分输入信号(反相输入和非反相输入之间的差异)以给出结果输出电压。
 
 
-Configuration
-*************
+配置 (Configuration)
+*********************
 
-When OPAMP is enabled, an initial configuration shall be provided using
-the devicetree. The OPAMP gain can be adjusted at runtime.
+启用 OPAMP 时,必须使用设备树提供初始配置。OPAMP 增益可以在运行时调整。
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_OPAMP`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: opamp_interface

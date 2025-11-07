@@ -1,56 +1,42 @@
 .. _video_api:
 
-Video
-#####
+视频 (Video)
+#############
 
-The video driver API offers a generic interface to video devices.
+视频驱动程序 API 为视频设备提供通用接口。
 
-Basic Operation
-***************
+基本操作 (Basic Operation)
+****************************
 
-Video Device
-============
+视频设备 (Video Device)
+=========================
 
-A video device is the abstraction of a hardware or software video function,
-which can produce, process, consume or transform video data. The video API is
-designed to offer flexible way to create, handle and combine various video
-devices.
+视频设备是硬件或软件视频功能的抽象,可以产生、处理、消费或转换视频数据。视频 API 旨在提供灵活的方式来创建、处理和组合各种视频设备。
 
-Endpoint
-========
+端点 (Endpoint)
+================
 
-Each video device can have one or more endpoints. Output endpoints configure
-video output function and generate data. Input endpoints configure video input
-function and consume data.
+每个视频设备可以有一个或多个端点。输出端点配置视频输出功能并生成数据。输入端点配置视频输入功能并消费数据。
 
-Video Buffer
-============
+视频缓冲区 (Video Buffer)
+===========================
 
-A video buffer provides the transport mechanism for the data. There is no
-particular requirement on the content. The requirement for the content is
-defined by the endpoint format. A video buffer can be queued to a device
-endpoint for filling (input ep) or consuming (output ep) operation, once
-the operation is achieved, buffer can be dequeued for post-processing,
-release or reuse.
+视频缓冲区提供数据的传输机制。对内容没有特别要求。内容要求由端点格式定义。视频缓冲区可以排队到设备端点进行填充(输入端点)或消费(输出端点)操作,一旦操作完成,缓冲区可以出队进行后处理、释放或重用。
 
-Controls
-========
+控制 (Controls)
+=================
 
-A video control is accessed and identified by a CID (control identifier). It
-represents a video control property. Different devices will have different
-controls available which can be generic, related to a device class or vendor
-specific. The set/get control functions provide a generic scalable interface
-to handle and create controls.
+视频控制通过 CID(控制标识符)访问和标识。它表示视频控制属性。不同的设备将具有不同的可用控制,这些控制可以是通用的、与设备类相关的或供应商特定的。设置/获取控制函数提供通用的可扩展接口来处理和创建控制。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+*********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_VIDEO`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: video_interface
 

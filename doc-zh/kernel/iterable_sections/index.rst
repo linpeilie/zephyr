@@ -1,18 +1,15 @@
 .. _iterable_sections_api:
 
-Iterable Sections
-#################
+可迭代段 (Iterable Sections)
+#############################
 
-This page contains the reference documentation for the iterable sections APIs,
-which can be used for defining iterable areas of equally-sized data structures,
-that can be iterated on using :c:macro:`STRUCT_SECTION_FOREACH`.
+本页包含可迭代段 API 的参考文档,该 API 可用于定义大小相等的数据结构的可迭代区域,
+可以使用 :c:macro:`STRUCT_SECTION_FOREACH` 对其进行迭代。
 
-Usage
-*****
+用法 (Usage)
+*************
 
-Iterable section elements are typically used by defining the data structure and
-associated initializer in a common header file, so that they can be
-instantiated anywhere in the code base.
+可迭代段元素通常通过在公共头文件中定义数据结构和相关初始化器来使用,以便它们可以在代码库的任何位置实例化。
 
 .. code-block:: c
 
@@ -32,12 +29,9 @@ instantiated anywhere in the code base.
     DEFINE_DATA(d2, 3, 4);
     DEFINE_DATA(d3, 5, 6);
 
-Then the linker has to be setup to place the structure in a
-contiguous segment using one of the linker macros such as
-:c:macro:`ITERABLE_SECTION_RAM` or :c:macro:`ITERABLE_SECTION_ROM`. Custom
-linker snippets are normally declared using one of the
-``zephyr_linker_sources()`` CMake functions, using the appropriate section
-identifier, ``DATA_SECTIONS`` for RAM structures and ``SECTIONS`` for ROM ones.
+然后必须设置链接器,使用链接器宏之一(如 :c:macro:`ITERABLE_SECTION_RAM` 或 :c:macro:`ITERABLE_SECTION_ROM`)将结构放置在连续的段中。自定义
+链接器片段通常使用 ``zephyr_linker_sources()`` CMake 函数之一声明,使用适当的段
+标识符,RAM 结构使用 ``DATA_SECTIONS``,ROM 结构使用 ``SECTIONS``。
 
 .. code-block:: cmake
 
@@ -50,7 +44,7 @@ identifier, ``DATA_SECTIONS`` for RAM structures and ``SECTIONS`` for ROM ones.
    #include <zephyr/linker/iterable_sections.h>
    ITERABLE_SECTION_RAM(my_data, 4)
 
-The data can then be accessed using :c:macro:`STRUCT_SECTION_FOREACH`.
+然后可以使用 :c:macro:`STRUCT_SECTION_FOREACH` 访问数据。
 
 .. code-block:: c
 
@@ -59,11 +53,9 @@ The data can then be accessed using :c:macro:`STRUCT_SECTION_FOREACH`.
    }
 
 .. note::
-   The linker is going to place the entries sorted by name, so the example
-   above would visit ``d1``, ``d2`` and ``d3`` in that order, regardless of how
-   they were defined in the code.
+   链接器将按名称排序放置条目,因此上面的示例将按该顺序访问 ``d1``、``d2`` 和 ``d3``,无论它们在代码中如何定义。
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: iterable_section_apis

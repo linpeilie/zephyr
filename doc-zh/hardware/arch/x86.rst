@@ -1,89 +1,70 @@
 .. _x86_developer_guide:
 
-x86 Developer Guide
-###################
+x86 开发者指南 (x86 Developer Guide)
+#####################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-This page contains information on certain aspects when developing for
-x86-based platforms.
+本页面包含为基于 x86 的平台开发时某些方面的信息。
 
-Virtual Memory
-**************
+虚拟内存 (Virtual Memory)
+**************************
 
-During very early boot, page tables are loaded so technically the kernel
-is executing in virtual address space. By default, physical and virtual
-memory are identity mapped and thus giving the appearance of execution
-taking place in physical address space. The physical address space is
-marked by kconfig :kconfig:option:`CONFIG_SRAM_BASE_ADDRESS` and
-:kconfig:option:`CONFIG_SRAM_SIZE` while the virtual address space is marked by
-:kconfig:option:`CONFIG_KERNEL_VM_BASE` and :kconfig:option:`CONFIG_KERNEL_VM_SIZE`.
-Note that :kconfig:option:`CONFIG_SRAM_OFFSET` controls where the Zephyr kernel
-is being placed in the memory, and its counterpart
-:kconfig:option:`CONFIG_KERNEL_VM_OFFSET`.
+在非常早期的引导期间,会加载页表,因此从技术上讲,内核在虚拟地址空间中执行。
+默认情况下,物理和虚拟内存是标识映射的,因此看起来执行发生在物理地址空间中。
+物理地址空间由 kconfig :kconfig:option:`CONFIG_SRAM_BASE_ADDRESS` 和
+:kconfig:option:`CONFIG_SRAM_SIZE` 标记,而虚拟地址空间由
+:kconfig:option:`CONFIG_KERNEL_VM_BASE` 和 :kconfig:option:`CONFIG_KERNEL_VM_SIZE` 标记。
+请注意,:kconfig:option:`CONFIG_SRAM_OFFSET` 控制 Zephyr 内核在内存中的位置,
+其对应项是 :kconfig:option:`CONFIG_KERNEL_VM_OFFSET`。
 
-Separate Virtual Address Space from Physical Address Space
-==========================================================
+从物理地址空间分离虚拟地址空间 (Separate Virtual Address Space from Physical Address Space)
+==============================================================================================
 
-On 32-bit x86, it is possible to have separate physical and virtual
-address space. Code and data are linked in virtual address space,
-but are still loaded in physical memory. However, during boot, code
-and data must be available and also addressable in physical address
-space before ``vm_enter`` inside :file:`arch/x86/core/ia32/crt0.S`.
-After ``vm_enter``, code execution is done via virtual addresses
-and data can be referred via their virtual addresses. This is
-possible as the page table generation script
-(:file:`arch/x86/gen_mmu.py`) identity maps the physical addresses
-at the page directory level, in addition to mapping virtual addresses
-to the physical memory. Later in the boot process,
-the entries for identity mapping at the page directory level are
-cleared in :c:func:`z_x86_mmu_init()`, effectively removing
-the identity mapping of physical memory. This unmapping must be done
-for userspace isolation or else they would be able to access
-restricted memory via physical addresses. Since the identity mapping
-is done at the page directory level, there is no need to allocate
-additional space for the page table. However, additional space may
-still be required for additional page directory table.
+在 32 位 x86 上,可以拥有独立的物理和虚拟地址空间。代码和数据链接在虚拟地址空间中,
+但仍加载在物理内存中。但是,在引导期间,在 :file:`arch/x86/core/ia32/crt0.S`
+中的 ``vm_enter`` 之前,代码和数据必须在物理地址空间中可用且可寻址。
+在 ``vm_enter`` 之后,代码执行通过虚拟地址完成,数据可以通过其虚拟地址引用。
+这是可能的,因为页表生成脚本 (:file:`arch/x86/gen_mmu.py`) 在页目录级别对物理地址进行标识映射,
+除了将虚拟地址映射到物理内存之外。稍后在引导过程中,
+在 :c:func:`z_x86_mmu_init()` 中清除页目录级别的标识映射条目,
+有效地删除了物理内存的标识映射。必须进行此取消映射以实现用户空间隔离,
+否则它们将能够通过物理地址访问受限内存。由于标识映射在页目录级别完成,
+因此无需为页表分配额外的空间。但是,对于额外的页目录表,可能仍需要额外的空间。
 
-There are restrictions on where virtual address space can be:
+虚拟地址空间的位置有限制:
 
-- Physical and virtual address spaces must be disjoint. This is
-  required as the entries in page directory table will be cleared.
-  If they are not disjoint, it would clear the entries needed for
-  virtual addresses.
+- 物理和虚拟地址空间必须不相交。这是必需的,因为将清除页目录表中的条目。
+  如果它们不是不相交的,它将清除虚拟地址所需的条目。
 
-  - If :kconfig:option:`CONFIG_X86_PAE` is enabled (``=y``), each address space
-    must reside in their own 1GB region, due to each entry of PDP
-    (Page Directory Pointer) covers 1GB of memory. For example:
+  - 如果启用了 :kconfig:option:`CONFIG_X86_PAE` (``=y``),
+    每个地址空间必须驻留在自己的 1GB 区域中,
+    因为 PDP (Page Directory Pointer) 的每个条目覆盖 1GB 的内存。例如:
 
-    - Assuming ``CONFIG_SRAM_OFFSET`` and ``CONFIG_KERNEL_VM_OFFSET``
-      are both ``0x0``.
+    - 假设 ``CONFIG_SRAM_OFFSET`` 和 ``CONFIG_KERNEL_VM_OFFSET`` 都为 ``0x0``。
 
-    - ``CONFIG_SRAM_BASE_ADDRESS == 0x00000000`` and
-      ``CONFIG_KERNEL_VM_BASE = 0x40000000`` is valid, while
+    - ``CONFIG_SRAM_BASE_ADDRESS == 0x00000000`` 且
+      ``CONFIG_KERNEL_VM_BASE = 0x40000000`` 是有效的,而
 
-    - ``CONFIG_SRAM_BASE_ADDRESS == 0x00000000`` and
-      ``CONFIG_KERNEL_VM_BASE = 0x20000000`` is not.
+    - ``CONFIG_SRAM_BASE_ADDRESS == 0x00000000`` 且
+      ``CONFIG_KERNEL_VM_BASE = 0x20000000`` 则无效。
 
-  - If :kconfig:option:`CONFIG_X86_PAE` is disabled (``=n``), each address space
-    must reside in their own 4MB region, due to each entry of PD
-    (Page Directory) covers 4MB of memory.
+  - 如果禁用了 :kconfig:option:`CONFIG_X86_PAE` (``=n``),
+    每个地址空间必须驻留在自己的 4MB 区域中,
+    因为 PD (Page Directory) 的每个条目覆盖 4MB 的内存。
 
-  - Both ``CONFIG_SRAM_BASE_ADDRESS`` and ``CONFIG_KERNEL_VM_BASE``
-    must also align with the starting addresses of targeted regions.
+  - ``CONFIG_SRAM_BASE_ADDRESS`` 和 ``CONFIG_KERNEL_VM_BASE``
+    还必须与目标区域的起始地址对齐。
 
-Specifying Additional Memory Mappings at Build Time
-***************************************************
+在构建时指定附加内存映射 (Specifying Additional Memory Mappings at Build Time)
+*********************************************************************************
 
-The page table generation script (:file:`arch/x86/gen_mmu.py`) generates
-the necessary multi-level page tables for code execution and data access
-using the kernel image produced by the first linker pass. Additional
-command line arguments can be passed to the script to generate additional
-memory mappings. This is useful for static mappings and/or device MMIO
-access during very early boot. To pass extra command line arguments to
-the script, populate a CMake list named ``X86_EXTRA_GEN_MMU_ARGUMENTS``
-in the board configuration file. Here is an example:
+页表生成脚本 (:file:`arch/x86/gen_mmu.py`) 使用第一次链接器传递产生的内核镜像
+生成代码执行和数据访问所需的多级页表。可以向脚本传递额外的命令行参数以生成额外的内存映射。
+这对于静态映射和/或非常早期引导期间的设备 MMIO 访问很有用。
+要向脚本传递额外的命令行参数,请在板配置文件中填充名为 ``X86_EXTRA_GEN_MMU_ARGUMENTS`` 的 CMake 列表。
+以下是一个示例:
 
 .. code-block:: cmake
 
@@ -91,34 +72,29 @@ in the board configuration file. Here is an example:
        --map 0xA0000000,0x2000
        --map 0x80000000,0x400000,LWUX,0xB0000000)
 
-The argument ``--map`` takes the following value:
-``<physical address>,<size>[,<flags:LUWX>[,<virtual address>]]``, where:
+参数 ``--map`` 采用以下值:
+``<physical address>,<size>[,<flags:LUWX>[,<virtual address>]]``,其中:
 
-- ``<physical address>`` is the physical address of the mapping. (Required)
+- ``<physical address>`` 是映射的物理地址。(必需)
 
-- ``<size>`` is the size of the region to be mapped. (Required)
+- ``<size>`` 是要映射的区域的大小。(必需)
 
-- ``<flags>`` is the flag associated with the mapping: (Optional)
+- ``<flags>`` 是与映射关联的标志: (可选)
 
-  - ``L``: Large page at the page directory level.
+  - ``L``: 页目录级别的大页面。
 
-  - ``U``: Allow userspace access.
+  - ``U``: 允许用户空间访问。
 
-  - ``W``: Read/write.
+  - ``W``: 读/写。
 
-  - ``X``: Allow execution.
+  - ``X``: 允许执行。
 
-  - ``D``: Cache disabled.
+  - ``D``: 禁用缓存。
 
-    - Default is small page (4KB), supervisor only, read only, and
-      execution disabled.
+    - 默认值为小页面 (4KB)、仅监督者、只读和禁用执行。
 
-- ``<virtual address`` is the virtual address of the mapping. (Optional)
+- ``<virtual address`` 是映射的虚拟地址。(可选)
 
-Note that specifying additional memory mappings requires larger storage
-space for the pre-allocated page tables (both kernel and per-domain
-tables). :kconfig:option:`CONFIG_X86_EXTRA_PAGE_TABLE_PAGES` is needed to
-specify how many more memory pages to be reserved for the page tables.
-If the needed space is not exactly the same as required space,
-the ``gen_mmu.py`` script will print out a message indicating what
-needs to be the value for the kconfig.
+请注意,指定额外的内存映射需要为预分配的页表(内核和每域表)提供更大的存储空间。
+需要 :kconfig:option:`CONFIG_X86_EXTRA_PAGE_TABLE_PAGES` 来指定要为页表保留多少内存页。
+如果所需空间与所需空间不完全相同,``gen_mmu.py`` 脚本将打印一条消息,指示 kconfig 的值需要是什么。

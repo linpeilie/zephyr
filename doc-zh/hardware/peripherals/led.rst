@@ -1,31 +1,30 @@
 .. _led_api:
 
-Light-Emitting Diode (LED)
-##########################
+发光二极管 (Light-Emitting Diode, LED)
+########################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-The LED API provides access to Light Emitting Diodes, both in individual and
-strip form.
+LED API 提供对发光二极管的访问,包括单个和灯带形式。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+*********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_LED`
 * :kconfig:option:`CONFIG_LED_STRIP`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 LED
 ===
 
 .. doxygengroup:: led_interface
 
-LED Strip
-=========
+LED 灯带 (LED Strip)
+=====================
 
 .. doxygengroup:: led_strip_interface

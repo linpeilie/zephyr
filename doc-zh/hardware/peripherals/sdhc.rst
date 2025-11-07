@@ -1,28 +1,21 @@
 .. _sdhc_api:
 
-Secure Digital (SD card) interface
-###################################
+安全数字接口 (Secure Digital, SD card)
+#######################################
 
-Zephyr can communicate with an attached SD card either using a system's native
-SD card interface or over SPI (Serial Peripheral Interface). Some devices can
-also communicate with MMC (MultiMediaCard) devices.
+Zephyr 可以使用系统的原生 SD 卡接口或通过 SPI (Serial Peripheral Interface, 串行外设接口) 与连接的 SD 卡通信。某些设备还可以与 MMC (MultiMediaCard, 多媒体卡) 设备通信。
 
-Applications can use Zephyr's :ref:`the disk access API <disk_access_api>`
-to use SD cards as storage devices, or Zephyr's SD card subsystem to
-directly read from and write to a card.
+应用程序可以使用 Zephyr 的 :ref:`磁盘访问 API <disk_access_api>` 将 SD 卡用作存储设备,或使用 Zephyr 的 SD 卡子系统直接从卡读取和写入。
 
-SD Host Controller (SDHC)
-*************************
+SD 主机控制器 (SD Host Controller, SDHC)
+*****************************************
 
-An SD host controller (SDHC) is a device capable of sending commands to an
-SD card. These commands can be sent using a system's native SD card interface,
-or over SPI.
+SD 主机控制器 (SDHC) 是能够向 SD 卡发送命令的设备。这些命令可以使用系统的原生 SD 卡接口发送,也可以通过 SPI 发送。
 
-Applications should generally not use the SD host controller API directly,
-instead they should use Zephyr's SD card subsystem.
+应用程序通常不应直接使用 SD 主机控制器 API,而应使用 Zephyr 的 SD 卡子系统。
 
-Requests
-========
+请求 (Requests)
+================
 
 The core of the SD host controller (SDHC) API is the :c:func:`sdhc_request` API.
 Requests contain a :c:struct:`sdhc_command` command structure, and an optional

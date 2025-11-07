@@ -1,32 +1,25 @@
 .. _min_heap_api:
 
-Min-Heap Data Structure
-#######################
+最小堆数据结构 (Min-Heap Data Structure)
+#########################################
 
 .. contents::
   :local:
   :depth: 2
 
-The Min-Heap implementation provides an efficient data structure for
-managing a dynamically changing list of elements while maintaining the ability
-to quickly extract the minimum value. It's a tree-based data structure that
-satisfies the heap property and supports common operations such as insertion,
-removal and popping the minimum element from the Min-Heap
+最小堆实现提供了一种高效的数据结构,用于管理动态变化的元素列表,同时保持快速提取最小值的能力。它是一种基于树的数据结构,满足堆属性,并支持常见操作,例如插入、删除和从最小堆中弹出最小元素。
 
-This section explains the motivation behind the implementation, its internal
-structure, API usage, and example scenarios for embedded systems and real-time
-environments.
+本节解释了实现背后的动机、其内部结构、API 用法以及嵌入式系统和实时环境的示例场景。
 
-Heap Structure
-**************
+堆结构 (Heap Structure)
+************************
 
-The heap is maintained as a complete binary tree stored in an array.
-Each node satisfies the **min-heap** property:
+堆作为存储在数组中的完全二叉树维护。
+每个节点满足**最小堆**属性:
 
-   - The value of each node is less than or equal to the values of its children.
+   - 每个节点的值小于或等于其子节点的值。
 
-This property ensures that the **minimum element is always at the root**
-(index 0).
+此属性确保**最小元素始终位于根部**(索引 0)。
 
 .. code-block:: text
 
@@ -39,39 +32,36 @@ This property ensures that the **minimum element is always at the root**
               / \     / \
              8   9  10  12
 
-For any node at index ``i``, its children are at indices:
+对于索引 ``i`` 处的任何节点,其子节点位于以下索引:
 
-- Left child: :math:`2*i + 1`
+- 左子节点: :math:`2*i + 1`
 
-- Right child: :math:`2*i + 2`
+- 右子节点: :math:`2*i + 2`
 
-Its parent is at index:
+其父节点位于索引:
 
-- Parent: :math:`(i - 1) / 2`
+- 父节点: :math:`(i - 1) / 2`
 
-Use Cases
-*********
+用例 (Use Cases)
+*****************
 
-MinHeap is well suited for:
+MinHeap 非常适合:
 
-- Implementing priority queues
-- Sorting data incrementally
-- Resource arbitration (e.g., lowest-cost resource selection)
-- Scheduling in cooperative multitasking systems
-- Managing timeouts and delay queues
-- Priority-based sensor or data sampling
+- 实现优先级队列
+- 增量排序数据
+- 资源仲裁(例如,最低成本资源选择)
+- 协作式多任务系统中的调度
+- 管理超时和延迟队列
+- 基于优先级的传感器或数据采样
 
-In RTOS environments like Zephyr, this heap can be used in kernel-level or
-application-level modules where minimal latency to obtain the highest priority
-resource is needed.
+在像 Zephyr 这样的 RTOS 环境中,此堆可用于内核级或应用程序级模块,其中需要以最小延迟获取最高优先级资源。
 
-Samples
-*******
+示例 (Samples)
+***************
 
- :zephyr:code-sample:`min-heap` sample demos the API usage of Min-Heap
- implementation in Zephyr RTOS.
+ :zephyr:code-sample:`min-heap` 示例演示了 Zephyr RTOS 中最小堆实现的 API 用法。
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: min_heap_apis

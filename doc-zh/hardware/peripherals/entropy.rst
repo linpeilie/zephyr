@@ -1,17 +1,14 @@
 .. _entropy_api:
 
-Entropy
-#######
+熵 (Entropy)
+#############
 
-Overview
-********
+概述 (Overview)
+****************
 
-The entropy API provides functions to retrieve entropy values from
-entropy hardware present on the platform. The entropy APIs are provided
-for use by the random subsystem and cryptographic services. They are not
-suitable to be used as random number generation functions.
+熵 API 提供从平台上存在的熵硬件检索熵值的函数。熵 API 供随机子系统和加密服务使用。它们不适合用作随机数生成函数。
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: entropy_interface

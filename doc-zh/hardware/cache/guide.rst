@@ -1,115 +1,93 @@
 .. _cache_guide:
 
-Caching Basics
-##############
+缓存基础 (Caching Basics)
+##########################
 
-This section discusses the basics of cache coherency and under what situations a
-user needs to explicitly deal with caching. For more detailed info on Zephyr's
-caching tools, see :ref:`cache_config` for Zephyr Kconfig options or
-:ref:`cache_api` for the API reference. This section primarily focuses on the
-data cache though there is typically also an instruction cache for systems with
-cache support.
+本节讨论缓存一致性的基础知识以及用户需要在哪些情况下显式处理缓存。
+有关 Zephyr 缓存工具的更多详细信息,请参阅 :ref:`cache_config` 了解 Zephyr Kconfig 选项,
+或参阅 :ref:`cache_api` 了解 API 参考。本节主要关注数据缓存,
+尽管对于具有缓存支持的系统通常也有指令缓存。
 
 .. note::
 
-  The information here assumes that the architecture-specific MPU support is
-  enabled. See the architecture-specific documentation for details.
+  此处的信息假设已启用特定于架构的 MPU 支持。有关详细信息,请参阅特定于架构的文档。
 
 .. note::
 
-  While cache coherence can be a concern for data shared between SMP cores, Zephyr
-  in general ensures that memory will be seen in a coherent state from multiple
-  cores. Most applications will only need to use the cache APIs for interaction
-  with external hardware like DMA controllers or foreign CPUs running a
-  different OS image. For more information on cache coherence between SMP cores,
-  see :kconfig:option:`CONFIG_KERNEL_COHERENCE`.
+  虽然缓存一致性可能是 SMP 核心之间共享数据的一个问题,
+  但 Zephyr 通常会确保从多个核心看到的内存处于一致状态。
+  大多数应用程序只需要使用缓存 API 与外部硬件(如 DMA 控制器或运行不同 OS 镜像的外部 CPU)进行交互。
+  有关 SMP 核心之间缓存一致性的更多信息,请参阅 :kconfig:option:`CONFIG_KERNEL_COHERENCE`。
 
-When dealing with memory shared between a processor core and other bus masters,
-cache coherency needs to be considered. Typically processor caches exist as
-close to each processor core as possible to maximize performance gain. Because
-of this, data moved into and out of memory by DMA engines will be stale in the
-processor's cache, resulting in what appears to be corrupt data. If you are
-moving data using DMA and the processor doesn't see the data you expect, cache
-coherency may be the issue.
+在处理处理器核心和其他总线主设备之间共享的内存时,需要考虑缓存一致性。
+通常,处理器缓存尽可能靠近每个处理器核心以最大化性能提升。
+因此,DMA 引擎移入和移出内存的数据在处理器缓存中将是陈旧的,导致看起来像是损坏的数据。
+如果您使用 DMA 移动数据,但处理器看不到您期望的数据,则缓存一致性可能是问题所在。
 
-There are multiple approaches to ensuring that the data seen by the processor
-core and peripherals is coherent. The simplest is just to disable caching, but
-this defeats the purpose of having a hardware cache in the first place and
-results in a significant performance hit. Many architectures provide methods for
-disabling caching for only a portion of memory. This can be useful when cache
-coherence is more important than performance, such as when using DMA with SPI.
-Finally, there is the option to flush or invalidate the cache for regions of
-memory at runtime.
+有多种方法可以确保处理器核心和外围设备看到的数据是一致的。
+最简单的方法是禁用缓存,但这违背了拥有硬件缓存的初衷,并导致显著的性能下降。
+许多架构提供了仅针对部分内存禁用缓存的方法。
+当缓存一致性比性能更重要时(例如将 DMA 与 SPI 一起使用时),这可能很有用。
+最后,还有一个选项是在运行时刷新或使内存区域的缓存无效。
 
-Globally Disabling the Data Cache
----------------------------------
+全局禁用数据缓存 (Globally Disabling the Data Cache)
+------------------------------------------------------
 
-As mentioned above, globally disabling data caching can have a significant
-performance impact but can be useful for debugging.
+如上所述,全局禁用数据缓存可能会对性能产生重大影响,但对于调试很有用。
 
-Requirements:
+要求:
 
-* :kconfig:option:`CONFIG_DCACHE`: DCACHE control enabled in Zephyr.
+* :kconfig:option:`CONFIG_DCACHE`: 在 Zephyr 中启用 DCACHE 控制。
 
-* :kconfig:option:`CONFIG_CACHE_MANAGEMENT`: cache API enabled.
+* :kconfig:option:`CONFIG_CACHE_MANAGEMENT`: 启用缓存 API。
 
-* Call :c:func:`sys_cache_data_disable()` to globally disable the data cache.
+* 调用 :c:func:`sys_cache_data_disable()` 以全局禁用数据缓存。
 
-Disabling Caching for a Memory Region
--------------------------------------
+禁用内存区域的缓存 (Disabling Caching for a Memory Region)
+-----------------------------------------------------------
 
-Disabling caching for only a portion of memory can be a good performance
-compromise if performance on the uncached memory is not critical to the
-application. This is a good option if the application requires many small
-unrelated buffers that are smaller than a cache line.
+如果未缓存内存上的性能对应用程序不是至关重要的,则仅针对部分内存禁用缓存可能是一个很好的性能折衷方案。
+如果应用程序需要许多小于缓存行的小型不相关缓冲区,这是一个不错的选择。
 
-Requirements:
+要求:
 
-* :kconfig:option:`CONFIG_DCACHE`: DCACHE control enabled in Zephyr.
+* :kconfig:option:`CONFIG_DCACHE`: 在 Zephyr 中启用 DCACHE 控制。
 
-* :kconfig:option:`CONFIG_MEM_ATTR`: enable the ``mem-attr`` library for
-  handling memory attributes in the device tree.
+* :kconfig:option:`CONFIG_MEM_ATTR`: 启用 ``mem-attr`` 库以处理设备树中的内存属性。
 
-* Annotate your device tree according to :ref:`mem_mgmt_api`.
+* 根据 :ref:`mem_mgmt_api` 注释您的设备树。
 
-Assuming the MPU driver is enabled, it will configure the specified regions
-according to the memory attributes specified during kernel initialization. When
-using a dedicated uncached region of memory, the linker needs to be instructed
-to place buffers into that region. This can be accomplished by specifying the
-memory region explicitly using ``Z_GENERIC_SECTION``:
+假设 MPU 驱动程序已启用,它将在内核初始化期间根据指定的内存属性配置指定的区域。
+当使用专用的非缓存内存区域时,需要指示链接器将缓冲区放入该区域。
+这可以通过使用 ``Z_GENERIC_SECTION`` 显式指定内存区域来完成:
 
 .. code-block:: c
 
-  /* SRAM4 marked as uncached in device tree */
+  /* SRAM4 在设备树中标记为非缓存 */
   uint8_t buffer[BUF_SIZE] Z_GENERIC_SECTION("SRAM4");
 
 .. note::
 
-  Configuring a distinct memory region with separate caching rules requires the
-  use of an MPU region which may be a limited resource on some architectures.
-  MPU regions may be needed by other memory protection features such as
-  :ref:`userspace <mpu_userspace>`, :ref:`stack protection <mpu_stack_objects>`,
-  or :ref:`memory domains<memory_domain>`.
+  使用单独的缓存规则配置不同的内存区域需要使用 MPU 区域,
+  这在某些架构上可能是有限的资源。其他内存保护功能(如 :ref:`用户空间 <mpu_userspace>`、
+  :ref:`栈保护 <mpu_stack_objects>` 或 :ref:`内存域<memory_domain>`)可能需要 MPU 区域。
 
-Automatically Disabling Caching by Variable
--------------------------------------------
+按变量自动禁用缓存 (Automatically Disabling Caching by Variable)
+------------------------------------------------------------------
 
-Zephyr has the ability to automatically define an uncached region in memory and
-allocate variables to it using ``__nocache``. Any variables marked with this
-attribute will be placed in a special ``nocache`` linker region in memory. This
-region will be configured as uncached by the MPU driver during initialization.
-This is a simpler option than explicitly declaring a region of memory uncached
-but provides less control over the placement of these variables, as the linker
-may allocate this region anywhere in RAM.
+Zephyr 能够自动在内存中定义非缓存区域,并使用 ``__nocache`` 将变量分配给它。
+使用此属性标记的任何变量都将放置在内存中的特殊 ``nocache`` 链接器区域中。
+此区域将在初始化期间由 MPU 驱动程序配置为非缓存。
+这是一个比显式声明内存区域为非缓存更简单的选项,但对这些变量的放置提供的控制较少,
+因为链接器可能会在 RAM 中的任何位置分配此区域。
 
-Requirements:
+要求:
 
-* :kconfig:option:`CONFIG_DCACHE`: DCACHE control enabled in Zephyr.
+* :kconfig:option:`CONFIG_DCACHE`: 在 Zephyr 中启用 DCACHE 控制。
 
-* :kconfig:option:`CONFIG_NOCACHE_MEMORY`: enable allocation of the ``nocache``
-  linker region and configure it as uncached.
+* :kconfig:option:`CONFIG_NOCACHE_MEMORY`: 启用 ``nocache`` 链接器区域的分配并将其配置为非缓存。
 
-* Add the ``__nocache`` attribute at the end of any uncached buffer definition:
+* 在任何非缓存缓冲区定义的末尾添加 ``__nocache`` 属性:
 
 .. code-block:: c
 
@@ -117,66 +95,55 @@ Requirements:
 
 .. note::
 
-  See note above regarding possible limitations on MPU regions. The ``nocache``
-  region is still a distinct MPU region even though it is automatically created
-  by Zephyr instead of being explicitly defined by the user.
+  请参阅上面关于 MPU 区域可能限制的注释。``nocache`` 区域仍然是一个独特的 MPU 区域,
+  即使它是由 Zephyr 自动创建的,而不是由用户显式定义的。
 
-Runtime Cache Control
----------------------
+运行时缓存控制 (Runtime Cache Control)
+---------------------------------------
 
-The most performant but most complex option is to control data caching at
-runtime. The two most relevant cache operations in this case are **flushing**
-and **invalidating**. Both of these operations operate on the smallest unit of
-cacheable memory, the cache line. Data cache lines are typically 16 to 128
-bytes. See :kconfig:option:`CONFIG_DCACHE_LINE_SIZE`. Cache line sizes are
-typically fixed in hardware and not configurable, but Zephyr does need to know
-the size of cache lines in order to correctly and efficiently manage the cache.
-If the buffers in question are smaller than the data cache line size, it may be
-more efficient to place them in an uncached region, as unrelated data packed
-into the same cache line may be destroyed when invalidating.
+性能最高但最复杂的选项是在运行时控制数据缓存。
+在这种情况下,两个最相关的缓存操作是 **刷新** 和 **失效**。
+这两个操作都在可缓存内存的最小单元——缓存行上操作。
+数据缓存行通常为 16 到 128 字节。请参阅 :kconfig:option:`CONFIG_DCACHE_LINE_SIZE`。
+缓存行大小通常在硬件中固定且不可配置,但 Zephyr 确实需要知道缓存行的大小,
+以便正确有效地管理缓存。如果所讨论的缓冲区小于数据缓存行大小,
+将它们放在非缓存区域可能更有效,因为打包到同一缓存行中的不相关数据在失效时可能会被破坏。
 
-Flushing the cache involves writing all modified cache lines in a specified
-region back to shared memory. Flush the cache associated with a buffer after the
-processor has written to it and before a remote bus master reads from that
-region.
+刷新缓存涉及将指定区域中所有修改的缓存行写回共享内存。
+在处理器写入缓冲区之后以及远程总线主设备从该区域读取之前刷新与缓冲区关联的缓存。
 
 .. note::
 
-  Some architectures support a cache configuration called **write-through**
-  caching in which data writes from the processor core propagate through to
-  shared memory. While this solves the cache coherence problem for CPU writes,
-  it also results in more traffic to main memory which may result in performance
-  degradation.
+  某些架构支持称为 **直写** 缓存的缓存配置,
+  其中来自处理器核心的数据写入会传播到共享内存。
+  虽然这解决了 CPU 写入的缓存一致性问题,但它也会导致到主内存的更多流量,
+  这可能会导致性能下降。
 
-Invalidating the cache works similarly but in the other direction. It marks
-cache lines in the specified region as stale, ensuring that the cache line will
-be refreshed from main memory when the processor next reads from the specified
-region. Invalidate the data cache of a buffer that a peripheral has written to
-before reading from that region.
+使缓存失效的工作方式类似,但方向相反。
+它将指定区域中的缓存行标记为陈旧,确保当处理器下次从指定区域读取时,缓存行将从主内存刷新。
+在从外围设备写入的缓冲区读取之前,使该缓冲区的数据缓存失效。
 
-In some cases, the same buffer may be reused for e.g. DMA reads and DMA writes.
-In that case it is possible to first flush the cache associated with a buffer
-and then invalidate it, ensuring that the cache will be refreshed the next time
-the processor reads from the buffer.
+在某些情况下,同一缓冲区可能会重复用于例如 DMA 读取和 DMA 写入。
+在这种情况下,可以先刷新与缓冲区关联的缓存,然后使其失效,
+确保下次处理器从缓冲区读取时缓存将被刷新。
 
-Requirements:
+要求:
 
-* :kconfig:option:`CONFIG_DCACHE`: DCACHE control enabled in Zephyr.
+* :kconfig:option:`CONFIG_DCACHE`: 在 Zephyr 中启用 DCACHE 控制。
 
-* :kconfig:option:`CONFIG_CACHE_MANAGEMENT`: cache API enabled.
+* :kconfig:option:`CONFIG_CACHE_MANAGEMENT`: 启用缓存 API。
 
-* Call :c:func:`sys_cache_data_flush_range()` to flush a memory region.
+* 调用 :c:func:`sys_cache_data_flush_range()` 以刷新内存区域。
 
-* Call :c:func:`sys_cache_data_invd_range()` to invalidate a memory region.
+* 调用 :c:func:`sys_cache_data_invd_range()` 以使内存区域失效。
 
-* Call :c:func:`sys_cache_data_flush_and_invd_range()` to flush and invalidate.
+* 调用 :c:func:`sys_cache_data_flush_and_invd_range()` 以刷新和失效。
 
-Alignment
----------
+对齐 (Alignment)
+-----------------
 
-As mentioned in :c:func:`sys_cache_data_invd_range()` and associated functions,
-buffers should be aligned to the cache line size. This can be accomplished by
-using ``__aligned``:
+如 :c:func:`sys_cache_data_invd_range()` 和相关函数中所述,
+缓冲区应与缓存行大小对齐。这可以通过使用 ``__aligned`` 来完成:
 
 .. code-block:: c
 

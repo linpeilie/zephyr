@@ -1,9 +1,9 @@
 .. _sensor-read-and-decode:
 
-Read and Decode
-###############
+读取和解码 (Read and Decode)
+#############################
 
-The quickly stabilizing experimental APIs for reading sensor data are:
+快速稳定的实验性传感器数据读取 API 是:
 
 * :c:func:`sensor_read`
 * :c:func:`sensor_read_async_mempool`
@@ -11,91 +11,73 @@ The quickly stabilizing experimental APIs for reading sensor data are:
 * :c:func:`sensor_decode`
 
 
-Benefits over :ref:`sensor-fetch-and-get`
-*********************************************************
+相对于 :ref:`sensor-fetch-and-get` 的优势
+******************************************
 
-These APIs allow for a wider usage of sensors, sensor types, and data flows with
-sensors. These are the future looking APIs in Zephyr and solve many issues
-that have been run into with :ref:`sensor-fetch-and-get`.
+这些 API 允许更广泛地使用传感器、传感器类型和传感器数据流。
+这些是 Zephyr 中面向未来的 API，解决了 :ref:`sensor-fetch-and-get` 遇到的许多问题。
 
-:c:func:`sensor_read` and similar functions acquire sensor encoded data into
-a buffer provided by the caller. Decode (:c:func:`sensor_decode`) then
-decodes the sensor specific encoded data into fixed point :c:type:`q31_t` values
-as vectors per channel. This allows further processing using fixed point DSP
-functions that work on vectors of data to be done (e.g. low-pass filters, FFT,
-fusion, etc).
+:c:func:`sensor_read` 和类似函数将传感器编码数据获取到调用者提供的缓冲区中。
+然后解码(:c:func:`sensor_decode`)将传感器特定的编码数据解码为
+每个通道的固定点 :c:type:`q31_t` 值向量。
+这允许使用在数据向量上工作的定点 DSP 函数进行进一步处理
+(例如低通滤波器、FFT、融合等)。
 
-Reading is by default asynchronous in its implementation and takes advantage of
-:ref:`rtio` to enable chaining asynchronous requests, or starting requests
-against many sensors simultaneously from a single call context.
+默认情况下，读取在其实现中是异步的，并利用 :ref:`rtio` 来启用链式异步请求，
+或从单个调用上下文同时对多个传感器启动请求。
 
-This enables incredibly useful code flows when working with sensors such as:
+这在使用传感器时启用了非常有用的代码流，例如:
 
-* Obtaining the raw sensor data, decoding never, later, or on a separate
-  processor (e.g. a phone).
-* Starting a read for sensors directly from an interrupt handler. No dedicated
-  thread needed saving precious stack space. No work queue needed introducing
-  variable latency. Starting a read for multiple sensors simultaneously from a
-  single call context (interrupt/thread/work queue).
-* Requesting multiple reads to the same device for Ping-Pong (double buffering)
-  setups.
-* Creating entire pipelines of data flow from sensors allowing for software
-  defined virtual sensors (:ref:`sensing`) all from a single thread with DAG
-  process ordering.
-* Potentially pre-programming DMAs to trigger on GPIO events, leaving the CPU
-  entirely out of the loop in handling sensor events like FIFO watermarks.
+* 获取原始传感器数据，永不解码、稍后解码或在单独的处理器上解码(例如手机)。
+* 直接从中断处理程序启动传感器读取。不需要专用线程，节省宝贵的堆栈空间。
+  不需要工作队列，避免引入可变延迟。从单个调用上下文(中断/线程/工作队列)
+  同时为多个传感器启动读取。
+* 向同一设备请求多次读取以进行乒乓(双缓冲)设置。
+* 创建从传感器流出数据的整个管道，允许软件定义的虚拟传感器(:ref:`sensing`)
+  全部来自具有 DAG 处理顺序的单个线程。
+* 可能预编程 DMA 以在 GPIO 事件上触发，使 CPU 完全不参与处理传感器事件(如 FIFO 水印)。
 
-Additionally, other shortcomings of :ref:`sensor-fetch-and-get` related to memory
-and trigger handling are solved.
+此外，还解决了与内存和触发器处理相关的 :ref:`sensor-fetch-and-get` 的其他缺点。
 
-* Triggers result in enqueued events, not callbacks.
-* Triggers can be setup to automatically fetch data. Potentially
-  enabling pre-programmed DMA transfers on GPIO interrupts.
-* Far less likely triggers are missed due to long held interrupt masks from
-  callbacks and context swapping.
-* Sensor FIFOs supported by wiring up FIFO triggers to read data into
-  mempool allocated buffers.
-* All sensor processing can be done in user mode (memory protected) threads.
-* Multiple sensor channels of the same type are better supported.
+* 触发器导致排队的事件，而不是回调。
+* 触发器可以设置为自动获取数据。可能在 GPIO 中断上启用预编程的 DMA 传输。
+* 由于回调和上下文交换中长时间持有的中断掩码，触发器丢失的可能性要小得多。
+* 通过将 FIFO 触发器连接到将数据读取到内存池分配的缓冲区中来支持传感器 FIFO。
+* 所有传感器处理都可以在用户模式(内存保护)线程中完成。
+* 更好地支持相同类型的多个传感器通道。
 
 .. note::
-   For `Read and Decode`_ benefits to be fully realized requires
-   :ref:`rtio` compliant communication access to the sensor. Typically this means
-   an :ref:`rtio` enabled bus driver for SPI or I2C.
+   要完全实现 `Read and Decode`_ 的优势，需要对传感器进行符合 :ref:`rtio`
+   的通信访问。通常这意味着为 SPI 或 I2C 启用 :ref:`rtio` 的总线驱动程序。
 
-Polling Read
-************
+轮询读取 (Polling Read)
+************************
 
-Polling reads with `Read and Decode`_ can be accomplished by instantiating a
-polling I/O device (akin to a file descriptor) for the sensor with the desired
-channels to poll. Requesting either blocking or non-blocking reads, then
-optionally decoding the data into fixed point values.
+使用 `Read and Decode`_ 进行轮询读取可以通过为具有所需通道的传感器实例化
+轮询 I/O 设备(类似于文件描述符)来实现。请求阻塞或非阻塞读取，
+然后可选地将数据解码为定点值。
 
-Polling a temperature sensor and printing its readout is likely the simplest
-sample to show how this all works.
+轮询温度传感器并打印其读数可能是显示这一切如何工作的最简单示例。
 
 .. literalinclude:: temp_polling.c
    :language: c
 
-Polling Read with Multiple Sensors
-**********************************
+使用多个传感器的轮询读取 (Polling Read with Multiple Sensors)
+***************************************************************
 
-One of the benefits of Read and Decode is the ability to concurrently read many
-sensors with many channels in one thread. Effectively read requests are started
-asynchronously for all sensors and their channels. When each read completes we
-then decode the sensor data. Examples speak loudly and so a sample showing how
-this might work with multiple temperature sensors with multiple temperature
-channels:
+Read and Decode 的优势之一是能够在一个线程中同时读取多个传感器的多个通道。
+有效地为所有传感器及其通道异步启动读取请求。当每个读取完成时，
+我们然后解码传感器数据。示例说明力度很大，因此这里有一个示例，
+展示了如何使用具有多个温度通道的多个温度传感器:
 
 .. literalinclude:: multiple_temp_polling.c
    :language: c
 
-Streaming
-*********
+流式传输 (Streaming)
+********************
 
-Handling triggers with `Read and Decode`_ works by setting up a stream I/O device
-configuration. A stream specifies the set of triggers to capture and if data
-should be captured with the event.
+使用 `Read and Decode`_ 处理触发器的方式是设置流 I/O 设备配置。
+流指定要捕获的触发器集以及是否应随事件捕获数据。
 
 
 

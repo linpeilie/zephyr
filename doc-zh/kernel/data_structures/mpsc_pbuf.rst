@@ -1,92 +1,67 @@
 .. _mpsc_pbuf:
 
-Multi Producer Single Consumer Packet Buffer
-============================================
+多生产者单消费者数据包缓冲区 (Multi Producer Single Consumer Packet Buffer)
+==============================================================================
 
-A :dfn:`Multi Producer Single Consumer Packet Buffer (MPSC_PBUF)` is a circular
-buffer, whose contents are stored in first-in-first-out order. Variable size
-packets are stored in the buffer. Packet buffer works under assumption that there
-is a single context that consumes the data. However, it is possible that another
-context may interfere to flush the data and never come back (panic case).
-Packet is produced in two steps: first requested amount of data is allocated,
-producer fills the data and commits it. Consuming a packet is also performed in
-two steps: consumer claims the packet, gets pointer to it and length and later
-on packet is freed. This approach reduces memory copying.
+:dfn:`多生产者单消费者数据包缓冲区 (MPSC_PBUF)` 是一个循环缓冲区,其内容按先进先出的顺序存储。可变大小的数据包存储在缓冲区中。数据包缓冲区在假设有单个上下文消费数据的情况下工作。但是,可能另一个上下文会干预以刷新数据并且再也不会返回(恐慌情况)。数据包分两步生成:首先分配请求的数据量,生产者填充数据并提交它。消费数据包也分两步执行:消费者声明数据包,获取指向它的指针和长度,然后释放数据包。这种方法减少了内存复制。
 
-A :dfn:`MPSC Packet Buffer` has the following key properties:
+:dfn:`MPSC 数据包缓冲区` 具有以下关键属性:
 
-* Allocate, commit scheme used for packet producing.
-* Claim, free scheme used for packet consuming.
-* Allocator ensures that contiguous memory of requested length is allocated.
-* Following policies can be applied when requested space cannot be allocated:
+* 用于数据包生成的分配、提交方案。
+* 用于数据包消费的声明、释放方案。
+* 分配器确保分配请求长度的连续内存。
+* 当无法分配请求的空间时,可以应用以下策略:
 
-  * **Overwrite** - oldest entries are dropped until requested amount of memory can
-    be allocated. For each dropped packet user callback is called.
-  * **No overwrite** - When requested amount of space cannot be allocated,
-    allocation fails.
-* Dedicated, optimized API for storing short packets.
-* Allocation with timeout.
+  * **覆盖** (Overwrite) - 丢弃最旧的条目,直到可以分配请求的内存量。对于每个丢弃的数据包,都会调用用户回调。
+  * **不覆盖** (No overwrite) - 当无法分配请求的空间量时,分配失败。
+* 用于存储短数据包的专用优化 API。
+* 带超时的分配。
 
-Internals
----------
+内部机制 (Internals)
+---------------------
 
-Each packet in the buffer contains ``MPSC_PBUF`` specific header which is used
-for internal management. Header consists of 2 bit flags. In order to optimize
-memory usage, header can be added on top of the user header using
-:c:macro:`MPSC_PBUF_HDR` and remaining bits in the first word can be application
-specific. Header consists of following flags:
+缓冲区中的每个数据包都包含用于内部管理的 ``MPSC_PBUF`` 特定头部。头部由 2 位标志组成。为了优化内存使用,可以使用 :c:macro:`MPSC_PBUF_HDR` 在用户头部顶部添加头部,并且第一个字中的剩余位可以是特定于应用程序的。头部由以下标志组成:
 
-* valid - bit set to one when packet contains valid user packet
-* busy - bit set when packet is being consumed (claimed but not free)
+* valid - 当数据包包含有效的用户数据包时,位设置为 1
+* busy - 当数据包正在被消费时(已声明但未释放),位设置
 
-Header state:
+头部状态:
 
-+-------+------+----------------------+
-| valid | busy | description          |
-+-------+------+----------------------+
-| 0     | 0    | space is free        |
-+-------+------+----------------------+
-| 1     | 0    | valid packet         |
-+-------+------+----------------------+
-| 1     | 1    | claimed valid packet |
-+-------+------+----------------------+
-| 0     | 1    | internal skip packet |
-+-------+------+----------------------+
++-------+------+------------------------+
+| valid | busy | 描述                   |
++-------+------+------------------------+
+| 0     | 0    | 空间空闲               |
++-------+------+------------------------+
+| 1     | 0    | 有效数据包             |
++-------+------+------------------------+
+| 1     | 1    | 已声明的有效数据包     |
++-------+------+------------------------+
+| 0     | 1    | 内部跳过数据包         |
++-------+------+------------------------+
 
-Packet buffer space contains free space, valid user packets and internal skip
-packets. Internal skip packets indicates padding, e.g. at the end of the buffer.
+数据包缓冲区空间包含空闲空间、有效的用户数据包和内部跳过数据包。内部跳过数据包表示填充,例如在缓冲区末尾。
 
-Allocation
-^^^^^^^^^^
+分配 (Allocation)
+^^^^^^^^^^^^^^^^^^
 
-Using pairs for read and write indexes, available space is determined. If
-space can be allocated, temporary write index is moved and pointer to a space
-within buffer is returned. Packet header is reset. If allocation required
-wrapping of the write index, a skip packet is added to the end of buffer. If
-space cannot be allocated and overwrite is disabled then ``NULL`` pointer is
-returned or context blocks if allocation was with timeout.
+使用读取和写入索引对,确定可用空间。如果可以分配空间,则移动临时写入索引并返回指向缓冲区内空间的指针。重置数据包头部。如果分配需要包装写入索引,则在缓冲区末尾添加跳过数据包。如果无法分配空间且禁用覆盖,则返回 ``NULL`` 指针,或者如果分配带有超时,则上下文阻塞。
 
-Allocation with overwrite
-^^^^^^^^^^^^^^^^^^^^^^^^^
+带覆盖的分配 (Allocation with overwrite)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If overwrite is enabled, oldest packets are dropped until requested amount of
-space can be allocated. When packets are dropped ``busy`` flag is checked in the
-header to ensure that currently consumed packet is not overwritten. In that case,
-skip packet is added before busy packet and packets following the busy packet
-are dropped. When busy packet is being freed, such situation is detected and
-packet is converted to skip packet to avoid double processing.
+如果启用覆盖,则丢弃最旧的数据包,直到可以分配请求的空间量。丢弃数据包时,会检查头部中的 ``busy`` 标志,以确保不会覆盖当前正在消费的数据包。在这种情况下,在繁忙数据包之前添加跳过数据包,并丢弃繁忙数据包之后的数据包。当释放繁忙数据包时,会检测到这种情况,并将数据包转换为跳过数据包以避免重复处理。
 
-Usage
+用法 (Usage)
 -----
 
-Packet header definition
+数据包头部定义 (Packet header definition)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Packet header details can be found in :zephyr_file:`include/zephyr/sys/mpsc_packet.h`.
-API functions can be found in :zephyr_file:`include/zephyr/sys/mpsc_pbuf.h`. Headers
-are split to avoid include spam when declaring the packet.
+数据包头部详细信息可以在 :zephyr_file:`include/zephyr/sys/mpsc_packet.h` 中找到。
+API 函数可以在 :zephyr_file:`include/zephyr/sys/mpsc_pbuf.h` 中找到。头部
+被拆分以避免在声明数据包时包含冗余内容。
 
-User header structure must start with internal header:
+用户头部结构必须以内部头部开始:
 
 .. code-block:: c
 
@@ -97,20 +72,18 @@ User header structure must start with internal header:
            uint32_t length: 32 - MPSC_PBUF_HDR_BITS;
    };
 
-Packet buffer configuration
+数据包缓冲区配置 (Packet buffer configuration)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Configuration structure contains buffer details, configuration flags and
-callbacks. Following callbacks are used by the packet buffer:
+配置结构包含缓冲区详细信息、配置标志和回调。数据包缓冲区使用以下回调:
 
-* Drop notification - callback called whenever a packet is dropped due to
-  overwrite.
-* Get packet length - callback to determine packet length
+* 丢弃通知 (Drop notification) - 每当由于覆盖而丢弃数据包时调用的回调。
+* 获取数据包长度 (Get packet length) - 用于确定数据包长度的回调
 
-Packet producing
+数据包生成 (Packet producing)
 ^^^^^^^^^^^^^^^^
 
-Standard, two step method:
+标准的两步方法:
 
 .. code-block:: c
 
@@ -120,23 +93,22 @@ Standard, two step method:
 
    mpsc_pbuf_commit(buffer, packet);
 
-Performance optimized storing of small packets:
+用于小数据包的性能优化存储:
 
-* 32 bit word packet
-* 32 bit word with pointer packet
+* 32 位字数据包 (32 bit word packet)
+* 带指针的 32 位字数据包 (32 bit word with pointer packet)
 
-Note that since packets are written by value, they should already contain
-``valid`` bit set in the header.
+请注意,由于数据包是按值写入的,因此它们应该已经在头部中设置了 ``valid`` 位。
 
 .. code-block:: c
 
    mpsc_pbuf_put_word(buffer, data);
    mpsc_pbuf_put_word_ext(buffer, data, ptr);
 
-Packet consuming
+数据包消费 (Packet consuming)
 ^^^^^^^^^^^^^^^^
 
-Two step method:
+两步方法:
 
 .. code-block:: c
 

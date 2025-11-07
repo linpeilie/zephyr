@@ -1,22 +1,21 @@
 .. _sent_api:
 
-Single Edge Nibble Transmission (SENT)
-######################################
+单边沿半字节传输 (Single Edge Nibble Transmission, SENT)
+##########################################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-The SENT API provides functionality to communicate with Single Edge Nibble
-Transmission (SENT) devices.
+SENT API 提供与单边沿半字节传输 (SENT, Single Edge Nibble Transmission) 设备通信的功能。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+*********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_SENT`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: sent_interface

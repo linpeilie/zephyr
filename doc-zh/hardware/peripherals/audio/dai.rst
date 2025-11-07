@@ -1,22 +1,22 @@
 .. _dai_api:
 
-Digital Audio Interface (DAI)
-#############################
+数字音频接口 (Digital Audio Interface, DAI)
+############################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-The DAI (Digital Audio Interface) is a generic high level API for audio drivers.
-It can be configured with bespoke data for vendor specific configuration.
+DAI(数字音频接口)是音频驱动程序的通用高级 API。
+它可以使用定制数据进行配置，以实现供应商特定的配置。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+**********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_DAI`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: dai_interface

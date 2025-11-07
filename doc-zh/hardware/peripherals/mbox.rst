@@ -1,18 +1,15 @@
 .. _mbox_api:
 
-Multi-Channel Inter-Processor Mailbox (MBOX)
-############################################
+多通道处理器间邮箱 (Multi-Channel Inter-Processor Mailbox, MBOX)
+##################################################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-An MBOX device is a peripheral capable of passing signals (and data depending
-on the peripheral) between CPUs and clusters in the system. Each MBOX instance
-is providing one or more channels, each one targeting one other CPU cluster
-(multiple channels can target the same cluster).
+MBOX 设备是一种能够在系统中的 CPU 和集群之间传递信号(和数据,取决于外设)的外设。每个 MBOX 实例提供一个或多个通道,每个通道针对另一个 CPU 集群(多个通道可以针对同一集群)。
 
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: mbox_interface

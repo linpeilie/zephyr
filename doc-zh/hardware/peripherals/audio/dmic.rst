@@ -1,21 +1,21 @@
 .. _audio_dmic_api:
 
-Digital Microphone (DMIC)
-#########################
+数字麦克风 (Digital Microphone, DMIC)
+######################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-The audio DMIC interface provides access to digital microphones.
+音频 DMIC 接口提供对数字麦克风的访问。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+**********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_AUDIO_DMIC`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: audio_dmic_interface

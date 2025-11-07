@@ -1,30 +1,27 @@
 .. _auxdisplay_api:
 
-Auxiliary Display (auxdisplay)
-##############################
+辅助显示器 (Auxiliary Display, auxdisplay)
+###########################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-Auxiliary Displays are text-based displays that have simple interfaces for
-displaying textual, numeric or alphanumeric data, as opposed to the
-:ref:`display_api`, auxiliary displays do not support custom
-graphical output to displays (and most often monochrome), the most
-advanced custom feature supported is generation of custom characters.
-These inexpensive displays are commonly found with various configurations
-and sizes, a common display size is 16 characters by 2 lines.
+辅助显示器是基于文本的显示器，具有用于显示文本、数字或字母数字数据的简单接口，
+与 :ref:`display_api` 不同，辅助显示器不支持自定义图形输出到显示器(并且通常是单色的)，
+支持的最高级自定义功能是生成自定义字符。
+这些廉价的显示器通常以各种配置和尺寸出现，常见的显示尺寸是 16 个字符乘 2 行。
 
-This API is unstable and subject to change.
+此 API 不稳定，可能会更改。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+**********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_AUXDISPLAY`
 * :kconfig:option:`CONFIG_AUXDISPLAY_INIT_PRIORITY`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: auxdisplay_interface

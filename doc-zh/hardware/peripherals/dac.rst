@@ -1,21 +1,21 @@
 .. _dac_api:
 
-Digital-to-Analog Converter (DAC)
-#################################
+数模转换器 (Digital-to-Analog Converter, DAC)
+###############################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-The DAC API provides access to Digital-to-Analog Converter (DAC) devices.
+DAC API 提供对数模转换器 (DAC, Digital-to-Analog Converter) 设备的访问。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+*********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_DAC`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: dac_interface

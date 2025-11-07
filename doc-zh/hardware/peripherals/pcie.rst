@@ -1,13 +1,13 @@
 .. _pcie_api:
 
-Peripheral Component Interconnect express Bus (PCIe)
-####################################################
+外设组件互连快速总线 (Peripheral Component Interconnect express Bus, PCIe)
+###########################################################################
 
-Overview
-********
+概述 (Overview)
+****************
 
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: pcie_host_interface

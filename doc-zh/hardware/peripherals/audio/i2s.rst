@@ -1,23 +1,22 @@
 .. _i2s_api:
 
-Inter-IC Sound (I2S) Bus
-########################
+集成电路间音频总线 (Inter-IC Sound, I2S Bus)
+##############################################
 
-Overview
-********
+概述 (Overview)
+****************
 
-The I2S (Inter-IC Sound) API provides support for the standard I2S interface
-as well as common non-standard extensions such as PCM Short/Long Frame Sync
-and Left/Right Justified Data Formats.
+I2S(集成电路间音频)API 支持标准 I2S 接口以及常见的非标准扩展，
+如 PCM 短/长帧同步和左/右对齐数据格式。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+**********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_I2S`
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: i2s_interface

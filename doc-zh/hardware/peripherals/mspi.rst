@@ -1,13 +1,9 @@
 .. _mspi_api:
 
-Multi-bit SPI Bus
-#################
+多位 SPI 总线 (Multi-bit SPI Bus)
+###################################
 
-The MSPI (multi-bit SPI) is provided as a generic API to accommodate
-advanced SPI peripherals and devices that typically require command,
-address and data phases, and multiple signal lines during these phases.
-While the API supports advanced features such as :term:`XIP` and scrambling,
-it is also compatible with generic SPI.
+MSPI (multi-bit SPI, 多位 SPI) 作为通用 API 提供,以适应高级 SPI 外设和设备,这些外设和设备通常需要命令、地址和数据阶段,以及在这些阶段期间的多条信号线。虽然 API 支持高级功能,如 :term:`XIP` 和加扰,但它也与通用 SPI 兼容。
 
 .. contents::
     :local:
@@ -15,8 +11,8 @@ it is also compatible with generic SPI.
 
 .. _mspi-controller-api:
 
-MSPI Controller API
-*******************
+MSPI 控制器 API (MSPI Controller API)
+**************************************
 
 Zephyr's MSPI controller API may be used when a multi-bit SPI controller
 is present. E.g. Ambiq MSPI, QSPI, OSPI, Flexspi, etc.

@@ -1,62 +1,49 @@
 .. _soc_porting_guide:
 
-SoC Porting Guide
-###################
+SoC 移植指南 (SoC Porting Guide)
+#################################
 
-This page describes how to add support for a new :term:`SoC` in Zephyr, be it in
-the upstream Zephyr project or locally in your own repository.
+本页面描述如何在 Zephyr 中添加对新 :term:`SoC` 的支持,无论是在上游 Zephyr 项目中还是在您自己的本地仓库中。
 
-SoC Definitions
-***************
+SoC 定义 (SoC Definitions)
+***************************
 
-It is expected that you are familiar with the board concept in Zephyr.
-A high level overview of the hardware support hierarchy and terms used in the
-Zephyr documentation can be seen in :ref:`hw_support_hierarchy`.
+期望您已经熟悉 Zephyr 中的板概念。
+Zephyr 文档中使用的硬件支持层次结构和术语的高层概述可以在 :ref:`hw_support_hierarchy` 中看到。
 
-For SoC porting, the most important terms are:
+对于 SoC 移植,最重要的术语是:
 
-- SoC: the exact system on a chip the board's CPU is part of.
-- SoC series: a group of tightly related SoCs.
-- SoC family: a wider group of SoCs with similar characteristics.
-- CPU cluster: a cluster of one or more CPU cores.
-- CPU core: a particular CPU instance of a given architecture.
-- Architecture: an instruction set architecture.
+- SoC: 板的 CPU 所属的确切片上系统。
+- SoC series (SoC 系列): 一组紧密相关的 SoC。
+- SoC family (SoC 家族): 具有相似特征的更广泛的 SoC 组。
+- CPU cluster (CPU 集群): 一个或多个 CPU 核心的集群。
+- CPU core (CPU 核心): 给定架构的特定 CPU 实例。
+- Architecture (架构): 指令集架构。
 
-Architecture
-============
+Architecture (架构)
+===================
 
-See :ref:`architecture_porting_guide`.
+参阅 :ref:`architecture_porting_guide`。
 
 
-Create your SoC directory
-*************************
+创建您的 SoC 目录 (Create your SoC directory)
+**********************************************
 
-Each SoC must have a unique name. Use the official name given by the SoC vendor
-and check that it's not already in use. In some cases someone else may have
-contributed a SoC with identical name. If the SoC name is already in use, then
-you should probably improve the existing SoC instead of creating a new one.
-The script ``list_hardware`` can be used to retrieve a list of all SoCs known
-in Zephyr, for example ``./scripts/list_hardware.py --soc-root=. --socs`` from
-the Zephyr base directory for a list of names that are already in use.
+每个 SoC 必须有一个唯一的名称。使用 SoC 供应商给出的官方名称并检查它是否尚未被使用。在某些情况下,其他人可能已经贡献了具有相同名称的 SoC。如果 SoC 名称已被使用,那么您可能应该改进现有的 SoC 而不是创建一个新的。
+脚本 ``list_hardware`` 可用于检索 Zephyr 中已知的所有 SoC 列表,例如从 Zephyr 基本目录运行 ``./scripts/list_hardware.py --soc-root=. --socs`` 可获取已使用的名称列表。
 
-Start by creating the directory ``zephyr/soc/<VENDOR>/soc1``, where
-``<VENDOR>`` is your vendor subdirectory.
+首先创建目录 ``zephyr/soc/<VENDOR>/soc1``,其中 ``<VENDOR>`` 是您的供应商子目录。
 
 .. note::
-  A ``<VENDOR>`` subdirectory is mandatory if contributing your SoC
-  to Zephyr, but if your SoC is placed in a local repo, then any folder
-  structure under ``<your-repo>/soc`` is permitted.
-  The ``<VENDOR>`` subdirectory must match a vendor defined in the list in
-  :zephyr_file:`dts/bindings/vendor-prefixes.txt`. If the SoC vendor does not
-  have a prefix in that list, then one must be created.
+  如果将您的 SoC 贡献给 Zephyr,则 ``<VENDOR>`` 子目录是强制性的,但如果您的 SoC 放置在本地仓库中,则允许在 ``<your-repo>/soc`` 下使用任何文件夹结构。
+  ``<VENDOR>`` 子目录必须匹配 :zephyr_file:`dts/bindings/vendor-prefixes.txt` 列表中定义的供应商。如果 SoC 供应商在该列表中没有前缀,则必须创建一个。
 
 .. note::
 
-  The SoC directory name does not need to match the name of the SoC.
-  Multiple SoCs can even be defined in one directory. In Zephyr, SoCs are often
-  organized in sub-folders in a common SoC Family or SoC Series tree.
+  SoC 目录名称不需要与 SoC 的名称匹配。
+  甚至可以在一个目录中定义多个 SoC。在 Zephyr 中,SoC 通常在通用 SoC Family 或 SoC Series 树的子文件夹中组织。
 
-Your SoC directory should look like this:
+您的 SoC 目录应如下所示:
 
 .. code-block:: none
 
@@ -68,62 +55,45 @@ Your SoC directory should look like this:
    ├── Kconfig.soc
    └── Kconfig.defconfig
 
-Replace ``<soc-name>`` with your SoC's name.
+将 ``<soc-name>`` 替换为您的 SoC 名称。
 
+强制性文件包括:
 
-The mandatory files are:
+#. :file:`soc.yml`: 描述 SoC 高层元数据的 YAML 文件,例如:
 
-#. :file:`soc.yml`: a YAML file describing the high-level meta data of the
-   SoC such as:
+   - SoC 名称: SoC 的名称
+   - CPU clusters (CPU 集群): 如果 SoC 包含一个或多个集群,则为 CPU 集群
+   - SoC series (SoC 系列): SoC 所属的 SoC 系列
+   - SoC family (SoC 家族): 系列所属的 SoC 家族
 
-   - SoC name: the name of the SoC
-   - CPU clusters: CPU clusters if the SoC contains one or more clusters
-   - SoC series: the SoC series to which the SoC belong
-   - SoC family: the SoC family to which the series belong
+#. :file:`soc.h`: 一个头文件,可用于描述或为 SoC 提供配置宏。:file:`soc.h` 通常会包含在 Zephyr 中的驱动程序、子系统、板和其他源代码中。
 
-#. :file:`soc.h`: a header file which can be used to describe or provide
-   configuration macros for the SoC. The :file:`soc.h` will often be included in
-   drivers, sub-systems, boards, and other source code found in Zephyr.
+#. :file:`Kconfig.soc`: 基本 SoC 配置,以 ``config SOC_<soc-name>`` 的形式定义 Kconfig SoC 符号,并将 SoC 名称提供给 Kconfig ``SOC`` 设置。
+   如果 ``soc.yml`` 描述了 SoC 家族和系列,则还必须在此文件中定义它们。不得选择 SoC 树之外的 Kconfig 设置。要选择通用 Zephyr Kconfig 设置,必须使用 :file:`Kconfig` 文件。
 
-#. :file:`Kconfig.soc`: the base SoC configuration which defines a Kconfig SoC
-   symbol in the form of ``config SOC_<soc-name>`` and provides the SoC name to
-   the Kconfig ``SOC`` setting.
-   If the ``soc.yml`` describes a SoC family and series, then those must also
-   be defined in this file. Kconfig settings outside of the SoC tree must not be
-   selected. To select general Zephyr Kconfig settings the :file:`Kconfig` file
-   must be used.
+#. :file:`CMakeLists.txt`: Zephyr 构建系统加载的 CMake 文件。此 CMake 文件可以定义在构建目标为 SoC 时要使用的附加包含路径和/或源文件。还必须定义要使用的基线链接器脚本。
 
-#. :file:`CMakeLists.txt`: CMake file loaded by the Zephyr build system. This
-   CMake file can define additional include paths and/or source files to be used
-   when a build targets the SoC. Also the base line linker script to use must be
-   defined.
+可选文件包括:
 
-The optional files are:
+- :file:`Kconfig`、:file:`Kconfig.defconfig` 以 :ref:`kconfig` 格式配置软件。这些选择架构和可用的外设。
 
-- :file:`Kconfig`, :file:`Kconfig.defconfig` software configuration in
-  :ref:`kconfig` format. These select the architecture and peripherals
-  available.
+编写您的 SoC YAML (Write your SoC YAML)
+******************************************
 
-Write your SoC YAML
-*********************
+SoC YAML 文件在高层次上描述 SoC 家族、SoC 系列和 SoC。
 
-The SoC YAML file describes the SoC family, SoC series, and SoC at a high level.
+详细配置(如硬件描述和配置)在 devicetree 和 Kconfig 中完成。
 
-Detailed configurations, such as hardware description and configuration are done
-in devicetree and Kconfig.
-
-The skeleton of a simple SoC YAML file containing just one SoC is:
+只包含一个 SoC 的简单 SoC YAML 文件的骨架是:
 
 .. code-block:: yaml
 
    socs:
      - name: <soc1>
 
-It is possible to have multiple SoC located in the SoC folder.
-For example if they belong to a common family or series it is recommended to
-locate such SoC in a common tree.
-Multiple SoCs and SoC series in a common folder can be described in the
-:file:`soc.yml` file as:
+可以在 SoC 文件夹中放置多个 SoC。
+例如,如果它们属于一个共同的家族或系列,建议将此类 SoC 放置在一个共同的树中。
+共同文件夹中的多个 SoC 和 SoC 系列可以在 :file:`soc.yml` 文件中描述为:
 
 .. code-block:: yaml
 
@@ -142,20 +112,16 @@ Multiple SoCs and SoC series in a common folder can be described in the
            ...
 
 
-Write your SoC devicetree
-*************************
+编写您的 SoC devicetree (Write your SoC devicetree)
+*****************************************************
 
-SoC devicetree include files are located in the :file:`<zephyr-repo>/dts` folder
-under a corresponding :file:`<ARCH>/<VENDOR>`.
+SoC devicetree 包含文件位于 :file:`<zephyr-repo>/dts` 文件夹下对应的 :file:`<ARCH>/<VENDOR>` 中。
 
-The SoC :file:`dts/<ARCH>/<VENDOR>/<soc>.dtsi` describes your SoC hardware in
-the Devicetree Source (DTS) format and must be included by any boards which use
-the SoC.
+SoC :file:`dts/<ARCH>/<VENDOR>/<soc>.dtsi` 以 Devicetree Source (DTS) 格式描述您的 SoC 硬件,并且必须被使用该 SoC 的任何板包含。
 
-If a highlevel :file:`<arch>.dtsi` file exists, then a good starting point is to
-include this file in your :file:`<soc>.dtsi`.
+如果存在高级 :file:`<arch>.dtsi` 文件,那么一个好的起点是在您的 :file:`<soc>.dtsi` 中包含此文件。
 
-In general, :file:`<soc>.dtsi` should look like this:
+一般来说,:file:`<soc>.dtsi` 应该如下所示:
 
 .. code-block:: devicetree
 
@@ -163,7 +129,7 @@ In general, :file:`<soc>.dtsi` should look like this:
 
    / {
            chosen {
-                   /* common chosen settings for your SoC */
+                   /* 您的 SoC 的通用 chosen 设置 */
            };
 
            cpus {
@@ -173,44 +139,34 @@ In general, :file:`<soc>.dtsi` should look like this:
                    cpu@0 {
                    device_type = "cpu";
                    compatible = "<compatibles>";
-                   /* ... your CPU definitions ... */
+                   /* ... 您的 CPU 定义 ... */
            };
 
            soc {
-                   /* Your SoC definitions and peripherals */
-                   /* such as ram, clock, buses, peripherals. */
+                   /* 您的 SoC 定义和外设 */
+                   /* 例如 ram、clock、bus、外设。 */
            };
    };
 
 .. hint::
-   It is possible to structure multiple :file:`<VENDOR>/<soc>.dtsi` files in
-   sub-directories for a cleaner file system structure. For example organized
-   pre SoC series, like this: :file:`<VENDOR>/<SERIES>/<soc>.dtsi`.
+   可以在子目录中构建多个 :file:`<VENDOR>/<soc>.dtsi` 文件,以获得更清晰的文件系统结构。例如按 SoC 系列组织,像这样::file:`<VENDOR>/<SERIES>/<soc>.dtsi`。
 
 
-Multiple CPU clusters
-=====================
+多个 CPU 集群 (Multiple CPU clusters)
+======================================
 
-Devicetree reflects the hardware. The memory space and peripherals available to
-one CPU cluster can be very different from another CPU cluster, therefore each
-CPU cluster will often have its own :file:`.dtsi` file.
+Devicetree 反映硬件。一个 CPU 集群可用的内存空间和外设可能与另一个 CPU 集群非常不同,因此每个 CPU 集群通常都有自己的 :file:`.dtsi` 文件。
 
-CPU cluster :file:`.dtsi` files should follow the naming scheme
-:file:`<soc>_<cluster>.dtsi`. A :file:`<soc>_<cluster>.dtsi` file will look
-similar to a SoC :file:`.dtsi` without CPU clusters.
+CPU 集群 :file:`.dtsi` 文件应遵循命名方案 :file:`<soc>_<cluster>.dtsi`。:file:`<soc>_<cluster>.dtsi` 文件看起来类似于没有 CPU 集群的 SoC :file:`.dtsi`。
 
-Write Kconfig files
-*******************
+编写 Kconfig 文件 (Write Kconfig files)
+*****************************************
 
-Zephyr uses the Kconfig language to configure software features. Your SoC
-needs to provide some Kconfig settings before you can compile a Zephyr
-application for it.
+Zephyr 使用 Kconfig 语言来配置软件功能。您的 SoC 需要提供一些 Kconfig 设置,然后才能为其编译 Zephyr 应用程序。
 
-Setting Kconfig configuration values is documented in detail in
-:ref:`setting_configuration_values`.
+设置 Kconfig 配置值在 :ref:`setting_configuration_values` 中有详细记录。
 
-There is one mandatory Kconfig file in the SoC directory, and two optional
-files for a SoC:
+SoC 目录中有一个强制性的 Kconfig 文件,以及两个可选文件:
 
 .. code-block:: none
 
@@ -220,14 +176,12 @@ files for a SoC:
    └── Kconfig.defconfig
 
 :file:`Kconfig.soc`
-  A shared Kconfig file which can be sourced both in Zephyr Kconfig and sysbuild
-  Kconfig trees.
+  一个共享的 Kconfig 文件,可以在 Zephyr Kconfig 和 sysbuild Kconfig 树中引用。
 
-  This file selects the SoC family and series in the Kconfig tree and potential
-  other SoC related Kconfig settings. In some cases a SOC_PART_NUMBER.
-  This file must not select anything outside the re-usable Kconfig SoC tree.
+  此文件在 Kconfig 树中选择 SoC 家族和系列以及潜在的其他 SoC 相关 Kconfig 设置。在某些情况下是 SOC_PART_NUMBER。
+  此文件不得选择可重用 Kconfig SoC 树之外的任何内容。
 
-  A :file:`Kconfig.soc` may look like this:
+  :file:`Kconfig.soc` 可能如下所示:
 
   .. code-block:: kconfig
 
@@ -251,28 +205,19 @@ files for a SoC:
      config SOC
              default "<soc_name>" if SOC_<SOC_NAME>
 
-  Notice that ``SOC_NAME`` is a pure uppercase version of the SoC name, ``SOC_SERIES_NAME`` is
-  a pure uppercase version of SoC series name and ``SOC_FAMILY_NAME`` is a pure uppercase version
-  of the SoC family name. If these fields do not appear in the :file:`soc.yml` file then they
-  should not be present in the :file:`Kconfig.soc` file.
+  请注意,``SOC_NAME`` 是 SoC 名称的纯大写版本,``SOC_SERIES_NAME`` 是 SoC 系列名称的纯大写版本,``SOC_FAMILY_NAME`` 是 SoC 家族名称的纯大写版本。如果这些字段未出现在 :file:`soc.yml` 文件中,则它们不应出现在 :file:`Kconfig.soc` 文件中。
 
-  The Kconfigs ``SOC``, ``SOC_SERIES`` and ``SOC_FAMILY`` settings are globally defined as
-  strings and therefore the :file:`Kconfig.soc` file shall only define the default string values
-  and not the types. Notice that the string values must match the values used in the
-  :file:`soc.yml` file.
+  Kconfig ``SOC``、``SOC_SERIES`` 和 ``SOC_FAMILY`` 设置在全局定义为字符串,因此 :file:`Kconfig.soc` 文件只应定义默认字符串值,而不应定义类型。请注意,字符串值必须与 :file:`soc.yml` 文件中使用的值匹配。
 
 .. note::
-  The build system supports any variation of case for ``soc_name``, ``soc_series_name`` and
-  ``soc_family_mame``, but when submitting boards for inclusion in Zephyr itself, these must be
-  purely lowercase versions of the Kconfig names
+  构建系统支持 ``soc_name``、``soc_series_name`` 和 ``soc_family_mame`` 的任何大小写变体,但在提交板以包含在 Zephyr 本身时,这些必须是 Kconfig 名称的纯小写版本。
 
 :file:`Kconfig`
-  Included by :zephyr_file:`soc/Kconfig`.
+  由 :zephyr_file:`soc/Kconfig` 包含。
 
-  This file can add Kconfig settings which are specific to the current SoC.
+  此文件可以添加特定于当前 SoC 的 Kconfig 设置。
 
-  The :file:`Kconfig` will often indicate given hardware support using a setting
-  of the form ``HAS_<support>``.
+  :file:`Kconfig` 通常会使用 ``HAS_<support>`` 形式的设置来指示给定的硬件支持。
 
   .. code-block:: kconfig
 
@@ -280,17 +225,14 @@ files for a SoC:
              select ARM
              select CPU_HAS_FPU
 
-  If the setting name is identical to an existing Kconfig setting in Zephyr and
-  only modifies the default value of said setting, then
-  :file:`Kconfig.defconfig` should be used  instead.
+  如果设置名称与 Zephyr 中现有的 Kconfig 设置相同,并且只修改该设置的默认值,则应改用 :file:`Kconfig.defconfig`。
 
 :file:`Kconfig.defconfig`
-  SoC specific default values for Kconfig options.
+  SoC 特定的 Kconfig 选项默认值。
 
-  Not all SoCs have a :file:`Kconfig.defconfig` file.
+  并非所有 SoC 都有 :file:`Kconfig.defconfig` 文件。
 
-  The entire file should be inside a pair of ``if SOC_<SOC_NAME>`` / ``endif``
-  or ``if SOC_SERIES_<SERIES_NAME>`` / ``endif``, like this:
+  整个文件应该在一对 ``if SOC_<SOC_NAME>`` / ``endif`` 或 ``if SOC_SERIES_<SERIES_NAME>`` / ``endif`` 内,像这样:
 
   .. code-block:: kconfig
 
@@ -301,15 +243,12 @@ files for a SoC:
 
      endif # SOC_<SOC_NAME>
 
-Multiple CPU clusters
-=====================
+多个 CPU 集群 (Multiple CPU clusters)
+======================================
 
-CPU clusters must provide additional Kconfig settings in the :file:`Kconfig.soc`
-file. This will usually be in the form of ``SOC_<SOC_NAME>_<CLUSTER>`` so for
-a given ``soc1`` with two clusters ``clusterA`` and ``clusterB``, then this
-will look like:
+CPU 集群必须在 :file:`Kconfig.soc` 文件中提供额外的 Kconfig 设置。这通常采用 ``SOC_<SOC_NAME>_<CLUSTER>`` 的形式,因此对于具有两个集群 ``clusterA`` 和 ``clusterB`` 的给定 ``soc1``,这将如下所示:
 
-SoC's When a SoC defines CPU cluster
+当 SoC 定义 CPU 集群时
 
   .. code-block:: kconfig
 

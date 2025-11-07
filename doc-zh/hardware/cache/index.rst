@@ -1,7 +1,7 @@
 .. _cache:
 
-Caching
-#######
+缓存 (Caching)
+##############
 
 .. toctree::
    :maxdepth: 1

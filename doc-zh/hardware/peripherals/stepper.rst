@@ -1,42 +1,35 @@
 .. _stepper_api:
 
-Steppers
-########
+步进器 (Steppers)
+##################
 
-The stepper driver API provides a set of functions for controlling and configuring stepper drivers.
+步进器驱动程序 API 提供了一组用于控制和配置步进器驱动程序的函数。
 
-Configure Stepper Driver
-========================
+配置步进器驱动程序 (Configure Stepper Driver)
+===============================================
 
-- Configure **micro-stepping resolution** using :c:func:`stepper_set_micro_step_res`
-  and :c:func:`stepper_get_micro_step_res`.
-- Configure **reference position** in microsteps using :c:func:`stepper_set_reference_position`
-  and :c:func:`stepper_get_actual_position`.
-- Set **step interval** in nanoseconds between steps using :c:func:`stepper_set_microstep_interval`
-- **Enable** the stepper driver using :c:func:`stepper_enable`.
-- **Disable** the stepper driver using :c:func:`stepper_disable`.
+- 使用 :c:func:`stepper_set_micro_step_res` 和 :c:func:`stepper_get_micro_step_res` 配置**微步分辨率**。
+- 使用 :c:func:`stepper_set_reference_position` 和 :c:func:`stepper_get_actual_position` 配置以微步为单位的**参考位置**。
+- 使用 :c:func:`stepper_set_microstep_interval` 设置步之间的**步进间隔**,以纳秒为单位。
+- 使用 :c:func:`stepper_enable` **启用**步进器驱动程序。
+- 使用 :c:func:`stepper_disable` **禁用**步进器驱动程序。
 
-Control Stepper
-===============
+控制步进器 (Control Stepper)
+==============================
 
-- **Move by** +/- micro-steps also known as **relative movement** using :c:func:`stepper_move_by`.
-- **Move to** a specific position also known as **absolute movement** using :c:func:`stepper_move_to`.
-- Run continuously with a **constant step interval** in a specific direction until
-  a stop is detected using :c:func:`stepper_run`.
-- **Stop** the stepper using :c:func:`stepper_stop`.
-- Check if the stepper is **moving** using :c:func:`stepper_is_moving`.
-- Register an **event callback** using :c:func:`stepper_set_event_callback`.
+- 使用 :c:func:`stepper_move_by` 进行 +/- 微步**移动**,也称为**相对移动**。
+- 使用 :c:func:`stepper_move_to` **移动到**特定位置,也称为**绝对移动**。
+- 使用 :c:func:`stepper_run` 以特定方向以**恒定步进间隔**连续运行,直到检测到停止。
+- 使用 :c:func:`stepper_stop` **停止**步进器。
+- 使用 :c:func:`stepper_is_moving` 检查步进器是否**正在移动**。
+- 使用 :c:func:`stepper_set_event_callback` 注册**事件回调**。
 
-Device Tree
-===========
+设备树 (Device Tree)
+=====================
 
-In the context of stepper controllers  device tree provides the initial hardware
-configuration for stepper drivers on a per device level. Each device must specify
-a device tree binding in Zephyr, and ideally, a set of hardware configuration options
-for things such as current settings, ramp parameters and furthermore. These can then
-be used in a boards devicetree to configure a stepper driver to its initial state.
+在步进器控制器的上下文中,设备树为每个设备级别的步进器驱动程序提供初始硬件配置。每个设备必须在 Zephyr 中指定设备树绑定,理想情况下,还应提供一组硬件配置选项,例如电流设置、斜坡参数等。然后,这些可以在板的设备树中用于将步进器驱动程序配置为其初始状态。
 
-See examples in:
+示例见:
 
 - :dtcompatible:`zephyr,h-bridge-stepper`
 - :dtcompatible:`adi,tmc50xx`
@@ -44,13 +37,12 @@ See examples in:
 Discord
 =======
 
-Zephyr has a `stepper discord`_ channel for stepper related discussions, which
-is open to all.
+Zephyr 有一个 `stepper discord`_ 频道用于步进器相关讨论,对所有人开放。
 
 .. _stepper-api-reference:
 
-Stepper API Test Suite
-======================
+步进器 API 测试套件 (Stepper API Test Suite)
+==============================================
 
 The stepper API test suite provides a set of tests that can be used to verify the functionality of
 stepper drivers.

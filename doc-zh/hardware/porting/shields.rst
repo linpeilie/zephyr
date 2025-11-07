@@ -1,18 +1,14 @@
 .. _shields:
 
-Shields
-#######
+Shields (屏蔽板/扩展板)
+########################
 
-Shields, also known as "add-on" or "daughter boards", attach to a board
-to extend its features and services for easier and modularized prototyping.
-In Zephyr, the shield feature provides Zephyr-formatted shield
-descriptions for easier compatibility with applications.
+Shields(也称为"附加板"或"子板")连接到板上以扩展其功能和服务,以便更轻松和模块化的原型设计。在 Zephyr 中,shield 功能提供 Zephyr 格式的 shield 描述,以便与应用程序更轻松地兼容。
 
-Shield activation
-*****************
+Shield 激活 (Shield activation)
+********************************
 
-Activate support for one or more shields by adding the matching ``--shield`` arguments
-to the west command:
+通过向 west 命令添加匹配的 ``--shield`` 参数来激活对一个或多个 shield 的支持:
 
   .. zephyr-app-commands::
      :app: your_app
@@ -21,44 +17,36 @@ to the west command:
      :goals: build
 
 
-Alternatively, it could be set by default in a project's CMakeLists.txt:
+或者,可以在项目的 CMakeLists.txt 中默认设置:
 
 .. code-block:: cmake
 
 	set(SHIELD x_nucleo_iks01a1)
 
 
-Shield interfaces
-*****************
+Shield 接口 (Shield interfaces)
+*********************************
 
-A shield is defined by two key characteristics:
+Shield 由两个关键特征定义:
 
-#. **Physical connectors** - the mechanical interface
-#. **Electrical signals** - what each pin actually does
+#. **物理连接器** - 机械接口
+#. **电信号** - 每个引脚实际执行的功能
 
-The connection between a shield and a board happens through Devicetree files:
+Shield 和板之间的连接通过 Devicetree 文件进行:
 
-- Board side: The board's devicetree file uses a :ref:`GPIO nexus node <gpio-nexus-node>` to map
-  connector pins to the microcontroller's actual GPIO pins. It also defines labels for buses exposed
-  through the connector (like ``arduino_i2c``, ``arduino_spi``, ``arduino_uart``).
+- 板侧: 板的 devicetree 文件使用 :ref:`GPIO nexus node <gpio-nexus-node>` 将连接器引脚映射到微控制器的实际 GPIO 引脚。它还为通过连接器公开的总线定义标签(如 ``arduino_i2c``、``arduino_spi``、``arduino_uart``)。
 
-- Shield side: The shield's .overlay file references these same labels to describe how its
-  components connect to the board.
+- Shield 侧: Shield 的 .overlay 文件引用这些相同的标签来描述其组件如何连接到板。
 
-At build time, the board's devicetree and the shield's overlay are combined to create a complete
-picture of the hardware setup.
+在构建时,板的 devicetree 和 shield 的 overlay 结合在一起,创建硬件设置的完整图像。
 
-For example, let's say you have a board with an Arduino connector but no built-in accelerometer.
-You can add one using an Arduino shield:
+例如,假设您有一个带有 Arduino 连接器但没有内置加速度计的板。您可以使用 Arduino shield 添加一个:
 
-#. The board's Devicetree defines an ``arduino_i2c`` label: it is the I2C bus made available on the
-   Arduino connector
+#. 板的 Devicetree 定义 ``arduino_i2c`` 标签: 它是 Arduino 连接器上可用的 I2C 总线
 
-#. The accelerometer shield's overlay file also references ``arduino_i2c`` to indicate it uses that
-   same I2C bus. If it needs to use GPIO pins from the connector, it references the GPIO nexus node
-   defined by the board's Devicetree (e.g. ``arduino_header``).
+#. 加速度计 shield 的 overlay 文件也引用 ``arduino_i2c`` 以指示它使用同一 I2C 总线。如果它需要使用连接器的 GPIO 引脚,它引用板的 Devicetree 定义的 GPIO nexus 节点(例如 ``arduino_header``)。
 
-When you then build for this board with this shield, Zephyr automatically "wires them" together.
+当您使用此 shield 为此板构建时,Zephyr 会自动"将它们连接"在一起。
 
 .. note::
 
@@ -69,19 +57,18 @@ When you then build for this board with this shield, Zephyr automatically "wires
 Arduino MKR
 -----------
 
-This is the form factor of the Arduino MKR boards.
+这是 Arduino MKR 板的外形尺寸。
 
 .. figure:: ../../../boards/arduino/mkrzero/doc/img/arduino_mkrzero.jpg
    :align: center
    :width: 200px
    :alt: Arduino MKR Zero
 
-   Arduino MKR Zero, an example of a board with the Arduino MKR shield interface
+   Arduino MKR Zero,具有 Arduino MKR shield 接口的板示例
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
-- ``arduino_mkr_header`` See :dtcompatible:`arduino-mkr-header` for details on GPIO pin definitions
-  and includes for use in devicetree files.
+- ``arduino_mkr_header`` 有关 GPIO 引脚定义和用于 devicetree 文件的包含的详细信息,请参阅 :dtcompatible:`arduino-mkr-header`。
 - ``arduino_mkr_i2c``
 - ``arduino_mkr_spi``
 - ``arduino_mkr_serial``
@@ -90,19 +77,18 @@ Relevant devicetree node labels:
 Arduino Nano
 ------------
 
-This is the form factor of the Arduino Nano boards.
+这是 Arduino Nano 板的外形尺寸。
 
 .. figure:: ../../../boards/arduino/nano_33_iot/doc/img/nano_33_iot.jpg
    :align: center
    :width: 300px
    :alt: Arduino Nano 33 IOT
 
-   Arduino Nano 33 IOT, an example of a board with the Arduino Nano shield interface
+   Arduino Nano 33 IOT,具有 Arduino Nano shield 接口的板示例
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
-- ``arduino_nano_header`` See :dtcompatible:`arduino-nano-header` for details on GPIO pin definitions
-  and includes for use in devicetree files.
+- ``arduino_nano_header`` 有关 GPIO 引脚定义和用于 devicetree 文件的包含的详细信息,请参阅 :dtcompatible:`arduino-nano-header`。
 - ``arduino_nano_i2c``
 - ``arduino_nano_spi``
 - ``arduino_nano_serial``
@@ -111,32 +97,31 @@ Relevant devicetree node labels:
 Arduino Uno R3
 --------------
 
-This is the form factor of the Arduino Uno R3 board.
+这是 Arduino Uno R3 板的外形尺寸。
 
 .. figure:: ../../../boards/shields/mcp2515/doc/keyestudio_can_bus_ks0411.jpg
    :align: center
    :width: 300px
    :alt: Keyestudio CAN-BUS Shield (KS0411)
 
-   Keyestudio CAN-BUS, an example of an Arduino shield (Credit: Keyestudio)
+   Keyestudio CAN-BUS,Arduino shield 示例(Credit: Keyestudio)
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
-- ``arduino_header`` See :dtcompatible:`arduino-header-r3` for details on GPIO pin definitions
-  and includes for use in devicetree files.
-- ``arduino_adc`` See :dtcompatible:`arduino,uno-adc`
-- ``arduino_pwm`` See :dtcompatible:`arduino-header-pwm`
+- ``arduino_header`` 有关 GPIO 引脚定义和用于 devicetree 文件的包含的详细信息,请参阅 :dtcompatible:`arduino-header-r3`。
+- ``arduino_adc`` 参阅 :dtcompatible:`arduino,uno-adc`
+- ``arduino_pwm`` 参阅 :dtcompatible:`arduino-header-pwm`
 - ``arduino_serial``
 - ``arduino_i2c``
 - ``arduino_spi``
 
-For technical details, see `Arduino Uno R3 pinout`_.
+有关技术细节,请参阅 `Arduino Uno R3 pinout`_。
 
 
-Camera and display connectors
------------------------------
+相机和显示器连接器 (Camera and display connectors)
+----------------------------------------------------
 
-These describe connections to cameras and displays (strictly speaking not shields).
+这些描述与相机和显示器的连接(严格来说不是 shield)。
 
 - :dtcompatible:`arducam,dvp-20pin-connector`
 - :dtcompatible:`nxp,cam-44pins-connector`
@@ -148,19 +133,19 @@ These describe connections to cameras and displays (strictly speaking not shield
 Feather
 -------
 
-This is the form factor of the Adafruit Feather series of boards.
-Shields intended for Feather boards are called Featherwings.
+这是 Adafruit Feather 系列板的外形尺寸。
+用于 Feather 板的 Shield 称为 Featherwing。
 
 .. figure:: ../../../boards/shields/adafruit_adalogger_featherwing/doc/adafruit_adalogger_featherwing.webp
    :align: center
    :width: 300px
    :alt: Adafruit Adalogger Featherwing Shield
 
-   Adafruit Adalogger, an example of a Featherwing (Credit: Adafruit)
+   Adafruit Adalogger,Featherwing 的一个示例 (Credit: Adafruit)
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
-- ``feather_header`` See :dtcompatible:`adafruit-feather-header` for GPIO pin definitions.
+- ``feather_header`` 有关 GPIO 引脚定义,请参阅 :dtcompatible:`adafruit-feather-header`。
 - ``feather_adc``
 - ``feather_i2c``
 - ``feather_serial``
@@ -170,59 +155,56 @@ Relevant devicetree node labels:
 Microbit
 --------
 
-This is for the edge connector of the Microbit boards.
+这适用于 Microbit 板的边缘连接器。
 
 .. figure::  ../../../boards/bbc/microbit_v2/doc/img/bbc_microbit2.jpg
    :align: center
    :width: 500px
    :alt: Microbit V2 board
 
-   Microbit V2 board uses the Microbit shield interface
+   Microbit V2 板使用 Microbit shield 接口
 
-See :dtcompatible:`microbit,edge-connector` for GPIO pin definitions and
-links to technical requirements.
+有关 GPIO 引脚定义和技术要求链接,请参阅 :dtcompatible:`microbit,edge-connector`。
 
 
 mikroBUS |trade|
 ----------------
 
-This is an interface standard for add-on boards, developed by Mikroe.
+这是一个由 Mikroe 开发的附加板接口标准。
 
 .. figure:: ../../../boards/shields/mikroe_3d_hall_3_click/doc/images/mikroe_3d_hall_3_click.webp
    :align: center
    :alt: 3D Hall 3 Click
    :height: 300px
 
-   3D Hall 3 Click, an example of a mikroBUS |trade| shield
+   3D Hall 3 Click,mikroBUS |trade| shield 的一个示例
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
-- ``mikrobus_header`` See :dtcompatible:`mikro-bus` for GPIO pin definitions and links to
-  technical specifications.
+- ``mikrobus_header`` 有关 GPIO 引脚定义和技术规范链接,请参阅 :dtcompatible:`mikro-bus`。
 - ``mikrobus_adc``
 - ``mikrobus_i2c``
 - ``mikrobus_spi``
 - ``mikrobus_serial``
 
-Note that boards with several mikroBUS |trade| connectors might define for
-example ``mikrobus_2_spi``.
+请注意,具有多个 mikroBUS |trade| 连接器的板可能会定义例如 ``mikrobus_2_spi``。
 
 
 Pico
 ----
 
-This is the form factor of the Raspberry Pi Pico boards.
+这是 Raspberry Pi Pico 板的外形尺寸。
 
 .. figure::  ../../../boards/shields/waveshare_ups/doc/waveshare_pico_ups_b.jpg
    :align: center
    :width: 300px
    :alt: Waveshare Pico UPS-B shield
 
-   Waveshare Pico UPS-B, an example of a Pico shield
+   Waveshare Pico UPS-B,Pico shield 的一个示例
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
-- ``pico_header`` See :dtcompatible:`raspberrypi,pico-header` for GPIO pin definitions.
+- ``pico_header`` 有关 GPIO 引脚定义,请参阅 :dtcompatible:`raspberrypi,pico-header`。
 - ``pico_i2c0``
 - ``pico_i2c1``
 - ``pico_serial``
@@ -232,19 +214,18 @@ Relevant devicetree node labels:
 ST Morpho
 ---------
 
-Development boards from ST Microelectronics often uses the ST Morpho shield interface.
+ST Microelectronics 的开发板通常使用 ST Morpho shield 接口。
 
 .. figure:: ../../../boards/shields/x_nucleo_gfx01m2/doc/x_nucleo_gfx01m2.webp
    :align: center
    :width: 300px
    :alt: X-NUCLEO-GFX01M2
 
-   X-NUCLEO-GFX01M2, an example of an ST Morpho shield
+   X-NUCLEO-GFX01M2,ST Morpho shield 的一个示例
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
-- ``st_morpho_header``  See :dtcompatible:`st-morpho-header` for details on GPIO pin definitions
-  and includes for use in devicetree files.
+- ``st_morpho_header`` 有关 GPIO 引脚定义详细信息和用于 devicetree 文件的包含,请参阅 :dtcompatible:`st-morpho-header`。
 - ``st_morpho_lcd_spi``
 - ``st_morpho_flash_spi``
 
@@ -252,18 +233,18 @@ Relevant devicetree node labels:
 Xiao
 ----
 
-This is the form factor of the Seeeduino XIAO boards.
+这是 Seeeduino XIAO 板的外形尺寸。
 
 .. figure:: ../../../boards/shields/seeed_xiao_expansion_board/doc/img/seeed_xiao_expansion_board.webp
      :align: center
      :width: 300px
      :alt: Seeed Studio XIAO Expansion Board
 
-     Seeed Studio XIAO Expansion Board, an example of a Xiao shield (Credit: Seeed Studio)
+     Seeed Studio XIAO Expansion Board,Xiao shield 的一个示例 (Credit: Seeed Studio)
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
-- ``xiao_d`` See :dtcompatible:`seeed,xiao-gpio` for GPIO pin definitions.
+- ``xiao_d`` 有关 GPIO 引脚定义,请参阅 :dtcompatible:`seeed,xiao-gpio`。
 - ``xiao_spi``
 - ``xiao_i2c``
 - ``xiao_serial``
@@ -274,34 +255,30 @@ Relevant devicetree node labels:
 zephyr_i2c / Stemma QT / Quiic
 ------------------------------
 
-These are four-pin I2C connectors. SparkFun calls these connectors "Qwiic", and Adafruit
-calls them "Stemma QT". The I2C connectors have four pins; GND, +3.3 Volt, I2C data and I2C
-clock. The most common physical connector is the 1.0 mm pitch JST-SH.
+这些是四引脚 I2C 连接器。SparkFun 将这些连接器称为"Qwiic",Adafruit 将其称为"Stemma QT"。I2C 连接器有四个引脚:GND、+3.3 Volt、I2C 数据和 I2C 时钟。最常见的物理连接器是 1.0 mm 间距的 JST-SH。
 
-Due to the different brand names, the interface is labeled "zephyr_i2c".
+由于不同的品牌名称,该接口被标记为"zephyr_i2c"。
 
 .. figure::  ../../../boards/shields/adafruit_vcnl4040/doc/adafruit_vcnl4040.webp
    :align: center
    :width: 200px
    :alt: Adafruit VCNL4040 Shield
 
-   Adafruit VCNL4040, an example of a zephyr_i2c shield (Credit: Adafruit)
+   Adafruit VCNL4040,zephyr_i2c shield 的一个示例 (Credit: Adafruit)
 
-See :dtcompatible:`stemma-qt-connector` and :dtcompatible:`grove-header` for descriptions
-and links to further details.
+有关描述和更多详细信息链接,请参阅 :dtcompatible:`stemma-qt-connector` 和 :dtcompatible:`grove-header`。
 
-Relevant devicetree node labels:
+相关的 devicetree 节点标签:
 
 - ``zephyr_i2c``
 
 
 .. _shield_porting_guide:
 
-Shield porting and configuration
-********************************
+Shield 移植和配置 (Shield porting and configuration)
+*****************************************************
 
-Shield configuration files are available in the board directory
-under :zephyr_file:`boards/shields`:
+Shield 配置文件在板目录 :zephyr_file:`boards/shields` 下可用:
 
 .. code-block:: none
 
@@ -312,21 +289,17 @@ under :zephyr_file:`boards/shields`:
    ├── Kconfig.defconfig
    └── pre_dt_shield.cmake
 
-These files provides shield configuration as follows:
+这些文件提供如下 shield 配置:
 
-* **shield.yml**: This file provides metadata about the shield in YAML format.
-  It must contain the following fields:
+* **shield.yml**: 此文件以 YAML 格式提供有关 shield 的元数据。
+  它必须包含以下字段:
 
-  * ``name``: Name of the shield used in Kconfig and build system (required)
-  * ``full_name``: Full commercial name of the shield (required)
-  * ``vendor``: Manufacturer/vendor of the shield (required)
-  * ``supported_features``: List of hardware features the shield supports (optional). In order to
-    help users identify the features a shield supports without having to dig into its overlay file,
-    the ``supported_features`` field can be used to list the types of features the shield supports.
-    The values should be the same as the ones defined in the
-    :zephyr_file:`dts/bindings/binding-types.txt` file.
+  * ``name``: 在 Kconfig 和构建系统中使用的 shield 名称(必需)
+  * ``full_name``: shield 的完整商业名称(必需)
+  * ``vendor``: shield 的制造商/供应商(必需)
+  * ``supported_features``: shield 支持的硬件特性列表(可选)。为了帮助用户识别 shield 支持的特性而无需深入研究其 overlay 文件,可以使用 ``supported_features`` 字段列出 shield 支持的特性类型。这些值应与 :zephyr_file:`dts/bindings/binding-types.txt` 文件中定义的值相同。
 
-  Example:
+  示例:
 
   .. code-block:: yaml
 
@@ -337,26 +310,15 @@ These files provides shield configuration as follows:
        - display
        - input
 
-* **<shield>.overlay**: This file provides a shield description in devicetree
-  format that is merged with the board's :ref:`devicetree <dt-guide>`
-  before compilation.
+* **<shield>.overlay**: 此文件以 devicetree 格式提供 shield 描述,在编译之前与板的 :ref:`devicetree <dt-guide>` 合并。
 
-* **Kconfig.shield**: This file defines shield Kconfig symbols that will be
-  used for default shield configuration. To ease use with applications,
-  the default shield configuration here should be consistent with those in
-  the :ref:`default_board_configuration`.
+* **Kconfig.shield**: 此文件定义将用于默认 shield 配置的 shield Kconfig 符号。为了便于与应用程序一起使用,此处的默认 shield 配置应与 :ref:`default_board_configuration` 中的配置保持一致。
 
-* **Kconfig.defconfig**: This file defines the default shield configuration. It
-  is made to be consistent with the :ref:`default_board_configuration`. Hence,
-  shield configuration should be done by keeping in mind that features
-  activation is application responsibility.
+* **Kconfig.defconfig**: 此文件定义默认的 shield 配置。它与 :ref:`default_board_configuration` 保持一致。因此,应该记住,功能激活是应用程序的责任。
 
-* **pre_dt_shield.cmake**: This optional file can be used to pass additional
-  arguments to the devicetree compiler ``dtc``.
+* **pre_dt_shield.cmake**: 此可选文件可用于向 devicetree 编译器 ``dtc`` 传递附加参数。
 
-Besides, in order to avoid name conflicts with devices that may be defined at
-board level, it is advised, specifically for shields devicetree descriptions,
-to provide a device nodelabel is the form <device>_<shield>, for instance:
+此外,为了避免与可能在板级定义的设备发生名称冲突,建议专门为 shield devicetree 描述提供形式为 <device>_<shield> 的设备节点标签,例如:
 
 .. code-block:: devicetree
 
@@ -365,50 +327,36 @@ to provide a device nodelabel is the form <device>_<shield>, for instance:
                 ...
         };
 
-Adding Source Code
-******************
+添加源代码 (Adding Source Code)
+********************************
 
-It is possible to add source code to shields, as a way to meet configuration
-requirements that are specific to the shield (e.g: initialization routines,
-timing constraints, etc), in order to enable it for proper operation with the
-different Zephyr components.
+可以向 shield 添加源代码,作为满足 shield 特定配置要求(例如:初始化例程、时序约束等)的一种方式,以便与不同的 Zephyr 组件正常运行。
 
 .. note::
 
-   Source code in shields shall not be used for purposes other than the
-   one described above. Generic functionalities that could be reused among
-   shields (and/or targets) shall not be captured here.
+   Shield 中的源代码不得用于上述目的以外的其他目的。可以在 shield(和/或目标)之间重用的通用功能不应在此处捕获。
 
-To effectively incorporate source code: add a :file:`CMakeLists.txt` file, as
-well as the corresponding source files (referenced in CMake similar to other
-areas of Zephyr, e.g: boards).
+要有效地合并源代码:添加 :file:`CMakeLists.txt` 文件以及相应的源文件(在 CMake 中引用,类似于 Zephyr 的其他区域,例如:板)。
 
-Board compatibility
-*******************
+板兼容性 (Board compatibility)
+********************************
 
-Hardware shield-to-board compatibility depends on the use of well-known
-connectors used on popular boards (such as Arduino and 96boards).  For
-software compatibility, boards must also provide a configuration matching
-their supported connectors.
+硬件 shield 到板的兼容性取决于在流行板上使用的知名连接器(例如 Arduino 和 96boards)的使用。对于软件兼容性,板还必须提供与其支持的连接器匹配的配置。
 
-This should be done at two different level:
+这应该在两个不同的级别完成:
 
-* Pinmux: Connector pins should be correctly configured to match shield pins
+* Pinmux: 连接器引脚应正确配置以匹配 shield 引脚
 
-* Devicetree: A board :ref:`devicetree <dt-guide>` file,
-  :file:`BOARD.dts` should define an alternate nodelabel for each connector interface.
-  For example, for Arduino I2C:
+* Devicetree: 板 :ref:`devicetree <dt-guide>` 文件 :file:`BOARD.dts` 应为每个连接器接口定义替代节点标签。例如,对于 Arduino I2C:
 
 .. code-block:: devicetree
 
         arduino_i2c: &i2c1 {};
 
-Board specific shield configuration
------------------------------------
+板特定的 shield 配置 (Board specific shield configuration)
+------------------------------------------------------------
 
-If modifications are needed to fit a shield to a particular board or board
-revision, you can override a shield description for a specific board by adding
-board or board revision overriding files to a shield, as follows:
+如果需要修改以使 shield 适应特定板或板修订版,您可以通过向 shield 添加板或板修订版覆盖文件来覆盖特定板的 shield 描述,如下所示:
 
 .. code-block:: none
 
@@ -421,11 +369,10 @@ board or board revision overriding files to a shield, as follows:
        └── <board>.conf
 
 
-Shield variants
-***************
+Shield 变体 (Shield variants)
+******************************
 
-Some shields may support several variants or revisions. In that case, it is
-possible to provide multiple version of the shields description:
+某些 shield 可能支持多个变体或修订版。在这种情况下,可以提供多个版本的 shield 描述:
 
 .. code-block:: none
 
@@ -435,15 +382,14 @@ possible to provide multiple version of the shields description:
    ├── <shield_v2>.overlay
    └── <shield_v2>.defconfig
 
-In this case, a shield-particular revision name can be used:
+在这种情况下,可以使用 shield 特定的修订版名称:
 
   .. zephyr-app-commands::
      :app: your_app
      :shield: shield_v2
      :goals: build
 
-You can also provide a board-specific configuration to a specific shield
-revision:
+您还可以为特定的 shield 修订版提供板特定的配置:
 
 .. code-block:: none
 
@@ -459,14 +405,10 @@ revision:
 
 .. _gpio-nexus-node:
 
-GPIO nexus nodes
-****************
+GPIO nexus 节点 (GPIO nexus nodes)
+***********************************
 
-GPIOs accessed by the shield peripherals must be identified using the
-shield GPIO abstraction, for example from the ``arduino-header-r3``
-compatible.  Boards that provide the header must map the header pins
-to SOC-specific pins.  This is accomplished by including a `nexus
-node`_ that looks like the following into the board devicetree file:
+Shield 外设访问的 GPIO 必须使用 shield GPIO 抽象来识别,例如来自 ``arduino-header-r3`` 兼容性。提供此接头的板必须将接头引脚映射到 SOC 特定的引脚。这是通过在板 devicetree 文件中包含如下所示的 `nexus node`_ 来实现的:
 
 .. _nexus node:
     https://github.com/devicetree-org/devicetree-specification/blob/4b1dac80eaca45b4babf5299452a951008a5d864/source/devicetree-basics.rst#nexus-nodes-and-specifier-mapping
@@ -502,29 +444,17 @@ node`_ that looks like the following into the board devicetree file:
                        <21 0 &gpiob 8 0>;   /* D15 */
     };
 
-This specifies how Arduino pin references like ``<&arduino_header 11
-0>`` are converted to SOC gpio pin references like ``<&gpiob 4 0>``.
+这指定了 Arduino 引脚引用(如 ``<&arduino_header 11 0>``)如何转换为 SOC GPIO 引脚引用(如 ``<&gpiob 4 0>``)。
 
-In Zephyr GPIO specifiers generally have two parameters (indicated by
-``#gpio-cells = <2>``): the pin number and a set of flags.  The low 6
-bits of the flags correspond to features that can be configured in
-devicetree.  In some cases it's necessary to use a non-zero flag value
-to tell the driver how a particular pin behaves, as with:
+在 Zephyr 中,GPIO 说明符通常有两个参数(由 ``#gpio-cells = <2>`` 指示):引脚号和一组标志。标志的低 6 位对应于可以在 devicetree 中配置的功能。在某些情况下,需要使用非零标志值来告诉驱动程序特定引脚的行为方式,例如:
 
 .. code-block:: devicetree
 
     drdy-gpios = <&arduino_header 11 GPIO_ACTIVE_LOW>;
 
-After preprocessing this becomes ``<&arduino_header 11 1>``.  Normally
-the presence of such a flag would cause the map lookup to fail,
-because there is no map entry with a non-zero flags value.  The
-``gpio-map-mask`` property specifies that, for lookup, all bits of the
-pin and all but the low 6 bits of the flags are used to identify the
-specifier.  Then the ``gpio-map-pass-thru`` specifies that the low 6
-bits of the flags are copied over, so the SOC GPIO reference becomes
-``<&gpiob 4 1>`` as intended.
+预处理后,这变为 ``<&arduino_header 11 1>``。通常,这种标志的存在会导致映射查找失败,因为没有具有非零标志值的映射条目。``gpio-map-mask`` 属性指定,对于查找,使用引脚的所有位和标志的除低 6 位之外的所有位来识别说明符。然后 ``gpio-map-pass-thru`` 指定复制标志的低 6 位,因此 SOC GPIO 引用按预期变为 ``<&gpiob 4 1>``。
 
-See `nexus node`_ for more information about this capability.
+有关此功能的更多信息,请参阅 `nexus node`_。
 
 
 .. _Arduino Uno R3 pinout:

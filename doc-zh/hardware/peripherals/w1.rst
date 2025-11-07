@@ -1,91 +1,68 @@
 .. _w1_api:
 
-1-Wire Bus
-##########
+1-Wire 总线 (1-Wire Bus)
+##########################
 
-Overview
-********
+概述 (Overview)
+****************
 
-1-Wire is a low speed half-duplex serial bus using only a single wire plus
-ground for both data transmission and device power supply.
-Similarly to I2C, 1-Wire uses a bidirectional open-collector data line,
-and is a single master multidrop bus. This means one master initiates all data
-exchanges with the slave devices.
-The 1-Wire bus supports longer bus lines than I2C, while it reaches speeds of up
-to 15.4 kbps in standard mode and up to 125 kbps in overdrive mode.
-Reliable communication in standard speed configuration is possible with 10 nodes
-over a bus length of 100 meters. Using overdrive speed, 3 nodes on a bus of
-10 meters length are expected to work solid. Optimized timing parameters and
-fewer nodes on the bus may allow to reach larger bus extents.
+1-Wire 是一种低速半双工串行总线,仅使用一根导线加地线进行数据传输和设备供电。与 I2C 类似,1-Wire 使用双向开集电极数据线,并且是单主机多点总线。这意味着一个主机启动与从设备的所有数据交换。1-Wire 总线支持比 I2C 更长的总线线路,而它在标准模式下可达到高达 15.4 kbps 的速度,在超速模式下可达到高达 125 kbps 的速度。在标准速度配置下,可以在 100 米长的总线上与 10 个节点进行可靠通信。使用超速,预计 10 米长总线上的 3 个节点可以稳定工作。优化的时序参数和总线上较少的节点可能允许达到更大的总线范围。
 
-The implementation details are specified in the `BOOK OF IBUTTON STANDARDS`_.
+实现细节在 `BOOK OF IBUTTON STANDARDS`_ 中指定。
 
 .. figure:: 1-Wire_bus_topology.drawio.svg
    :align: center
-   :alt: 1-Wire bus topology
+   :alt: 1-Wire 总线拓扑
 
-   A typical 1-Wire bus topology
+   典型的 1-Wire 总线拓扑
 
 
 .. _w1-master-api:
 
-W1 Master API
-=================
+W1 主机 API (W1 Master API)
+============================
 
-Zephyr's 1-Wire Master API is used to interact with 1-Wire slave devices like
-temperature sensors and serial memories.
+Zephyr 的 1-Wire 主机 API 用于与温度传感器和串行存储器等 1-Wire 从设备交互。
 
-In Zephyr this API is split into the following layers.
+在 Zephyr 中,此 API 分为以下层:
 
-* The link layer handles basic communication functions such as bus reset,
-  presence detect and bit transfer operations.
-  It is the only hardware-dependent layer in Zephyr.
-  This layer is supported by a driver using the Zephyr :ref:`uart_api` interface,
-  which should work on most Zephyr platforms.
-  In the future, a GPIO/Timer based driver and hardware specific drivers might
-  be added.
-* The 1-Wire network layer handles all means for slave identification and bus
-  arbitration.
-  This includes ROM commands like Match ROM, or Search ROM.
+* 链路层处理基本通信功能,例如总线复位、存在检测和位传输操作。它是 Zephyr 中唯一的硬件相关层。此层由使用 Zephyr :ref:`uart_api` 接口的驱动程序支持,该接口应在大多数 Zephyr 平台上工作。将来,可能会添加基于 GPIO/定时器的驱动程序和特定于硬件的驱动程序。
+* 1-Wire 网络层处理从机识别和总线仲裁的所有方法。这包括 ROM 命令,如 Match ROM 或 Search ROM。
 
-   * All slave devices have a unique 64-bit identification number, which
-     includes a 8-bit `1-Wire Family Code`_ and a 8-bit CRC.
-   * In order to find slaves on the bus, the standard specifies an search
-     algorithm which successively detects all slaves on the bus.
-     This algorithm is described in the `1-Wire Search Algorithm Application Note`_.
+   * 所有从设备都有一个唯一的 64 位识别号,其中包括一个 8 位 `1-Wire Family Code`_ 和一个 8 位 CRC。
+   * 为了在总线上查找从机,标准指定了一种搜索算法,该算法依次检测总线上的所有从机。此算法在 `1-Wire Search Algorithm Application Note`_ 中描述。
 
-* Transport layer and Presentation layer functions are not implemented in the
-  generic 1-Wire driver and therefore must be handled in individual slave drivers.
+* 传输层和表示层功能未在通用 1-Wire 驱动程序中实现,因此必须在各个从机驱动程序中处理。
 
-The 1-Wire API is considered experimental.
+1-Wire API 被视为实验性的。
 
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+*********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_W1`
 * :kconfig:option:`CONFIG_W1_NET`
 
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
-1-Wire data link layer
-======================
+1-Wire 数据链路层 (1-Wire data link layer)
+===========================================
 
 .. doxygengroup:: w1_data_link
 
-1-Wire network layer
-====================
+1-Wire 网络层 (1-Wire network layer)
+=====================================
 
 .. doxygengroup:: w1_network
 
-1-Wire generic functions and helpers
-====================================
+1-Wire 通用函数和辅助函数 (1-Wire generic functions and helpers)
+==================================================================
 
-Functions that are not directly related to any of the networking layers.
+与任何网络层不直接相关的函数。
 
 .. doxygengroup:: w1_interface
 

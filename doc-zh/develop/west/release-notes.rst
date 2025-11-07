@@ -1,77 +1,74 @@
 .. _west-release-notes:
 
-West Release Notes
-##################
+West 发布说明 (West Release Notes)
+###################################
 
 v1.5.0
 ******
 
-Major changes:
+主要变更 (Major changes):
 
-- Add support for auto-caching.
-  Pass the ``--auto-cache <directory>`` argument to ``west update``.
+- 添加对自动缓存的支持。
+  向 ``west update`` 传递 ``--auto-cache <directory>`` 参数。
 
-Other changes:
+其他变更 (Other changes):
 
-- Allow combining ``--name-cache`` and ``--path-cache`` for ``west update``.
+- 允许对 ``west update`` 同时使用 ``--name-cache`` 和 ``--path-cache``。
 
-- Document default revision value in the manifest schema.
+- 在清单模式中记录默认修订版本值。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- Allow empty or missing manifest projects list.
+- 允许空的或缺失的清单项目列表。
 
-- Make ``manifest.group-filter`` list order deterministic when freezing or resolving manifest files.
+- 在冻结或解析清单文件时,使 ``manifest.group-filter`` 列表顺序具有确定性。
 
 v1.4.0
 ******
 
-Changes:
+变更 (Changes):
 
-- Allow appending data to configuration strings.
-  To append to a value for ``<name>``, type: ``west config -a <name> <value>``.
+- 允许向配置字符串追加数据。
+  要向 ``<name>`` 的值追加数据,请输入: ``west config -a <name> <value>``。
 
-- Add ``--untracked`` argument option to ``west manifest``.
-  Run ``west manifest --untracked`` in a workspace to print all files and
-  directories that are not tracked or managed by west.
+- 向 ``west manifest`` 添加 ``--untracked`` 参数选项。
+  在工作空间中运行 ``west manifest --untracked`` 以打印所有未被 west 跟踪或管理的文件和目录。
 
-- Add ``--inactive`` argument option to ``west list`` to support printing inactive projects.
+- 向 ``west list`` 添加 ``--inactive`` 参数选项,以支持打印非活动项目。
 
-- Support ``--active-only`` argument option for the ``west manifest --resolve`` and
-  ``west manifest --freeze`` commands.
-  This allows freezing workspaces with active project or group filters.
+- 为 ``west manifest --resolve`` 和 ``west manifest --freeze`` 命令支持 ``--active-only`` 参数选项。
+  这允许冻结具有活动项目或组过滤器的工作空间。
 
-API changes:
+API 变更 (API changes):
 
-- ``west.manifest.Manifest`` methods ``as_dict()``, ``as_frozen_dict()``, ``as_yaml()`` and
-  ``as_frozen_yaml()`` now have an optional ``active_only`` argument (defaults to ``False``)
-  to return an object containing all projects or only the active ones.
+- ``west.manifest.Manifest`` 方法 ``as_dict()``、``as_frozen_dict()``、``as_yaml()`` 和
+  ``as_frozen_yaml()`` 现在有一个可选的 ``active_only`` 参数 (默认为 ``False``)
+  用于返回包含所有项目或仅包含活动项目的对象。
 
 v1.3.0
 ******
 
-Major changes:
+主要变更 (Major changes):
 
-- Added support for :ref:`west-aliases` commands.
+- 添加了对 :ref:`west-aliases` 命令的支持。
 
-- Adopt the `pyproject TOML specification`_ for packaging.
+- 采用 `pyproject TOML 规范`_ 进行打包。
 
 .. _pyproject TOML specification:
    https://packaging.python.org/en/latest/specifications/pyproject-toml/
 
-Other changes:
+其他变更 (Other changes):
 
-- Add cache support for submodules.
+- 为子模块添加缓存支持。
 
-- Decode manifest files as UTF-8 by default.
+- 默认将清单文件解码为 UTF-8。
 
-- Pass unknown arguments for ``west diff`` and ``west status`` to underlying ``git`` commands.
+- 将 ``west diff`` 和 ``west status`` 的未知参数传递给底层的 ``git`` 命令。
 
-- Added ``--manifest`` argument to ``west diff`` to allow comparing
-  the current workspace to the manifest revisions.
+- 向 ``west diff`` 添加 ``--manifest`` 参数,以允许将当前工作空间与清单修订版本进行比较。
 
-- Environment variables can be used with west forall
-  The following are defined:
+- 环境变量可以与 west forall 一起使用
+  定义了以下环境变量:
 
   - ``WEST_PROJECT_NAME``
   - ``WEST_PROJECT_PATH``
@@ -80,45 +77,42 @@ Other changes:
   - ``WEST_PROJECT_URL``
   - ``WEST_PROJECT_REMOTE``
 
-- Added support for early argument ``-q/--quiet`` to reduce verbosity.
+- 添加了对早期参数 ``-q/--quiet`` 的支持,以减少详细输出。
 
-- Added ``-o/--clone-opt`` argument to ``west init`` to pass to ``git clone``.
+- 向 ``west init`` 添加 ``-o/--clone-opt`` 参数,以传递给 ``git clone``。
 
-- Support Python 3.13 and drop support for Python 3.8.
+- 支持 Python 3.13 并放弃对 Python 3.8 的支持。
 
-- Prevent manifests from having projects in the ``.west`` directory.
+- 防止清单在 ``.west`` 目录中包含项目。
 
-- Add NTFS workarounds and ``--rename-delay`` for ``west init``.
+- 为 ``west init`` 添加 NTFS 变通方法和 ``--rename-delay``。
 
-- Print a stack trace when calling die in debug ``-vvv``.
+- 在调试模式 ``-vvv`` 中调用 die 时打印堆栈跟踪。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- Use ``'backslashreplace'`` not to crash on malformed UTF from subprocess.
+- 使用 ``'backslashreplace'`` 以避免在子进程输出格式错误的 UTF 时崩溃。
 
-- Fix handling in ``west diff`` for repositories with merge conflicts.
-  Additionally improve error printing and handle ``git diff`` return codes.
+- 修复了 ``west diff`` 在有合并冲突的仓库中的处理问题。
+  此外改进了错误打印并处理 ``git diff`` 返回代码。
 
-- Fix ``--freeze`` and ``--resolve`` for the ``west manifest`` command when git submodules are used.
+- 修复了当使用 git 子模块时 ``west manifest`` 命令的 ``--freeze`` 和 ``--resolve``。
 
 v1.2.0
 ******
 
-Major changes:
+主要变更 (Major changes):
 
-- New ``west grep`` command for running a "grep tool" in your west workspace's
-  repositories. Currently, ``git grep``, `ripgrep`_, and standard ``grep`` are
-  supported grep tools.
+- 新增 ``west grep`` 命令,用于在您的 west 工作空间的仓库中运行 "grep 工具"。
+  目前支持 ``git grep``、`ripgrep`_ 和标准 ``grep`` 作为 grep 工具。
 
-  To run this command to get ``git grep foo`` results from all cloned,
-  active repositories, run:
+  要运行此命令以从所有已克隆的活动仓库获取 ``git grep foo`` 结果,请运行:
 
   .. code-block:: console
 
      west grep foo
 
-  Here are some other examples for running different grep commands
-  with ``west grep``:
+  以下是使用 ``west grep`` 运行不同 grep 命令的其他示例:
 
   .. list-table::
 
@@ -129,8 +123,7 @@ Major changes:
      * - ``grep --recursive``
        - ``west grep --tool grep foo``
 
-  To switch the default grep tool in your workspace, run the appropriate
-  command in this table:
+  要在工作空间中切换默认的 grep 工具,请运行此表中的相应命令:
 
   .. list-table::
 
@@ -139,161 +132,137 @@ Major changes:
      * - ``grep``
        - ``west config grep.tool grep``
 
-  For more details, run ``west help grep``.
+  有关更多详细信息,请运行 ``west help grep``。
 
-Other changes:
+其他变更 (Other changes):
 
-- The manifest file format now supports a ``description`` field in each
-  ``projects:`` element. See :ref:`west-manifests-projects` for examples.
+- 清单文件格式现在支持在每个 ``projects:`` 元素中使用 ``description`` 字段。
+  请参阅 :ref:`west-manifests-projects` 以获取示例。
 
-- ``west list --format`` now accepts ``{description}`` in the format
-  string, which prints the project's ``description:`` value.
+- ``west list --format`` 现在在格式字符串中接受 ``{description}``,
+  用于打印项目的 ``description:`` 值。
 
-- ``west compare`` now always prints information about
-  :ref:`west-manifest-rev`.
+- ``west compare`` 现在总是打印关于 :ref:`west-manifest-rev` 的信息。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- ``west init`` aborts if the destination directory already exists.
+- 如果目标目录已经存在,``west init`` 会中止。
 
-API changes:
+API 变更 (API changes):
 
-- ``west.commands.WestCommand`` methods ``check_call()`` and
-  ``check_output()`` now take any kwargs that can be passed on
-  to the underlying subprocess function.
+- ``west.commands.WestCommand`` 方法 ``check_call()`` 和 ``check_output()``
+  现在可以接受任何可以传递给底层 subprocess 函数的 kwargs。
 
-- ``west.commands.WestCommand.run_subprocess()``: new wrapper
-  around ``subprocess.run()``. This could not be named ``run()``
-  because ``WestCommand`` already had a method by this name.
+- ``west.commands.WestCommand.run_subprocess()``: 围绕 ``subprocess.run()`` 的新包装器。
+  这不能命名为 ``run()``,因为 ``WestCommand`` 已经有一个同名方法。
 
-- ``west.commands.WestCommand`` methods ``dbg()``, ``inf()``,
-  ``wrn()``, and ``err()`` now all take an ``end`` kwarg, which
-  is passed on to the call to ``print()``.
+- ``west.commands.WestCommand`` 方法 ``dbg()``、``inf()``、``wrn()`` 和 ``err()``
+  现在都接受一个 ``end`` kwarg,它会被传递给 ``print()`` 调用。
 
-- ``west.manifest.Project`` now has a ``description`` attribute,
-  which contains the parsed value of the ``description:`` field
-  in the manifest data.
+- ``west.manifest.Project`` 现在有一个 ``description`` 属性,
+  其中包含清单数据中 ``description:`` 字段的解析值。
 
 .. _ripgrep: https://github.com/BurntSushi/ripgrep#readme
 
 v1.1.0
 ******
 
-Major changes:
+主要变更 (Major changes):
 
-- ``west compare``: new command that compares the state of the
-  workspace against the manifest.
+- ``west compare``: 新命令,用于比较工作空间的状态与清单。
 
-- Support for a new ``manifest.project-filter`` configuration option.
-  See :ref:`west-config-index` for details. The ``west manifest --freeze``
-  and ``west manifest --resolve`` commands currently cannot be used when
-  this option is set. This restriction can be removed in a later release.
+- 支持新的 ``manifest.project-filter`` 配置选项。
+  详见 :ref:`west-config-index`。当设置此选项时,目前无法使用
+  ``west manifest --freeze`` 和 ``west manifest --resolve`` 命令。
+  此限制可以在以后的版本中移除。
 
-- Project names which contain comma (``,``) or whitespace now generate
-  warnings. These warnings are errors if the new ``manifest.project-filter``
-  configuration option is set. The warnings may be promoted to errors in a
-  future major version of west.
+- 包含逗号 (``,``) 或空格的项目名称现在会生成警告。
+  如果设置了新的 ``manifest.project-filter`` 配置选项,这些警告将变为错误。
+  这些警告可能在 west 的未来主要版本中被提升为错误。
 
-Other changes:
+其他变更 (Other changes):
 
-- ``west forall`` now takese a ``--group`` argument that can be used
-  to restrict the command to only run in one or more groups. Run
-  ``west help forall`` for details.
+- ``west forall`` 现在接受一个 ``--group`` 参数,可用于将命令限制为仅在一个或多个组中运行。
+  运行 ``west help forall`` 以获取详细信息。
 
-- All west commands will now output log messages from west API modules at
-  warning level or higher. In addition, the ``--verbose`` argument to west
-  can be used once to include informational messages, or twice to include
-  debug messages, from all commands.
+- 所有 west 命令现在将以警告级别或更高级别输出来自 west API 模块的日志消息。
+  此外,west 的 ``--verbose`` 参数可以使用一次以包含信息性消息,
+  或使用两次以包含来自所有命令的调试消息。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- Various improvements to error messages, debug logging, and error handling.
+- 对错误消息、调试日志和错误处理的各种改进。
 
-API changes:
+API 变更 (API changes):
 
-- ``west.manifest.Manifest.is_active()`` now respects the
-  ``manifest.project-filter`` configuration option's value.
+- ``west.manifest.Manifest.is_active()`` 现在遵守 ``manifest.project-filter`` 配置选项的值。
 
 v1.0.1
 ******
 
-Major changes:
+主要变更 (Major changes):
 
-- Manifest schema version "1.0" is now available for use in this release. This
-  is identical to the "0.13" schema version in terms of features, but can be
-  used by applications that do not wish to use a "0.x" manifest "version:"
-  field. See :ref:`west-manifest-schema-version` for details on this feature.
+- 清单模式版本 "1.0" 现在可以在此版本中使用。这在功能上与 "0.13" 模式版本相同,
+  但可以被不希望使用 "0.x" 清单 "version:" 字段的应用程序使用。
+  有关此功能的详细信息,请参阅 :ref:`west-manifest-schema-version`。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- West no longer exits with a successful error code when sent an
-  interrupt signal. Instead, it exits with a platform-specific
-  error code and signals to the calling environment that the
-  process was interrupted.
+- West 在收到中断信号时不再以成功的错误代码退出。
+  相反,它以特定于平台的错误代码退出,并向调用环境发出进程被中断的信号。
 
 v1.0.0
 ******
 
-Major changes in this release:
+此版本的主要变更 (Major changes in this release):
 
-- The :ref:`west-apis` are now declared stable. Any breaking changes will be
-  communicated by a major version bump from v1.x.y to v2.x.y.
+- :ref:`west-apis` 现在被声明为稳定的。任何破坏性变更都将通过从 v1.x.y 到 v2.x.y 的主版本号提升来通知。
 
-- West v1.0 no longer works with the Zephyr v1.14 LTS releases. This LTS has
-  long been obsoleted by Zephyr v2.7 LTS. If you need to use Zephyr v1.14, you
-  must use west v0.14 or earlier.
+- West v1.0 不再适用于 Zephyr v1.14 LTS 版本。此 LTS 早已被 Zephyr v2.7 LTS 淘汰。
+  如果您需要使用 Zephyr v1.14,则必须使用 west v0.14 或更早版本。
 
-- Like the rest of Zephyr, west now requires Python v3.8 or later
+- 与 Zephyr 的其余部分一样,west 现在需要 Python v3.8 或更高版本
 
-- West commands no longer accept abbreviated command line arguments. For
-  example, you must now specify ``west update --keep-descendants`` instead of
-  using an abbreviation like ``west update --keep-d``. This is part of a change
-  applied to all of Zephyr's Python scripts' command-line interfaces. The
-  abbreviations were causing problems in practice when commands were updated to
-  add new options with similar names but different behavior to existing ones.
+- West 命令不再接受缩写的命令行参数。例如,您现在必须指定 ``west update --keep-descendants``
+  而不是使用像 ``west update --keep-d`` 这样的缩写。这是应用于所有 Zephyr 的 Python 脚本
+  命令行接口的更改的一部分。当命令被更新以添加与现有选项名称相似但行为不同的新选项时,
+  缩写在实践中会引起问题。
 
-Other changes:
+其他变更 (Other changes):
 
-- All built-in west functions have stopped using ``west.log``
+- 所有内置的 west 函数都已停止使用 ``west.log``
 
-- ``west update``: new ``--submodule-init-config`` option.
-  See commit `9ba92b05`_ for details.
+- ``west update``: 新增 ``--submodule-init-config`` 选项。
+  详见提交 `9ba92b05`_。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- West extension commands that failed to load properly sometimes dumped stack.
-  This has been fixed and west now prints a sensible error message in this case.
+- 有时无法正确加载的 West 扩展命令会转储堆栈。
+  这已被修复,west 现在在这种情况下打印合理的错误消息。
 
-- ``west config`` now fails on malformed configuration option arguments
-  which lack a ``.`` in the option name
+- ``west config`` 现在对缺少 ``.`` 的格式错误的配置选项参数会失败
 
-API changes:
+API 变更 (API changes):
 
-- The west package now contains the metadata files necessary for some static
-  analyzers (such as `mypy`_) to auto-detect its type annotations.
-  See commit `d9f00e24`_ for details.
+- west 包现在包含一些静态分析器(如 `mypy`_)自动检测其类型注解所需的元数据文件。
+  详见提交 `d9f00e24`_。
 
-- the deprecated ``west.build`` module used for Zephyr v1.14 LTS compatibility was
-  removed
+- 已移除用于 Zephyr v1.14 LTS 兼容性的已弃用 ``west.build`` 模块
 
-- the deprecated ``west.cmake`` module used for Zephyr v1.14 LTS compatibility was
-  removed
+- 已移除用于 Zephyr v1.14 LTS 兼容性的已弃用 ``west.cmake`` 模块
 
-- the ``west.log`` module is now deprecated. This module uses global state,
-  which can make it awkward to use it as an API which multiple different python
-  modules may rely on.
+- ``west.log`` 模块现在已弃用。此模块使用全局状态,
+  这可能使其作为多个不同 python 模块可能依赖的 API 使用起来很尴尬。
 
-- The :ref:`west-apis-commands` module got some new APIs which lay groundwork
-  for a future change to add a global verbosity control to a command's output,
-  and work to remove global state from the ``west`` package's API:
+- :ref:`west-apis-commands` 模块获得了一些新的 API,为将来添加命令输出的全局详细度控制
+  以及从 ``west`` 包的 API 中移除全局状态的工作奠定了基础:
 
-  - New ``west.commands.WestCommand.__init__()`` keyword argument: ``verbosity``
-  - New ``west.commands.WestCommand`` property: ``color_ui``
-  - New ``west.commands.WestCommand`` methods, which should be used to print output
-    from extension commands instead of writing directly to sys.stdout or
-    sys.stderr: ``inf()``, ``wrn()``, ``err()``, ``die()``, ``banner()``,
-    ``small_banner()``
-  - New ``west.commands.VERBOSITY`` enum
+  - 新增 ``west.commands.WestCommand.__init__()`` 关键字参数: ``verbosity``
+  - 新增 ``west.commands.WestCommand`` 属性: ``color_ui``
+  - 新增 ``west.commands.WestCommand`` 方法,应该使用这些方法从扩展命令打印输出,
+    而不是直接写入 sys.stdout 或 sys.stderr: ``inf()``、``wrn()``、``err()``、``die()``、
+    ``banner()``、``small_banner()``
+  - 新增 ``west.commands.VERBOSITY`` 枚举
 
 .. _9ba92b05: https://github.com/zephyrproject-rtos/west/commit/9ba92b054500d75518ff4c4646590bfe134db523
 .. _d9f00e24: https://github.com/zephyrproject-rtos/west/commit/d9f00e242b8cb297b56e941982adf231281c6bae
@@ -302,48 +271,41 @@ API changes:
 v0.14.0
 *******
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- West commands that were run with a bad local configuration file dumped stack
-  in a confusing way. This has been fixed and west now prints a sensible error
-  message in this case.
+- 使用错误的本地配置文件运行的 West 命令以令人困惑的方式转储堆栈。
+  这已被修复,west 现在在这种情况下打印合理的错误消息。
 
-- A bug in the way west looks for the zephyr repository was fixed. The bug
-  itself usually appeared when running an extension command like ``west build``
-  in a new workspace for the first time; this used to fail (just for the first
-  time, not on subsequent command invocations) unless you ran the command in
-  the workspace's top level directory.
+- 修复了 west 查找 zephyr 仓库的方式中的一个错误。该错误通常在新工作空间中
+  首次运行扩展命令(如 ``west build``)时出现;过去这会失败(仅在第一次,
+  而不是在后续命令调用时),除非您在工作空间的顶层目录中运行命令。
 
-- West now prints sensible error messages when the user lacks permission to
-  open the manifest file instead of dumping stack traces.
+- West 现在在用户缺少打开清单文件的权限时打印合理的错误消息,而不是转储堆栈跟踪。
 
-API changes:
+API 变更 (API changes):
 
-- The ``west.manifest.MalformedConfig`` exception type has been moved to the
-  ``west.configuration`` module
+- ``west.manifest.MalformedConfig`` 异常类型已移至 ``west.configuration`` 模块
 
-- The ``west.manifest.MalformedConfig`` exception type has been moved to the
-  :ref:`west.configuration <west-apis-configuration>` module
+- ``west.manifest.MalformedConfig`` 异常类型已移至
+  :ref:`west.configuration <west-apis-configuration>` 模块
 
-- The ``west.configuration.Configuration`` class now raises ``MalformedConfig``
-  instead of ``RuntimeError`` in some cases
+- ``west.configuration.Configuration`` 类现在在某些情况下引发 ``MalformedConfig``
+  而不是 ``RuntimeError``
 
 v0.13.1
 *******
 
-Bug fix:
+错误修复 (Bug fix):
 
-- When calling west.manifest.Manifest.from_file() when outside of a
-  workspace, west again falls back on the ZEPHYR_BASE environment
-  variable to locate the workspace.
+- 当在工作空间外调用 west.manifest.Manifest.from_file() 时,
+  west 再次回退到 ZEPHYR_BASE 环境变量以定位工作空间。
 
 v0.13.0
 *******
 
-New features:
+新功能 (New features):
 
-- You can now associate arbitrary user data with the manifest repository
-  itself in the ``manifest: self: userdata:`` value, like so:
+- 您现在可以在 ``manifest: self: userdata:`` 值中将任意用户数据与清单仓库本身关联,如下所示:
 
   .. code-block:: YAML
 
@@ -351,60 +313,51 @@ New features:
        self:
          userdata: <any YAML value can go here>
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- The path to the manifest repository reported by west could be incorrect in
-  certain circumstances detailed in [issue
-  #572](https://github.com/zephyrproject-rtos/west/issues/572). This has been
-  fixed as part of a larger overhaul of path handling support in the
-  ``west.manifest`` API module.
+- west 报告的清单仓库路径在某些情况下可能不正确,详见 [issue
+  #572](https://github.com/zephyrproject-rtos/west/issues/572)。
+  这已作为 ``west.manifest`` API 模块中路径处理支持的大规模改进的一部分得到修复。
 
-- The ``west.Manifest.ManifestProject.__repr__`` return value was fixed
+- ``west.Manifest.ManifestProject.__repr__`` 返回值已修复
 
-:ref:`API <west-apis>` changes:
+:ref:`API <west-apis>` 变更:
 
-- ``west.configuration.Configuration``: new object-oriented interface to the
-  current configuration. This reflects the system, global, and workspace-local
-  configuration values, and allows you to read, write, and delete configuration
-  options from any or all of these locations.
+- ``west.configuration.Configuration``: 当前配置的新的面向对象接口。
+  这反映了系统、全局和工作空间本地配置值,并允许您从这些位置中的任何或所有位置
+  读取、写入和删除配置选项。
 
 - ``west.commands.WestCommand``:
 
-  - ``config``: new attribute, returns a ``Configuration`` object or aborts the
-    program if none is set. This is always usable from within extension command
-    ``do_run()`` implementations.
-  - ``has_config``: new boolean attribute, which is ``True`` if and only if
-    reading ``self.config`` will abort the program.
+  - ``config``: 新属性,返回 ``Configuration`` 对象,如果未设置则中止程序。
+    这在扩展命令 ``do_run()`` 实现中始终可用。
+  - ``has_config``: 新的布尔属性,当且仅当读取 ``self.config`` 会中止程序时为 ``True``。
 
-- The path handling in the ``west.manifest`` package has been overhauled in a
-  backwards-incompatible way. For more details, see commit
-  [56cfe8d1d1](https://github.com/zephyrproject-rtos/west/commit/56cfe8d1d1f3c9b45de3e793c738acd62db52aca).
+- ``west.manifest`` 包中的路径处理已以向后不兼容的方式进行了全面改革。
+  有关更多详细信息,请参阅提交
+  [56cfe8d1d1](https://github.com/zephyrproject-rtos/west/commit/56cfe8d1d1f3c9b45de3e793c738acd62db52aca)。
 
-- ``west.manifest.Manifest.validate()``: this now returns the validated data as
-  a Python dict. This can be useful if the value passed to this function was a
-  str, and the dict is desired.
+- ``west.manifest.Manifest.validate()``: 现在将验证的数据作为 Python dict 返回。
+  如果传递给此函数的值是 str,并且需要 dict,这可能很有用。
 
-- ``west.manifest.Manifest``: new:
+- ``west.manifest.Manifest``: 新增:
 
-  - path attributes ``abspath``, ``posixpath``, ``relative_path``,
-    ``yaml_path``, ``repo_path``, ``repo_posixpath``
-  - ``userdata`` attribute, which contains the parsed value
-    from ``manifest: self: userdata:``, or is None
-  - ``from_topdir()`` factory method
+  - 路径属性 ``abspath``、``posixpath``、``relative_path``、
+    ``yaml_path``、``repo_path``、``repo_posixpath``
+  - ``userdata`` 属性,其中包含来自 ``manifest: self: userdata:`` 的解析值,或为 None
+  - ``from_topdir()`` 工厂方法
 
-- ``west.manifest.ManifestProject``: new ``userdata`` attribute, which also
-  contains the parsed value from ``manifest: self: userdata:``, or is None
+- ``west.manifest.ManifestProject``: 新增 ``userdata`` 属性,
+  它也包含来自 ``manifest: self: userdata:`` 的解析值,或为 None
 
-- ``west.manifest.ManifestImportFailed``: the constructor can now take any
-  value; this can be used to reflect failed imports from a :ref:`map
-  <west-manifest-import-map>` or other compound value.
+- ``west.manifest.ManifestImportFailed``: 构造函数现在可以接受任何值;
+  这可用于反映来自 :ref:`map <west-manifest-import-map>` 或其他复合值的失败导入。
 
-- Deprecated configuration APIs:
+- 已弃用的配置 API:
 
-  The following APIs are now deprecated in favor of using a ``Configuration``
-  object. Usually this will be done via ``self.config`` from a ``WestCommand``
-  instance, but this can be done directly by instantiating a ``Configuration``
-  object for other usages.
+  以下 API 现在已弃用,推荐使用 ``Configuration`` 对象。
+  通常这将通过 ``WestCommand`` 实例的 ``self.config`` 完成,
+  但也可以通过直接实例化 ``Configuration`` 对象来完成其他用途。
 
   - ``west.configuration.config``
   - ``west.configuration.read_config``
@@ -414,72 +367,62 @@ Bug fixes:
 v0.12.0
 *******
 
-New features:
+新功能 (New features):
 
-- West now works on the `MSYS2 <https://www.msys2.org/>`_ platform.
+- West 现在可以在 `MSYS2 <https://www.msys2.org/>`_ 平台上工作。
 
-- West manifest files can now contain arbitrary user data associated with each
-  project. See :ref:`west-project-userdata` for details.
+- West 清单文件现在可以包含与每个项目关联的任意用户数据。
+  详见 :ref:`west-project-userdata`。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- The ``west list`` command's ``{sha}`` format key has been fixed for
-  the manifest repository; it now prints ``N/A`` ("not applicable")
-  as expected.
+- ``west list`` 命令的 ``{sha}`` 格式键已针对清单仓库进行了修复;
+  它现在按预期打印 ``N/A`` ("不适用")。
 
-:ref:`API <west-apis>` changes:
+:ref:`API <west-apis>` 变更:
 
-- The ``west.manifest.Project.userdata`` attribute was added to support
-  project user data.
+- 添加了 ``west.manifest.Project.userdata`` 属性以支持项目用户数据。
 
 v0.11.1
 *******
 
-New features:
+新功能 (New features):
 
-- ``west status`` now only prints output for projects which have a nonempty
-  status.
+- ``west status`` 现在仅打印具有非空状态的项目的输出。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- The manifest file parser was incorrectly allowing project names which contain
-  the path separator characters ``/`` and ``\``. These invalid characters are
-  now rejected.
+- 清单文件解析器错误地允许包含路径分隔符字符 ``/`` 和 ``\`` 的项目名称。
+  这些无效字符现在被拒绝。
 
-  Note: if you need to place a project within a subdirectory of the workspace
-  topdir, use the ``path:`` key. If you need to customize a project's fetch URL
-  relative to its remote ``url-base:``, use ``repo-path:``. See
-  :ref:`west-manifests-projects` for examples.
+  注意: 如果您需要将项目放置在工作空间 topdir 的子目录中,请使用 ``path:`` 键。
+  如果您需要相对于其远程 ``url-base:`` 自定义项目的获取 URL,请使用 ``repo-path:``。
+  请参阅 :ref:`west-manifests-projects` 以获取示例。
 
-- The changes made in west v0.10.1 to the ``west init --manifest-rev`` option
-  which selected the default branch name were leaving the manifest repository
-  in a detached HEAD state. This has been fixed by using ``git clone`` internally
-  instead of ``git init`` and ``git fetch``. See `issue #522`_ for details.
+- west v0.10.1 中对 ``west init --manifest-rev`` 选项所做的更改(选择默认分支名称)
+  会使清单仓库处于分离的 HEAD 状态。这已通过在内部使用 ``git clone`` 而不是
+  ``git init`` 和 ``git fetch`` 得到修复。详见 `issue #522`_。
 
-- The ``WEST_CONFIG_LOCAL`` environment variable now correctly
-  overrides the default location, :file:`<workspace topdir>/.west/config`.
+- ``WEST_CONFIG_LOCAL`` 环境变量现在可以正确覆盖默认位置
+  :file:`<workspace topdir>/.west/config`。
 
-- ``west update --fetch=smart`` (``smart`` is the default) now correctly skips
-  fetches for project revisions which are `lightweight tags`_ (it already
-  worked correctly for annotated tags; only lightweight tags were unnecessarily
-  fetched).
+- ``west update --fetch=smart`` (``smart`` 是默认值) 现在可以正确跳过对
+  `lightweight tags`_ 的项目修订版本的获取(它已经对 annotated tags 正确工作;
+  只有 lightweight tags 被不必要地获取)。
 
-Other changes:
+其他变更 (Other changes):
 
-- The fix for issue #522 mentioned above introduces a new restriction. The
-  ``west init --manifest-rev`` option value, if given, must now be either a
-  branch or a tag. In particular, "pseudo-branches" like GitHub's
-  ``pull/1234/head`` references which could previously be used to fetch a pull
-  request can no longer be passed to ``--manifest-rev``. Users must now fetch
-  and check out such revisions manually after running ``west init``.
+- 上面提到的对 issue #522 的修复引入了一个新的限制。
+  ``west init --manifest-rev`` 选项值(如果给定)现在必须是分支或标签。
+  特别是,GitHub 的 ``pull/1234/head`` 引用等 "伪分支"(以前可用于获取拉取请求)
+  不能再传递给 ``--manifest-rev``。用户现在必须在运行 ``west init`` 后手动获取和检出此类修订版本。
 
-:ref:`API <west-apis>` changes:
+:ref:`API <west-apis>` 变更:
 
-- ``west.manifest.Manifest.get_projects()`` avoids incorrect results in
-  some edge cases described in `issue #523`_.
+- ``west.manifest.Manifest.get_projects()`` 避免了 `issue #523`_ 中描述的某些边缘情况的错误结果。
 
-- ``west.manifest.Project.sha()`` now works correctly for tag revisions.
-  (This applies to both lightweight and annotated tags.)
+- ``west.manifest.Project.sha()`` 现在对标签修订版本正确工作。
+  (这适用于 lightweight tags 和 annotated tags。)
 
 .. _lightweight tags: https://git-scm.com/book/en/v2/Git-Basics-Tagging
 .. _issue #522: https://github.com/zephyrproject-rtos/west/issues/522
@@ -488,89 +431,75 @@ Other changes:
 v0.11.0
 *******
 
-New features:
+新功能 (New features):
 
-- ``west update`` now supports ``--narrow``, ``--name-cache``, and
-  ``--path-cache`` options. These can be influenced by the ``update.narrow``,
-  ``update.name-cache``, and ``update.path-cache`` :ref:`west-config` options.
-  These can be used to optimize the speed of the update.
-- ``west update`` now supports a ``--fetch-opt`` option that will be passed to
-  the ``git fetch`` command used to fetch remote revisions when updating each
-  project.
+- ``west update`` 现在支持 ``--narrow``、``--name-cache`` 和 ``--path-cache`` 选项。
+  这些可以通过 ``update.narrow``、``update.name-cache`` 和 ``update.path-cache``
+  :ref:`west-config` 选项来影响。这些可用于优化更新速度。
+- ``west update`` 现在支持 ``--fetch-opt`` 选项,该选项将传递给用于在更新每个项目时
+  获取远程修订版本的 ``git fetch`` 命令。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- ``west update`` now synchronizes Git submodules in projects by default. This
-  avoids issues if the URL changes in the manifest file from when the submodule
-  was first initialized. This behavior can be disabled by setting the
-  ``update.sync-submodules`` configuration option to ``false``.
+- ``west update`` 现在默认同步项目中的 Git 子模块。
+  如果清单文件中的 URL 从子模块首次初始化时发生了变化,这可以避免问题。
+  可以通过将 ``update.sync-submodules`` 配置选项设置为 ``false`` 来禁用此行为。
 
-Other changes:
+其他变更 (Other changes):
 
-- the :ref:`west-apis-manifest` module has fixed docstrings for the Project
-  class
+- :ref:`west-apis-manifest` 模块为 Project 类修复了文档字符串
 
 v0.10.1
 *******
 
-New features:
+新功能 (New features):
 
-- The :ref:`west-init` command's ``--manifest-rev`` (``--mr``) option no longer
-  defaults to ``master``. Instead, the command will query the repository for
-  its default branch name and use that instead. This allows users to move from
-  ``master`` to ``main`` without breaking scripts that do not provide this
-  option.
+- :ref:`west-init` 命令的 ``--manifest-rev`` (``--mr``) 选项不再默认为 ``master``。
+  相反,该命令将查询仓库以获取其默认分支名称并使用它。这允许用户从 ``master``
+  迁移到 ``main`` 而不会破坏不提供此选项的脚本。
 
 .. _west_0_10_0:
 
 v0.10.0
 *******
 
-New features:
+新功能 (New features):
 
-- The ``name`` key in a project's :ref:`submodules list
-  <west-manifest-submodules>` is now optional.
+- 项目的 :ref:`submodules list <west-manifest-submodules>` 中的 ``name`` 键现在是可选的。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- West now checks that the manifest schema version is one of the explicitly
-  allowed values documented in :ref:`west-manifest-schema-version`. The old
-  behavior was just to check that the schema version was newer than the west
-  version where the ``manifest: version:`` key was introduced. This incorrectly
-  allowed invalid schema versions, like ``0.8.2``.
+- West 现在检查清单模式版本是否为 :ref:`west-manifest-schema-version` 中记录的明确允许的值之一。
+  旧行为只是检查模式版本是否比引入 ``manifest: version:`` 键的 west 版本更新。
+  这错误地允许了无效的模式版本,如 ``0.8.2``。
 
-Other changes:
+其他变更 (Other changes):
 
-- A manifest file's ``group-filter`` is now propagated through an ``import``.
-  This is a change from how west v0.9.x handled this. In west v0.9.x, only the
-  top level manifest file's ``group-filter`` had any effect; the group filter
-  lists from any imported manifests were ignored.
+- 清单文件的 ``group-filter`` 现在通过 ``import`` 传播。
+  这是与 west v0.9.x 处理方式的变更。在 west v0.9.x 中,只有顶层清单文件的
+  ``group-filter`` 有效;来自任何导入的清单的组过滤器列表被忽略。
 
-  Starting with west v0.10.0, the group filter lists from imported manifests
-  are also imported. For details, see :ref:`west-group-filter-imports`.
+  从 west v0.10.0 开始,来自导入清单的组过滤器列表也会被导入。
+  有关详细信息,请参阅 :ref:`west-group-filter-imports`。
 
-  The new behavior will take effect if ``manifest: version:`` is not given or
-  is at least ``0.10``. The old behavior is still available in the top level
-  manifest file only with an explicit ``manifest: version: 0.9``. See
-  :ref:`west-manifest-schema-version` for more information on schema versions.
+  如果未给定 ``manifest: version:`` 或至少为 ``0.10``,则新行为将生效。
+  旧行为仍可在顶层清单文件中通过显式的 ``manifest: version: 0.9`` 使用。
+  有关模式版本的更多信息,请参阅 :ref:`west-manifest-schema-version`。
 
-  See `west pull request #482
-  <https://github.com/zephyrproject-rtos/west/pull/482>`_ for the motivation
-  for this change and additional context.
+  有关此更改的动机和附加上下文,请参阅 `west pull request #482
+  <https://github.com/zephyrproject-rtos/west/pull/482>`_。
 
 v0.9.1
 ******
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- Commands like ``west manifest --resolve`` now correctly include group and
-  group filter information.
+- 像 ``west manifest --resolve`` 这样的命令现在可以正确包含组和组过滤器信息。
 
-Other changes:
+其他变更 (Other changes):
 
-- West now warns if you combine ``import`` with ``group-filter``. Semantics for
-  this combination have changed starting with v0.10.x. See the v0.10.0 release
-  notes above for more information.
+- 如果您将 ``import`` 与 ``group-filter`` 结合使用,West 现在会发出警告。
+  从 v0.10.x 开始,此组合的语义已更改。有关更多信息,请参阅上面的 v0.10.0 发布说明。
 
 .. _west_0_9_0:
 
@@ -579,279 +508,233 @@ v0.9.0
 
 .. warning::
 
-   The ``west config`` fix described below comes at a cost: any comments or
-   other manual edits in configuration files will be removed when setting a
+   下面描述的 ``west config`` 修复是有代价的: 通过该命令或 ``west.configuration`` API
+   设置配置选项时,配置文件中的任何注释或其他手动编辑都将被删除。
    configuration option via that command or the ``west.configuration`` API.
 
 .. warning::
 
-   Combining the ``group-filter`` feature introduced in this release with
-   manifest imports is discouraged. The resulting behavior has changed in west
-   v0.10.
+   不建议将此版本中引入的 ``group-filter`` 功能与清单导入结合使用。
+   从 west v0.10 开始,生成的行为已更改。
 
-New features:
+新功能 (New features):
 
-- West manifests now support :ref:`west-manifest-submodules`. This allows you
-  to clone `Git submodules
-  <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_ into a west project
-  repository in addition to the project repository itself.
+- West 清单现在支持 :ref:`west-manifest-submodules`。这允许您将 `Git 子模块
+  <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_ 克隆到 west 项目仓库中,
+  以及项目仓库本身。
 
-- West manifests now support :ref:`west-manifest-groups`. Project groups can be
-  enabled and disabled to determine what projects are "active", and therefore
-  will be acted upon by the following commands: ``west update``, ``west list``,
-  ``west diff``, ``west status``, ``west forall``.
+- West 清单现在支持 :ref:`west-manifest-groups`。可以启用和禁用项目组来确定哪些项目是 "活动的",
+  因此将受以下命令影响: ``west update``、``west list``、``west diff``、``west status``、
+  ``west forall``。
 
-- ``west update`` no longer updates inactive projects by default. It now
-  supports a ``--group-filter`` option which allows for one-time modifications
-  to the set of enabled and disabled project groups.
+- ``west update`` 默认情况下不再更新非活动项目。它现在支持 ``--group-filter`` 选项,
+  该选项允许对启用和禁用的项目组集合进行一次性修改。
 
-- Running ``west list``, ``west diff``, ``west status``, or ``west forall``
-  with no arguments does not print information for inactive projects by
-  default. If the user specifies a list of projects explicitly at the command
-  line, output for them is included regardless of whether they are active.
+- 不带参数运行 ``west list``、``west diff``、``west status`` 或 ``west forall``
+  默认情况下不会打印非活动项目的信息。如果用户在命令行明确指定项目列表,
+  则无论它们是否处于活动状态,都会包含它们的输出。
 
-  These commands also now support ``--all`` arguments to include all
-  projects, even inactive ones.
+  这些命令现在还支持 ``--all`` 参数以包含所有项目,即使是非活动项目。
 
-- ``west list`` now supports a ``{groups}`` format string key in its
-  ``--format`` argument.
+- ``west list`` 现在在其 ``--format`` 参数中支持 ``{groups}`` 格式字符串键。
 
-Bug fixes:
+错误修复 (Bug fixes):
 
-- The ``west config`` command and ``west.configuration`` API did not correctly
-  store some configuration values, such as strings which contain commas. This
-  has been fixed; see `commit 36f3f91e
-  <https://github.com/zephyrproject-rtos/west/commit/36f3f91e270782fb05f6da13800f433a9c48f130>`_
-  for details.
+- ``west config`` 命令和 ``west.configuration`` API 未正确存储某些配置值,
+  例如包含逗号的字符串。这已被修复;详见 `commit 36f3f91e
+  <https://github.com/zephyrproject-rtos/west/commit/36f3f91e270782fb05f6da13800f433a9c48f130>`_。
 
-- A manifest file with an empty ``manifest: self: path:`` value is invalid, but
-  west used to let it pass silently. West now rejects such manifests.
+- 具有空 ``manifest: self: path:`` 值的清单文件是无效的,
+  但 west 过去会默默地让它通过。West 现在拒绝此类清单。
 
-- A bug affecting the behavior of the ``west init -l .`` command was fixed; see
-  `issue #435 <https://github.com/zephyrproject-rtos/west/issues/435>`_.
+- 修复了影响 ``west init -l .`` 命令行为的错误;请参阅
+  `issue #435 <https://github.com/zephyrproject-rtos/west/issues/435>`_。
 
-:ref:`API <west-apis>` changes:
+:ref:`API <west-apis>` 变更:
 
-- added ``west.manifest.Manifest.is_active()``
-- added ``west.manifest.Manifest.group_filter``
-- added ``submodules`` attribute to ``west.manifest.Project``, which has
-  newly added type ``west.manifest.Submodule``
+- 添加了 ``west.manifest.Manifest.is_active()``
+- 添加了 ``west.manifest.Manifest.group_filter``
+- 向 ``west.manifest.Project`` 添加了 ``submodules`` 属性,
+  其新添加的类型为 ``west.manifest.Submodule``
 
-Other changes:
+其他变更 (Other changes):
 
-- The :ref:`west-manifest-import` feature now supports the terms ``allowlist``
-  and ``blocklist`` instead of ``whitelist`` and ``blacklist``, respectively.
+- :ref:`west-manifest-import` 功能现在支持术语 ``allowlist`` 和 ``blocklist``,
+  分别代替 ``whitelist`` 和 ``blacklist``。
 
-  The old terms are still supported for compatibility, but the documentation
-  has been updated to use the new ones exclusively.
+  为了兼容性,仍支持旧术语,但文档已更新为专门使用新术语。
 
 v0.8.0
 ******
 
-This is a feature release which changes the manifest schema by adding support
-for a ``path-prefix:`` key in an ``import:`` mapping, along with some other
-features and fixes.
+这是一个功能版本,通过在 ``import:`` 映射中添加对 ``path-prefix:`` 键的支持,
+更改了清单模式,以及一些其他功能和修复。
 
-- Manifest import mappings now support a ``path-prefix:`` key, which places
-  the project and its imported repositories in a subdirectory of the workspace.
-  See :ref:`west-manifest-ex3.4` for an example.
-- The west command line application can now also be run using ``python3 -m
-  west``. This makes it easier to run west under a particular Python
-  interpreter without modifying the :envvar:`PATH` environment variable.
-- :ref:`west manifest --path <west-manifest-path>` prints the absolute path to
-  west.yml
-- ``west init`` now supports an ``--mf foo.yml`` option, which initializes the
-  workspace using :file:`foo.yml` instead of :file:`west.yml`.
-- ``west list`` now prints the manifest repository's path using the
-  ``manifest.path`` :ref:`configuration option <west-config>`, which may differ
-  from the ``self: path:`` value in the manifest data. The old behavior is
-  still available, but requires passing a new ``--manifest-path-from-yaml``
-  option.
-- Various Python API changes; see :ref:`west-apis` for details.
+- 清单导入映射现在支持 ``path-prefix:`` 键,它将项目及其导入的仓库放置在工作空间的子目录中。
+  请参阅 :ref:`west-manifest-ex3.4` 以获取示例。
+- west 命令行应用程序现在也可以使用 ``python3 -m west`` 运行。
+  这使得在不修改 :envvar:`PATH` 环境变量的情况下在特定的 Python 解释器下运行 west 变得更加容易。
+- :ref:`west manifest --path <west-manifest-path>` 打印 west.yml 的绝对路径
+- ``west init`` 现在支持 ``--mf foo.yml`` 选项,它使用 :file:`foo.yml`
+  而不是 :file:`west.yml` 初始化工作空间。
+- ``west list`` 现在使用 ``manifest.path`` :ref:`配置选项 <west-config>` 打印清单仓库的路径,
+  这可能与清单数据中的 ``self: path:`` 值不同。旧行为仍然可用,
+  但需要传递新的 ``--manifest-path-from-yaml`` 选项。
+- 各种 Python API 变更;详见 :ref:`west-apis`。
 
 v0.7.3
 ******
 
-This is a bugfix release.
+这是一个错误修复版本。
 
-- Fix an error where a failed import could leave the workspace in an unusable
-  state (see [PR #415](https://github.com/zephyrproject-rtos/west/pull/415) for
-  details)
+- 修复了失败的导入可能使工作空间处于不可用状态的错误
+  (详见 [PR #415](https://github.com/zephyrproject-rtos/west/pull/415))
 
 v0.7.2
 ******
 
-This is a bugfix and minor feature release.
+这是一个错误修复和次要功能版本。
 
-- Filter out duplicate extension commands brought in by manifest imports
-- Fix ``west.Manifest.get_projects()`` when finding the manifest repository by
-  path
+- 过滤掉由清单导入带来的重复扩展命令
+- 修复了在通过路径查找清单仓库时的 ``west.Manifest.get_projects()``
 
 v0.7.1
 ******
 
-This is a bugfix and minor feature release.
+这是一个错误修复和次要功能版本。
 
-- ``west update --stats`` now prints timing for operations which invoke a
-  subprocess, time spent in west's Python process for each project, and total
-  time updating each project.
-- ``west topdir`` always prints a POSIX style path
-- minor console output changes
+- ``west update --stats`` 现在打印调用子进程的操作的计时、
+  每个项目在 west 的 Python 进程中花费的时间以及更新每个项目的总时间。
+- ``west topdir`` 总是打印 POSIX 风格的路径
+- 次要的控制台输出更改
 
 v0.7.0
 ******
 
-The main user-visible feature in west 0.7 is the :ref:`west-manifest-import`
-feature. This allows users to load west manifest data from multiple different
-files, resolving the results into a single logical manifest.
+west 0.7 中主要的用户可见功能是 :ref:`west-manifest-import` 功能。
+这允许用户从多个不同的文件加载 west 清单数据,将结果解析为单个逻辑清单。
 
-Additional user-visible changes:
+其他用户可见的变更:
 
-- The idea of a "west installation" has been renamed to "west workspace" in
-  this documentation and in the west API documentation. The new term seems to
-  be easier for most people to work with than the old one.
-- West manifests now support a :ref:`schema version
-  <west-manifest-schema-version>`.
-- The "west config" command can now be run outside of a workspace, e.g.
-  to run ``west config --global section.key value`` to set a configuration
-  option's value globally.
-- There is a new :ref:`west topdir <west-built-in-misc>` command, which
-  prints the root directory of the current west workspace.
-- The ``west -vv init`` command now prints the git operations being performed,
-  and their results.
-- The restriction that no project can be named "manifest" is now enforced; the
-  name "manifest" is reserved for the manifest repository, and is usable as
-  such in commands like ``west list manifest``, instead of ``west list
-  path-to-manifest-repository`` being the only way to say that
-- It's no longer an error if there is no project named "zephyr". This is
-  part of an effort to make west generally usable for non-Zephyr use cases.
-- Various bug fixes.
+- "west 安装" 的概念在本文档和 west API 文档中已重命名为 "west 工作空间"。
+  新术语似乎对大多数人来说比旧术语更容易使用。
+- West 清单现在支持 :ref:`模式版本 <west-manifest-schema-version>`。
+- "west config" 命令现在可以在工作空间外运行,例如运行
+  ``west config --global section.key value`` 来全局设置配置选项的值。
+- 有一个新的 :ref:`west topdir <west-built-in-misc>` 命令,
+  它打印当前 west 工作空间的根目录。
+- ``west -vv init`` 命令现在打印正在执行的 git 操作及其结果。
+- 现在强制执行没有项目可以命名为 "manifest" 的限制;名称 "manifest"
+  为清单仓库保留,并且可以在诸如 ``west list manifest`` 之类的命令中使用,
+  而不是 ``west list path-to-manifest-repository`` 是唯一的方式
+- 如果没有名为 "zephyr" 的项目不再是错误。这是使 west 普遍适用于非 Zephyr 用例的努力的一部分。
+- 各种错误修复。
 
-The developer-visible changes to the :ref:`west-apis` are:
+对 :ref:`west-apis` 的开发人员可见的变更:
 
-- west.build and west.cmake: deprecated; this is Zephyr-specific functionality
-  and should never have been part of west. Since Zephyr v1.14 LTS relies on it,
-  it will continue to be included in the distribution, but will be removed
-  when that version of Zephyr is obsoleted.
+- west.build 和 west.cmake: 已弃用;这是 Zephyr 特定的功能,
+  本不应该是 west 的一部分。由于 Zephyr v1.14 LTS 依赖它,
+  它将继续包含在发行版中,但将在该版本的 Zephyr 被淘汰时删除。
 - west.commands:
 
-  - WestCommand.requires_installation: deprecated; use requires_workspace instead
-  - WestCommand.requires_workspace: new
-  - WestCommand.has_manifest: new
-  - WestCommand.manifest: this is now settable
-- west.configuration: callers can now identify the workspace directory
-  when reading and writing configuration files
+  - WestCommand.requires_installation: 已弃用;改用 requires_workspace
+  - WestCommand.requires_workspace: 新增
+  - WestCommand.has_manifest: 新增
+  - WestCommand.manifest: 现在可设置
+- west.configuration: 调用者现在可以在读取和写入配置文件时识别工作空间目录
 - west.log:
 
-  - msg(): new
+  - msg(): 新增
 - west.manifest:
 
-  - The module now uses the standard logging module instead of west.log
-  - QUAL_REFS_WEST: new
-  - SCHEMA_VERSION: new
-  - Defaults: removed
-  - Manifest.as_dict(): new
-  - Manifest.as_frozen_yaml(): new
-  - Manifest.as_yaml(): new
-  - Manifest.from_file() and from_data(): these factory methods are more
-    flexible to use and less reliant on global state
-  - Manifest.validate(): new
-  - ManifestImportFailed: new
-  - ManifestProject: semi-deprecated and will likely be removed later.
-  - Project: the constructor now takes a topdir argument
-  - Project.format() and its callers are removed. Use f-strings instead.
-  - Project.name_and_path: new
-  - Project.remote_name: new
-  - Project.sha() now captures stderr
-  - Remote: removed
+  - 该模块现在使用标准日志模块而不是 west.log
+  - QUAL_REFS_WEST: 新增
+  - SCHEMA_VERSION: 新增
+  - Defaults: 已移除
+  - Manifest.as_dict(): 新增
+  - Manifest.as_frozen_yaml(): 新增
+  - Manifest.as_yaml(): 新增
+  - Manifest.from_file() 和 from_data(): 这些工厂方法使用更灵活,对全局状态的依赖更少
+  - Manifest.validate(): 新增
+  - ManifestImportFailed: 新增
+  - ManifestProject: 半弃用,以后可能会被删除。
+  - Project: 构造函数现在接受 topdir 参数
+  - Project.format() 及其调用者已移除。改用 f-strings。
+  - Project.name_and_path: 新增
+  - Project.remote_name: 新增
+  - Project.sha() 现在捕获 stderr
+  - Remote: 已移除
 
-West now requires Python 3.6 or later. Additionally, some features may rely on
-Python dictionaries being insertion-ordered; this is only an implementation
-detail in CPython 3.6, but it is part of the language specification as of
-Python 3.7.
+West 现在需要 Python 3.6 或更高版本。此外,某些功能可能依赖于 Python 字典的插入顺序;
+这在 CPython 3.6 中只是一个实现细节,但从 Python 3.7 开始是语言规范的一部分。
 
 v0.6.3
 ******
 
-This point release fixes an error in the behavior of the deprecated
-``west.cmake`` module.
+这个次要版本修复了已弃用的 ``west.cmake`` 模块行为中的错误。
 
 v0.6.2
 ******
 
-This point release fixes an error in the behavior of ``west
-update --fetch=smart``, introduced in v0.6.1.
+这个次要版本修复了 v0.6.1 中引入的 ``west update --fetch=smart`` 行为中的错误。
 
-All v0.6.1 users must upgrade.
+所有 v0.6.1 用户必须升级。
 
 v0.6.1
 ******
 
 .. warning::
 
-   Do not use this point release. Make sure to use v0.6.2 instead.
+   不要使用这个次要版本。请确保改用 v0.6.2。
 
-The user-visible features in this point release are:
+此次要版本中的用户可见功能包括:
 
-- The :ref:`west-update` command has a new ``--fetch``
-  command line flag and ``update.fetch`` :ref:`configuration option
-  <west-config>`. The default value, "smart", skips fetching SHAs and tags
-  which are available locally.
-- Better and more consistent error-handling in the ``west diff``, ``west
-  status``, ``west forall``, and ``west update`` commands. Each of these
-  commands can operate on multiple projects; if a subprocess related to one
-  project fails, these commands now continue to operate on the rest of the
-  projects. All of them also now report a nonzero error code from the west
-  process if any of these subprocesses fails (this was previously not true of
-  ``west forall`` in particular).
-- The :ref:`west manifest <west-built-in-misc>` command also handles errors
-  better.
-- The :ref:`west list <west-built-in-misc>` command now works even when the
-  projects are not cloned, as long as its format string only requires
-  information which can be read from the manifest file. It still fails if the
-  format string requires data stored in the project repository, e.g. if it
-  includes the ``{sha}`` format string key.
-- Commands and options which operate on git revisions now accept abbreviated
-  SHAs. For example, ``west init --mr SHA_PREFIX`` now works. Previously, the
-  ``--mr`` argument needed to be the entire 40 character SHA if it wasn't a
-  branch or a tag.
+- :ref:`west-update` 命令有一个新的 ``--fetch`` 命令行标志和
+  ``update.fetch`` :ref:`配置选项 <west-config>`。默认值 "smart"
+  跳过获取本地可用的 SHA 和标签。
+- 在 ``west diff``、``west status``、``west forall`` 和 ``west update`` 命令中
+  更好且更一致的错误处理。这些命令中的每一个都可以在多个项目上操作;
+  如果与一个项目相关的子进程失败,这些命令现在会继续在其余项目上操作。
+  如果这些子进程中的任何一个失败,它们现在也都会从 west 进程报告非零错误代码
+  (这以前对 ``west forall`` 尤其不适用)。
+- :ref:`west manifest <west-built-in-misc>` 命令也更好地处理错误。
+- :ref:`west list <west-built-in-misc>` 命令现在即使在项目未克隆时也可以工作,
+  只要其格式字符串仅需要可以从清单文件中读取的信息。
+  如果格式字符串需要存储在项目仓库中的数据,它仍然会失败,
+  例如如果它包含 ``{sha}`` 格式字符串键。
+- 在 git 修订版本上操作的命令和选项现在接受缩写的 SHA。
+  例如,``west init --mr SHA_PREFIX`` 现在可以工作。以前,
+  如果 ``--mr`` 参数不是分支或标签,则需要是完整的 40 字符 SHA。
 
-The developer-visible changes to the :ref:`west-apis` are:
+对 :ref:`west-apis` 的开发人员可见的变更:
 
-- west.log.banner(): new
-- west.log.small_banner(): new
-- west.manifest.Manifest.get_projects(): new
-- west.manifest.Project.is_cloned(): new
-- west.commands.WestCommand instances can now access the parsed
-  Manifest object via a new self.manifest property during the
-  do_run() call. If read, it returns the Manifest object or
-  aborts the command if it could not be parsed.
-- west.manifest.Project.git() now has a capture_stderr kwarg
+- west.log.banner(): 新增
+- west.log.small_banner(): 新增
+- west.manifest.Manifest.get_projects(): 新增
+- west.manifest.Project.is_cloned(): 新增
+- west.commands.WestCommand 实例现在可以在 do_run() 调用期间通过新的 self.manifest
+  属性访问解析的 Manifest 对象。如果读取,它返回 Manifest 对象,
+  或者如果无法解析则中止命令。
+- west.manifest.Project.git() 现在有一个 capture_stderr kwarg
 
 
 v0.6.0
 ******
 
-- No separate bootstrapper
+- 无单独的引导程序
 
-  In west v0.5.x, the program was split into two components, a bootstrapper and
-  a per-installation clone. See `Multiple Repository Management in the v1.14
-  documentation`_ for more details.
+  在 west v0.5.x 中,该程序被分为两个组件,一个引导程序和一个每个安装的克隆。
+  详见 `v1.14 文档中的多仓库管理`_。
 
-  This is similar to how Google's Repo tool works, and lets west iterate quickly
-  at first. It caused confusion, however, and west is now stable enough to be
-  distributed entirely as one piece via PyPI.
+  这类似于 Google 的 Repo 工具的工作方式,让 west 一开始可以快速迭代。
+  然而,这引起了混乱,west 现在足够稳定,可以完全作为一个整体通过 PyPI 分发。
 
-  From v0.6.x onwards, all of the core west commands and helper classes are
-  part of the west package distributed via PyPI. This eliminates complexity
-  and makes it possible to import west modules from anywhere in the system,
-  not just extension commands.
-- The ``selfupdate`` command still exists for backwards compatibility, but
-  now simply exits after printing an error message.
-- Manifest syntax changes
+  从 v0.6.x 开始,所有核心 west 命令和辅助类都是通过 PyPI 分发的 west 包的一部分。
+  这消除了复杂性,并使得可以从系统的任何地方导入 west 模块,而不仅仅是扩展命令。
+- ``selfupdate`` 命令仍然存在以保持向后兼容性,但现在只是在打印错误消息后退出。
+- 清单语法变更
 
-  - A west manifest file's ``projects`` elements can now specify their fetch
-    URLs directly, like so:
+  - west 清单文件的 ``projects`` 元素现在可以直接指定其获取 URL,如下所示:
 
     .. code-block:: yaml
 
@@ -860,11 +743,9 @@ v0.6.0
            - name: example-project-name
              url: https://github.com/example/example-project
 
-    Project elements with ``url`` attributes set in this way may not also have
-    ``remote`` attributes.
-  - Project names must be unique: this restriction is needed to support future
-    work, but was not possible in west v0.5.x because distinct projects may
-    have URLs with the same final pathname component, like so:
+    以这种方式设置 ``url`` 属性的项目元素不能同时具有 ``remote`` 属性。
+  - 项目名称必须是唯一的: 需要这个限制来支持未来的工作,
+    但在 west v0.5.x 中这是不可能的,因为不同的项目可能具有相同最终路径名组件的 URL,如下所示:
 
     .. code-block:: yaml
 
@@ -882,8 +763,7 @@ v0.6.0
              remote: remote-2
              path: remote-2-project
 
-    These manifests can now be written with projects that use ``url``
-    instead of ``remote``, like so:
+    这些清单现在可以使用 ``url`` 而不是 ``remote`` 编写项目,如下所示:
 
     .. code-block:: yaml
 
@@ -894,54 +774,45 @@ v0.6.0
            - name: remote-2-project
              url: https://github.com/remote-2/project
 
-- The ``west list`` command now supports a ``{sha}`` format string key
+- ``west list`` 命令现在支持 ``{sha}`` 格式字符串键
 
-- The default format string for ``west list`` was changed to ``"{name:12}
-  {path:28} {revision:40} {url}"``.
+- ``west list`` 的默认格式字符串已更改为 ``"{name:12} {path:28} {revision:40} {url}"``。
 
-- The command ``west manifest --validate`` can now be run to load and validate
-  the current manifest file, among other error-handling fixes related to
-  manifest parsing.
+- 命令 ``west manifest --validate`` 现在可以运行来加载和验证当前的清单文件,
+  以及其他与清单解析相关的错误处理修复。
 
-- Incompatible API changes were made to west's APIs. Further changes are
-  expected until API stability is declared in west v1.0.
+- 对 west 的 API 进行了不兼容的 API 更改。在 west v1.0 中声明 API 稳定性之前,
+  预计会有进一步的更改。
 
-  - The ``west.manifest.Project`` constructor's ``remote`` and ``defaults``
-    positional arguments are now kwargs. A new ``url`` kwarg was also added; if
-    given, the ``Project`` URL is set to that value, and the ``remote`` kwarg
-    is ignored.
+  - ``west.manifest.Project`` 构造函数的 ``remote`` 和 ``defaults`` 位置参数现在是 kwargs。
+    还添加了一个新的 ``url`` kwarg;如果给定,则将 ``Project`` URL 设置为该值,
+    并忽略 ``remote`` kwarg。
 
-  - ``west.manifest.MANIFEST_SECTIONS`` was removed. There is only one section
-    now, namely ``manifest``. The *sections* kwargs in the
-    ``west.manifest.Manifest`` factory methods and constructor were also
-    removed.
+  - ``west.manifest.MANIFEST_SECTIONS`` 已移除。现在只有一个部分,即 ``manifest``。
+    ``west.manifest.Manifest`` 工厂方法和构造函数中的 *sections* kwargs 也已移除。
 
-  - The ``west.manifest.SpecialProject`` class was removed. Use
-    ``west.manifest.ManifestProject`` instead.
+  - ``west.manifest.SpecialProject`` 类已移除。改用 ``west.manifest.ManifestProject``。
 
 
 v0.5.x
 ******
 
-West v0.5.x is the first version used widely by the Zephyr Project as part of
-its v1.14 Long-Term Support (LTS) release. The `west v0.5.x documentation`_ is
-available as part of the Zephyr's v1.14 documentation.
+West v0.5.x 是 Zephyr 项目作为其 v1.14 长期支持 (LTS) 版本的一部分广泛使用的第一个版本。
+`west v0.5.x 文档`_ 作为 Zephyr v1.14 文档的一部分提供。
 
-West's main features in v0.5.x are:
+West 在 v0.5.x 中的主要功能包括:
 
-- Multiple repository management using Git repositories, including self-update
-  of west itself
-- Hierarchical configuration files
-- Extension commands
+- 使用 Git 仓库进行多仓库管理,包括 west 本身的自更新
+- 分层配置文件
+- 扩展命令
 
-Versions Before v0.5.x
-**********************
+v0.5.x 之前的版本 (Versions Before v0.5.x)
+******************************************
 
-Tags in the west repository before v0.5.x are prototypes which are of
-historical interest only.
+west 仓库中 v0.5.x 之前的标签是原型,仅具有历史意义。
 
-.. _Multiple Repository Management in the v1.14 documentation:
+.. _v1.14 文档中的多仓库管理:
    https://docs.zephyrproject.org/1.14.0/guides/west/repo-tool.html
 
-.. _west v0.5.x documentation:
+.. _west v0.5.x 文档:
    https://docs.zephyrproject.org/1.14.0/guides/west/index.html

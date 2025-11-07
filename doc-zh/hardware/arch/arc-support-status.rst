@@ -1,114 +1,105 @@
 .. _hardware_arch_arc_support_status:
 
-Zephyr support status on ARC processors
-#######################################
+ARC 处理器上的 Zephyr 支持状态
+###############################
 
-Overview
-********
+概述 (Overview)
+****************
 
-This page describes current state of Zephyr for ARC processors and some future
-plans. Please note that
+本页面描述了 ARC 处理器的 Zephyr 当前状态和一些未来计划。请注意:
 
- * plans are given without exact deadlines
- * software features require corresponding hardware to be present and
-   configured the proper way
- * not all the features can be enabled at the same time
+ * 计划没有给出确切的截止日期
+ * 软件功能需要相应的硬件存在并以正确的方式配置
+ * 并非所有功能都可以同时启用
 
-Support status
-**************
+支持状态 (Support status)
+**************************
 
-Legend:
-**Y** - yes, supported; **N** - no, not supported; **WIP** - Work In Progress;
-**TBD** - to be decided
+图例:
+**Y** - 是,支持; **N** - 否,不支持; **WIP** - 进行中;
+**TBD** - 待定
 
 
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-|                                                                     | **Processor families**                                                 |
+|                                                                     | **处理器系列 (Processor families)**                                    |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
 |                                                                     | **EM**     | **HS3x/4x** | **VPX**           | **HS5x**   | **HS6x**   |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Port status                                                         | upstreamed | upstreamed  | upstreamed [#f6]_ | upstreamed | upstreamed |
+| 移植状态                                                             | 已上游     | 已上游      | 已上游 [#f6]_      | 已上游     | 已上游     |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| **Features**                                                                                                                                 |
+| **功能 (Features)**                                                                                                                          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Closely coupled memories (ICCM, DCCM) [#f1]_                        | Y          | Y           | Y                 | TBD        | TBD        |
+| 紧密耦合存储器 (ICCM, DCCM) [#f1]_                                   | Y          | Y           | Y                 | TBD        | TBD        |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Execution with caches - Instruction/Data, L1/L2 caches              | Y          | Y           | Y                 | Y          | Y          |
+| 使用缓存执行 - 指令/数据、L1/L2 缓存                                  | Y          | Y           | Y                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Hardware-assisted unaligned memory access                           | Y [#f2]_   | Y           | Y                 | Y          | Y          |
+| 硬件辅助未对齐内存访问                                                | Y [#f2]_   | Y           | Y                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Regular interrupts with multiple priority levels, direct interrupts | Y          | Y           | Y                 | Y          | Y          |
+| 具有多个优先级的常规中断、直接中断                                     | Y          | Y           | Y                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Fast interrupts, separate register banks for fast interrupts        | Y          | Y           | TBD               | N          | N          |
+| 快速中断、用于快速中断的独立寄存器组                                   | Y          | Y           | TBD               | N          | N          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Hardware floating point unit (FPU)                                  | Y          | Y           | TBD [#f6]_        | TBD        | TBD        |
+| 硬件浮点单元 (FPU)                                                   | Y          | Y           | TBD [#f6]_        | TBD        | TBD        |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Symmetric multiprocessing (SMP) support, switch-based               | N/A        | Y           | TBD               | Y          | Y          |
+| 对称多处理 (SMP) 支持,基于交换                                       | N/A        | Y           | TBD               | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Hardware-assisted stack checking                                    | Y          | Y           | Y                 | N          | N          |
+| 硬件辅助栈检查                                                       | Y          | Y           | Y                 | N          | N          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Hardware-assisted atomic operations                                 | N/A        | Y           | Y                 | Y          | Y          |
+| 硬件辅助原子操作                                                     | N/A        | Y           | Y                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
 | DSP ISA                                                             | Y          | N [#f3]_    | TBD [#f6]_        | TBD        | TBD        |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| DSP AGU/XY extensions                                               | Y          | N [#f3]_    | N/A               | TBD        | TBD        |
+| DSP AGU/XY 扩展                                                     | Y          | N [#f3]_    | N/A               | TBD        | TBD        |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Userspace                                                           | Y          | Y           | N                 | TBD        | TBD        |
+| 用户空间                                                            | Y          | Y           | N                 | TBD        | TBD        |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Memory protection unit (MPU)                                        | Y          | Y           | TBD               | N          | N          |
+| 内存保护单元 (MPU)                                                  | Y          | Y           | TBD               | N          | N          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Memory management unit (MMU)                                        | N/A        | N           | TBD               | N          | N          |
+| 内存管理单元 (MMU)                                                  | N/A        | N           | TBD               | N          | N          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
 | SecureShield                                                        | Y          | N/A         | N/A               | N/A        | N/A        |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| Single-thread kernel support [#f5]_                                 | Y          | Y           | Y                 | Y          | Y          |
+| 单线程内核支持 [#f5]_                                               | Y          | Y           | Y                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| **Toolchains**                                                                                                                               |
+| **工具链 (Toolchains)**                                                                                                                      |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| GNU (open source GCC-based)                                         | Y          | Y           | N                 | Y          | Y          |
+| GNU (开源的基于 GCC)                                                | Y          | Y           | N                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| MetaWare (proprietary Clang-based)                                  | Y          | Y           | Y                 | Y          | Y          |
+| MetaWare (专有的基于 Clang)                                         | Y          | Y           | Y                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| **Simulators**                                                                                                                               |
+| **模拟器 (Simulators)**                                                                                                                      |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| QEMU (open source) [#f4]_                                           | Y          | Y           | N                 | Y          | Y          |
+| QEMU (开源) [#f4]_                                                  | Y          | Y           | N                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
-| nSIM (proprietary, provided by MetaWare Development Tools)          | Y          | Y           | Y                 | Y          | Y          |
+| nSIM (专有,由 MetaWare Development Tools 提供)                      | Y          | Y           | Y                 | Y          | Y          |
 +---------------------------------------------------------------------+------------+-------------+-------------------+------------+------------+
 
-Notes
-*****
+注释 (Notes)
+*************
 
-.. [#f1] usage of CCMs is limited on SMP systems
-.. [#f2] except the systems with secure features (SecureShield) due to HW
-         limitation
-.. [#f3] We only support save/restore ACCL/ACCH registers in task's context.
-         Rest of DSP/AGU registers save/restore isn't implemented but kernel
-         itself does not use these registers. This allows single task per
-         core to use DSP/AGU safely.
-.. [#f4] QEMU doesn't support all the ARC processor's HW features. For the
-         detailed info please check the ARC QEMU documentation
-.. [#f5] Single-thread kernel is support only for single core targets
-.. [#f6] currently only ARC VPX scalar port is supported. The support of VPX vector pipeline, VCCM,
-         STU is not included in this port, and require additional development and / or other runtime
-         integration.
+.. [#f1] CCM 的使用在 SMP 系统上受到限制
+.. [#f2] 由于硬件限制,具有安全功能 (SecureShield) 的系统除外
+.. [#f3] 我们仅支持在任务上下文中保存/恢复 ACCL/ACCH 寄存器。
+         未实现其余 DSP/AGU 寄存器的保存/恢复,但内核本身不使用这些寄存器。
+         这允许每个核心的单个任务安全地使用 DSP/AGU。
+.. [#f4] QEMU 不支持所有 ARC 处理器的硬件功能。有关详细信息,
+         请查看 ARC QEMU 文档
+.. [#f5] 单线程内核仅支持单核目标
+.. [#f6] 目前仅支持 ARC VPX 标量端口。此端口不包括对 VPX 向量管道、VCCM、
+         STU 的支持,需要额外的开发和/或其他运行时集成。
 
-VPX Vector Registers
---------------------
-Zephyr supports a limited form sharing of the VPX vector registers known as
-cooperative sharing. Threads that use these registers must bookend the relevant
-sections with calls to :c:func:`arc_vpx_lock` and :c:func:`arc_vpx_unlock` to
-control access to this resource.
+VPX 向量寄存器
+--------------
+Zephyr 支持一种有限形式的 VPX 向量寄存器共享,称为协作共享。
+使用这些寄存器的线程必须使用对 :c:func:`arc_vpx_lock` 和 :c:func:`arc_vpx_unlock`
+的调用来控制对此资源的访问。
 
 .. note::
-    If the system has multiple CPUs, then it is the responsibility of the
-    application developer to both pin the thread to a single CPU before it
-    attempts to get the cooperative lock, and not modify the CPU affinity
-    while it is waiting for or holding that cooperative lock.
+    如果系统有多个 CPU,那么应用程序开发人员有责任在线程尝试获取协作锁之前
+    将线程固定到单个 CPU,并且在等待或持有该协作锁时不修改 CPU 亲和性。
 
-Configuration Options
-=====================
+配置选项 (Configuration Options)
+=================================
 
-The cooperative sharing of the VPX vector registers is selected when
-configuration option :kconfig:option:`CONFIG_ARC_VPX_COOPERATIVE_SHARING`
-is enabled.
+当启用配置选项 :kconfig:option:`CONFIG_ARC_VPX_COOPERATIVE_SHARING` 时,
+将选择 VPX 向量寄存器的协作共享。

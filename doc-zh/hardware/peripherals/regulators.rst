@@ -1,27 +1,17 @@
 .. _regulator_api:
 
-Regulators
-##########
+稳压器 (Regulators)
+####################
 
-This subsystem provides control of voltage and current regulators. A common
-example is a GPIO that controls a transistor that supplies current to a device
-that is not always needed. Another example is a PMIC, typically a much more
-complex device.
+此子系统提供对电压和电流稳压器的控制。一个常见的例子是控制晶体管的 GPIO,该晶体管向并非总是需要的设备提供电流。另一个例子是 PMIC,通常是一个复杂得多的设备。
 
-The ``*-supply`` devicetree properties are used to identify the regulator(s)
-that a devicetree node directly depends on. Within the driver for the node the
-regulator API is used to issue requests for power when the device is to be
-active, and release the power request when the device shuts down.
+``*-supply`` 设备树属性用于标识设备树节点直接依赖的稳压器。在节点的驱动程序中,稳压器 API 用于在设备处于活动状态时请求电源,并在设备关闭时释放电源请求。
 
-The simplest case where a regulator is needed is one where there is only one
-client. For those situations the cost of using the regulator device
-infrastructure is not justified, and ``*-gpios`` devicetree properties should be
-used. There is no device interface to these regulators as they are entirely
-controlled within the driver for the corresponding node, e.g. a sensor.
+需要稳压器的最简单情况是只有一个客户端的情况。对于这些情况,使用稳压器设备基础架构的成本是不合理的,应该使用 ``*-gpios`` 设备树属性。这些稳压器没有设备接口,因为它们完全在相应节点的驱动程序中控制,例如传感器。
 
 .. _regulator_api_reference:
 
-API Reference
-**************
+API 参考 (API Reference)
+**************************
 
 .. doxygengroup:: regulator_interface

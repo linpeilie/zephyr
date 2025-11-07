@@ -1,94 +1,70 @@
 .. _usb_bc12_api:
 
-BC1.2 Devices (Experimental)
-#######################################
+BC1.2 设备 (BC1.2 Devices) (实验性, Experimental)
+##################################################
 
-The Battery Charging specification, currently at revision 1.2, is commonly
-referred to as just BC1.2. BC1.2 defines limits and detection mechanisms for USB
-devices to draw current exceeding the USB 2.0 specification limit of 0.5A, 2.5W.
+电池充电规范 (Battery Charging specification) 目前处于 1.2 修订版,通常简称为 BC1.2。BC1.2 定义了 USB 设备吸取超过 USB 2.0 规范限制(0.5A、2.5W)电流的限制和检测机制。
 
-The BC1.2 specification uses the term Charging Port for the device that supplies
-VBUS on the USB connection and the term Portable Device for the device that
-sinks current from the USB connection.
+BC1.2 规范使用术语 Charging Port (充电端口) 来表示在 USB 连接上提供 VBUS 的设备,使用术语 Portable Device (便携式设备) 来表示从 USB 连接吸取电流的设备。
 
-Note that the `BC1.2 Specification`_ uses the acronym PD for Portable Device. This
-should not be confused with the USB-C Power Delivery, which also uses the
-acronym PD.
+请注意,`BC1.2 规范`_ 使用首字母缩写 PD 来表示 Portable Device (便携式设备)。这不应与 USB-C Power Delivery (供电) 混淆,后者也使用首字母缩写 PD。
 
-On many devices, BC1.2 is the fallback mechanism to determine the connected
-charger capability on USB type C ports when the attached type-C partner does not
-support Power Delivery.
+在许多设备上,当连接的 type-C 伙伴不支持 Power Delivery 时,BC1.2 是确定 USB type C 端口上连接充电器能力的后备机制。
 
-Key parameters from the `BC1.2 Specification`_ include:
+来自 `BC1.2 规范`_ 的关键参数包括:
 
 ============================================================  ========  ===========
-Parameter                                                     Symbol    Range
+参数 (Parameter)                                              符号      范围
 ============================================================  ========  ===========
 Allowed PD (portable device) Current Draw from Charging Port  IDEV_CHG  1.5 A
+允许的 PD(便携式设备)从充电端口吸取的电流
 Charging Downstream Port Rated Current                        ICDP      1.5 - 5.0 A
+充电下行端口额定电流
 Maximum Configured Current when connected to a SDP            ICFG_MAX  500 mA
+连接到 SDP 时的最大配置电流
 Dedicated Charging Port Rated Current                         IDCP      1.5 - 5.0 A
+专用充电端口额定电流
 Suspend current                                               ISUSP     2.5 mA
+挂起电流
 Unit load current                                             IUNIT     100 mA
+单元负载电流
 ============================================================  ========  ===========
 
-While the ICDP and IDCP rated currents go up to 5.0 A, the BC1.2 current is
-limited by the IDEV_CHG parameter. So the BC1.2 support is capped at 1.5 A in
-the Zephyr implementation when using portable-device mode.
+虽然 ICDP 和 IDCP 额定电流可达 5.0 A,但 BC1.2 电流受 IDEV_CHG 参数限制。因此,在使用便携式设备模式时,Zephyr 实现中的 BC1.2 支持上限为 1.5 A。
 
 .. _BC1.2 Specification: https://www.usb.org/document-library/battery-charging-v12-spec-and-adopters-agreement
 
-Basic Operation
-***************
+基本操作 (Basic Operation)
+****************************
 
-The BC1.2 device driver provides only two APIs, ``bc12_set_role()`` and
-``bc12_set_result_cb()``.
+BC1.2 设备驱动程序仅提供两个 API:``bc12_set_role()`` 和 ``bc12_set_result_cb()``。
 
-The application calls ``bc12_set_role()`` to transition the BC1.2 device to
-either a disconnected, portable-device, or charging port mode.
+应用程序调用 ``bc12_set_role()`` 将 BC1.2 设备转换为断开连接、便携式设备或充电端口模式之一。
 
-For the disconnected state, the BC1.2 driver powers down the detection chip.
-The power down operation is vendor specific.
+对于断开连接状态,BC1.2 驱动程序会关闭检测芯片。断电操作是供应商特定的。
 
-The application calls ``bc12_set_role()`` with the type set to
-BC12_PORTABLE_DEVICE when both the following conditions are true:
+当以下两个条件都为真时,应用程序调用 ``bc12_set_role()`` 并将类型设置为 BC12_PORTABLE_DEVICE:
 
-* The application configured the port as an upstream facing port, i.e. a USB
-  device port.
-* The application detects VBUS on the USB connection.
+* 应用程序将端口配置为上行端口,即 USB 设备端口。
+* 应用程序检测到 USB 连接上的 VBUS。
 
-For portable-device mode, the BC1.2 driver powers up the detection chip and
-starts charger detection. At completion of the charger detection, the BC1.2
-driver notifies the callback registered with ``bc12_set_result_cb()``. By
-default, the BC1.2 driver clamps the current to 1.5A to comply with the BC1.2
-specification.
+对于便携式设备模式,BC1.2 驱动程序启动检测芯片并开始充电器检测。在充电器检测完成时,BC1.2 驱动程序通知使用 ``bc12_set_result_cb()`` 注册的回调。默认情况下,BC1.2 驱动程序将电流限制在 1.5A 以符合 BC1.2 规范。
 
-To comply with the USB 2.0 specification, when the driver detects a SDP
-(Standard Downstream Port) charging partner or if BC1.2 detection fails, the
-driver reports the available current as ISUSP (2.5 mA). The application may
-increase the current draw to IUNIT (100 mA) when the connected USB host resumes
-the USB bus and may increase the current draw to ICFG_MAX (500 mA) when the USB
-host configures the USB device.
+为了符合 USB 2.0 规范,当驱动程序检测到 SDP (Standard Downstream Port, 标准下行端口) 充电伙伴或 BC1.2 检测失败时,驱动程序会将可用电流报告为 ISUSP (2.5 mA)。当连接的 USB 主机恢复 USB 总线时,应用程序可以将电流吸取增加到 IUNIT (100 mA),当 USB 主机配置 USB 设备时,可以将电流吸取增加到 ICFG_MAX (500 mA)。
 
-Charging port mode is used by the application when the USB port is configured as
-a downstream facing port, i.e. a USB host port. For charging port mode, the
-BC1.2 driver powers up the detection chip and configures the charger type
-specified by a devicetree property. If the driver supports detection of plug and
-unplug events, the BC1.2 driver notifies the callback registered with
-``bc12_set_result_cb()`` to indicate the current connection state of the
-portable device partner.
+当 USB 端口配置为下行端口(即 USB 主机端口)时,应用程序使用充电端口模式。对于充电端口模式,BC1.2 驱动程序启动检测芯片并配置由设备树属性指定的充电器类型。如果驱动程序支持检测插入和拔出事件,则 BC1.2 驱动程序会通知使用 ``bc12_set_result_cb()`` 注册的回调,以指示便携式设备伙伴的当前连接状态。
 
-Configuration Options
-*********************
+配置选项 (Configuration Options)
+*********************************
 
-Related configuration options:
+相关配置选项:
 
 * :kconfig:option:`CONFIG_USB_BC12`
 
 .. _bc12_api_reference:
 
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: b12_interface
 .. doxygengroup:: b12_emulator_backend

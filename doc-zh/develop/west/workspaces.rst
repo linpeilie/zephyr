@@ -1,112 +1,92 @@
 .. _west-workspaces:
 
-Workspaces
-##########
+工作空间 (Workspaces)
+######################
 
-This page describes the *west workspace* concept introduced in
-:ref:`west-basics` in more detail.
+本页面更详细地描述了在 :ref:`west-basics` 中介绍的 *west 工作空间* 概念。
 
 .. _west-manifest-rev:
 
-The ``manifest-rev`` branch
-***************************
+``manifest-rev`` 分支
+**********************
 
-West creates and controls a Git branch named ``manifest-rev`` in each
-project. This branch points to the revision that the manifest file
-specified for the project at the time :ref:`west-update` was last run.
-Other workspace management commands may use ``manifest-rev`` as a reference
-point for the upstream revision as of this latest update. Among other
-purposes, the ``manifest-rev`` branch allows the manifest file to use SHAs
-as project revisions.
+West 在每个项目中创建并控制一个名为 ``manifest-rev`` 的 Git 分支。
+该分支指向清单文件在上次运行 :ref:`west-update` 时为项目指定的修订版本。
+其他工作空间管理命令可能会使用 ``manifest-rev`` 作为此最新更新时上游修订版本的参考点。
+除其他目的外,``manifest-rev`` 分支允许清单文件使用 SHA 作为项目修订版本。
 
-Although ``manifest-rev`` is a normal Git branch, west will recreate and/or
-reset it on the next update. For this reason, it is **dangerous**
-to check it out or otherwise modify it yourself. For instance, any commits
-you manually add to this branch may be lost the next time you run ``west
-update``. Instead, check out a local branch with another name, and either
-rebase it on top of a new ``manifest-rev``, or merge ``manifest-rev`` into
-it.
+虽然 ``manifest-rev`` 是一个正常的 Git 分支,但 west 会在下次更新时重新创建和/或重置它。
+因此,自己检出或以其他方式修改它是 **危险的**。例如,您手动添加到此分支的任何提交可能会
+在下次运行 ``west update`` 时丢失。相反,请检出具有其他名称的本地分支,然后将其变基到
+新的 ``manifest-rev`` 上,或将 ``manifest-rev`` 合并到其中。
 
 .. note::
 
-   West does not create a ``manifest-rev`` branch in the manifest repository,
-   since west does not manage the manifest repository's branches or revisions.
+   West 不会在清单仓库中创建 ``manifest-rev`` 分支,因为 west 不管理清单仓库的分支或修订版本。
 
-The ``refs/west/*`` Git refs
-****************************
+``refs/west/*`` Git 引用
+*************************
 
-West also reserves all Git refs that begin with ``refs/west/`` (such as
-``refs/west/foo``) for itself in local project repositories. Unlike
-``manifest-rev``, these refs are not regular branches. West's behavior here is
-an implementation detail; users should not rely on these refs' existence or
-behavior.
+West 还在本地项目仓库中为自己保留所有以 ``refs/west/`` 开头的 Git 引用(例如 ``refs/west/foo``)。
+与 ``manifest-rev`` 不同,这些引用不是常规分支。West 的这种行为是实现细节;用户不应依赖这些引用的存在或行为。
 
-Private repositories
-********************
+私有仓库 (Private repositories)
+********************************
 
-You can use west to fetch from private repositories. There is nothing
-west-specific about this.
+您可以使用 west 从私有仓库获取。这没有什么 west 特定的内容。
 
-The ``west update`` command essentially runs ``git fetch YOUR_PROJECT_URL``
-when a project's ``manifest-rev`` branch must be updated to a newly fetched
-commit. It's up to your environment to make sure the fetch succeeds.
+``west update`` 命令在项目的 ``manifest-rev`` 分支必须更新为新获取的提交时,
+本质上运行 ``git fetch YOUR_PROJECT_URL``。这取决于您的环境来确保获取成功。
 
-You can either enter the password manually or use any of the `credential
-helpers built in to Git`_. Since Git has credential storage built in, there is
-no need for a west-specific feature.
+您可以手动输入密码或使用 `Git 内置的任何凭据助手`_。
+由于 Git 具有内置的凭据存储,因此不需要 west 特定的功能。
 
-The following sections cover common cases for running ``west update`` without
-having to enter your password, as well as how to troubleshoot issues.
+以下部分介绍了在不必输入密码的情况下运行 ``west update`` 的常见情况,以及如何排除故障。
 
 .. _credential helpers built in to Git:
    https://git-scm.com/docs/gitcredentials
 
-Fetching via HTTPS
-==================
+通过 HTTPS 获取 (Fetching via HTTPS)
+=====================================
 
-On Windows when fetching from GitHub, recent versions of Git prompt you for
-your GitHub password in a graphical window once, then store it for future use
-(in a default installation). Passwordless fetching from GitHub should therefore
-work "out of the box" on Windows after you have done it once.
+在 Windows 上从 GitHub 获取时,最新版本的 Git 会在图形窗口中提示您输入一次 GitHub 密码,
+然后将其存储供将来使用(在默认安装中)。因此,在 Windows 上执行一次后,从 GitHub 进行
+无密码获取应该可以"开箱即用"。
 
-In general, you can store your credentials on disk using the "store" git
-credential helper. See the `git-credential-store`_ manual page for details.
+通常,您可以使用 "store" git 凭据助手将凭据存储在磁盘上。
+有关详细信息,请参阅 `git-credential-store`_ 手册页。
 
-To use this helper for all the repositories in your workspace, run:
+要为工作空间中的所有仓库使用此助手,请运行:
 
 .. code-block:: shell
 
    west forall -c "git config credential.helper store"
 
-To use this helper on just the projects ``foo`` and ``bar``, run:
+要仅为项目 ``foo`` 和 ``bar`` 使用此助手,请运行:
 
 .. code-block:: shell
 
    west forall -c "git config credential.helper store" foo bar
 
-To use this helper by default on your computer, run:
+要在您的计算机上默认使用此助手,请运行:
 
 .. code-block:: shell
 
    git config --global credential.helper store
 
-On GitHub, you can set up a `personal access token`_ to use in place of your
-account password. (This may be required if your account has two-factor
-authentication enabled, and may be preferable to storing your account password
-in plain text even if two-factor authentication is disabled.)
+在 GitHub 上,您可以设置 `个人访问令牌`_ 来代替您的帐户密码。
+(如果您的帐户启用了双因素身份验证,这可能是必需的,即使禁用了双因素身份验证,
+这也可能比以纯文本形式存储您的帐户密码更可取。)
 
-You can use the Git credential store to authenticate with a GitHub PAT
-(Personal Access Token) like so:
+您可以使用 Git 凭据存储来使用 GitHub PAT(个人访问令牌)进行身份验证,如下所示:
 
 .. code-block:: shell
 
    echo "https://x-access-token:$GH_TOKEN@github.com" >> ~/.git-credentials
 
-If you don't want to store any credentials on the file system, you can store
-them in memory temporarily using `git-credential-cache`_ instead.
+如果您不想在文件系统上存储任何凭据,可以使用 `git-credential-cache`_ 临时将它们存储在内存中。
 
-If you setup fetching via SSH, you can use Git URL rewrite feature. The following
-command instructs Git to use SSH URLs for GitHub instead of HTTPS ones:
+如果您设置了通过 SSH 获取,可以使用 Git URL 重写功能。以下命令指示 Git 对 GitHub 使用 SSH URL 而不是 HTTPS URL:
 
 .. code-block:: shell
 
@@ -119,68 +99,60 @@ command instructs Git to use SSH URLs for GitHub instead of HTTPS ones:
 .. _personal access token:
    https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token
 
-Fetching via SSH
-================
+通过 SSH 获取 (Fetching via SSH)
+=================================
 
-If your SSH key has no password, fetching should just work. If it does have a
-password, you can avoid entering it manually every time using `ssh-agent`_.
+如果您的 SSH 密钥没有密码,获取应该可以正常工作。如果它有密码,
+您可以使用 `ssh-agent`_ 避免每次都手动输入密码。
 
-On GitHub, see `Connecting to GitHub with SSH`_ for details on configuration
-and key creation.
+在 GitHub 上,有关配置和密钥创建的详细信息,请参阅 `使用 SSH 连接到 GitHub`_。
 
 .. _ssh-agent:
    https://www.ssh.com/ssh/agent
 .. _Connecting to GitHub with SSH:
    https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh
 
-Project locations
-*****************
+项目位置 (Project locations)
+*****************************
 
-Projects can be located anywhere inside the workspace, but they may not
-"escape" it.
+项目可以位于工作空间内的任何位置,但它们不能"逃离"它。
 
-In other words, project repositories need not be located in subdirectories of
-the manifest repository or as immediate subdirectories of the topdir. However,
-projects must have paths inside the workspace.
+换句话说,项目仓库不必位于清单仓库的子目录中或作为顶级目录的直接子目录。
+但是,项目必须具有工作空间内的路径。
+但是,项目必须具有工作空间内的路径。
 
-You may replace a project's repository directory within the workspace with a
-symbolic link to elsewhere on your computer, but west will not do this for you.
+您可以将工作空间内的项目仓库目录替换为指向计算机上其他位置的符号链接,但 west 不会为您执行此操作。
 
 .. _west-topologies:
 
-Topologies supported
-********************
+支持的拓扑结构 (Topologies supported)
+**************************************
 
-The following are example source code topologies supported by west.
+以下是 west 支持的示例源代码拓扑结构。
 
-- T1: star topology, zephyr is the manifest repository
-- T2: star topology, a Zephyr application is the manifest repository
-- T3: forest topology, freestanding manifest repository
+- T1: 星形拓扑,zephyr 是清单仓库
+- T2: 星形拓扑,Zephyr 应用程序是清单仓库
+- T3: 森林拓扑,独立的清单仓库
 
-T1: Star topology, zephyr is the manifest repository
-====================================================
+T1: 星形拓扑,zephyr 是清单仓库
+===============================
 
-- The zephyr repository acts as the central repository and specifies
-  its :ref:`modules` in its :file:`west.yml`
-- Analogy with existing mechanisms: Git submodules with zephyr as the
-  super-project
+- zephyr 仓库充当中央仓库,并在其 :file:`west.yml` 中指定其 :ref:`模块 <modules>`
+- 与现有机制的类比:Git 子模块,zephyr 作为超级项目
 
-This is the default. See :ref:`west-workspace` for how mainline Zephyr is an
-example of this topology.
+这是默认设置。有关主线 Zephyr 如何作为此拓扑结构的示例,请参阅 :ref:`west-workspace`。
 
 .. _west-t2:
 
-T2: Star topology, application is the manifest repository
-=========================================================
+T2: 星形拓扑,应用程序是清单仓库
+================================
 
-- Useful for those focused on a single application
-- A repository containing a Zephyr application acts as the central repository
-  and names other projects required to build it in its :file:`west.yml`. This
-  includes the zephyr repository and any modules.
-- Analogy with existing mechanisms: Git submodules with the application as
-  the super-project, zephyr and other projects as submodules
+- 对于那些专注于单个应用程序的人很有用
+- 包含 Zephyr 应用程序的仓库充当中央仓库,并在其 :file:`west.yml` 中命名构建它所需的其他项目。
+  这包括 zephyr 仓库和任何模块。
+- 与现有机制的类比:Git 子模块,应用程序作为超级项目,zephyr 和其他项目作为子模块
 
-A workspace using this topology looks like this:
+使用此拓扑结构的工作空间如下所示:
 
 .. code-block:: none
 
@@ -202,9 +174,8 @@ A workspace using this topology looks like this:
                             # Only the 'manifest-rev' version can be imported.
 
 
-Here is an example :file:`application/west.yml` which uses
-:ref:`west-manifest-import`, available since west 0.7, to import Zephyr v2.5.0
-and its modules into the application manifest file:
+以下是一个 :file:`application/west.yml` 示例,它使用 :ref:`west-manifest-import`
+(自 west 0.7 起可用)将 Zephyr v2.5.0 及其模块导入应用程序清单文件:
 
 .. code-block:: yaml
 
@@ -221,12 +192,11 @@ and its modules into the application manifest file:
      self:
        path: application
 
-You can still selectively "override" individual Zephyr modules if you use
-``import:`` in this way; see :ref:`west-manifest-ex1.3` for an example.
+如果以这种方式使用 ``import:``,您仍然可以有选择地"覆盖"各个 Zephyr 模块;
+有关示例,请参阅 :ref:`west-manifest-ex1.3`。
 
-Another way to do the same thing is to copy/paste :file:`zephyr/west.yml`
-to :file:`application/west.yml`, adding an entry for the zephyr
-project itself, like this:
+另一种做同样事情的方法是将 :file:`zephyr/west.yml` 复制/粘贴到 :file:`application/west.yml`,
+为 zephyr 项目本身添加一个条目,如下所示:
 
 .. code-block:: yaml
 
@@ -248,26 +218,21 @@ project itself, like this:
      self:
        path: application
 
-(The ``west-commands`` is there for :ref:`west-build-flash-debug` and other
-Zephyr-specific :ref:`west-extensions`. It's not necessary when using
-``import``.)
+(``west-commands`` 用于 :ref:`west-build-flash-debug` 和其他 Zephyr 特定的
+:ref:`west-extensions <west-extensions>`。使用 ``import`` 时不需要它。)
 
-The main advantage to using ``import`` is not having to track the revisions of
-imported projects separately. In the above example, using ``import`` means
-Zephyr's :ref:`module <modules>` versions are automatically determined from the
-:file:`zephyr/west.yml` revision, instead of having to be copy/pasted (and
-maintained) on their own.
+使用 ``import`` 的主要优势是不必单独跟踪导入项目的修订版本。
+在上面的示例中,使用 ``import`` 意味着 Zephyr 的 :ref:`模块 <modules>` 版本会自动从
+:file:`zephyr/west.yml` 修订版本中确定,而不必自己复制/粘贴(和维护)。
 
-T3: Forest topology
-===================
+T3: 森林拓扑
+============
 
-- Useful for those supporting multiple independent applications or downstream
-  distributions with no "central" repository
-- A dedicated manifest repository which contains no Zephyr source code,
-  and specifies a list of projects all at the same "level"
-- Analogy with existing mechanisms: Google repo-based source distribution
+- 对于那些支持多个独立应用程序或没有"中央"仓库的下游分发的人很有用
+- 一个不包含 Zephyr 源代码的专用清单仓库,并指定所有处于同一"级别"的项目列表
+- 与现有机制的类比:基于 Google repo 的源代码分发
 
-A workspace using this topology looks like this:
+使用此拓扑结构的工作空间如下所示:
 
 .. code-block:: none
 
@@ -293,9 +258,8 @@ A workspace using this topology looks like this:
        └── west.yml        # This can be partially imported with lower precedence or ignored.
                            # Only the 'manifest-rev' version can be imported.
 
-Here is an example T3 :file:`manifest-repo/west.yml` which uses
-:ref:`west-manifest-import`, available since west 0.7, to import Zephyr
-v2.5.0 and its modules, then add the ``app1`` and ``app2`` projects:
+以下是一个 T3 :file:`manifest-repo/west.yml` 示例,它使用 :ref:`west-manifest-import`
+(自 west 0.7 起可用)导入 Zephyr v2.5.0 及其模块,然后添加 ``app1`` 和 ``app2`` 项目:
 
 .. code-block:: yaml
 
@@ -319,16 +283,15 @@ v2.5.0 and its modules, then add the ``app1`` and ``app2`` projects:
      self:
        path: manifest-repo
 
-You can also do this "by hand" by copy/pasting :file:`zephyr/west.yml`
-as shown :ref:`above <west-t2>` for the T2 topology, with the same caveats.
+您也可以通过复制/粘贴 :file:`zephyr/west.yml` 来"手动"完成此操作,
+如 T2 拓扑的 :ref:`上述 <west-t2>` 所示,具有相同的注意事项。
 
 .. _workspace-as-git-repo:
 
-Not supported: workspace topdir as .git repository
-**************************************************
+不支持:工作空间顶级目录作为 .git 仓库
+***************************************
 
-Some users have asked for support making the workspace :ref:`topdir
-<west-workspace>` a git repository, like this example:
+一些用户要求支持将工作空间 :ref:`topdir <west-workspace>` 设为 git 仓库,如下例所示:
 
 .. code-block:: none
 
@@ -337,9 +300,6 @@ Some users have asked for support making the workspace :ref:`topdir
    ├── .west/                     # marks the location of the topdir
    └── [ ... other projects ...]
 
-This is **not** an officially supported topology. As a design decision, west
-assumes that the workspace topdir itself is not a git repository.
+这 **不是** 官方支持的拓扑结构。作为设计决策,west 假定工作空间顶级目录本身不是 git 仓库。
 
-You may be able to make something like this "work" for yourself and your own
-goals. However, future versions of west might contain changes which can "break"
-your setup.
+您可能能够让类似的东西为您自己和您自己的目标"工作"。但是,west 的未来版本可能包含可能"破坏"您的设置的更改。
