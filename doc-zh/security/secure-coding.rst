@@ -1,217 +1,102 @@
 .. _secure code:
 
-Secure Coding
-#############
+安全编码 (Secure Coding)
+########################
 
-Traditionally, microcontroller-based systems have not placed much
-emphasis on security.
-They have usually been thought of as isolated, disconnected
-from the world, and not very vulnerable, just because of the
-difficulty in accessing them.  The Internet of Things has changed
-this.  Now, code running on small microcontrollers often has access to
-the internet, or at least to other devices (that may themselves have
-vulnerabilities).  Given the volume they are often deployed at,
-uncontrolled access can be devastating [#attackf]_.
+传统上,基于微控制器的系统并没有过多强调安全性。它们通常被认为是孤立的,与世界断开连接的,并且不太容易受到攻击,仅仅是因为访问它们的难度。物联网改变了这一点。现在,在小型微控制器上运行的代码通常可以访问互联网,或至少可以访问其他设备(它们本身可能存在漏洞)。鉴于它们通常部署的数量,不受控制的访问可能是毁灭性的 [#attackf]_。
 
-This document describes the requirements and process for ensuring
-security is addressed within the Zephyr project.  All code submitted
-should comply with these principles.
+本文档描述了确保 Zephyr 项目内解决安全问题的要求和流程。所有提交的代码都应遵守这些原则。
 
-Much of this document comes from [CIIBPB]_.
+本文档的大部分内容来自 [CIIBPB]_。
 
-Introduction and Scope
-**********************
+简介和范围 (Introduction and Scope)
+***********************************
 
-This document covers guidelines for the `Zephyr Project`_, from a
-security perspective.  Many of the ideas contained herein are captured
-from other open source efforts.
+本文档从安全角度涵盖了 `Zephyr 项目 (Zephyr Project)`_ 的指南。其中包含的许多想法都是从其他开源工作中捕获的。
 
 .. todo: Reference main document here
 
 .. _Zephyr Project: https://www.zephyrproject.org/
 
-We begin with an overview of secure design as it relates to
-Zephyr.  This is followed by
-a section on `Secure development knowledge`_, which
-gives basic requirements that a developer working on the project will
-need to have.  This section gives references to other security
-documents, and full details of how to write secure software are beyond
-the scope of this document.  This section also describes
-vulnerability knowledge that at least one of the primary developers
-should have.  This knowledge will be necessary for the review process
-described below this.
+我们从与 Zephyr 相关的安全设计概述开始。接下来是 `安全开发知识 (Secure development knowledge)`_ 部分,该部分给出了在项目上工作的开发人员需要具备的基本要求。本节引用了其他安全文档,有关如何编写安全软件的完整详细信息超出了本文档的范围。本节还描述了至少一名主要开发人员应具备的漏洞知识。此知识对于下面描述的审查过程是必要的。
 
-Following this is a description of the review process used to
-incorporate changes into the Zephyr codebase.  This is followed by
-documentation about how security-sensitive issues are handled by the
-project.
+接下来是对用于将更改合并到 Zephyr 代码库的审查过程的描述。接下来是有关项目如何处理安全敏感问题的文档。
 
-Finally, the document covers how changes are to be made to this
-document.
+最后,本文档涵盖了如何对本文档进行更改。
 
-Secure Coding
+安全编码 (Secure Coding)
 *************
 
-Designing an open software system such as Zephyr to be secure requires
-adhering to a defined set of design standards. In [SALT75]_, the following,
-widely accepted principles for protection mechanisms are defined to
-help prevent security violations and limit their impact:
+设计像 Zephyr 这样的开放软件系统以确保安全需要遵守一套定义的设计标准。在 [SALT75]_ 中,定义了以下广泛接受的保护机制原则,以帮助防止安全违规并限制其影响:
 
-- **Open design** as a design guideline incorporates the maxim that
-  protection mechanisms cannot be kept secret on any system in
-  widespread use. Instead of relying on secret, custom-tailored
-  security measures, publicly accepted cryptographic algorithms and
-  well established cryptographic libraries shall be used.
+- **开放设计 (Open design)** 作为设计指南,包含了这样一个准则:在广泛使用的任何系统上,保护机制不能被保密。应该使用公开接受的加密算法和完善的加密库,而不是依赖秘密的、定制的安全措施。
 
-- **Economy of mechanism** specifies that the underlying design of a
-  system shall be kept as simple and small as possible. In the context
-  of the Zephyr project, this can be realized, e.g., by modular code
-  [PAUL09]_ and abstracted APIs.
+- **机制经济性 (Economy of mechanism)** 规定系统的底层设计应尽可能保持简单和小型。在 Zephyr 项目的上下文中,这可以通过模块化代码 [PAUL09]_ 和抽象 API 来实现。
 
-- **Complete mediation** requires that each access to every object and
-  process needs to be authenticated first. Mechanisms to store access
-  conditions shall be avoided if possible.
+- **完全中介 (Complete mediation)** 要求对每个对象和进程的每次访问都需要首先进行身份验证。如果可能,应避免存储访问条件的机制。
 
-- **Fail-safe defaults** defines that access is restricted by default
-  and permitted only in specific conditions defined by the system
-  protection scheme, e.g., after successful authentication.
-  Furthermore, default settings for services shall be chosen in a way
-  to provide maximum security.  This corresponds to the "Secure by
-  Default" paradigm [MS12]_.
+- **故障安全默认值 (Fail-safe defaults)** 定义默认情况下访问受到限制,并且仅在系统保护方案定义的特定条件下(例如,成功验证后)才允许。此外,服务的默认设置应以提供最大安全性的方式选择。这对应于"默认安全"范式 [MS12]_。
 
-- **Separation of privilege** is the principle that two conditions or
-  more need to be satisfied before access is granted. In the context
-  of the Zephyr project, this could encompass split keys [PAUL09]_.
+- **特权分离 (Separation of privilege)** 是指在授予访问权限之前需要满足两个或更多条件的原则。在 Zephyr 项目的上下文中,这可以包括分割密钥 [PAUL09]_。
 
-- **Least privilege** describes an access model in which each user,
-  program, and thread, shall have the smallest possible subset
-  of permissions in the system required to perform their task. This
-  positive security model aims to minimize the attack surface of the
-  system.
+- **最小特权 (Least privilege)** 描述了一种访问模型,其中每个用户、程序和线程都应具有系统中执行其任务所需的最小权限子集。这种积极的安全模型旨在最小化系统的攻击面。
 
-- **Least common mechanism** specifies that mechanisms common to more
-  than one user or process shall not be shared if not strictly
-  required. The example given in [SALT75]_ is a function that should be
-  implemented as a shared library executed by each user and not as a
-  supervisor procedure shared by all users.
+- **最少公共机制 (Least common mechanism)** 规定除非严格要求,否则不应共享多个用户或进程共有的机制。[SALT75]_ 中给出的示例是一个函数,应该作为每个用户执行的共享库实现,而不是作为所有用户共享的监督程序。
 
-- **Psychological acceptability** requires that security features are
-  easy to use by the developers in order to ensure their usage and the
-  correctness of its application.
+- **心理可接受性 (Psychological acceptability)** 要求安全特性易于开发人员使用,以确保其使用和应用的正确性。
 
-In addition to these general principles, the following points are
-specific to the development of a secure RTOS:
+除了这些通用原则外,以下几点特定于安全 RTOS 的开发:
 
-- **Complementary Security/Defense in Depth**: do not rely on a single
-  threat mitigation approach. In case of the complementary security
-  approach, parts of the threat mitigation are performed by the
-  underlying platform. In case such mechanisms are not provided by the
-  platform, or are not trusted, a defense in depth [MS12]_ paradigm
-  shall be used.
+- **互补安全/纵深防御 (Complementary Security/Defense in Depth)**: 不要依赖单一的威胁缓解方法。在互补安全方法的情况下,部分威胁缓解由底层平台执行。如果平台未提供此类机制或不受信任,则应使用纵深防御 [MS12]_ 范式。
 
-- **Less commonly used services off by default**: to reduce the
-  exposure of the system to potential attacks, features or services
-  shall not be enabled by default if they are only rarely used (a
-  threshold of 80% is given in [MS12]_). For the Zephyr project, this can
-  be realized using the configuration management. Each functionality
-  and module shall be represented as a configuration option and needs
-  to be explicitly enabled. Then, all features, protocols, and drivers
-  not required for a particular use case can be disabled. The user
-  shall be notified if low-level options and APIs are enabled but not
-  used by the application.
+- **默认关闭不常用的服务 (Less commonly used services off by default)**: 为了减少系统对潜在攻击的暴露,如果功能或服务很少使用(在 [MS12]_ 中给出的阈值为 80%),则不应默认启用它们。对于 Zephyr 项目,这可以使用配置管理来实现。每个功能和模块都应表示为配置选项,需要显式启用。然后,可以禁用特定用例不需要的所有功能、协议和驱动程序。如果启用了底层选项和 API 但应用程序未使用,则应通知用户。
 
-- **Change management**: to guarantee a traceability of changes to the
-  system, each change shall follow a specified process including a
-  change request, impact analysis, ratification, implementation, and
-  validation phase. In each stage, appropriate documentation shall be
-  provided. All commits shall be related to a bug report or change
-  request in the issue tracker. Commits without a valid reference
-  shall be denied.
+- **变更管理 (Change management)**: 为了保证对系统更改的可追溯性,每个更改都应遵循指定的流程,包括变更请求、影响分析、批准、实施和验证阶段。在每个阶段,都应提供适当的文档。所有提交都应与问题跟踪器中的错误报告或变更请求相关。没有有效引用的提交应被拒绝。
 
-Secure development knowledge
+安全开发知识 (Secure development knowledge)
 ****************************
 
-Secure designer
+安全设计者 (Secure designer)
 ===============
 
-The Zephyr project must have at least one primary developer who knows
-how to design secure software.
+Zephyr 项目必须至少有一名主要开发人员知道如何设计安全软件。
 
-This requires understanding the following design principles,
-including the 8 principles from [SALT75]_:
+这需要理解以下设计原则,包括来自 [SALT75]_ 的 8 个原则:
 
-- economy of mechanism (keep the design as simple and small as
-  practical, e.g., by adopting sweeping simplifications)
+- 机制经济性 (economy of mechanism) (尽可能保持设计简单和小型,例如通过采用全面的简化)
 
-- fail-safe defaults (access decisions shall deny by default, and
-  projects' installation shall be secure by default)
+- 故障安全默认值 (fail-safe defaults) (访问决策应默认拒绝,项目的安装应默认安全)
 
-- complete mediation (every access that might be limited must be
-  checked for authority and be non-bypassable)
+- 完全中介 (complete mediation) (每个可能受限制的访问都必须检查权限并且不可绕过)
 
 .. todo: Explain better the constraints of embedded devices, and that
    we typically do edge detection, not at each function. Perhaps
    relate this to input validation below.
 
-- open design (security mechanisms should not depend on attacker
-  ignorance of its design, but instead on more easily protected and
-  changed information like keys and passwords)
+- 开放设计 (open design) (安全机制不应依赖于攻击者对其设计的无知,而应依赖于更容易保护和更改的信息,如密钥和密码)
 
-- separation of privilege (ideally, access to important objects should
-  depend on more than one condition, so that defeating one protection
-  system won't enable complete access. For example, multi-factor
-  authentication, such as requiring both a password and a hardware
-  token, is stronger than single-factor authentication)
+- 特权分离 (separation of privilege) (理想情况下,对重要对象的访问应依赖于多个条件,因此破坏一个保护系统不会启用完全访问。例如,多因素身份验证(如同时需要密码和硬件令牌)比单因素身份验证更强)
 
-- least privilege (processes should operate with the least privilege
-  necessary)
+- 最小特权 (least privilege) (进程应以所需的最小特权运行)
 
-- least common mechanism (the design should minimize the mechanisms
-  common to more than one user and depended on by all users, e.g.,
-  directories for temporary files)
+- 最少公共机制 (least common mechanism) (设计应最小化多个用户共有且所有用户都依赖的机制,例如临时文件的目录)
 
-- psychological acceptability (the human interface must be designed
-  for ease of use - designing for "least astonishment" can help)
+- 心理可接受性 (psychological acceptability) (人机界面必须设计为易于使用 - "最少惊讶"的设计可以提供帮助)
 
-- limited attack surface (the set of the
-  different points where an attacker can try to enter or extract data)
+- 有限的攻击面 (limited attack surface) (攻击者可以尝试进入或提取数据的不同点的集合)
 
-- input validation with allowlists (inputs should typically be checked
-  to determine if they are valid before they are accepted; this
-  validation should use allowlists (which only accept known-good
-  values), not blocklists (which attempt to list known-bad values)).
+- 使用允许列表的输入验证 (input validation with allowlists) (输入通常应在被接受之前检查以确定它们是否有效;此验证应使用允许列表(仅接受已知良好的值),而不是阻止列表(试图列出已知不良的值))。
 
-Vulnerability Knowledge
+漏洞知识 (Vulnerability Knowledge)
 =======================
 
-A "primary developer" in a project is anyone who is familiar with the
-project's code base, is comfortable making changes to it, and is
-acknowledged as such by most other participants in the project. A
-primary developer would typically make a number of contributions over
-the past year (via code, documentation, or answering questions).
-Developers would typically be considered primary developers if they
-initiated the project (and have not left the project more than three
-years ago), have the option of receiving information on a private
-vulnerability reporting channel (if there is one), can accept commits
-on behalf of the project, or perform final releases of the project
-software. If there is only one developer, that individual is the
-primary developer.
+项目中的"主要开发人员"是指熟悉项目代码库、能够轻松对其进行更改,并被项目中大多数其他参与者认可的任何人。主要开发人员通常在过去一年中做出了大量贡献(通过代码、文档或回答问题)。如果开发人员发起了项目(并且在三年前离开项目),有权接收私有漏洞报告渠道的信息(如果有),可以代表项目接受提交,或者执行项目软件的最终发布,则通常被视为主要开发人员。如果只有一名开发人员,该个人就是主要开发人员。
 
-At least one of the primary developers **must** know of common kinds of
-errors that lead to vulnerabilities in this kind of software, as well
-as at least one method to counter or mitigate each of them.
+至少一名主要开发人员**必须**了解导致此类软件中漏洞的常见错误类型,以及至少一种对抗或缓解每种错误的方法。
 
-Examples (depending on the type of software) include SQL
-injection, OS injection, classic buffer overflow, cross-site
-scripting, missing authentication, and missing authorization. See the
-`CWE/SANS top 25`_ or `OWASP Top 10`_ for commonly used lists.
+示例(取决于软件类型)包括 SQL 注入、OS 注入、经典缓冲区溢出、跨站点脚本、缺少身份验证和缺少授权。请参阅 `CWE/SANS top 25`_ 或 `OWASP Top 10`_ 以获取常用列表。
 
-A free class from the nonprofit OpenSecurityTraining2 for C/C++ developers
-is available at `OST2_1001`_. It teaches how to prevent, detect, and
-mitigate linear stack/heap buffer overflows, non-linear out of bound writes,
-integer overflows, and other integer issues. The follow-on class, `OST2_1002`_,
-covers uninitialized data access, race conditions, use-after-free, type confusion,
-and information disclosure vulnerabilities.
+非营利组织 OpenSecurityTraining2 为 C/C++ 开发人员提供的免费课程可在 `OST2_1001`_ 获得。它教授如何预防、检测和缓解线性栈/堆缓冲区溢出、非线性越界写入、整数溢出和其他整数问题。后续课程 `OST2_1002`_ 涵盖未初始化数据访问、竞态条件、释放后使用、类型混淆和信息泄露漏洞。
 
 .. Turn this into something specific. Can we find examples of
    mistakes.  Perhaps an example of things static analysis tool has sent us.
@@ -224,65 +109,36 @@ and information disclosure vulnerabilities.
 
 .. _OST2_1002: https://ost2.fyi/Vulns1002
 
-Zephyr Security Subcommittee
+Zephyr 安全小组委员会 (Zephyr Security Subcommittee)
 ============================
 
-There shall be a "Zephyr Security Subcommittee", responsible for
-enforcing this guideline, monitoring reviews, and improving these
-guidelines.
+应设立一个"Zephyr 安全小组委员会",负责执行本指南、监督审查和改进这些指南。
 
-This team will be established according to the Zephyr Project charter.
+该团队将根据 Zephyr 项目章程建立。
 
-Code Review
+代码审查 (Code Review)
 ***********
 
-The Zephyr project shall use a code review system that all changes are
-required to go through.  Each change shall be reviewed by at least one
-primary developer that is not the author of the change.  This
-developer shall determine if this change affects the security of the
-system (based on their general understanding of security), and if so,
-shall request the developer with vulnerability knowledge, or the
-secure designer to also review the code.  Any of these individuals
-shall have the ability to block the change from being merged into the
-mainline code until the security issues have been addressed.
+Zephyr 项目应使用一个所有更改都必须通过的代码审查系统。每个更改应至少由一名不是更改作者的主要开发人员审查。该开发人员应确定此更改是否影响系统的安全性(基于他们对安全性的一般理解),如果是,应请求具有漏洞知识的开发人员或安全设计者也审查代码。这些人中的任何一人都应有能力阻止更改合并到主线代码中,直到安全问题得到解决。
 
-Issues and Bug Tracking
+问题和错误跟踪 (Issues and Bug Tracking)
 ***********************
 
-The Zephyr project shall have an issue tracking system (such as GitHub_)
-that can be used to record and track defects that are found in the
-system.
+Zephyr 项目应有一个问题跟踪系统(如 GitHub_),可用于记录和跟踪系统中发现的缺陷。
 
 .. _GitHub: https://www.github.com
 
-Because security issues are often sensitive, this issue tracking
-system shall have a field to indicate a security issue.  Setting this
-field shall result in the issue only being visible to the Zephyr Security
-Subcommittee. In addition, there shall be a
-field to allow the Zephyr Security Subcommittee to add additional users that will
-have visibility to a given issue.
+由于安全问题通常很敏感,此问题跟踪系统应有一个字段来指示安全问题。设置此字段应导致该问题仅对 Zephyr 安全小组委员会可见。此外,应有一个字段允许 Zephyr 安全小组委员会添加将对给定问题具有可见性的其他用户。
 
-This embargo, or limited visibility, shall only be for a fixed
-duration, with a default being a project-decided value.  However,
-because security considerations are often external to the Zephyr
-project itself, it may be necessary to increase this embargo time.
-The time necessary shall be clearly annotated in the issue itself.
+此禁运或有限可见性应仅持续固定时间,默认值为项目决定的值。但是,由于安全考虑通常是 Zephyr 项目本身之外的,因此可能需要延长此禁运时间。必要的时间应在问题本身中明确注明。
 
-The list of issues shall be reviewed at least once a month by the
-Zephyr Security Subcommittee.  This review should focus on
-tracking the fixes, determining if any external parties need to be
-notified or involved, and determining when to lift the embargo on the
-issue.  The embargo should **not** be lifted via an automated means, but
-the review team should avoid unnecessary delay in lifting issues that
-have been resolved.
+问题列表应至少每月由 Zephyr 安全小组委员会审查一次。此审查应侧重于跟踪修复、确定是否需要通知或涉及任何外部方,以及确定何时解除对问题的禁运。禁运**不**应通过自动方式解除,但审查团队应避免不必要地延迟解除已解决的问题。
 
-Modifications to This Document
+对本文档的修改 (Modifications to This Document)
 ******************************
 
-Changes to this document shall be reviewed by the Zephyr Security Subcommittee,
-and approved by consensus.
+对本文档的更改应由 Zephyr 安全小组委员会审查,并通过共识批准。
 
-.. [#attackf]  An attack_ resulted in a significant portion of DNS
-   infrastructure being taken down.
+.. [#attackf]  一次攻击_ 导致大量 DNS 基础设施被关闭。
 
 .. _attack: https://www.theverge.com/2016/10/21/13362354/dyn-dns-ddos-attack-cause-outage-status-explained

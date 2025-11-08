@@ -1,27 +1,19 @@
 .. _hardening:
 
-Hardening Tool
-##############
+加固工具 (Hardening Tool)
+#########################
 
-Before launching a product, it's crucial to ensure that your software is as secure as possible. This
-process, known as "hardening", involves strengthening the security of a system to protect it from
-potential threats and vulnerabilities.
+在推出产品之前,确保软件尽可能安全至关重要。这个被称为"加固"的过程涉及加强系统的安全性,以保护其免受潜在威胁和漏洞的影响。
 
-At a high-level, hardening a Zephyr application can be seen as a two-fold process:
+从高层次看,加固 Zephyr 应用程序可以看作是一个双重过程:
 
-#. Disabling features and compilation flags that might lead to security vulnerabilities (ex. making
-   sure that no "experimental" features are being used, disabling features typically used for
-   debugging purposes such as assertions, shell, etc.).
-#. Enabling optional features that can lead to improve security (ex. stack sentinel, hardware stack
-   protection, etc.). Some of these features might be hardware-dependent.
+#. 禁用可能导致安全漏洞的特性和编译标志(例如,确保没有使用"实验性"特性,禁用通常用于调试目的的特性,如断言、shell 等)。
+#. 启用可以提高安全性的可选特性(例如,栈哨兵、硬件栈保护等)。其中一些特性可能依赖于硬件。
 
-To simplify this process, Zephyr offers a **hardening tool** designed to analyze an application's
-configuration against a set of hardening preferences defined by the **Security Working Group**. The
-tool looks at the KConfig options in the build target and provides tailored suggestions and
-recommendations to adjust security-related options.
+为了简化此过程,Zephyr 提供了一个**加固工具**,旨在根据**安全工作组**定义的一组加固首选项来分析应用程序的配置。该工具查看构建目标中的 KConfig 选项,并提供量身定制的建议和推荐以调整安全相关选项。
 
-Usage
-*****
+用法 (Usage)
+************
 
 .. zephyr-app-commands::
     :tool: all
@@ -29,9 +21,7 @@ Usage
     :board: reel_board
     :goals: hardenconfig
 
-The output should be similar to the table below. For each configuration option set to a value that
-could lead to a security vulnerability, the table will propose a recommended value that should be
-used instead.
+输出应类似于下表。对于设置为可能导致安全漏洞的值的每个配置选项,该表将提出应使用的推荐值。
 
 .. code-block:: console
 
