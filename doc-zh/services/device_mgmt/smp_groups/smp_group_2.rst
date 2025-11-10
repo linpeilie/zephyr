@@ -1,26 +1,26 @@
 .. _mcumgr_smp_group_2:
 
-Statistics management
-#####################
+统计管理 (Statistics management)
+##################################
 
-Statistics management allows to obtain data gathered by Statistics subsystem
-of Zephyr, enabled with :kconfig:option:`CONFIG_STATS`.
+统计管理允许获取Zephyr统计子系统收集的数据 (Statistics management allows to obtain data gathered by Statistics subsystem of Zephyr),通过 :kconfig:option:`CONFIG_STATS` 启用 (enabled with :kconfig:option:`CONFIG_STATS`)。
 
-Statistics management group defines commands:
+统计管理组定义命令 (Statistics management group defines commands):
 
 .. table::
     :align: center
 
     +-------------------+-----------------------------------------------+
-    | ``Command ID``    | Command description                           |
+    | ``命令ID``        | 命令描述                                      |
+    | (``Command ID``)  | (Command description)                         |
     +===================+===============================================+
-    | ``0``             | Group data                                    |
+    | ``0``             | 组数据 (Group data)                           |
     +-------------------+-----------------------------------------------+
-    | ``1``             | List groups                                   |
+    | ``1``             | 列出组 (List groups)                          |
     +-------------------+-----------------------------------------------+
 
-Statistics: group data
-**********************
+统计:组数据 (Statistics: group data)
+*************************************
 
 The command is used to obtain data for group specified by a name.
 The name is one of group names as registered, with

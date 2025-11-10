@@ -1,19 +1,19 @@
 .. _crypto_api:
 
 
-Crypto APIs
-###########
+加密API (Crypto APIs)
+#####################
 
-Overview
-********
+概述 (Overview)
+****************
 
-API Reference
-*************
+API参考 (API Reference)
+***********************
 
-Generic API for crypto drivers
-==============================
+加密驱动程序通用API (Generic API for crypto drivers)
+=====================================================
 .. doxygengroup:: crypto
 
-Ciphers API
-===========
+密码API (Ciphers API)
+======================
 .. doxygengroup:: crypto_cipher

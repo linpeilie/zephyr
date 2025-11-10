@@ -1,34 +1,37 @@
 .. _mcumgr_smp_group_0:
 
-Default/OS Management Group
-###########################
+默认/OS管理组 (Default/OS Management Group)
+#############################################
 
-OS management group defines following commands:
+OS管理组定义以下命令 (OS management group defines following commands):
 
 .. table::
     :align: center
 
     +-------------------+-----------------------------------------------+
-    | ``Command ID``    | Command description                           |
+    | ``命令ID``        | 命令描述                                      |
+    | (``Command ID``)  | (Command description)                         |
     +===================+===============================================+
-    | ``0``             | Echo                                          |
+    | ``0``             | 回显 (Echo)                                   |
     +-------------------+-----------------------------------------------+
-    | ``1``             | Console/Terminal echo control;                |
-    |                   | unimplemented by Zephyr                       |
+    | ``1``             | 控制台/终端回显控制;                          |
+    |                   | (Console/Terminal echo control;)              |
+    |                   | Zephyr未实现                                  |
+    |                   | (unimplemented by Zephyr)                     |
     +-------------------+-----------------------------------------------+
-    | ``2``             | Task Statistics                               |
+    | ``2``             | 任务统计 (Task Statistics)                    |
     +-------------------+-----------------------------------------------+
-    | ``3``             | Memory pool statistics                        |
+    | ``3``             | 内存池统计 (Memory pool statistics)           |
     +-------------------+-----------------------------------------------+
-    | ``4``             | Date-time string                              |
+    | ``4``             | 日期时间字符串 (Date-time string)             |
     +-------------------+-----------------------------------------------+
-    | ``5``             | System reset                                  |
+    | ``5``             | 系统重置 (System reset)                       |
     +-------------------+-----------------------------------------------+
-    | ``6``             | MCUMGR parameters                             |
+    | ``6``             | MCUMGR参数 (MCUMGR parameters)                |
     +-------------------+-----------------------------------------------+
-    | ``7``             | OS/Application info                           |
+    | ``7``             | OS/应用程序信息 (OS/Application info)         |
     +-------------------+-----------------------------------------------+
-    | ``8``             | Bootloader information                        |
+    | ``8``             | 引导加载程序信息 (Bootloader information)     |
     +-------------------+-----------------------------------------------+
 
 Echo command

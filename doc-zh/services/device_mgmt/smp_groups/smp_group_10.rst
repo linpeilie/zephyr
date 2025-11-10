@@ -1,27 +1,33 @@
 .. _mcumgr_smp_group_10:
 
-Enumeration Management Group
-#############################
+枚举管理组 (Enumeration Management Group)
+##########################################
 
-Enumeration management group defines the following commands:
+枚举管理组定义以下命令 (Enumeration management group defines the following commands):
 
 .. table::
     :align: center
 
     +----------------+-----------------------------+
-    | ``Command ID`` | Command description         |
+    | ``命令ID``     | 命令描述                    |
+    | (``Command ID``| (Command description)       |
     +================+=============================+
-    | ``0``          | Count of supported groups   |
+    | ``0``          | 支持的组数量                |
+    |                | (Count of supported groups) |
     +----------------+-----------------------------+
-    | ``1``          | List supported groups       |
+    | ``1``          | 列出支持的组                |
+    |                | (List supported groups)     |
     +----------------+-----------------------------+
-    | ``2``          | Fetch single group ID       |
+    | ``2``          | 获取单个组ID                |
+    |                | (Fetch single group ID)     |
     +----------------+-----------------------------+
-    | ``3``          | Details on supported groups |
+    | ``3``          | 支持的组的详细信息          |
+    |                | (Details on supported       |
+    |                | groups)                     |
     +----------------+-----------------------------+
 
-Count of supported groups command
-*********************************
+支持的组数量命令 (Count of supported groups command)
+*****************************************************
 
 Count of supported groups returns the total number of MCUmgr command groups that a device supports.
 

@@ -1,21 +1,22 @@
 .. _mcumgr_smp_group_63:
 
-Zephyr Management Group
-#######################
+Zephyr管理组 (Zephyr Management Group)
+########################################
 
-Zephyr management group defines the following commands:
+Zephyr管理组定义以下命令 (Zephyr management group defines the following commands):
 
 .. table::
     :align: center
 
     +----------------+------------------------------+
-    | ``Command ID`` | Command description          |
+    | ``命令ID``     | 命令描述                     |
+    | (``Command ID``| (Command description)        |
     +================+==============================+
-    | ``0``          | Erase storage                |
+    | ``0``          | 擦除存储 (Erase storage)     |
     +----------------+------------------------------+
 
-Erase storage command
-*********************
+擦除存储命令 (Erase storage command)
+*************************************
 
 Erase storage command allows clearing the ``storage_partition`` flash partition on a device,
 generally this is used when switching to a new application build if the application uses storage

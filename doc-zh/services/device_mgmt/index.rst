@@ -1,7 +1,7 @@
 .. _device_mgmt:
 
-Device Management
-#################
+设备管理 (Device Management)
+#############################
 
 .. toctree::
     :maxdepth: 1

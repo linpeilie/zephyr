@@ -1,32 +1,33 @@
 .. _mcumgr_smp_group_3:
 
-Settings (Config) Management Group
-##################################
+设置(配置)管理组 (Settings (Config) Management Group)
+########################################################
 
-Settings management group (known as Configuration Manager in the original MCUmgr repository)
-defines the following commands:
+设置管理组(在原始MCUmgr存储库中称为配置管理器) (Settings management group (known as Configuration Manager in the original MCUmgr repository))
+定义以下命令 (defines the following commands):
 
 .. table::
     :align: center
 
     +----------------+------------------------------+
-    | ``Command ID`` | Command description          |
+    | ``命令ID``     | 命令描述                     |
+    | (``Command ID``| (Command description)        |
     +================+==============================+
-    | ``0``          | Read/write setting           |
+    | ``0``          | 读/写设置                    |
+    |                | (Read/write setting)         |
     +----------------+------------------------------+
-    | ``1``          | Delete setting               |
+    | ``1``          | 删除设置 (Delete setting)    |
     +----------------+------------------------------+
-    | ``2``          | Commit settings              |
+    | ``2``          | 提交设置 (Commit settings)   |
     +----------------+------------------------------+
-    | ``3``          | Load/Save settings           |
+    | ``3``          | 加载/保存设置                |
+    |                | (Load/Save settings)         |
     +----------------+------------------------------+
 
-Note that the Zephyr version adds additional commands and features which are not supported by
-the original upstream version, however, the original client functionality should work for
-read/write functionality.
+请注意,Zephyr版本添加了原始上游版本不支持的额外命令和功能 (Note that the Zephyr version adds additional commands and features which are not supported by the original upstream version),但是,原始客户端功能应该可以用于读/写功能 (however, the original client functionality should work for read/write functionality)。
 
-Read/write setting command
-**************************
+读/写设置命令 (Read/write setting command)
+*******************************************
 
 Read/write setting command allows updating a setting entry on a device or
 getting the current value of a setting from a device.

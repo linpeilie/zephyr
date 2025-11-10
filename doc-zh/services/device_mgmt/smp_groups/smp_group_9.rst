@@ -1,24 +1,25 @@
 .. _mcumgr_smp_group_9:
 
-Shell management
-################
+Shell管理 (Shell management)
+#############################
 
-Shell management allows passing commands to the shell subsystem over the SMP
-protocol.
+Shell管理允许通过SMP协议将命令传递给shell子系统 (Shell management allows passing commands to the shell subsystem over the SMP protocol)。
 
-Shell management group defines following commands:
+Shell管理组定义以下命令 (Shell management group defines following commands):
 
 .. table::
     :align: center
 
     +-------------------+-----------------------------------------------+
-    | ``Command ID``    | Command description                           |
+    | ``命令ID``        | 命令描述                                      |
+    | (``Command ID``)  | (Command description)                         |
     +===================+===============================================+
-    | ``0``             | Shell command line execute                    |
+    | ``0``             | Shell命令行执行                               |
+    |                   | (Shell command line execute)                  |
     +-------------------+-----------------------------------------------+
 
-Shell command line execute
-**************************
+Shell命令行执行 (Shell command line execute)
+**********************************************
 
 The command allows to execute command line in a similar way to typing it into
 a shell, but both a request and a response are transported over SMP.

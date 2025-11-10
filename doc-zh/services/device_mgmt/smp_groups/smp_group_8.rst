@@ -1,32 +1,33 @@
 .. _mcumgr_smp_group_8:
 
-File management
-###############
+文件管理 (File management)
+###########################
 
-The file management group provides commands that allow to upload and download files
-to/from a device.
+文件管理组提供允许向设备上传和从设备下载文件的命令 (The file management group provides commands that allow to upload and download files to/from a device)。
 
-File management group defines following commands:
+文件管理组定义以下命令 (File management group defines following commands):
 
 .. table::
     :align: center
 
     +-------------------+-----------------------------------------------+
-    | ``Command ID``    | Command description                           |
+    | ``命令ID``        | 命令描述                                      |
+    | (``Command ID``)  | (Command description)                         |
     +===================+===============================================+
-    | ``0``             | File download/upload                          |
+    | ``0``             | 文件下载/上传 (File download/upload)          |
     +-------------------+-----------------------------------------------+
-    | ``1``             | File status                                   |
+    | ``1``             | 文件状态 (File status)                        |
     +-------------------+-----------------------------------------------+
-    | ``2``             | File hash/checksum                            |
+    | ``2``             | 文件哈希/校验和 (File hash/checksum)          |
     +-------------------+-----------------------------------------------+
-    | ``3``             | Supported file hash/checksum types            |
+    | ``3``             | 支持的文件哈希/校验和类型                     |
+    |                   | (Supported file hash/checksum types)          |
     +-------------------+-----------------------------------------------+
-    | ``4``             | File close                                    |
+    | ``4``             | 文件关闭 (File close)                         |
     +-------------------+-----------------------------------------------+
 
-File download
-*************
+文件下载 (File download)
+*************************
 
 Command allows to download contents of an existing file from specified path
 of a target device. Client applications must keep track of data they have

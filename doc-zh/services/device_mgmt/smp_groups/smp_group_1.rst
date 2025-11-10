@@ -1,36 +1,40 @@
 .. _mcumgr_smp_group_1:
 
-Application/software image management group
-###########################################
+应用程序/软件映像管理组 (Application/software image management group)
+#######################################################################
 
-Application/software image management group defines following commands:
+应用程序/软件映像管理组定义以下命令 (Application/software image management group defines following commands):
 
 .. table::
     :align: center
 
     +-------------------+-----------------------------------------------+
-    | ``Command ID``    | Command description                           |
+    | ``命令ID``        | 命令描述                                      |
+    | (``Command ID``)  | (Command description)                         |
     +===================+===============================================+
-    | ``0``             | State of images                               |
+    | ``0``             | 映像状态 (State of images)                    |
     +-------------------+-----------------------------------------------+
-    | ``1``             | Image upload                                  |
+    | ``1``             | 映像上传 (Image upload)                       |
     +-------------------+-----------------------------------------------+
-    | ``2``             | File                                          |
+    | ``2``             | 文件 (File)                                   |
+    |                   | (Zephyr保留但不支持)                          |
     |                   | (reserved but not supported by Zephyr)        |
     +-------------------+-----------------------------------------------+
-    | ``3``             | Corelist                                      |
+    | ``3``             | 核心列表 (Corelist)                           |
+    |                   | (Zephyr保留但不支持)                          |
     |                   | (reserved but not supported by Zephyr)        |
     +-------------------+-----------------------------------------------+
-    | ``4``             | Coreload                                      |
+    | ``4``             | 核心加载 (Coreload)                           |
+    |                   | (Zephyr保留但不支持)                          |
     |                   | (reserved but not supported by Zephyr)        |
     +-------------------+-----------------------------------------------+
-    | ``5``             | Image erase                                   |
+    | ``5``             | 映像擦除 (Image erase)                        |
     +-------------------+-----------------------------------------------+
-    | ``6``             | Slot info                                     |
+    | ``6``             | 插槽信息 (Slot info)                          |
     +-------------------+-----------------------------------------------+
 
-Notion of "slots" and "images" in Zephyr
-****************************************
+Zephyr中"插槽"和"映像"的概念 (Notion of "slots" and "images" in Zephyr)
+***************************************************************************
 
 The "slot" and "image" definition comes from mcuboot where "image" would
 consist of two "slots", further named "primary" and "secondary"; the application
