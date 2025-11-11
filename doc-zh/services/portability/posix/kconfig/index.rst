@@ -1,10 +1,9 @@
 .. _posix_kconfig_options:
 
-Additional Configuration Options
-********************************
+其他配置选项 (Additional Configuration Options)
+************************************************
 
-Below is a non-exhaustive list of additional :ref:`kconfig` options relating to Zephyr's
-implementation of the POSIX API.
+以下是与 Zephyr POSIX API 实现相关的其他 :ref:`kconfig` 选项的非详尽列表。(Below is a non-exhaustive list of additional :ref:`kconfig` options relating to Zephyr's implementation of the POSIX API.)
 
 * :kconfig:option:`CONFIG_DYNAMIC_THREAD`
 * :kconfig:option:`CONFIG_DYNAMIC_THREAD_POOL_SIZE`

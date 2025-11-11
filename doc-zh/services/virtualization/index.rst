@@ -1,7 +1,7 @@
 .. _virtualization_reference:
 
-Virtualization
-##############
+虚拟化 (Virtualization)
+########################
 
 .. toctree::
    :maxdepth: 1

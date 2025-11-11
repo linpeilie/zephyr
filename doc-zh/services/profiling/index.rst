@@ -1,9 +1,9 @@
 .. _profiling:
 
-Profiling
-#########
+性能分析 (Profiling)
+#####################
 
-Required Kconfig: :kconfig:option:`CONFIG_PROFILING`
+必需的 Kconfig: :kconfig:option:`CONFIG_PROFILING` (Required Kconfig: :kconfig:option:`CONFIG_PROFILING`)
 
 .. toctree::
    :maxdepth: 1

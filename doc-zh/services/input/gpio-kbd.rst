@@ -1,28 +1,23 @@
 .. _gpio-kbd:
 
-GPIO Keyboard Matrix
-####################
+GPIO键盘矩阵 (GPIO Keyboard Matrix)
+####################################
 
-The :dtcompatible:`gpio-kbd-matrix` driver supports a large variety of keyboard
-matrix hardware configurations and has numerous options to change its behavior.
-This is an overview of some common setups and how they can be supported by the
-driver.
+:dtcompatible:`gpio-kbd-matrix` 驱动程序支持各种键盘矩阵硬件配置 (The :dtcompatible:`gpio-kbd-matrix` driver supports a large variety of keyboard matrix hardware configurations),并具有许多选项来更改其行为 (and has numerous options to change its behavior)。
+这是一些常见设置的概述以及驱动程序如何支持它们 (This is an overview of some common setups and how they can be supported by the driver)。
 
-The conventional configuration for all of these is that the driver reads on the
-row GPIOs (inputs) and selects on the columns GPIOs (output).
+所有这些的常规配置是驱动程序在行GPIO(输入)上读取并在列GPIO(输出)上选择 (The conventional configuration for all of these is that the driver reads on the row GPIOs (inputs) and selects on the columns GPIOs (output))。
 
-Base use case, no isolation diodes, interrupt capable GPIOs
-***********************************************************
+基本用例,无隔离二极管,支持中断的GPIO (Base use case, no isolation diodes, interrupt capable GPIOs)
+********************************************************************************************************
 
-This is the common configuration found on consumer keyboards with membrane
-switches and flexible circuit boards, no isolation diodes, requires ghosting
-detection (which is enabled by default).
+这是在带有薄膜开关和柔性电路板的消费键盘上常见的配置 (This is the common configuration found on consumer keyboards with membrane switches and flexible circuit boards),无隔离二极管 (no isolation diodes),需要重影检测(默认启用) (requires ghosting detection (which is enabled by default))。
 
 .. figure:: no-diodes.svg
       :align: center
       :width: 50%
 
-      A 3x3 matrix, no diodes
+      一个3x3矩阵,无二极管 (A 3x3 matrix, no diodes)
 
 The system must support GPIO interrupts, and the interrupt can be enabled on all
 row GPIOs at the same time.
@@ -46,10 +41,10 @@ been pressed.
 GPIOs for columns that are not currently selected are configured in high
 impedance mode. This means that the row state may need some time to settle to
 avoid misreading the key state from a column to the following one. The settle
-time can be tweaked by changing the ``settle-time-us`` property.
+The settle time can be tweaked by changing the ``settle-time-us`` property.
 
-Isolation diodes
-****************
+隔离二极管 (Isolation diodes)
+*******************************
 
 If the matrix has isolation diodes for every key, then it's possible to:
 
@@ -107,8 +102,8 @@ active high columns.
         no-ghostkey-check;
    };
 
-GPIO with no interrupt support
-******************************
+不支持中断的GPIO (GPIO with no interrupt support)
+****************************************************
 
 Some GPIO controllers have limitations on GPIO interrupts, and may not support
 enabling interrupts on all row GPIOs at the same time.
@@ -128,8 +123,8 @@ This configuration can be enabled by setting the ``idle-mode`` property to
         idle-mode = "poll";
    };
 
-GPIO multiplexer
-****************
+GPIO多路复用器 (GPIO multiplexer)
+**********************************
 
 In more extreme cases, such as if the columns are using a multiplexer and it's
 impossible to select all of them at the same time, the driver can be configured
@@ -147,8 +142,8 @@ to ``0``.
         idle-mode = "scan";
    };
 
-Row and column GPIO selection
-*****************************
+行和列GPIO选择 (Row and column GPIO selection)
+***********************************************
 
 If the row GPIOs are sequential and on the same gpio controller, the driver
 automatically switches API to read from the whole GPIO port rather than the
@@ -160,15 +155,15 @@ The same is true for column GPIOs, but only if the matrix is configured for
 ``col-drive-inactive``, so that is only usable for matrixes with isolation
 diodes.
 
-16-bit row support
-******************
+16位行支持 (16-bit row support)
+********************************
 
 The driver uses an 8-bit datatype to store the row state by default, which
 limits the matrix row size to 8. This can be increased to 16 by enabling the
 :kconfig:option:`CONFIG_INPUT_KBD_MATRIX_16_BIT_ROW` option.
 
-Actual key mask configuration
-*****************************
+实际按键掩码配置 (Actual key mask configuration)
+**************************************************
 
 If the key matrix is not complete, a map of the keys that are actually
 populated can be specified using the ``actual-key-mask`` property. This allows
@@ -199,8 +194,8 @@ The actual key mask can be changed at runtime by enabling
 :kconfig:option:`CONFIG_INPUT_KBD_ACTUAL_KEY_MASK_DYNAMIC` and the using the
 :c:func:`input_kbd_matrix_actual_key_mask_set` API.
 
-Keymap configuration
-********************
+键映射配置 (Keymap configuration)
+**********************************
 
 Keyboard matrix devices report a series of x/y/touch events. These can be
 mapped to normal key events using the :dtcompatible:`input-keymap` driver.
@@ -233,8 +228,8 @@ output:
 
 .. doxygengroup:: input_keymap
 
-Keyboard matrix shell commands
-******************************
+键盘矩阵shell命令 (Keyboard matrix shell commands)
+****************************************************
 
 The shell command ``kbd_matrix_state_dump`` can be used to test the
 functionality of any keyboard matrix driver implemented using the keyboard
@@ -263,8 +258,8 @@ Example usage:
    Keyboard state logging disabled
    [00:01:47.967,651] <inf> input: kbd-matrix key-mask [07 05 07 --] (8)
 
-Keyboard matrix library
-***********************
+键盘矩阵库 (Keyboard matrix library)
+**************************************
 
 The GPIO keyboard matrix driver is based on a generic keyboard matrix library,
 which implements the core functionalities such as scanning delays, debouncing,

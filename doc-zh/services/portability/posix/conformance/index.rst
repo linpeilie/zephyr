@@ -1,21 +1,21 @@
 .. _posix_conformance:
 
-POSIX Conformance
-#################
+POSIX 一致性 (POSIX Conformance)
+##################################
 
-As per `IEEE 1003.1-2017`_, this section details Zephyr's POSIX conformance.
+根据 `IEEE 1003.1-2017`_ 标准,本节详细说明了 Zephyr 的 POSIX 一致性。(As per `IEEE 1003.1-2017`_, this section details Zephyr's POSIX conformance.)
 
 .. _IEEE 1003.1-2017: https://standards.ieee.org/ieee/1003.1/7101/
 
 .. _posix_system_interfaces:
 
-POSIX System Interfaces
-=======================
+POSIX 系统接口 (POSIX System Interfaces)
+==========================================
 
 .. The following have values greater than -1 in Zephyr, conformant with the POSIX specification.
 
-.. csv-table:: POSIX System Interfaces
-   :header: Symbol, Support, Remarks
+.. csv-table:: POSIX 系统接口 (POSIX System Interfaces)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     _POSIX_CHOWN_RESTRICTED, 0,
@@ -30,8 +30,8 @@ POSIX System Interfaces
 
 .. _posix_system_interfaces_required:
 
-.. csv-table:: POSIX System Interfaces
-   :header: Symbol, Support, Remarks
+.. csv-table:: POSIX 系统接口 (POSIX System Interfaces)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     _POSIX_VERSION, 200809L,
@@ -53,8 +53,8 @@ POSIX System Interfaces
 .. The following should be valued greater than zero in Zephyr, in order to be strictly conformant
     with the POSIX specification.
 
-.. csv-table:: POSIX System Interfaces (Unsupported)
-   :header: Symbol, Support, Remarks
+.. csv-table:: POSIX 系统接口(不支持) (POSIX System Interfaces (Unsupported))
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     _POSIX_JOB_CONTROL, -1, :ref:`†<posix_undefined_behaviour>`
@@ -62,8 +62,8 @@ POSIX System Interfaces
     _POSIX_SAVED_IDS, -1, :ref:`†<posix_undefined_behaviour>`
     _POSIX_SHELL, -1, :ref:`†<posix_undefined_behaviour>`
 
-.. csv-table:: POSIX System Interfaces (Optional)
-   :header: Symbol, Support, Remarks
+.. csv-table:: POSIX 系统接口(可选) (POSIX System Interfaces (Optional))
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     _POSIX_ADVISORY_INFO, -1,
@@ -101,13 +101,13 @@ POSIX System Interfaces
     _XOPEN_UNIX, -1,
 
 
-POSIX Shell and Utilities
-=========================
+POSIX Shell 与实用程序 (POSIX Shell and Utilities)
+====================================================
 
-Zephyr does not support a POSIX shell or utilities at this time.
+Zephyr 目前不支持 POSIX shell 或实用程序。(Zephyr does not support a POSIX shell or utilities at this time.)
 
-.. csv-table:: POSIX Shell and Utilities
-   :header: Symbol, Support, Remarks
+.. csv-table:: POSIX Shell 与实用程序 (POSIX Shell and Utilities)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     _POSIX2_C_DEV, -1, :ref:`†<posix_undefined_behaviour>`
@@ -125,14 +125,14 @@ Zephyr does not support a POSIX shell or utilities at this time.
     _POSIX2_UNIX, -1, :ref:`†<posix_undefined_behaviour>`
     _POSIX2_UUCP, -1, :ref:`†<posix_undefined_behaviour>`
 
-XSI Conformance
-###############
+XSI 一致性 (XSI Conformance)
+##############################
 
-X/Open System Interfaces
-========================
+X/Open 系统接口 (X/Open System Interfaces)
+===========================================
 
-.. csv-table:: X/Open System Interfaces
-   :header: Symbol, Support, Remarks
+.. csv-table:: X/Open 系统接口 (X/Open System Interfaces)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     :ref:`_POSIX_FSYNC<posix_option_fsync>`, 200809L, :kconfig:option:`CONFIG_POSIX_FSYNC`
@@ -143,17 +143,11 @@ X/Open System Interfaces
 .. _posix_undefined_behaviour:
 
 .. note::
-   Some features may exhibit undefined behaviour as they fall beyond the scope of Zephyr's current
-   design and capabilities. For example, multi-processing, ad-hoc memory-mapping, multiple users,
-   or regular expressions are features that are uncommon in low-footprint embedded systems.
-   Such undefined behaviour is denoted with the † (obelus) symbol. Additional details
-   :ref:`here <posix_option_groups>`.
+   某些特性可能会表现出未定义行为,因为它们超出了 Zephyr 当前的设计与能力范围。例如,多进程、临时内存映射、多用户或正则表达式等特性在低占用嵌入式系统中并不常见。此类未定义行为用 † (剑标) 符号表示。更多详情参见:ref:`此处 <posix_option_groups>`。(Some features may exhibit undefined behaviour as they fall beyond the scope of Zephyr's current design and capabilities. For example, multi-processing, ad-hoc memory-mapping, multiple users, or regular expressions are features that are uncommon in low-footprint embedded systems. Such undefined behaviour is denoted with the † (obelus) symbol. Additional details :ref:`here <posix_option_groups>`.)
 
 .. _posix_libc_provided:
 
 .. note::
-    Features listed in various POSIX Options or Option Groups may be provided in whole or in part
-    by a conformant C library implementation. This includes (but is not limited to) POSIX
-    Extensions to the ISO C Standard (`CX`_).
+    各种 POSIX 选项或选项组中列出的特性可能全部或部分由符合标准的 C 库实现提供。这包括(但不限于) ISO C 标准的 POSIX 扩展 (`CX`_)。(Features listed in various POSIX Options or Option Groups may be provided in whole or in part by a conformant C library implementation. This includes (but is not limited to) POSIX Extensions to the ISO C Standard (`CX`_).)
 
 .. _CX: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap01.html

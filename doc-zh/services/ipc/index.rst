@@ -1,7 +1,7 @@
 .. _ipc_service_api:
 
-Interprocessor Communication (IPC)
-##################################
+处理器间通信 (Interprocessor Communication (IPC))
+##################################################
 
 .. toctree::
    :maxdepth: 1

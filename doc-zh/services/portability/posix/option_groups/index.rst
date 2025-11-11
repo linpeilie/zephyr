@@ -1,20 +1,20 @@
-POSIX Option and Option Group Details
-#####################################
+﻿POSIX 选项与选项组详情 (POSIX Option and Option Group Details)
+##################################################################
 
 .. _posix_option_groups:
 
-POSIX Option Groups
-===================
+POSIX 选项组 (POSIX Option Groups)
+====================================
 
 .. _posix_option_group_barriers:
 
 POSIX_BARRIERS
 ++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_BARRIERS`.
+使用 :kconfig:option:`CONFIG_POSIX_BARRIERS` 启用此选项组。(使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_BARRIERS`).)
 
 .. csv-table:: POSIX_BARRIERS
-   :header: API, Supported
+   :header: API, 支持 (Supported)
    :widths: 50,10
 
     pthread_barrier_destroy(),yes
@@ -28,14 +28,13 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_BARRIERS`.
 POSIX_C_LANG_JUMP
 +++++++++++++++++
 
-The ``POSIX_C_LANG_JUMP`` Option Group is included in the ISO C standard.
+``POSIX_C_LANG_JUMP`` 选项组包含在 ISO C 标准中。(The ``POSIX_C_LANG_JUMP`` Option Group is included in the ISO C standard.)
 
 .. note::
-   When using Newlib, Picolibc, or other C libraries conforming to the ISO C Standard, the
-   ``POSIX_C_LANG_JUMP`` Option Group is considered supported.
+   使用 Newlib、Picolibc 或其他符合 ISO C 标准的 C 库时,``POSIX_C_LANG_JUMP`` 选项组被视为已支持。(When using Newlib, Picolibc, or other C libraries conforming to the ISO C Standard, the ``POSIX_C_LANG_JUMP`` Option Group is considered supported.)
 
 .. csv-table:: POSIX_C_LANG_JUMP
-   :header: API, Supported
+   :header: API, 支持 (Supported)
    :widths: 50,10
 
     setjmp(), yes
@@ -46,41 +45,36 @@ The ``POSIX_C_LANG_JUMP`` Option Group is included in the ISO C standard.
 POSIX_C_LANG_MATH
 +++++++++++++++++
 
-The ``POSIX_C_LANG_MATH`` Option Group is included in the ISO C standard.
+``POSIX_C_LANG_MATH`` 选项组包含在 ISO C 标准中。(The ``POSIX_C_LANG_MATH`` Option Group is included in the ISO C standard.)
 
 .. note::
-   When using Newlib, Picolibc, or other C libraries conforming to the ISO C Standard, the
-   ``POSIX_C_LANG_MATH`` Option Group is considered supported.
+   使用 Newlib、Picolibc 或其他符合 ISO C 标准的 C 库时,``POSIX_C_LANG_MATH`` 选项组被视为已支持。(When using Newlib, Picolibc, or other C libraries conforming to the ISO C Standard, the ``POSIX_C_LANG_MATH`` Option Group is considered supported.)
 
-Please refer to `Subprofiling Considerations`_ for details on the ``POSIX_C_LANG_MATH`` Option
-Group.
+有关 ``POSIX_C_LANG_MATH`` 选项组的详细信息,请参阅 `Subprofiling Considerations`_。(Please refer to `Subprofiling Considerations`_ for details on the ``POSIX_C_LANG_MATH`` Option Group.)
 
 .. _posix_option_group_c_lang_support:
 
 POSIX_C_LANG_SUPPORT
 ++++++++++++++++++++
 
-The POSIX_C_LANG_SUPPORT option group contains the general ISO C Library.
+POSIX_C_LANG_SUPPORT 选项组包含通用的 ISO C 库。(The POSIX_C_LANG_SUPPORT option group contains the general ISO C Library.)
 
 .. note::
-   When using Newlib, Picolibc, or other C libraries conforming to the ISO C Standard, the entire
-   ``POSIX_C_LANG_SUPPORT`` Option Group is considered supported.
+   使用 Newlib、Picolibc 或其他符合 ISO C 标准的 C 库时,整个 ``POSIX_C_LANG_SUPPORT`` 选项组被视为已支持。(When using Newlib, Picolibc, or other C libraries conforming to the ISO C Standard, the entire ``POSIX_C_LANG_SUPPORT`` Option Group is considered supported.)
 
-Please refer to `Subprofiling Considerations`_ for details on the ``POSIX_C_LANG_SUPPORT`` Option
-Group.
+有关 ``POSIX_C_LANG_SUPPORT`` 选项组的详细信息,请参阅 `Subprofiling Considerations`_。(Please refer to `Subprofiling Considerations`_ for details on the ``POSIX_C_LANG_SUPPORT`` Option Group.)
 
-For more information on developing Zephyr applications in the C programming language, please refer
-to :ref:`details<language_support>`.
+有关使用 C 编程语言开发 Zephyr 应用程序的更多信息,请参阅 :ref:`详细信息<language_support>`。(For more information on developing Zephyr applications in the C programming language, please refer to :ref:`details<language_support>`.)
 
 .. _posix_option_group_c_lang_support_r:
 
 POSIX_C_LANG_SUPPORT_R
 ++++++++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_C_LANG_SUPPORT_R`.
+使用 :kconfig:option:`CONFIG_POSIX_C_LANG_SUPPORT_R` 启用此选项组。(使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_C_LANG_SUPPORT_R`).)
 
 .. csv-table:: POSIX_C_LANG_SUPPORT_R
-   :header: API, Supported
+   :header: API, 支持 (Supported)
    :widths: 50,10
 
     asctime_r(),yes
@@ -96,7 +90,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_C_LANG_SUPPORT_R`.
 POSIX_C_LIB_EXT
 +++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_C_LIB_EXT`.
+使用 :kconfig:option:`CONFIG_POSIX_C_LIB_EXT` 启用此选项组。(使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_C_LIB_EXT`).)
 
 .. csv-table:: POSIX_C_LIB_EXT
    :header: API, Supported
@@ -123,7 +117,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_C_LIB_EXT`.
 POSIX_CLOCK_SELECTION
 +++++++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_CLOCK_SELECTION`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_CLOCK_SELECTION`).
 
 .. csv-table:: POSIX_CLOCK_SELECTION
    :header: API, Supported
@@ -138,7 +132,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_CLOCK_SELECTION`.
 POSIX_DEVICE_IO
 +++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_DEVICE_IO`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_DEVICE_IO`).
 
 .. note::
    When using Newlib, Picolibc, or other C libraries conforming to the ISO C Standard, the
@@ -203,7 +197,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_DEVICE_IO`.
 POSIX_FD_MGMT
 +++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_FD_MGMT`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_FD_MGMT`).
 
 .. csv-table:: POSIX_FD_MGMT
    :header: API, Supported
@@ -244,7 +238,7 @@ POSIX_FILE_LOCKING
 POSIX_FILE_SYSTEM
 +++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_FILE_SYSTEM`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_FILE_SYSTEM`).
 
 .. csv-table:: POSIX_FILE_SYSTEM
    :header: API, Supported
@@ -282,7 +276,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_FILE_SYSTEM`.
 POSIX_FILE_SYSTEM_R
 +++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_FILE_SYSTEM_R`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_FILE_SYSTEM_R`).
 
 .. csv-table:: POSIX_FILE_SYSTEM_R
    :header: API, Supported
@@ -295,7 +289,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_FILE_SYSTEM_R`.
 POSIX_MAPPED_FILES
 ++++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_MAPPED_FILES`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_MAPPED_FILES`).
 
 .. csv-table:: POSIX_MAPPED_FILES
    :header: API, Supported
@@ -310,7 +304,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_MAPPED_FILES`.
 POSIX_MEMORY_PROTECTION
 +++++++++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_MEMORY_PROTECTION`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_MEMORY_PROTECTION`).
 
 .. csv-table:: POSIX_MEMORY_PROTECTION
    :header: API, Supported
@@ -323,7 +317,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_MEMORY_PROTECTION`.
 POSIX_MULTI_PROCESS
 +++++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_MULTI_PROCESS`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_MULTI_PROCESS`).
 
 .. csv-table:: POSIX_MULTI_PROCESS
    :header: API, Supported
@@ -362,7 +356,7 @@ POSIX_NETWORKING
 The function ``sockatmark()`` is not yet supported and is expected to fail setting ``errno``
 to ``ENOSYS`` :ref:`†<posix_undefined_behaviour>`.
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_NETWORKING`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_NETWORKING`).
 
 .. csv-table:: POSIX_NETWORKING
    :header: API, Supported
@@ -438,7 +432,7 @@ POSIX_PIPE
 POSIX_REALTIME_SIGNALS
 ++++++++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_REALTIME_SIGNALS`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_REALTIME_SIGNALS`).
 
 .. csv-table:: POSIX_REALTIME_SIGNALS
    :header: API, Supported
@@ -458,7 +452,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_REALTIME_SIGNALS`.
 POSIX_RW_LOCKS
 ++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_RW_LOCKS`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_RW_LOCKS`).
 
 .. csv-table:: POSIX_RW_LOCKS
    :header: API, Supported
@@ -481,7 +475,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_RW_LOCKS`.
 POSIX_SEMAPHORES
 ++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_SEMAPHORES`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_SEMAPHORES`).
 
 .. csv-table:: POSIX_SEMAPHORES
    :header: API, Supported
@@ -514,7 +508,7 @@ POSIX_SIGNAL_JUMP
 POSIX_SIGNALS
 +++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_SIGNALS`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_SIGNALS`).
 
 .. note::
    As processes are not yet supported in Zephyr, the ISO C functions ``abort()``, ``signal()``,
@@ -554,7 +548,7 @@ POSIX_SINGLE_PROCESS
 The POSIX_SINGLE_PROCESS option group contains services for single
 process applications.
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_SINGLE_PROCESS`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_SINGLE_PROCESS`).
 
 .. csv-table:: POSIX_SINGLE_PROCESS
    :header: API, Supported
@@ -574,7 +568,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_SINGLE_PROCESS`.
 POSIX_SPIN_LOCKS
 ++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_SPIN_LOCKS`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_SPIN_LOCKS`).
 
 .. csv-table:: POSIX_SPIN_LOCKS
    :header: API, Supported
@@ -596,7 +590,7 @@ consists of a single (implicit) process with multiple threads. Therefore, the
 standard requires all basic thread services, except those related to
 multiple processes.
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_THREADS`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_THREADS`).
 
 .. csv-table:: POSIX_THREADS_BASE
    :header: API, Supported
@@ -657,7 +651,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_THREADS`.
 POSIX_THREADS_EXT
 +++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_THREADS_EXT`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_THREADS_EXT`).
 
 .. csv-table:: POSIX_THREADS_EXT
    :header: API, Supported
@@ -673,7 +667,7 @@ Enable this option group with :kconfig:option:`CONFIG_POSIX_THREADS_EXT`.
 POSIX_TIMERS
 ++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_POSIX_TIMERS`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_POSIX_TIMERS`).
 
 .. csv-table:: POSIX_TIMERS
    :header: API, Supported
@@ -702,7 +696,7 @@ The ``XSI_REALTIME`` option group indicates that the :ref:`_POSIX_FSYNC<posix_op
 :ref:`_POSIX_SHARED_MEMORY_OBJECTS<posix_option_shared_memory_objects>`, and
 :ref:`_POSIX_SYNCHRONIZED_IO<posix_option_synchronized_io>` options are enabled.
 
-Enable this option group with :kconfig:option:`CONFIG_XSI_REALTIME`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_XSI_REALTIME`).
 
 When this option group is enabled, the ``_XOPEN_REALTIME`` feature test macro will be defined to a
 value other than -1.
@@ -712,7 +706,7 @@ value other than -1.
 XSI_SINGLE_PROCESS
 ++++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_XSI_SINGLE_PROCESS`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_XSI_SINGLE_PROCESS`).
 
 .. csv-table:: XSI_SINGLE_PROCESS
    :header: API, Supported
@@ -727,7 +721,7 @@ Enable this option group with :kconfig:option:`CONFIG_XSI_SINGLE_PROCESS`.
 XSI_SYSTEM_LOGGING
 ++++++++++++++++++
 
-Enable this option group with :kconfig:option:`CONFIG_XSI_SYSTEM_LOGGING`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_XSI_SYSTEM_LOGGING`).
 
 .. csv-table:: XSI_SYSTEM_LOGGING
    :header: API, Supported
@@ -747,7 +741,7 @@ The XSI_THREADS_EXT option group is required because it provides
 functions to control a thread's stack. This is considered useful for any
 real-time application.
 
-Enable this option group with :kconfig:option:`CONFIG_XSI_THREADS_EXT`.
+使用 (Enable this option group with :kconfig:option:`CONFIG_XSI_THREADS_EXT`).
 
 .. csv-table:: XSI_THREADS_EXT
    :header: API, Supported
@@ -772,7 +766,7 @@ Functions part of the ``_POSIX_ASYNCHRONOUS_IO`` Option are not implemented in Z
 provided so that conformant applications can still link. These functions will fail, setting
 ``errno`` to ``ENOSYS``:ref:`†<posix_undefined_behaviour>`.
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_ASYNCHRONOUS_IO`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_ASYNCHRONOUS_IO`).
 
 .. csv-table:: _POSIX_ASYNCHRONOUS_IO
    :header: API, Supported
@@ -792,7 +786,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_ASYNCHRONOUS_IO`.
 _POSIX_CPUTIME
 ++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_CPUTIME`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_CPUTIME`).
 
 .. csv-table:: _POSIX_CPUTIME
    :header: API, Supported
@@ -805,7 +799,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_CPUTIME`.
 _POSIX_FSYNC
 ++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_FSYNC`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_FSYNC`).
 
 .. csv-table:: _POSIX_FSYNC
    :header: API, Supported
@@ -822,7 +816,7 @@ Internet Protocol Version 6 is supported.
 
 For more information, please refer to :ref:`Networking <networking>`.
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_IPV6`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_IPV6`).
 
 .. _posix_option_memlock:
 
@@ -833,7 +827,7 @@ Zephyr's :ref:`Demand Paging API <memory_management_api_demand_paging>` does not
 pinning or unpinning all virtual memory regions. The functions below are expected to fail and
 set ``errno`` to ``ENOSYS`` :ref:`†<posix_undefined_behaviour>`.
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_MEMLOCK`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_MEMLOCK`).
 
 .. csv-table:: _POSIX_MEMLOCK
    :header: API, Supported
@@ -847,7 +841,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_MEMLOCK`.
 _POSIX_MEMLOCK_RANGE
 ++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_MEMLOCK_RANGE`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_MEMLOCK_RANGE`).
 
 .. csv-table:: _POSIX_MEMLOCK_RANGE
    :header: API, Supported
@@ -861,7 +855,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_MEMLOCK_RANGE`.
 _POSIX_MESSAGE_PASSING
 ++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_MESSAGE_PASSING`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_MESSAGE_PASSING`).
 
 .. csv-table:: _POSIX_MESSAGE_PASSING
    :header: API, Supported
@@ -881,7 +875,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_MESSAGE_PASSING`.
 _POSIX_MONOTONIC_CLOCK
 ++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_MONOTONIC_CLOCK`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_MONOTONIC_CLOCK`).
 
 .. csv-table:: _POSIX_MONOTONIC_CLOCK
    :header: API, Supported
@@ -898,7 +892,7 @@ As processes are not yet supported in Zephyr, the functions ``sched_rr_get_inter
 ``sched_setparam()``, and ``sched_setscheduler()`` are expected to fail setting ``errno``
 to ``ENOSYS``:ref:`†<posix_undefined_behaviour>`.
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_PRIORITY_SCHEDULING`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_PRIORITY_SCHEDULING`).
 
 .. csv-table:: _POSIX_PRIORITY_SCHEDULING
    :header: API, Supported
@@ -921,7 +915,7 @@ Raw sockets are supported.
 
 For more information, please refer to :kconfig:option:`CONFIG_NET_SOCKETS_PACKET`.
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_RAW_SOCKETS`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_RAW_SOCKETS`).
 
 .. _posix_shared_memory_objects:
 
@@ -930,7 +924,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_RAW_SOCKETS`.
 _POSIX_SHARED_MEMORY_OBJECTS
 ++++++++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_SHARED_MEMORY_OBJECTS`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_SHARED_MEMORY_OBJECTS`).
 
 .. csv-table:: _POSIX_SHARED_MEMORY_OBJECTS
    :header: API, Supported
@@ -946,7 +940,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_SHARED_MEMORY_OBJECTS`.
 _POSIX_SYNCHRONIZED_IO
 ++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_SYNCHRONIZED_IO`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_SYNCHRONIZED_IO`).
 
 .. csv-table:: _POSIX_SYNCHRONIZED_IO
    :header: API, Supported
@@ -961,7 +955,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_SYNCHRONIZED_IO`.
 _POSIX_THREAD_ATTR_STACKADDR
 ++++++++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_ATTR_STACKADDR`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_ATTR_STACKADDR`).
 
 .. csv-table:: _POSIX_THREAD_ATTR_STACKADDR
    :header: API, Supported
@@ -975,7 +969,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_ATTR_STACKADDR`.
 _POSIX_THREAD_ATTR_STACKSIZE
 ++++++++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_ATTR_STACKSIZE`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_ATTR_STACKSIZE`).
 
 .. csv-table:: _POSIX_THREAD_ATTR_STACKSIZE
    :header: API, Supported
@@ -989,7 +983,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_ATTR_STACKSIZE`.
 _POSIX_THREAD_CPUTIME
 +++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_CPUTIME`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_CPUTIME`).
 
 .. csv-table:: _POSIX_THREAD_CPUTIME
    :header: API, Supported
@@ -1003,7 +997,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_CPUTIME`.
 _POSIX_THREAD_PRIO_INHERIT
 ++++++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIO_INHERIT`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIO_INHERIT`).
 
 .. csv-table:: _POSIX_THREAD_PRIO_INHERIT
    :header: API, Supported
@@ -1017,7 +1011,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIO_INHERIT`.
 _POSIX_THREAD_PRIO_PROTECT
 ++++++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIO_PROTECT`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIO_PROTECT`).
 
 .. csv-table:: _POSIX_THREAD_PRIO_PROTECT
    :header: API, Supported
@@ -1035,7 +1029,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIO_PROTECT`.
 _POSIX_THREAD_PRIORITY_SCHEDULING
 +++++++++++++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIORITY_SCHEDULING`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIORITY_SCHEDULING`).
 
 .. csv-table:: _POSIX_THREAD_PRIORITY_SCHEDULING
    :header: API, Supported
@@ -1056,7 +1050,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_PRIORITY_SCHEDULING
 _POSIX_THREAD_SAFE_FUNCTIONS
 ++++++++++++++++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_SAFE_FUNCTIONS`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_SAFE_FUNCTIONS`).
 
 .. csv-table:: _POSIX_THREAD_SAFE_FUNCTIONS
     :header: API, Supported
@@ -1087,7 +1081,7 @@ Enable this option with :kconfig:option:`CONFIG_POSIX_THREAD_SAFE_FUNCTIONS`.
 _POSIX_TIMEOUTS
 +++++++++++++++
 
-Enable this option with :kconfig:option:`CONFIG_POSIX_TIMEOUTS`.
+Enable this option with :kconfig:option:`CONFIG_POSIX_TIMEOUTS`).
 
 .. csv-table:: _POSIX_TIMEOUTS
    :header: API, Supported
@@ -1111,7 +1105,7 @@ implemented in Zephyr but are provided so that conformant applications can still
 Unimplemented functions in this option group will fail, setting ``errno`` to ``ENOSYS``
 :ref:`†<posix_undefined_behaviour>`.
 
-Enable this option with :kconfig:option:`CONFIG_XOPEN_STREAMS`.
+Enable this option with :kconfig:option:`CONFIG_XOPEN_STREAMS`).
 
 .. csv-table:: _XOPEN_STREAMS
    :header: API, Supported

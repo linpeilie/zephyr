@@ -1,5 +1,5 @@
-API Reference
-*************
+API 参考 (API Reference)
+*************************
 
 .. doxygengroup:: llext_apis
 
@@ -8,3 +8,4 @@ API Reference
 .. doxygengroup:: llext_loader_apis
 
 .. doxygengroup:: llext_inspect_apis
+

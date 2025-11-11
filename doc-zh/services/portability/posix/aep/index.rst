@@ -1,51 +1,46 @@
 .. _posix_aep:
 
-POSIX Application Environment Profiles (AEP)
-############################################
+POSIX 应用环境配置 (POSIX Application Environment Profiles (AEP))
+##################################################################
 
-Although inactive, `IEEE 1003.13-2003`_ defined a number of AEP that inspired the modern
-subprofiling options of `IEEE 1003.1-2017`_. The single-purpose realtime system profiles
-are listed below, for reference, in terms that agree with the current POSIX-1 standard. PSE54
-is not considered at this time.
+尽管已不活跃,`IEEE 1003.13-2003`_ 定义了许多 AEP,这些配置启发了 `IEEE 1003.1-2017`_ 的现代子配置选项。下面列出的单用途实时系统配置仅供参考,使用的术语与当前 POSIX-1 标准一致。目前不考虑 PSE54。(Although inactive, `IEEE 1003.13-2003`_ defined a number of AEP that inspired the modern subprofiling options of `IEEE 1003.1-2017`_. The single-purpose realtime system profiles are listed below, for reference, in terms that agree with the current POSIX-1 standard. PSE54 is not considered at this time.)
 
-System Interfaces
-=================
+系统接口 (System Interfaces)
+=============================
 
-The required POSIX :ref:`System Interfaces<posix_system_interfaces_required>` are supported for
-each Application Environment Profile.
+每个应用环境配置都支持所需的 POSIX :ref:`系统接口<posix_system_interfaces_required>`。(The required POSIX :ref:`System Interfaces<posix_system_interfaces_required>` are supported for each Application Environment Profile.)
 
 ..  figure:: si.svg
     :align: center
     :scale: 150%
     :alt: Required System Interfaces
 
-    System Interfaces
+    系统接口 (System Interfaces)
 
 .. _posix_aep_pse51:
 
-Minimal Realtime System Profile (PSE51)
-=======================================
+最小实时系统配置 (Minimal Realtime System Profile (PSE51))
+===========================================================
 
-The *Minimal Realtime System Profile* (PSE51) includes all of the
-:ref:`System Interfaces<posix_system_interfaces_required>` along with several additional features.
+*最小实时系统配置* (PSE51) 包括所有 :ref:`系统接口<posix_system_interfaces_required>` 以及几个额外的功能。(The *Minimal Realtime System Profile* (PSE51) includes all of the :ref:`System Interfaces<posix_system_interfaces_required>` along with several additional features.)
 
 ..  figure:: aep-pse51.svg
     :align: center
     :scale: 150%
     :alt: Minimal Realtime System Profile (PSE51)
 
-    Minimal Realtime System Profile (PSE51)
+    最小实时系统配置 (Minimal Realtime System Profile (PSE51))
 
 .. Conforming implementations shall define _POSIX_AEP_REALTIME_MINIMAL to the value 200312L
 
-.. csv-table:: PSE51 System Interfaces
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE51 系统接口 (PSE51 System Interfaces)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     _POSIX_AEP_REALTIME_MINIMAL, -1, :kconfig:option:`CONFIG_POSIX_AEP_REALTIME_MINIMAL`
 
-.. csv-table:: PSE51 Option Groups
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE51 选项组 (PSE51 Option Groups)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     :ref:`POSIX_C_LANG_JUMP <posix_option_group_c_lang_jump>`, yes,
@@ -55,8 +50,8 @@ The *Minimal Realtime System Profile* (PSE51) includes all of the
     :ref:`POSIX_SINGLE_PROCESS <posix_option_group_single_process>`, yes, :kconfig:option:`CONFIG_POSIX_SINGLE_PROCESS`
     :ref:`XSI_THREADS_EXT <posix_option_group_xsi_threads_ext>`, yes, :kconfig:option:`CONFIG_XSI_THREADS_EXT`
 
-.. csv-table:: PSE51 Option Requirements
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE51 选项要求 (PSE51 Option Requirements)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     :ref:`_POSIX_FSYNC <posix_option_fsync>`, 200809L, :kconfig:option:`CONFIG_POSIX_FSYNC`
@@ -75,37 +70,36 @@ The *Minimal Realtime System Profile* (PSE51) includes all of the
 
 .. _posix_aep_pse52:
 
-Realtime Controller System Profile (PSE52)
-==========================================
+实时控制器系统配置 (Realtime Controller System Profile (PSE52))
+================================================================
 
-The *Realtime Controller System Profile* (PSE52) includes all features from PSE51 and the
-:ref:`System Interfaces<posix_system_interfaces_required>`.
+*实时控制器系统配置* (PSE52) 包括 PSE51 的所有功能以及 :ref:`系统接口<posix_system_interfaces_required>`。(The *Realtime Controller System Profile* (PSE52) includes all features from PSE51 and the :ref:`System Interfaces<posix_system_interfaces_required>`.)
 
 ..  figure:: aep-pse52.svg
     :align: center
     :scale: 150%
     :alt: Realtime Controller System Profile (PSE52)
 
-    Realtime Controller System Profile (PSE52)
+    实时控制器系统配置 (Realtime Controller System Profile (PSE52))
 
 .. Conforming implementations shall define _POSIX_AEP_REALTIME_CONTROLLER to the value 200312L
 
-.. csv-table:: PSE52 System Interfaces
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE52 系统接口 (PSE52 System Interfaces)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     _POSIX_AEP_REALTIME_CONTROLLER, -1, :kconfig:option:`CONFIG_POSIX_AEP_REALTIME_CONTROLLER`
 
-.. csv-table:: PSE52 Option Groups
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE52 选项组 (PSE52 Option Groups)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     :ref:`POSIX_C_LANG_MATH <posix_option_group_c_lang_math>`, yes,
     :ref:`POSIX_FD_MGMT <posix_option_group_fd_mgmt>`,, :kconfig:option:`CONFIG_POSIX_FD_MGMT`
     :ref:`POSIX_FILE_SYSTEM <posix_option_group_file_system>`,, :kconfig:option:`CONFIG_POSIX_FILE_SYSTEM`
 
-.. csv-table:: PSE52 Option Requirements
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE52 选项要求 (PSE52 Option Requirements)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     :ref:`_POSIX_MESSAGE_PASSING <posix_option_message_passing>`, 200809L, :kconfig:option:`CONFIG_POSIX_MESSAGE_PASSING`
@@ -115,29 +109,28 @@ The *Realtime Controller System Profile* (PSE52) includes all features from PSE5
 
 .. _posix_aep_pse53:
 
-Dedicated Realtime System Profile (PSE53)
-=========================================
+专用实时系统配置 (Dedicated Realtime System Profile (PSE53))
+==============================================================
 
-The *Dedicated Realtime System Profile* (PSE53) includes all features from PSE52, PSE51, and the
-:ref:`System Interfaces<posix_system_interfaces_required>`.
+*专用实时系统配置* (PSE53) 包括 PSE52、PSE51 的所有功能以及 :ref:`系统接口<posix_system_interfaces_required>`。(The *Dedicated Realtime System Profile* (PSE53) includes all features from PSE52, PSE51, and the :ref:`System Interfaces<posix_system_interfaces_required>`.)
 
 ..  figure:: aep-pse53.svg
     :align: center
     :scale: 150%
     :alt: Dedicated Realtime System Profile (PSE53)
 
-    Dedicated Realtime System Profile (PSE53)
+    专用实时系统配置 (Dedicated Realtime System Profile (PSE53))
 
 .. Conforming implementations shall define _POSIX_AEP_REALTIME_DEDICATED to the value 200312L
 
-.. csv-table:: PSE53 System Interfaces
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE53 系统接口 (PSE53 System Interfaces)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     _POSIX_AEP_REALTIME_DEDICATED, -1, :kconfig:option:`CONFIG_POSIX_AEP_REALTIME_DEDICATED`
 
-.. csv-table:: PSE53 Option Groups
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE53 选项组 (PSE53 Option Groups)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     :ref:`POSIX_MULTI_PROCESS<posix_option_group_multi_process>`,, :kconfig:option:`CONFIG_POSIX_MULTI_PROCESS`:ref:`†<posix_undefined_behaviour>`
@@ -145,8 +138,8 @@ The *Dedicated Realtime System Profile* (PSE53) includes all features from PSE52
     :ref:`POSIX_PIPE <posix_option_group_pipe>`,,
     :ref:`POSIX_SIGNAL_JUMP <posix_option_group_signal_jump>`,,
 
-.. csv-table:: PSE53 Option Requirements
-   :header: Symbol, Support, Remarks
+.. csv-table:: PSE53 选项要求 (PSE53 Option Requirements)
+   :header: 符号 (Symbol), 支持 (Support), 备注 (Remarks)
    :widths: 50, 10, 50
 
     :ref:`_POSIX_CPUTIME <posix_option_cputime>`, 200809L, :kconfig:option:`CONFIG_POSIX_CPUTIME`

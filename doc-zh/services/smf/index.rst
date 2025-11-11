@@ -1,68 +1,45 @@
 .. _smf:
 
-State Machine Framework
-#######################
+状态机框架 (State Machine Framework)
+#####################################
 
 .. highlight:: c
 
-Overview
-========
+概述 (Overview)
+================
 
-The State Machine Framework (SMF) is an application agnostic framework that
-provides an easy way for developers to integrate state machines into their
-application. The framework can be added to any project by enabling the
-:kconfig:option:`CONFIG_SMF` option.
+状态机框架 (SMF) 是一个与应用程序无关的框架,它为开发人员提供了一种将状态机集成到其应用程序中的简便方法。可以通过启用 :kconfig:option:`CONFIG_SMF` 选项将该框架添加到任何项目中。(The State Machine Framework (SMF) is an application agnostic framework that provides an easy way for developers to integrate state machines into their application. The framework can be added to any project by enabling the :kconfig:option:`CONFIG_SMF` option.)
 
-State Creation
-==============
+状态创建 (State Creation)
+==========================
 
-A state is represented by three functions, where one function implements the
-Entry actions, another function implements the Run actions, and the last
-function implements the Exit actions. The prototype for the entry and exit
-functions are as follows: ``void funct(void *obj)``, and the prototype for the
-run action is ``enum smf_state_result funct(void *obj)`` where the ``obj``
-parameter is a user defined structure that has the state machine context,
-:c:struct:`smf_ctx`, as its first member. For example::
+状态由三个函数表示,其中一个函数实现进入动作 (Entry actions),另一个函数实现运行动作 (Run actions),最后一个函数实现退出动作 (Exit actions)。进入和退出函数的原型如下:``void funct(void *obj)``,运行动作的原型是 ``enum smf_state_result funct(void *obj)``,其中 ``obj`` 参数是用户定义的结构,该结构将状态机上下文 :c:struct:`smf_ctx` 作为其第一个成员。例如::(A state is represented by three functions, where one function implements the Entry actions, another function implements the Run actions, and the last function implements the Exit actions. The prototype for the entry and exit functions are as follows: ``void funct(void *obj)``, and the prototype for the run action is ``enum smf_state_result funct(void *obj)`` where the ``obj`` parameter is a user defined structure that has the state machine context, :c:struct:`smf_ctx`, as its first member. For example::)
 
    struct user_object {
       struct smf_ctx ctx;
       /* All User Defined Data Follows */
    };
 
-The :c:struct:`smf_ctx` member must be first because the state machine
-framework's functions casts the user defined object to the :c:struct:`smf_ctx`
-type with the :c:macro:`SMF_CTX` macro.
+:c:struct:`smf_ctx` 成员必须是第一个,因为状态机框架的函数使用 :c:macro:`SMF_CTX` 宏将用户定义的对象转换为 :c:struct:`smf_ctx` 类型。(The :c:struct:`smf_ctx` member must be first because the state machine framework's functions casts the user defined object to the :c:struct:`smf_ctx` type with the :c:macro:`SMF_CTX` macro.)
 
-For example instead of doing this ``(struct smf_ctx *)&user_obj``, you could
-use ``SMF_CTX(&user_obj)``.
+例如,不要这样做 ``(struct smf_ctx *)&user_obj``,您可以使用 ``SMF_CTX(&user_obj)``。(For example instead of doing this ``(struct smf_ctx *)&user_obj``, you could use ``SMF_CTX(&user_obj)``.)
 
-By default, a state can have no ancestor states, resulting in a flat state
-machine. But to enable the creation of a hierarchical state machine, the
-:kconfig:option:`CONFIG_SMF_ANCESTOR_SUPPORT` option must be enabled.
+默认情况下,状态可以没有祖先状态,从而产生平面状态机。但是要启用分层状态机的创建,必须启用 :kconfig:option:`CONFIG_SMF_ANCESTOR_SUPPORT` 选项。(By default, a state can have no ancestor states, resulting in a flat state machine. But to enable the creation of a hierarchical state machine, the :kconfig:option:`CONFIG_SMF_ANCESTOR_SUPPORT` option must be enabled.)
 
-The return value of the run action, :c:enum:`smf_state_result` determines if the
-state machine propagates the event to parent run actions
-(:c:enum:`SMF_EVENT_PROPAGATE`) or if the event was handled by the run action
-(:c:enum:`SMF_EVENT_HANDLED`). Flat state machines do not have parent actions,
-so the return code is ignored; returning :c:enum:`SMF_EVENT_HANDLED` is
-recommended.
+运行动作的返回值 :c:enum:`smf_state_result` 决定状态机是否将事件传播到父运行动作 (:c:enum:`SMF_EVENT_PROPAGATE`) 或事件是否由运行动作处理 (:c:enum:`SMF_EVENT_HANDLED`)。平面状态机没有父动作,因此返回代码被忽略;建议返回 :c:enum:`SMF_EVENT_HANDLED`。(The return value of the run action, :c:enum:`smf_state_result` determines if the state machine propagates the event to parent run actions (:c:enum:`SMF_EVENT_PROPAGATE`) or if the event was handled by the run action (:c:enum:`SMF_EVENT_HANDLED`). Flat state machines do not have parent actions, so the return code is ignored; returning :c:enum:`SMF_EVENT_HANDLED` is recommended.)
 
-Calling :c:func:`smf_set_state` prevents calling parent run
-actions, even if :c:enum:`SMF_EVENT_PROPAGATE` is returned.
+调用 :c:func:`smf_set_state` 会阻止调用父运行动作,即使返回 :c:enum:`SMF_EVENT_PROPAGATE`。(Calling :c:func:`smf_set_state` prevents calling parent run actions, even if :c:enum:`SMF_EVENT_PROPAGATE` is returned.)
 
-By default, the hierarchical state machines do not support initial transitions
-to child states on entering a superstate. To enable them the
-:kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION` option must be enabled.
+默认情况下,分层状态机不支持在进入超状态时初始转换到子状态。要启用它们,必须启用 :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION` 选项。(By default, the hierarchical state machines do not support initial transitions to child states on entering a superstate. To enable them the :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION` option must be enabled.)
 
-The following macro can be used for easy state creation:
+以下宏可用于轻松创建状态:(The following macro can be used for easy state creation:)
 
-* :c:macro:`SMF_CREATE_STATE` Create a state
+* :c:macro:`SMF_CREATE_STATE` 创建状态 (Create a state)
 
-State Machine Creation
-======================
+状态机创建 (State Machine Creation)
+====================================
 
-A state machine is created by defining a table of states that's indexed by an
-enum. For example, the following creates three flat states::
+状态机是通过定义由枚举索引的状态表来创建的。例如,以下代码创建了三个平面状态::(A state machine is created by defining a table of states that's indexed by an enum. For example, the following creates three flat states::)
 
    enum demo_state { S0, S1, S2 };
 
@@ -72,7 +49,7 @@ enum. For example, the following creates three flat states::
       [S2] = SMF_CREATE_STATE(s2_entry, s2_run, s2_exit, NULL, NULL)
    };
 
-And this example creates three hierarchical states::
+此示例创建了三个分层状态::(And this example creates three hierarchical states::)
 
    enum demo_state { S0, S1, S2 };
 
@@ -83,8 +60,7 @@ And this example creates three hierarchical states::
    };
 
 
-This example creates three hierarchical states with an initial transition
-from parent state S0 to child state S2::
+此示例创建了三个分层状态,其中从父状态 S0 到子状态 S2 具有初始转换::(This example creates three hierarchical states with an initial transition from parent state S0 to child state S2::)
 
    enum demo_state { S0, S1, S2 };
 
@@ -97,65 +73,81 @@ from parent state S0 to child state S2::
       [S2] = SMF_CREATE_STATE(s2_entry, s2_run, s2_exit, demo_states[S0], NULL)
    };
 
-To set the initial state, the :c:func:`smf_set_initial` function should be
-called.
+要设置初始状态,应调用 :c:func:`smf_set_initial` 函数。(To set the initial state, the :c:func:`smf_set_initial` function should be called.)
 
-To transition from one state to another, the :c:func:`smf_set_state`
-function is used.
+要从一个状态转换到另一个状态,使用 :c:func:`smf_set_state` 函数。(To transition from one state to another, the :c:func:`smf_set_state` function is used.)
 
-.. note:: If :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION` is not set,
-   :c:func:`smf_set_initial` and :c:func:`smf_set_state` function should
-   not be passed a parent state as the parent state does not know which
-   child state to transition to. Transitioning to a parent state is OK
-   if an initial transition to a child state is defined. A well-formed
-   HSM should have initial transitions defined for all parent states.
+.. note:: 如果未设置 :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION`,则不应将父状态传递给 :c:func:`smf_set_initial` 和 :c:func:`smf_set_state` 函数,因为父状态不知道要转换到哪个子状态。如果定义了到子状态的初始转换,则转换到父状态是可以的。良好形成的 HSM 应该为所有父状态定义初始转换。(If :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION` is not set, :c:func:`smf_set_initial` and :c:func:`smf_set_state` function should not be passed a parent state as the parent state does not know which child state to transition to. Transitioning to a parent state is OK if an initial transition to a child state is defined. A well-formed HSM should have initial transitions defined for all parent states.)
 
-.. note:: While the state machine is running, :c:func:`smf_set_state` should
-   only be called from the Entry or Run function. Calling
-   :c:func:`smf_set_state` from Exit functions will generate a warning in the
-   log and no transition will occur.
+.. note:: 在状态机运行时,:c:func:`smf_set_state` 应仅从进入或运行函数调用。从退出函数调用 :c:func:`smf_set_state` 将在日志中生成警告,并且不会发生转换。(While the state machine is running, :c:func:`smf_set_state` should only be called from the Entry or Run function. Calling :c:func:`smf_set_state` from Exit functions will generate a warning in the log and no transition will occur.)
 
-State Machine Execution
-=======================
+状态机执行 (State Machine Execution)
+=====================================
 
-To run the state machine, the :c:func:`smf_run_state` function should be
-called in some application dependent way. An application should cease calling
-smf_run_state if it returns a non-zero value.
+要运行状态机,应以某种应用程序相关的方式调用 :c:func:`smf_run_state` 函数。如果它返回非零值,应用程序应停止调用 smf_run_state。(To run the state machine, the :c:func:`smf_run_state` function should be called in some application dependent way. An application should cease calling smf_run_state if it returns a non-zero value.)
 
-State Machine Termination
-=========================
+状态机终止 (State Machine Termination)
+=======================================
 
-To terminate the state machine, the :c:func:`smf_set_terminate` function
-should be called. It can be called from the entry, run, or exit actions. The
-function takes a non-zero user defined value that will be returned by the
-:c:func:`smf_run_state` function.
+要终止状态机,应调用 :c:func:`smf_set_terminate` 函数。它可以从进入、运行或退出动作调用。该函数采用非零用户定义值,该值将由 :c:func:`smf_run_state` 函数返回。(To terminate the state machine, the :c:func:`smf_set_terminate` function should be called. It can be called from the entry, run, or exit actions. The function takes a non-zero user defined value that will be returned by the :c:func:`smf_run_state` function.)
 
-Retrieving the Current State
-====================================
+检索当前状态 (Retrieving the Current State)
+============================================
 
-**Leaf State**: In the context of a hierarchical state machine, a *leaf state*
-is a state that does not contain any child states. It represents the most granular
-level of state in the hierarchy, where no further decomposition is possible.
+**叶状态** (Leaf State):在分层状态机的上下文中,*叶状态*是不包含任何子状态的状态。它表示层次结构中最细粒度的状态级别,在这里不可能进行进一步分解。(In the context of a hierarchical state machine, a *leaf state* is a state that does not contain any child states. It represents the most granular level of state in the hierarchy, where no further decomposition is possible.)
 
-**Executing State**: The *executing state* refers to the state whose entry,
-run, or exit action is currently being executed by the state machine. This
-may be a parent or leaf state, depending on the current operation.
+**执行状态** (Executing State):*执行状态*是指其进入、运行或退出动作当前正在由状态机执行的状态。这可以是父状态或叶状态,具体取决于当前操作。(The *executing state* refers to the state whose entry, run, or exit action is currently being executed by the state machine. This may be a parent or leaf state, depending on the current operation.)
 
-To retrieve the current leaf state, the :c:func:`smf_get_current_leaf_state`
-function should be called.
-For example::
+要检索当前叶状态,应调用 :c:func:`smf_get_current_leaf_state` 函数。例如::(To retrieve the current leaf state, the :c:func:`smf_get_current_leaf_state` function should be called. For example::)
 
    const struct smf_state *leaf_state = smf_get_current_leaf_state(SMF_CTX(&s_obj));
 
-.. note:: If :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION` is not enabled, or
-	if the initial state of a parent state is not defined, always set the state
-	to a leaf state. Otherwise, the state machine may enter a parent state directly,
-	and :c:func:`smf_get_current_leaf_state` may return a parent state instead of
-	a leaf state. Ensure initial transitions are properly configured for all parent
-	states to avoid malformed hierarchical state machines.
+.. note:: 如果未启用 :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION`,或者如果未定义父状态的初始状态,则始终将状态设置为叶状态。否则,状态机可能直接进入父状态,:c:func:`smf_get_current_leaf_state` 可能返回父状态而不是叶状态。确保为所有父状态正确配置初始转换,以避免形成不良的分层状态机。(If :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION` is not enabled, or if the initial state of a parent state is not defined, always set the state to a leaf state. Otherwise, the state machine may enter a parent state directly, and :c:func:`smf_get_current_leaf_state` may return a parent state instead of a leaf state. Ensure initial transitions are properly configured for all parent states to avoid malformed hierarchical state machines.)
 
-To retrieve the state whose entry, run, or exit action is currently being executed,
-use the :c:func:`smf_get_current_executing_state` function.
+要检索其进入、运行或退出动作当前正在执行的状态,使用 :c:func:`smf_get_current_executing_state` 函数。(To retrieve the state whose entry, run, or exit action is currently being executed, use the :c:func:`smf_get_current_executing_state` function.)
+
+UML 状态机 (UML State Machines)
+==================
+
+SMF 遵循 UML 分层状态机转换规则,即最小公共祖先的进入和退出动作在转换时不执行,除非所述转换是到自身的转换。(SMF follows UML hierarchical state machine rules for transitions i.e., the entry and exit actions of the least common ancestor are not executed on transition, unless said transition is a transition to self.)
+
+UML StateMachines 规范可以在以下 UML 规范的第 14 章中找到:https://www.omg.org/spec/UML/ (The UML Specification for StateMachines may be found in chapter 14 of the UML specification available here: https://www.omg.org/spec/UML/)
+
+SMF 在以下方面偏离 UML 规则:(SMF breaks from UML rules in:)
+
+1. 在源状态的上下文中执行与转换相关的动作,而不是在执行退出动作之后。(Executing the actions associated with the transition within the context of the source state, rather than after the exit actions are performed.)
+2. 仅允许到自身的外部转换,而不允许到子状态的转换。从超状态到子状态的转换被视为本地转换。(Only allowing external transitions to self, not to sub-states. A transition from a superstate to a child state is treated as a local transition.)
+3. 禁止在退出动作中使用 :c:func:`smf_set_state` 进行转换。(Prohibiting transitions using :c:func:`smf_set_state` in exit actions.)
+
+SMF 也不提供除初始伪状态之外的任何伪状态。可以通过从 'terminate' 状态的进入动作调用 :c:func:`smf_set_terminate` 来建模终止伪状态。通过为每个区域调用 :c:func:`smf_run_state` 来建模正交区域。(SMF also does not provide any pseudostates except the Initial Pseudostate. Terminate pseudostates can be modelled by calling :c:func:`smf_set_terminate` from the entry action of a 'terminate' state. Orthogonal regions are modelled by calling :c:func:`smf_run_state` for each region.)
+
+状态机示例 (State Machine Examples)
+======================
+
+平面状态机示例 (Flat State Machine Example)
+**************************
+
+此示例使用 SMF 将以下状态图转换为代码,其中初始状态为 S0。(This example turns the following state diagram into code using the SMF, where the initial state is S0.)
+
+.. graphviz::
+   :caption: 平面状态机图 (Flat state machine diagram)
+
+   digraph smf_flat {
+      node [style=rounded];
+      init [shape = point];
+      STATE_S0 [shape = box];
+      STATE_S1 [shape = box];
+      STATE_S2 [shape = box];
+
+      init -> STATE_S0;
+      STATE_S0 -> STATE_S1;
+      STATE_S1 -> STATE_S2;
+      STATE_S2 -> STATE_S0;
+   }
+
+代码::(Code::)(If :kconfig:option:`CONFIG_SMF_INITIAL_TRANSITION` is not enabled, or if the initial state of a parent state is not defined, always set the state to a leaf state. Otherwise, the state machine may enter a parent state directly, and :c:func:`smf_get_current_leaf_state` may return a parent state instead of a leaf state. Ensure initial transitions are properly configured for all parent states to avoid malformed hierarchical state machines.)
+
+要检索其进入、运行或退出动作当前正在执行的状态,使用 :c:func:`smf_get_current_executing_state` 函数。(To retrieve the state whose entry, run, or exit action is currently being executed, use the :c:func:`smf_get_current_executing_state` function.)
 
 UML State Machines
 ==================

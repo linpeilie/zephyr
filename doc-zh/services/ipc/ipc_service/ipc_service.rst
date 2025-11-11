@@ -1,64 +1,47 @@
 .. _ipc_service:
 
-IPC service
-###########
+IPC 服务 (IPC service)
+######################
 
 .. contents::
     :local:
     :depth: 2
 
-The IPC service API provides an interface to exchange data between two domains
-or CPUs.
+IPC 服务 API 提供了一个在两个域或 CPU 之间交换数据的接口。(The IPC service API provides an interface to exchange data between two domains or CPUs.)
 
-Overview
-========
+概述 (Overview)
+================
 
-An IPC service communication channel consists of one instance and one or
-several endpoints associated with the instance.
+一个 IPC 服务通信通道由一个实例和与该实例关联的一个或多个端点组成。(An IPC service communication channel consists of one instance and one or several endpoints associated with the instance.)
 
-An instance is the external representation of a physical communication channel
-between two domains or CPUs. The actual implementation and internal
-representation of the instance is peculiar to each backend.
+实例是两个域或 CPU 之间物理通信通道的外部表示。实例的实际实现和内部表示因每个后端而异。(An instance is the external representation of a physical communication channel between two domains or CPUs. The actual implementation and internal representation of the instance is peculiar to each backend.)
 
-An individual instance is not used to send data between domains/CPUs. To send
-and receive the data, the user must create (register) an endpoint in the
-instance. This allows for the connection of the two domains of interest.
+单独的实例不用于在域/CPU 之间发送数据。要发送和接收数据,用户必须在实例中创建(注册)一个端点。这允许连接两个感兴趣的域。(An individual instance is not used to send data between domains/CPUs. To send and receive the data, the user must create (register) an endpoint in the instance. This allows for the connection of the two domains of interest.)
 
-It is possible to have zero or multiple endpoints for one single instance,
-possibly with different priorities, and to use each to exchange data.
-Endpoint prioritization and multi-instance ability highly depend on the backend
-used.
+对于单个实例,可以有零个或多个端点,可能具有不同的优先级,并使用每个端点交换数据。端点优先级和多实例能力高度依赖于所使用的后端。(It is possible to have zero or multiple endpoints for one single instance, possibly with different priorities, and to use each to exchange data. Endpoint prioritization and multi-instance ability highly depend on the backend used.)
 
-The endpoint is an entity the user must use to send and receive data between
-two domains (connected by the instance). An endpoint is always associated to an
-instance.
+端点是用户必须使用的实体,用于在两个域之间发送和接收数据(通过实例连接)。端点始终与实例相关联。(The endpoint is an entity the user must use to send and receive data between two domains (connected by the instance). An endpoint is always associated to an instance.)
 
-The creation of the instances is left to the backend, usually at init time.
-The registration of the endpoints is left to the user, usually at run time.
+实例的创建留给后端,通常在初始化时进行。端点的注册留给用户,通常在运行时进行。(The creation of the instances is left to the backend, usually at init time. The registration of the endpoints is left to the user, usually at run time.)
 
-The API does not mandate a way for the backend to create instances but it is
-strongly recommended to use the devicetree to retrieve the configuration
-parameters for an instance. Currently, each backend defines its own
-DT-compatible configuration that is used to configure the interface at boot
-time.
+API 并不强制后端创建实例的方式,但强烈建议使用设备树来检索实例的配置参数。目前,每个后端定义自己的 DT 兼容配置,用于在启动时配置接口。(The API does not mandate a way for the backend to create instances but it is strongly recommended to use the devicetree to retrieve the configuration parameters for an instance. Currently, each backend defines its own DT-compatible configuration that is used to configure the interface at boot time.)
 
-The following usage scenarios are supported:
+支持以下使用场景:(The following usage scenarios are supported:)
 
-* Simple data exchange.
-* Data exchange using the no-copy API.
+* 简单数据交换。(Simple data exchange.)
+* 使用零拷贝 API 进行数据交换。(Data exchange using the no-copy API.)
 
-Simple data exchange
-====================
+简单数据交换 (Simple data exchange)
+====================================
 
-To send data between domains or CPUs, an endpoint must be registered onto
-an instance.
+要在域或 CPU 之间发送数据,必须在实例上注册一个端点。(To send data between domains or CPUs, an endpoint must be registered onto an instance.)
 
-See the following example:
+请参见以下示例:(See the following example:)
 
 .. note::
 
-   Before registering an endpoint, the instance must be opened using the
-   :c:func:`ipc_service_open_instance` function.
+   在注册端点之前,必须使用 :c:func:`ipc_service_open_instance` 函数打开实例。(Before registering an endpoint, the instance must be opened using the :c:func:`ipc_service_open_instance` function.)
+
 
 
 .. code-block:: c
@@ -99,13 +82,12 @@ See the following example:
       ret = ipc_service_send(&ept0, &message, sizeof(message));
    }
 
-Data exchange using the no-copy API
-===================================
+使用零拷贝 API 进行数据交换 (Data exchange using the no-copy API)
+===================================================================
 
-If the backend supports the no-copy API you can use it to directly write and
-read to and from shared memory regions.
+如果后端支持零拷贝 API,您可以使用它直接在共享内存区域中写入和读取。(If the backend supports the no-copy API you can use it to directly write and read to and from shared memory regions.)
 
-See the following example:
+请参见以下示例:(See the following example:)
 
 .. code-block:: c
 
@@ -158,28 +140,23 @@ See the following example:
       ret = ipc_service_send_nocopy(&ept0, data, sizeof(message));
    }
 
-Backends
-========
+后端 (Backends)
+================
 
-The requirements needed for implementing backends give flexibility to the IPC
-service. These allow for the addition of dedicated backends having only a
-subsets of features for specific use cases.
+实现后端所需的要求为 IPC 服务提供了灵活性。这允许添加仅具有特定用例功能子集的专用后端。(The requirements needed for implementing backends give flexibility to the IPC service. These allow for the addition of dedicated backends having only a subsets of features for specific use cases.)
 
-The backend must support at least the following:
+后端必须至少支持以下内容:(The backend must support at least the following:)
 
-* The init-time creation of instances.
-* The run-time registration of an endpoint in an instance.
+* 初始化时创建实例。(The init-time creation of instances.)
+* 运行时在实例中注册端点。(The run-time registration of an endpoint in an instance.)
 
-Additionally, the backend can also support the following:
+此外,后端还可以支持以下内容:(Additionally, the backend can also support the following:)
 
-* The run-time deregistration of an endpoint from the instance.
-* The run-time closing of an instance.
-* The no-copy API.
+* 运行时从实例中注销端点。(The run-time deregistration of an endpoint from the instance.)
+* 运行时关闭实例。(The run-time closing of an instance.)
+* 零拷贝 API。(The no-copy API.)
 
-Each backend can have its own limitations and features that make the backend
-unique and dedicated to a specific use case. The IPC service API can be used
-with multiple backends simultaneously, combining the pros and cons of each
-backend.
+每个后端都可以有自己的限制和特性,使后端独特并专用于特定用例。IPC 服务 API 可以同时与多个后端一起使用,结合每个后端的优缺点。(Each backend can have its own limitations and features that make the backend unique and dedicated to a specific use case. The IPC service API can be used with multiple backends simultaneously, combining the pros and cons of each backend.)
 
 .. toctree::
    :maxdepth: 1
@@ -187,15 +164,16 @@ backend.
    backends/ipc_service_icmsg.rst
    backends/ipc_service_icbmsg.rst
 
-API Reference
-=============
+API 参考 (API Reference)
+=========================
 
-IPC service API
-***************
+IPC 服务 API (IPC service API)
+*******************************
 
 .. doxygengroup:: ipc_service_api
 
-IPC service backend API
-***********************
+IPC 服务后端 API (IPC service backend API)
+*******************************************
 
 .. doxygengroup:: ipc_service_backend
+

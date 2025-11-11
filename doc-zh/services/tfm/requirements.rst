@@ -1,13 +1,13 @@
-TF-M Requirements
-#################
+TF-M 要求 (TF-M Requirements)
+#############################
 
-The following are some of the boards that can be used with TF-M:
+以下是一些可以与 TF-M 一起使用的开发板 (The following are some of the boards that can be used with TF-M):
 
 .. list-table::
    :header-rows: 1
 
-   * - Board
-     - NSPE board name
+   * - 开发板 (Board)
+     - NSPE 开发板名称 (NSPE board name)
    * - :ref:`mps2_an521_board`
      - ``mps2/an521/cpu0/ns`` (qemu supported)
    * - :ref:`mps3_board`
@@ -37,41 +37,41 @@ The following are some of the boards that can be used with TF-M:
    * - :ref:`v2m_musca_s1_board`
      - ``v2m_musca_s1/musca_s1/ns``
 
-To make sure TF-M is supported for a board
+要确保某个开发板支持 TF-M，请在其默认配置中检查 :kconfig:option:`CONFIG_TRUSTED_EXECUTION_NONSECURE` 是否设置为 ``y`` (To make sure TF-M is supported for a board
 in its output, check that :kconfig:option:`CONFIG_TRUSTED_EXECUTION_NONSECURE`
-is set to ``y`` in that board's default configuration.
+is set to ``y`` in that board's default configuration)。
 
-Software Requirements
-*********************
+软件要求 (Software Requirements)
+*********************************
 
-The Python modules required when building TF-M binaries are listed in the
-TF-M repository under ``tools/requirements.txt``.
+构建 TF-M 二进制文件时所需的 Python 模块列在 TF-M 仓库的 ``tools/requirements.txt`` 文件中 (The Python modules required when building TF-M binaries are listed in the
+TF-M repository under ``tools/requirements.txt``)。
 
-You can install them via:
+您可以通过以下方式安装它们 (You can install them via):
 
    .. code-block:: bash
 
       $ pip3 install -r "$(west list trusted-firmware-m -f '{abspath}')/tools/requirements.txt"
 
-They are used by TF-M's signing utility to prepare firmware images for
-validation by the bootloader.
+它们被 TF-M 的签名工具用来准备固件映像以供引导加载程序验证 (They are used by TF-M's signing utility to prepare firmware images for
+validation by the bootloader)。
 
-Part of the process of generating binaries for QEMU and merging signed
+生成用于 QEMU 的二进制文件以及在某些平台上合并已签名的安全和非安全二进制文件的过程，还需要使用 ``srec_cat`` 工具 (Part of the process of generating binaries for QEMU and merging signed
 secure and non-secure binaries on certain platforms also requires the use of
-the ``srec_cat`` utility.
+the ``srec_cat`` utility)。
 
-This can be installed on Linux via:
+在 Linux 上可以通过以下方式安装 (This can be installed on Linux via):
 
    .. code-block:: bash
 
       $ sudo apt-get install srecord
 
-And on OS X via:
+在 OS X 上可以通过以下方式安装 (And on OS X via):
 
    .. code-block:: bash
 
       $ brew install srecord
 
-For Windows-based systems, please make sure you have a copy of the utility
-available on your system path. See, for example:
+对于基于 Windows 的系统，请确保您的系统路径中有该工具的副本。例如，请参见 (For Windows-based systems, please make sure you have a copy of the utility
+available on your system path. See, for example):
 `SRecord for Windows <https://sourceforge.net/projects/srecord/files/srecord-win32>`_

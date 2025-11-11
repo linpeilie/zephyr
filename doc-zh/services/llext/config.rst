@@ -1,173 +1,120 @@
-Configuration
-#############
+配置 (Configuration)
+#####################
 
-The following Kconfig options are available for the LLEXT subsystem:
+以下 Kconfig 选项可用于 LLEXT 子系统:(The following Kconfig options are available for the LLEXT subsystem:)
 
 .. _llext_kconfig_heap:
 
-Heap size
-----------
+堆大小 (Heap size)
+------------------
 
-The LLEXT subsystem needs a heap to be allocated for extension related data.
-The following option controls this allocation, when allocating a static heap.
+LLEXT 子系统需要为扩展相关数据分配堆。在分配静态堆时,以下选项控制此分配。(The LLEXT subsystem needs a heap to be allocated for extension related data. The following option controls this allocation, when allocating a static heap.)
 
 :kconfig:option:`CONFIG_LLEXT_HEAP_SIZE`
 
-        Size of the LLEXT heap in kilobytes.
+        LLEXT 堆的大小(以千字节为单位)。(Size of the LLEXT heap in kilobytes.)
 
-For boards using the Harvard architecture, the LLEXT heap is split into two:
-one heap in instruction memory and another in data memory. The following options
-control these allocations.
+对于使用哈佛架构的板,LLEXT 堆分为两部分:一个在指令内存中的堆和另一个在数据内存中的堆。以下选项控制这些分配。(For boards using the Harvard architecture, the LLEXT heap is split into two: one heap in instruction memory and another in data memory. The following options control these allocations.)
 
 :kconfig:option:`CONFIG_LLEXT_INSTR_HEAP_SIZE`
 
-        Size of the LLEXT heap in instruction memory in kilobytes.
+        指令内存中 LLEXT 堆的大小(以千字节为单位)。(Size of the LLEXT heap in instruction memory in kilobytes.)
 
 :kconfig:option:`CONFIG_LLEXT_DATA_HEAP_SIZE`
 
-        Size of the LLEXT heap in data memory in kilobytes.
+        数据内存中 LLEXT 堆的大小(以千字节为单位)。(Size of the LLEXT heap in data memory in kilobytes.)
 
 .. note::
-   The LLEXT instruction heap is grouped with Zephyr .rodata, which the linker
-   typically places after .text in instruction memory.
+   LLEXT 指令堆与 Zephyr .rodata 分组在一起,链接器通常将其放置在指令内存中 .text 之后。(The LLEXT instruction heap is grouped with Zephyr .rodata, which the linker typically places after .text in instruction memory.)
 
 .. warning::
-   LLEXT will be unable to link and execute extensions if instruction memory
-   (i.e., memory the processor can fetch instructions from) is not writable.
+   如果指令内存(即处理器可以从中获取指令的内存)不可写,LLEXT 将无法链接和执行扩展。(LLEXT will be unable to link and execute extensions if instruction memory (i.e., memory the processor can fetch instructions from) is not writable.)
 
-Alternatively the application can configure a dynamic heap using the following
-option.
+或者,应用程序可以使用以下选项配置动态堆。(Alternatively the application can configure a dynamic heap using the following option.)
 
 :kconfig:option:`CONFIG_LLEXT_HEAP_DYNAMIC`
 
-        Some applications require loading extensions into the memory which does
-        not exist during the boot time and cannot be allocated statically. Make
-        the application responsible for LLEXT heap allocation. Do not allocate
-        LLEXT heap statically.
+        某些应用程序需要将扩展加载到启动时不存在且无法静态分配的内存中。使应用程序负责 LLEXT 堆分配。不要静态分配 LLEXT 堆。(Some applications require loading extensions into the memory which does not exist during the boot time and cannot be allocated statically. Make the application responsible for LLEXT heap allocation. Do not allocate LLEXT heap statically.)
 
-        Application must call :c:func:`llext_heap_init` in order to assign a
-        buffer to be used as the LLEXT heap, otherwise LLEXT modules will not
-        load. When the application does not need LLEXT functionality any more,
-        it should call :c:func:`llext_heap_uninit` which releases control of
-        the buffer back to the application.
+        应用程序必须调用 :c:func:`llext_heap_init` 以分配要用作 LLEXT 堆的缓冲区,否则 LLEXT 模块将无法加载。当应用程序不再需要 LLEXT 功能时,应调用 :c:func:`llext_heap_uninit`,它会将缓冲区的控制权释放回应用程序。(Application must call :c:func:`llext_heap_init` in order to assign a buffer to be used as the LLEXT heap, otherwise LLEXT modules will not load. When the application does not need LLEXT functionality any more, it should call :c:func:`llext_heap_uninit` which releases control of the buffer back to the application.)
 
 .. note::
 
-   When :ref:`user mode <usermode_api>` is enabled, the heap size must be
-   large enough to allow the extension sections to be allocated with the
-   alignment required by the architecture.
+   当 :ref:`用户模式 <usermode_api>` 启用时,堆大小必须足够大,以允许使用架构所需的对齐方式分配扩展节。(When :ref:`user mode <usermode_api>` is enabled, the heap size must be large enough to allow the extension sections to be allocated with the alignment required by the architecture.)
 
 .. note::
-   On Harvard architectures, applications must call
-   :c:func:`llext_heap_init_harvard`.
+   在哈佛架构上,应用程序必须调用 :c:func:`llext_heap_init_harvard`。(On Harvard architectures, applications must call :c:func:`llext_heap_init_harvard`.)
 
 .. _llext_kconfig_type:
 
-ELF object type
----------------
+ELF 对象类型 (ELF object type)
+-------------------------------
 
-The LLEXT subsystem supports loading different types of extensions; the type
-can be set by choosing among the following Kconfig options:
+LLEXT 子系统支持加载不同类型的扩展;可以通过在以下 Kconfig 选项中进行选择来设置类型:(The LLEXT subsystem supports loading different types of extensions; the type can be set by choosing among the following Kconfig options:)
 
 :kconfig:option:`CONFIG_LLEXT_TYPE_ELF_OBJECT`
 
-        Build and expect relocatable files as binary object type for the LLEXT
-        subsystem. A single compiler invocation is used to generate the object
-        file.
+        构建并期望可重定位文件作为 LLEXT 子系统的二进制对象类型。使用单个编译器调用生成对象文件。(Build and expect relocatable files as binary object type for the LLEXT subsystem. A single compiler invocation is used to generate the object file.)
 
 :kconfig:option:`CONFIG_LLEXT_TYPE_ELF_RELOCATABLE`
 
-        Build and expect relocatable (partially linked) files as the binary
-        object type for the LLEXT subsystem. These object files are generated
-        by the linker by combining multiple object files into a single one.
+        构建并期望可重定位(部分链接)文件作为 LLEXT 子系统的二进制对象类型。这些对象文件由链接器通过将多个对象文件组合成一个来生成。(Build and expect relocatable (partially linked) files as the binary object type for the LLEXT subsystem. These object files are generated by the linker by combining multiple object files into a single one.)
 
 :kconfig:option:`CONFIG_LLEXT_TYPE_ELF_SHAREDLIB`
 
-        Build and expect shared libraries as binary object type for the LLEXT
-        subsystem. The standard linking process is used to generate the shared
-        library from multiple object files.
+        构建并期望共享库作为 LLEXT 子系统的二进制对象类型。标准链接过程用于从多个对象文件生成共享库。(Build and expect shared libraries as binary object type for the LLEXT subsystem. The standard linking process is used to generate the shared library from multiple object files.)
 
         .. note::
 
-           This is not currently supported on ARM architectures.
+           这在 ARM 架构上当前不受支持。(This is not currently supported on ARM architectures.)
 
 .. _llext_kconfig_storage:
 
-Minimize allocations
---------------------
+最小化分配 (Minimize allocations)
+----------------------------------
 
-The LLEXT subsystem loading mechanism, by default, uses a seek/read abstraction
-and copies all data into allocated memory; this is done to allow the extension
-to be loaded from any storage medium. Sometimes, however, data is already in a
-buffer in RAM and copying it is not necessary. The following option allows the
-LLEXT subsystem to optimize memory footprint in this case.
+默认情况下,LLEXT 子系统加载机制使用查找/读取抽象并将所有数据复制到分配的内存中;这样做是为了允许从任何存储介质加载扩展。然而,有时数据已经在 RAM 中的缓冲区中,复制它是没有必要的。以下选项允许 LLEXT 子系统在这种情况下优化内存占用。(The LLEXT subsystem loading mechanism, by default, uses a seek/read abstraction and copies all data into allocated memory; this is done to allow the extension to be loaded from any storage medium. Sometimes, however, data is already in a buffer in RAM and copying it is not necessary. The following option allows the LLEXT subsystem to optimize memory footprint in this case.)
 
 :kconfig:option:`CONFIG_LLEXT_STORAGE_WRITABLE`
 
-        Allow the extension to be loaded by directly referencing section data
-        into the ELF buffer. To be effective, this requires the use of an ELF
-        loader that supports the ``peek`` functionality, such as the
-        :c:struct:`llext_buf_loader`.
+        允许通过直接引用节数据到 ELF 缓冲区来加载扩展。要有效,这需要使用支持 ``peek`` 功能的 ELF 加载器,例如 :c:struct:`llext_buf_loader`。(Allow the extension to be loaded by directly referencing section data into the ELF buffer. To be effective, this requires the use of an ELF loader that supports the ``peek`` functionality, such as the :c:struct:`llext_buf_loader`.)
 
         .. warning::
 
-           The application must ensure that the buffer used to load the
-           extension remains allocated until the extension is unloaded.
+           应用程序必须确保用于加载扩展的缓冲区在扩展卸载之前保持分配状态。(The application must ensure that the buffer used to load the extension remains allocated until the extension is unloaded.)
 
         .. note::
 
-           This will directly modify the contents of the buffer during the link
-           phase. Once the extension is unloaded, the buffer must be reloaded
-           before it can be used again in a call to :c:func:`llext_load`.
+           这将在链接阶段直接修改缓冲区的内容。扩展卸载后,必须在再次调用 :c:func:`llext_load` 之前重新加载缓冲区。(This will directly modify the contents of the buffer during the link phase. Once the extension is unloaded, the buffer must be reloaded before it can be used again in a call to :c:func:`llext_load`.)
 
         .. note::
 
-           This is currently required by the Xtensa architecture. Further
-           information on this topic is available on GitHub issue `#75341
-           <https://github.com/zephyrproject-rtos/zephyr/issues/75341>`_.
+           Xtensa 架构当前需要此选项。有关此主题的更多信息可在 GitHub issue `#75341 <https://github.com/zephyrproject-rtos/zephyr/issues/75341>`_ 上找到。(This is currently required by the Xtensa architecture. Further information on this topic is available on GitHub issue `#75341 <https://github.com/zephyrproject-rtos/zephyr/issues/75341>`_.)
+
 
 .. _llext_kconfig_slid:
 
-Using SLID for symbol lookups
------------------------------
+使用 SLID 进行符号查找 (Using SLID for symbol lookups)
+-------------------------------------------------------
 
-When an extension is loaded, the LLEXT subsystem must find the address of all
-the symbols residing in the main application that the extension references.
-To this end, the main binary contains a LLEXT-dedicated symbol table, filled
-with one symbol-name-to-address mapping entry for each symbol exported by the
-main application to extensions. This table can then be searched into by the
-LLEXT linker at extension load time. This process is pretty slow due to the
-nature of string comparisons, and the size consumed by the table can become
-significant as the number of exported symbols increases.
+当加载扩展时,LLEXT 子系统必须找到扩展引用的驻留在主应用程序中的所有符号的地址。为此,主二进制文件包含一个 LLEXT 专用符号表,该表填充了主应用程序导出到扩展的每个符号的一个符号名称到地址映射条目。然后,LLEXT 链接器可以在扩展加载时搜索此表。由于字符串比较的性质,此过程非常慢,并且随着导出符号数量的增加,表消耗的大小可能会变得很大。(When an extension is loaded, the LLEXT subsystem must find the address of all the symbols residing in the main application that the extension references. To this end, the main binary contains a LLEXT-dedicated symbol table, filled with one symbol-name-to-address mapping entry for each symbol exported by the main application to extensions. This table can then be searched into by the LLEXT linker at extension load time. This process is pretty slow due to the nature of string comparisons, and the size consumed by the table can become significant as the number of exported symbols increases.)
 
 :kconfig:option:`CONFIG_LLEXT_EXPORT_BUILTINS_BY_SLID`
 
-        Perform an extra processing step on the Zephyr binary and on all
-        extensions being built, converting every string in the symbol tables to
-        a pointer-sized hash called Symbol Link Identifier (SLID), which is
-        stored in the binary.
+        对 Zephyr 二进制文件和正在构建的所有扩展执行额外的处理步骤,将符号表中的每个字符串转换为称为符号链接标识符(SLID)的指针大小哈希,该哈希存储在二进制文件中。(Perform an extra processing step on the Zephyr binary and on all extensions being built, converting every string in the symbol tables to a pointer-sized hash called Symbol Link Identifier (SLID), which is stored in the binary.)
 
-        This speeds up the symbol lookup process by allowing usage of
-        integer-based comparisons rather than string-based ones. Another
-        benefit of SLID-based linking is that storing symbol names in the
-        binary is no longer necessary, which provides a significant decrease in
-        symbol table size.
+        这通过允许使用基于整数的比较而不是基于字符串的比较来加速符号查找过程。SLID 链接的另一个好处是不再需要在二进制文件中存储符号名称,这大大减少了符号表大小。(This speeds up the symbol lookup process by allowing usage of integer-based comparisons rather than string-based ones. Another benefit of SLID-based linking is that storing symbol names in the binary is no longer necessary, which provides a significant decrease in symbol table size.)
 
         .. note::
 
-           This option is not currently compatible with the :ref:`LLEXT EDK
-           <llext_build_edk>`.
+           此选项当前与 :ref:`LLEXT EDK <llext_build_edk>` 不兼容。(This option is not currently compatible with the :ref:`LLEXT EDK <llext_build_edk>`.)
 
         .. note::
 
-           Using a different value for this option in the main binary and in
-           extensions is not supported. For example, if the main application
-           is built with ``CONFIG_LLEXT_EXPORT_BUILTINS_BY_SLID=y``, it is
-           forbidden to load an extension that was compiled with
-           ``CONFIG_LLEXT_EXPORT_BUILTINS_BY_SLID=n``.
+           不支持在主二进制文件和扩展中对此选项使用不同的值。例如,如果主应用程序使用 ``CONFIG_LLEXT_EXPORT_BUILTINS_BY_SLID=y`` 构建,则禁止加载使用 ``CONFIG_LLEXT_EXPORT_BUILTINS_BY_SLID=n`` 编译的扩展。(Using a different value for this option in the main binary and in extensions is not supported. For example, if the main application is built with ``CONFIG_LLEXT_EXPORT_BUILTINS_BY_SLID=y``, it is forbidden to load an extension that was compiled with ``CONFIG_LLEXT_EXPORT_BUILTINS_BY_SLID=n``.)
 
-EDK configuration
------------------
+EDK 配置 (EDK configuration)
+-----------------------------
 
-Options influencing the generation and behavior of the LLEXT EDK are described
-in :ref:`llext_kconfig_edk`.
+影响 LLEXT EDK 生成和行为的选项在 :ref:`llext_kconfig_edk` 中描述。(Options influencing the generation and behavior of the LLEXT EDK are described in :ref:`llext_kconfig_edk`.)
+
