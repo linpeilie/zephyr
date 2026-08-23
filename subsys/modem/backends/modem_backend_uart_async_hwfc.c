@@ -11,6 +11,8 @@
 LOG_MODULE_REGISTER(modem_backend_uart_async_hwfc, CONFIG_MODEM_MODULES_LOG_LEVEL);
 
 #include <zephyr/kernel.h>
+#include <zephyr/pm/device_runtime.h>
+#include <zephyr/drivers/gpio.h>
 #include <string.h>
 
 struct rx_buf_t {
@@ -221,6 +223,15 @@ static int modem_backend_uart_async_hwfc_open(void *data)
 		return -ENOMEM;
 	}
 
+	ret = pm_device_runtime_get(backend->uart);
+	if (ret < 0) {
+		LOG_ERR_PM_DEVICE_RUNTIME_GET(backend->uart, ret);
+		return ret;
+	}
+	if (backend->dtr_gpio) {
+		gpio_pin_set_dt(backend->dtr_gpio, 1);
+	}
+
 	atomic_clear(&backend->async.common.state);
 	atomic_set_bit(&backend->async.common.state, MODEM_BACKEND_UART_ASYNC_STATE_OPEN_BIT);
 
@@ -259,11 +270,14 @@ static uint32_t get_transmit_buf_size(const struct modem_backend_uart *backend)
 	return backend->async.common.transmit_buf_size;
 }
 
-static int modem_backend_uart_async_hwfc_transmit(void *data, const uint8_t *buf, size_t size)
+static int modem_backend_uart_async_hwfc_transmit_chain(
+	void *data, const struct modem_pipe_data_fragment *frags, size_t num_frags)
 {
 	struct modem_backend_uart *backend = (struct modem_backend_uart *)data;
+	uint32_t remaining = get_transmit_buf_size(backend);
+	uint32_t offset = 0;
+	uint32_t to_copy;
 	bool transmitting;
-	uint32_t bytes_to_transmit;
 	int ret;
 
 	transmitting = atomic_test_and_set_bit(&backend->async.common.state,
@@ -272,26 +286,31 @@ static int modem_backend_uart_async_hwfc_transmit(void *data, const uint8_t *buf
 		return 0;
 	}
 
-	/* Determine amount of bytes to transmit */
-	bytes_to_transmit = MIN(size, get_transmit_buf_size(backend));
+	/* Linearize data from fragments into internal buffer */
+	for (int i = 0; i < num_frags; i++) {
+		to_copy = MIN(remaining, frags[i].size);
+		memcpy(backend->async.common.transmit_buf + offset, frags[i].data, to_copy);
+		offset += to_copy;
+		remaining -= to_copy;
+		if (remaining == 0) {
+			/* Early exit if no space remaining */
+			break;
+		}
+	}
 
-	/* Copy buf to transmit buffer which is passed to UART */
-	memcpy(backend->async.common.transmit_buf, buf, bytes_to_transmit);
-
-	ret = uart_tx(backend->uart, backend->async.common.transmit_buf, bytes_to_transmit,
+	ret = uart_tx(backend->uart, backend->async.common.transmit_buf, offset,
 		      CONFIG_MODEM_BACKEND_UART_ASYNC_TRANSMIT_TIMEOUT_MS * 1000L);
 
 #if CONFIG_MODEM_STATS
-	advertise_transmit_buf_stats(backend, bytes_to_transmit);
+	advertise_transmit_buf_stats(backend, offset);
 #endif
 
 	if (ret != 0) {
-		LOG_ERR("Failed to %s %u bytes. (%d)",
-			"start async transmit for", bytes_to_transmit, ret);
+		LOG_ERR("Failed to %s %u bytes. (%d)", "start async transmit for", offset, ret);
 		return ret;
 	}
 
-	return (int)bytes_to_transmit;
+	return (int)offset;
 }
 
 static int modem_backend_uart_async_hwfc_receive(void *data, uint8_t *buf, size_t size)
@@ -347,8 +366,12 @@ static int modem_backend_uart_async_hwfc_receive(void *data, uint8_t *buf, size_
 static int modem_backend_uart_async_hwfc_close(void *data)
 {
 	struct modem_backend_uart *backend = (struct modem_backend_uart *)data;
+	int ret;
 
-	atomic_clear_bit(&backend->async.common.state, MODEM_BACKEND_UART_ASYNC_STATE_OPEN_BIT);
+	if (!atomic_test_and_clear_bit(&backend->async.common.state,
+				       MODEM_BACKEND_UART_ASYNC_STATE_OPEN_BIT)) {
+		return 0;
+	}
 	uart_tx_abort(backend->uart);
 
 	if (!atomic_test_and_clear_bit(&backend->async.common.state,
@@ -357,12 +380,21 @@ static int modem_backend_uart_async_hwfc_close(void *data)
 		uart_rx_disable(backend->uart);
 	}
 
+	if (backend->dtr_gpio) {
+		gpio_pin_set_dt(backend->dtr_gpio, 0);
+	}
+	ret = pm_device_runtime_put_async(backend->uart, K_NO_WAIT);
+	if (ret < 0) {
+		LOG_ERR_PM_DEVICE_RUNTIME_PUT(backend->uart, ret);
+		return ret;
+	}
+
 	return 0;
 }
 
 static const struct modem_pipe_api modem_backend_uart_async_api = {
 	.open = modem_backend_uart_async_hwfc_open,
-	.transmit = modem_backend_uart_async_hwfc_transmit,
+	.transmit_chain = modem_backend_uart_async_hwfc_transmit_chain,
 	.receive = modem_backend_uart_async_hwfc_receive,
 	.close = modem_backend_uart_async_hwfc_close,
 };

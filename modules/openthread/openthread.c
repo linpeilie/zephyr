@@ -91,6 +91,17 @@ LOG_MODULE_REGISTER(net_openthread_platform, CONFIG_OPENTHREAD_PLATFORM_LOG_LEVE
 #define OT_JOINER_PSKD ""
 #endif
 
+#if defined(CONFIG_OPENTHREAD_JOINER_AUTOSTART)
+/* Thread specification: a PSKd is 6 to 32 base32-thread characters. */
+#define OT_JOINER_PSKD_MIN_LENGTH 6
+#define OT_JOINER_PSKD_MAX_LENGTH 32
+
+BUILD_ASSERT(sizeof(OT_JOINER_PSKD) - 1 >= OT_JOINER_PSKD_MIN_LENGTH &&
+	     sizeof(OT_JOINER_PSKD) - 1 <= OT_JOINER_PSKD_MAX_LENGTH,
+	     "CONFIG_OPENTHREAD_JOINER_PSKD must be set to 6 to 32 uppercase alphanumeric "
+	     "characters (0-9, A-Z excluding I, O, Q, Z) that are unique to this device.");
+#endif
+
 #if defined(CONFIG_OPENTHREAD_PLATFORM_INFO)
 #define OT_PLATFORM_INFO CONFIG_OPENTHREAD_PLATFORM_INFO
 #else
@@ -125,7 +136,12 @@ K_KERNEL_STACK_DEFINE(ot_stack_area, OT_STACK_SIZE);
 
 k_tid_t openthread_thread_id_get(void)
 {
-	return (k_tid_t)&openthread_work_q.thread;
+	return openthread_work_q.thread_id;
+}
+
+struct k_work_q *openthread_work_q_get(void)
+{
+	return &openthread_work_q;
 }
 
 static int ncp_hdlc_send(const uint8_t *buf, uint16_t len)
@@ -351,7 +367,7 @@ int openthread_init(void)
 	} else {
 		otIp6SetReceiveFilterEnabled(openthread_instance, true);
 
-#if defined(CONFIG_OPENTHREAD_NAT64_TRANSLATOR)
+#if defined(CONFIG_OPENTHREAD_NAT64_TRANSLATOR) && !defined(CONFIG_OPENTHREAD_ZEPHYR_BORDER_ROUTER)
 
 		otIp4Cidr nat64_cidr;
 
@@ -365,7 +381,7 @@ int openthread_init(void)
 			LOG_ERR("Failed to parse NAT64 CIDR");
 			return -EIO;
 		}
-#endif /* CONFIG_OPENTHREAD_NAT64_TRANSLATOR */
+#endif /* CONFIG_OPENTHREAD_NAT64_TRANSLATOR && !CONFIG_OPENTHREAD_ZEPHYR_BORDER_ROUTER */
 
 		error = otSetStateChangedCallback(openthread_instance, &ot_state_changed_handler,
 						  NULL);
@@ -494,13 +510,25 @@ void openthread_set_receive_cb(openthread_receive_cb cb, void *context)
 		openthread_mutex_lock();
 		otIp6SetReceiveCallback(openthread_instance, cb, context);
 
-#if defined(CONFIG_OPENTHREAD_NAT64_TRANSLATOR)
+		openthread_mutex_unlock();
+	}
+}
+
+#if defined(CONFIG_OPENTHREAD_ZEPHYR_BORDER_ROUTER_NAT64_TRANSLATOR)
+void openthread_set_nat64_receive_cb(openthread_receive_cb cb, void *context)
+{
+	__ASSERT(cb != NULL, "NAT64 receive callback is not set");
+	__ASSERT(openthread_instance != NULL, "OpenThread instance is not initialized");
+
+	if (!IS_ENABLED(CONFIG_OPENTHREAD_COPROCESSOR)) {
+		openthread_mutex_lock();
+
 		otNat64SetReceiveIp4Callback(openthread_instance, cb, context);
-#endif /* CONFIG_OPENTHREAD_NAT64_TRANSLATOR */
 
 		openthread_mutex_unlock();
 	}
 }
+#endif /* CONFIG_OPENTHREAD_NAT64_TRANSLATOR && CONFIG_NET_IPV4 */
 
 void openthread_mutex_lock(void)
 {

@@ -25,6 +25,21 @@
 #define SAMPLED_VALUE_MIN_FIELDS 2
 #define SAMPLED_VALUE_MAX_FIELDS 3
 
+struct json_ocpp_call_req_msg {
+	char *uid;
+	const char *action;
+	char *payload;
+	size_t count;
+	uint8_t call_req;
+};
+
+struct json_ocpp_call_res_msg {
+	char *uid;
+	char *payload;
+	size_t count;
+	uint8_t call_res;
+};
+
 struct json_common_payload_field {
 	int val1;
 	char *val2;
@@ -84,7 +99,7 @@ struct json_ocpp_start_txn_msg {
 struct json_ocpp_getconfig_msg {
 	struct json_ocpp_key_val {
 		char *key;
-		int readonly;
+		bool readonly;
 		char *value;
 	} configuration_key[1];
 

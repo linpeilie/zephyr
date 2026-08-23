@@ -30,6 +30,12 @@ config MEMC_MCUX_FLEXSPI_IS66WVQ8M4
 	depends on DT_HAS_NXP_IMX_FLEXSPI_IS66WVQ8M4_ENABLED
 	select MEMC_MCUX_FLEXSPI
 
+config MEMC_MCUX_FLEXSPI_IS66WVS8M8
+	bool "MCUX FlexSPI ISSI IS66WVS8M8 pSRAM driver"
+	default y
+	depends on DT_HAS_NXP_IMX_FLEXSPI_IS66WVS8M8_ENABLED
+	select MEMC_MCUX_FLEXSPI
+
 config MEMC_MCUX_FLEXSPI_APS6404L
 	bool "MCUX FlexSPI AP Memory APS6404L pSRAM driver"
 	default y
@@ -45,6 +51,16 @@ config MEMC_MCUX_FLEXSPI_INIT_PRIORITY
 	  initialization priorities can be set such that
 	  MEMC_MCUX_FLEXSPI_INIT_PRIORITY < FLASH_INIT_PRIORITY <
 	  MEMC_INIT_PRIORITY
+
+config MEMC_MCUX_FLEXSPI_WAIT_BUS_IDLE_TIMEOUT
+	int "Number of polls waiting for the FlexSPI bus to go idle"
+	depends on PM_DEVICE
+	default 100000
+	help
+	  Maximum number of polls while waiting for the FlexSPI bus to go
+	  idle before clearing the per-port LUT bookkeeping on a power-domain
+	  wake.  Bounds the wake path so a wedged controller cannot hang
+	  resume.
 
 config MEMC_MCUX_FLEXSPI_INIT_XIP
 	bool "Initialize FLEXSPI when using device for XIP"

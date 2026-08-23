@@ -117,14 +117,19 @@ static int cmd_add_network(const struct shell *sh, size_t argc, char *argv[])
 {
 	int opt;
 	int opt_index = 0;
-	struct getopt_state *state;
-	static const struct option long_options[] = {
-		{"ssid", required_argument, 0, 's'},	 {"passphrase", required_argument, 0, 'p'},
-		{"key-mgmt", required_argument, 0, 'k'}, {"ieee-80211w", required_argument, 0, 'w'},
-		{"bssid", required_argument, 0, 'm'},	 {"band", required_argument, 0, 'b'},
-		{"channel", required_argument, 0, 'c'},	 {"timeout", required_argument, 0, 't'},
-		{"identity", required_argument, 0, 'a'}, {"key-passwd", required_argument, 0, 'K'},
-		{"help", no_argument, 0, 'h'},		 {0, 0, 0, 0}};
+	struct sys_getopt_state *state;
+	static const struct sys_getopt_option long_options[] = {
+		{"ssid", sys_getopt_required_argument, 0, 's'},
+		{"passphrase", sys_getopt_required_argument, 0, 'p'},
+		{"key-mgmt", sys_getopt_required_argument, 0, 'k'},
+		{"ieee-80211w", sys_getopt_required_argument, 0, 'w'},
+		{"bssid", sys_getopt_required_argument, 0, 'm'},
+		{"band", sys_getopt_required_argument, 0, 'b'},
+		{"channel", sys_getopt_required_argument, 0, 'c'},
+		{"timeout", sys_getopt_required_argument, 0, 't'},
+		{"identity", sys_getopt_required_argument, 0, 'a'},
+		{"key-passwd", sys_getopt_required_argument, 0, 'K'},
+		{"help", sys_getopt_no_argument, 0, 'h'},		 {0, 0, 0, 0}};
 	char *endptr;
 	bool secure_connection = false;
 	uint8_t band;
@@ -137,10 +142,11 @@ static int cmd_add_network(const struct shell *sh, size_t argc, char *argv[])
 	size_t offset = 0;
 	long channel;
 	long mfp = WIFI_MFP_OPTIONAL;
+	int ret;
 
-	while ((opt = getopt_long(argc, argv, "s:p:k:w:b:c:m:t:a:K:h", long_options, &opt_index)) !=
-	       -1) {
-		state = getopt_state_get();
+	while ((opt = sys_getopt_long(argc, argv, "s:p:k:w:b:c:m:t:a:K:h",
+				      long_options, &opt_index)) != -1) {
+		state = sys_getopt_state_get();
 		switch (opt) {
 		case 's':
 			creds.header.ssid_len = strlen(state->optarg);
@@ -283,6 +289,12 @@ static int cmd_add_network(const struct shell *sh, size_t argc, char *argv[])
 		shell_warn(sh, "Passphrase provided without security configuration\n");
 	}
 
+	if (creds.password_len > 0 && creds.header.type == WIFI_SECURITY_TYPE_OWE) {
+		shell_warn(sh, "Passphrase is not required for OWE connection\n");
+		memset(creds.password, 0, sizeof(creds.password));
+		creds.password_len = 0;
+	}
+
 	if (creds.header.ssid_len == 0) {
 		shell_error(sh, "SSID not provided\n");
 		shell_help(sh);
@@ -298,11 +310,21 @@ static int cmd_add_network(const struct shell *sh, size_t argc, char *argv[])
 	    creds.header.type == WIFI_SECURITY_TYPE_EAP_PEAP_GTC ||
 	    creds.header.type == WIFI_SECURITY_TYPE_EAP_TTLS_MSCHAPV2 ||
 	    creds.header.type == WIFI_SECURITY_TYPE_EAP_PEAP_TLS) {
-		wifi_set_enterprise_credentials(iface, 0);
+		ret = wifi_set_enterprise_credentials(iface, 0);
+		if (ret != 0) {
+			shell_error(sh, "Failed to set enterprise credentials (%d)\n", ret);
+			return -ENOEXEC;
+		}
 	}
 #endif /* CONFIG_WIFI_NM_WPA_SUPPLICANT_CRYPTO_ENTERPRISE */
 
-	return wifi_credentials_set_personal_struct(&creds);
+	ret = wifi_credentials_set_personal_struct(&creds);
+
+	if (ret != 0) {
+		shell_error(sh, "Failed to add network credentials, err: %d", ret);
+	}
+
+	return ret;
 }
 
 static int cmd_delete_network(const struct shell *sh, size_t argc, char *argv[])
@@ -324,7 +346,15 @@ static int cmd_delete_network(const struct shell *sh, size_t argc, char *argv[])
 	wifi_clear_enterprise_credentials();
 #endif /* CONFIG_WIFI_SHELL_RUNTIME_CERTIFICATES */
 
-	return wifi_credentials_delete_by_ssid(argv[1], strlen(argv[1]));
+	int ret = wifi_credentials_delete_by_ssid(argv[1], strlen(argv[1]));
+
+	if (ret == -ENOENT) {
+		shell_error(sh, "No matching network with SSID: \"%s\" found", argv[1]);
+	} else if (ret != 0) {
+		shell_error(sh, "Failed to delete network credentials, err: %d", ret);
+	}
+
+	return ret;
 }
 
 static int cmd_list_networks(const struct shell *sh, size_t argc, char *argv[])
@@ -338,11 +368,16 @@ static int cmd_list_networks(const struct shell *sh, size_t argc, char *argv[])
 static int cmd_auto_connect(const struct shell *sh, size_t argc, char *argv[])
 {
 	struct net_if *iface = net_if_get_wifi_sta();
+	int rc;
 
 #ifdef CONFIG_WIFI_NM_WPA_SUPPLICANT_CRYPTO_ENTERPRISE
-	wifi_set_enterprise_credentials(iface, 0);
+	rc = wifi_set_enterprise_credentials(iface, 0);
+	if (rc != 0) {
+		shell_error(sh, "Failed to set enterprise credentials (%d)\n", rc);
+		return -ENOEXEC;
+	}
 #endif /* CONFIG_WIFI_NM_WPA_SUPPLICANT_CRYPTO_ENTERPRISE */
-	int rc = net_mgmt(NET_REQUEST_WIFI_CONNECT_STORED, iface, NULL, 0);
+	rc = net_mgmt(NET_REQUEST_WIFI_CONNECT_STORED, iface, NULL, 0);
 
 	if (rc) {
 		shell_error(sh,

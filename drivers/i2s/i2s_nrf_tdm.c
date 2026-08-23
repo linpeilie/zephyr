@@ -27,10 +27,15 @@ LOG_MODULE_REGISTER(tdm_nrf, CONFIG_I2S_LOG_LEVEL);
  */
 #define NRFX_TDM_STATUS_NEXT_BUFFERS_NEEDED BIT(0)
 
-/* The TDM peripheral has been stopped and all buffers that were passed
- * to the driver have been released.
+/* The TDM peripheral has been stopped (or aborted) and all buffers that
+ * were passed to the driver have been released.
  */
 #define NRFX_TDM_STATUS_TRANSFER_STOPPED BIT(1)
+
+/* Due to hardware limitations, the TDM peripheral requires the rx/tx size
+ * to be greater than 8 bytes.
+ */
+#define NRFX_TDM_MIN_TRANSFER_SIZE_ALLOWED 8
 
 /* Maximum clock divider value. Corresponds to CKDIV2. */
 #define NRFX_TDM_MAX_SCK_DIV_VALUE TDM_CONFIG_SCK_DIV_SCKDIV_Max
@@ -110,8 +115,9 @@ struct tdm_drv_cfg {
 };
 
 struct tdm_drv_data {
-#if CONFIG_CLOCK_CONTROL_NRFS_AUDIOPLL || DT_NODE_HAS_STATUS_OKAY(NODE_AUDIO_AUXPLL)
-	const struct device *audiopll;
+#if CONFIG_CLOCK_CONTROL_NRFS_AUDIOPLL || DT_NODE_HAS_STATUS_OKAY(NODE_AUDIO_AUXPLL) ||            \
+	((NRF_CLOCK_HAS_HFCLK24M || NRF_CLOCK_HAS_HFCLKAUDIO) && !CONFIG_CLOCK_CONTROL_NRF)
+	const struct device *audioclock;
 	struct nrf_clock_spec aclk_spec;
 #elif CONFIG_CLOCK_CONTROL_NRF
 	struct onoff_manager *clk_mgr;
@@ -140,7 +146,7 @@ static int audio_clock_request(struct tdm_drv_data *drv_data)
 	return onoff_request(drv_data->clk_mgr, &drv_data->clk_cli);
 #elif (DT_NODE_HAS_STATUS_OKAY(NODE_ACLK) && CONFIG_CLOCK_CONTROL_NRFS_AUDIOPLL) || \
 	  DT_NODE_HAS_STATUS_OKAY(NODE_AUDIO_AUXPLL)
-	return nrf_clock_control_request(drv_data->audiopll, &drv_data->aclk_spec,
+	return nrf_clock_control_request(drv_data->audioclock, &drv_data->aclk_spec,
 					 &drv_data->clk_cli);
 #else
 	(void)drv_data;
@@ -155,7 +161,7 @@ static int audio_clock_release(struct tdm_drv_data *drv_data)
 	return onoff_release(drv_data->clk_mgr);
 #elif (DT_NODE_HAS_STATUS_OKAY(NODE_ACLK) && CONFIG_CLOCK_CONTROL_NRFS_AUDIOPLL) || \
 	  DT_NODE_HAS_STATUS_OKAY(NODE_AUDIO_AUXPLL)
-	return nrf_clock_control_release(drv_data->audiopll, &drv_data->aclk_spec);
+	return nrf_clock_control_release(drv_data->audioclock, &drv_data->aclk_spec);
 #else
 	(void)drv_data;
 
@@ -173,14 +179,12 @@ static void tdm_irq_handler(const struct device *dev)
 	const struct tdm_drv_cfg *drv_cfg = dev->config;
 	NRF_TDM_Type *p_reg = drv_cfg->p_reg;
 	tdm_ctrl_t *ctrl_data = drv_cfg->control_data;
-	uint32_t event_mask = 0;
 
 	if (nrf_tdm_event_check(p_reg, NRF_TDM_EVENT_MAXCNT)) {
 		nrf_tdm_event_clear(p_reg, NRF_TDM_EVENT_MAXCNT);
 	}
 	if (nrf_tdm_event_check(p_reg, NRF_TDM_EVENT_TXPTRUPD)) {
 		nrf_tdm_event_clear(p_reg, NRF_TDM_EVENT_TXPTRUPD);
-		event_mask |= NRFY_EVENT_TO_INT_BITMASK(NRF_TDM_EVENT_TXPTRUPD);
 		ctrl_data->tx_ready = true;
 		if (ctrl_data->use_tx && ctrl_data->buffers_needed) {
 			ctrl_data->buffers_reused = true;
@@ -188,16 +192,17 @@ static void tdm_irq_handler(const struct device *dev)
 	}
 	if (nrf_tdm_event_check(p_reg, NRF_TDM_EVENT_RXPTRUPD)) {
 		nrf_tdm_event_clear(p_reg, NRF_TDM_EVENT_RXPTRUPD);
-		event_mask |= NRFY_EVENT_TO_INT_BITMASK(NRF_TDM_EVENT_RXPTRUPD);
 		ctrl_data->rx_ready = true;
 		if (ctrl_data->use_rx && ctrl_data->buffers_needed) {
 			ctrl_data->buffers_reused = true;
 		}
 	}
-	if (nrf_tdm_event_check(p_reg, NRF_TDM_EVENT_STOPPED)) {
+	if (nrf_tdm_event_check(p_reg, NRF_TDM_EVENT_STOPPED) ||
+	    nrf_tdm_event_check(p_reg, NRF_TDM_EVENT_ABORTED)) {
 		nrf_tdm_event_clear(p_reg, NRF_TDM_EVENT_STOPPED);
-		event_mask |= NRFY_EVENT_TO_INT_BITMASK(NRF_TDM_EVENT_STOPPED);
-		nrf_tdm_int_disable(p_reg, NRF_TDM_INT_STOPPED_MASK_MASK);
+		nrf_tdm_event_clear(p_reg, NRF_TDM_EVENT_ABORTED);
+		nrf_tdm_int_disable(p_reg,
+				    NRF_TDM_INT_STOPPED_MASK_MASK | NRF_TDM_INT_ABORTED_MASK);
 		nrf_tdm_disable(p_reg);
 		/* When stopped, release all buffers, including these scheduled for
 		 * the next part of the transfer, and signal that the transfer has
@@ -356,7 +361,8 @@ static void tdm_start(struct tdm_drv_data *drv_data, tdm_buffers_t const *p_init
 		rxtx_mask = NRF_TDM_INT_TXPTRUPD_MASK_MASK;
 	}
 
-	nrf_tdm_int_enable(p_reg, rxtx_mask | NRF_TDM_INT_STOPPED_MASK_MASK);
+	nrf_tdm_int_enable(p_reg,
+			   rxtx_mask | NRF_TDM_INT_STOPPED_MASK_MASK | NRF_TDM_INT_ABORTED_MASK);
 	nrf_tdm_tx_count_set(p_reg, p_initial_buffers->buffer_size);
 	nrf_tdm_tx_buffer_set(p_reg, p_initial_buffers->p_tx_buffer);
 	nrf_tdm_rx_count_set(p_reg, p_initial_buffers->buffer_size);
@@ -365,11 +371,11 @@ static void tdm_start(struct tdm_drv_data *drv_data, tdm_buffers_t const *p_init
 	nrf_tdm_task_trigger(p_reg, NRF_TDM_TASK_START);
 }
 
-static void tdm_stop(NRF_TDM_Type *p_reg)
+static void tdm_stop(NRF_TDM_Type *p_reg, bool graceful)
 {
 	nrf_tdm_int_disable(p_reg, NRF_TDM_INT_RXPTRUPD_MASK_MASK | NRF_TDM_INT_TXPTRUPD_MASK_MASK);
 
-	nrf_tdm_task_trigger(p_reg, NRF_TDM_TASK_STOP);
+	nrf_tdm_task_trigger(p_reg, graceful ? NRF_TDM_TASK_STOP : NRF_TDM_TASK_ABORT);
 }
 
 static bool next_buffers_set(struct tdm_drv_data *drv_data, tdm_buffers_t const *p_buffers)
@@ -401,7 +407,7 @@ static bool supply_next_buffers(struct tdm_drv_data *drv_data, tdm_buffers_t *ne
 	if (drv_data->active_dir != I2S_DIR_TX) { /* -> RX active */
 		if (!get_next_rx_buffer(drv_data, next)) {
 			drv_data->state = I2S_STATE_ERROR;
-			tdm_stop(drv_cfg->p_reg);
+			tdm_stop(drv_cfg->p_reg, true);
 			return false;
 		}
 		/* Set buffer size if there is no TX buffer (which effectively
@@ -441,7 +447,7 @@ static void tdm_uninit(struct tdm_drv_data *drv_data)
 {
 	NRF_TDM_Type *p_reg = drv_data->drv_cfg->p_reg;
 
-	tdm_stop(p_reg);
+	tdm_stop(p_reg, true);
 	NRFX_IRQ_DISABLE(nrfx_get_irq_number(p_reg));
 }
 
@@ -454,6 +460,19 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 	uint32_t chan_mask = 0;
 	uint8_t extra_channels = 0;
 	uint8_t max_num_of_channels = NRFX_TDM_NUM_OF_CHANNELS;
+	i2s_fmt_t data_format = tdm_cfg->format & I2S_FMT_DATA_FORMAT_MASK;
+	const nrf_tdm_fsync_duration_t fsync_duration =
+#if NRF_TDM_HAS_CONFIG_FSYNC_DURATION_ENUM
+		(data_format == I2S_FMT_DATA_FORMAT_PCM_SHORT ||
+		 data_format == I2S_FMT_DATA_FORMAT_PCM_LONG)
+			? NRF_TDM_FSYNC_DURATION_SCK
+			: NRF_TDM_FSYNC_DURATION_CHANNEL;
+#else
+		(data_format == I2S_FMT_DATA_FORMAT_PCM_SHORT ||
+		 data_format == I2S_FMT_DATA_FORMAT_PCM_LONG)
+			? 1
+			: tdm_cfg->word_size;
+#endif
 
 	if (drv_data->state != I2S_STATE_READY) {
 		LOG_ERR("Cannot configure in state: %d", drv_data->state);
@@ -475,8 +494,10 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 
 	__ASSERT_NO_MSG(tdm_cfg->mem_slab != NULL && tdm_cfg->block_size != 0);
 
-	if ((tdm_cfg->block_size % sizeof(uint32_t)) != 0) {
-		LOG_ERR("This device can transfer only full 32-bit words");
+	if ((tdm_cfg->block_size % sizeof(uint32_t)) != 0 ||
+		tdm_cfg->block_size <= NRFX_TDM_MIN_TRANSFER_SIZE_ALLOWED) {
+		LOG_ERR("This device can only transmit full 32-bit words greater than %u bytes.",
+			NRFX_TDM_MIN_TRANSFER_SIZE_ALLOWED);
 		return -EINVAL;
 	}
 
@@ -503,7 +524,7 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 		nrfx_cfg.alignment = NRF_TDM_ALIGN_LEFT;
 		nrfx_cfg.fsync_polarity = NRF_TDM_POLARITY_NEGEDGE;
 		nrfx_cfg.sck_polarity = NRF_TDM_POLARITY_POSEDGE;
-		nrfx_cfg.fsync_duration = NRF_TDM_FSYNC_DURATION_CHANNEL;
+		nrfx_cfg.fsync_duration = fsync_duration;
 		nrfx_cfg.channel_delay = NRF_TDM_CHANNEL_DELAY_1CK;
 		max_num_of_channels = 2;
 		break;
@@ -511,7 +532,7 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 		nrfx_cfg.alignment = NRF_TDM_ALIGN_LEFT;
 		nrfx_cfg.fsync_polarity = NRF_TDM_POLARITY_POSEDGE;
 		nrfx_cfg.sck_polarity = NRF_TDM_POLARITY_POSEDGE;
-		nrfx_cfg.fsync_duration = NRF_TDM_FSYNC_DURATION_CHANNEL;
+		nrfx_cfg.fsync_duration = fsync_duration;
 		nrfx_cfg.channel_delay = NRF_TDM_CHANNEL_DELAY_NONE;
 		max_num_of_channels = 2;
 		break;
@@ -519,7 +540,7 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 		nrfx_cfg.alignment = NRF_TDM_ALIGN_RIGHT;
 		nrfx_cfg.fsync_polarity = NRF_TDM_POLARITY_POSEDGE;
 		nrfx_cfg.sck_polarity = NRF_TDM_POLARITY_POSEDGE;
-		nrfx_cfg.fsync_duration = NRF_TDM_FSYNC_DURATION_CHANNEL;
+		nrfx_cfg.fsync_duration = fsync_duration;
 		nrfx_cfg.channel_delay = NRF_TDM_CHANNEL_DELAY_NONE;
 		max_num_of_channels = 2;
 		break;
@@ -527,14 +548,14 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 		nrfx_cfg.alignment = NRF_TDM_ALIGN_LEFT;
 		nrfx_cfg.fsync_polarity = NRF_TDM_POLARITY_NEGEDGE;
 		nrfx_cfg.sck_polarity = NRF_TDM_POLARITY_NEGEDGE;
-		nrfx_cfg.fsync_duration = NRF_TDM_FSYNC_DURATION_SCK;
+		nrfx_cfg.fsync_duration = fsync_duration;
 		nrfx_cfg.channel_delay = NRF_TDM_CHANNEL_DELAY_NONE;
 		break;
 	case I2S_FMT_DATA_FORMAT_PCM_LONG:
 		nrfx_cfg.alignment = NRF_TDM_ALIGN_LEFT;
 		nrfx_cfg.fsync_polarity = NRF_TDM_POLARITY_POSEDGE;
 		nrfx_cfg.sck_polarity = NRF_TDM_POLARITY_NEGEDGE;
-		nrfx_cfg.fsync_duration = NRF_TDM_FSYNC_DURATION_SCK;
+		nrfx_cfg.fsync_duration = fsync_duration;
 		nrfx_cfg.channel_delay = NRF_TDM_CHANNEL_DELAY_NONE;
 		break;
 	default:
@@ -542,13 +563,19 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 		return -EINVAL;
 	}
 
-	if ((tdm_cfg->format & I2S_FMT_DATA_ORDER_LSB) || (tdm_cfg->format & I2S_FMT_BIT_CLK_INV) ||
-	    (tdm_cfg->format & I2S_FMT_FRAME_CLK_INV)) {
+	if (tdm_cfg->format &
+	    (I2S_FMT_DATA_ORDER_LSB | I2S_FMT_BIT_CLK_INV | I2S_FMT_FRAME_CLK_INV)) {
 		LOG_ERR("Unsupported stream format: 0x%02x", tdm_cfg->format);
 		return -EINVAL;
 	}
 
-	if (tdm_cfg->channels == 1 && nrfx_cfg.fsync_duration == NRF_TDM_FSYNC_DURATION_CHANNEL) {
+	if (tdm_cfg->channels == 1 &&
+#if NRF_TDM_HAS_CONFIG_FSYNC_DURATION_ENUM
+	    nrfx_cfg.fsync_duration == NRF_TDM_FSYNC_DURATION_CHANNEL
+#else
+	    nrfx_cfg.fsync_duration == tdm_cfg->word_size
+#endif
+	) {
 		/* For I2S mono standard, two channels are to be sent.
 		 * The unused half period of LRCK will contain zeros.
 		 */
@@ -561,11 +588,11 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 	nrfx_cfg.num_of_channels = nrf_tdm_chan_num_get(tdm_cfg->channels + extra_channels);
 	chan_mask = BIT_MASK(tdm_cfg->channels);
 
-	if ((tdm_cfg->options & I2S_OPT_BIT_CLK_SLAVE) &&
-	    (tdm_cfg->options & I2S_OPT_FRAME_CLK_SLAVE)) {
+	if ((tdm_cfg->options & I2S_OPT_BIT_CLK_TARGET) &&
+	    (tdm_cfg->options & I2S_OPT_FRAME_CLK_TARGET)) {
 		nrfx_cfg.mode = NRF_TDM_MODE_SLAVE;
-	} else if (!(tdm_cfg->options & I2S_OPT_BIT_CLK_SLAVE) &&
-		   !(tdm_cfg->options & I2S_OPT_FRAME_CLK_SLAVE)) {
+	} else if (!(tdm_cfg->options & I2S_OPT_BIT_CLK_TARGET) &&
+		   !(tdm_cfg->options & I2S_OPT_FRAME_CLK_TARGET)) {
 		nrfx_cfg.mode = NRF_TDM_MODE_MASTER;
 	} else {
 		LOG_ERR("Unsupported operation mode: 0x%02x", tdm_cfg->options);
@@ -593,7 +620,7 @@ static int tdm_nrf_configure(const struct device *dev, enum i2s_dir dir,
 	 */
 	drv_data->request_clock = (drv_cfg->sck_src != PCLK) || (drv_cfg->mck_src != PCLK);
 
-	if ((tdm_cfg->options & I2S_OPT_LOOPBACK) || (tdm_cfg->options & I2S_OPT_PINGPONG)) {
+	if (tdm_cfg->options & (I2S_OPT_LOOPBACK | I2S_OPT_PINGPONG)) {
 		LOG_ERR("Unsupported options: 0x%02x", tdm_cfg->options);
 		return -EINVAL;
 	}
@@ -673,13 +700,24 @@ static int tdm_nrf_write(const struct device *dev, void *mem_block, size_t size)
 		return -EIO;
 	}
 
-	if (size > drv_data->tx.cfg.block_size || size < sizeof(uint32_t)) {
+	if (size > drv_data->tx.cfg.block_size) {
 		LOG_ERR("This device can only write blocks up to %u bytes",
 			drv_data->tx.cfg.block_size);
 		return -EIO;
 	}
+
+	if ((size % sizeof(uint32_t)) != 0 || size <= NRFX_TDM_MIN_TRANSFER_SIZE_ALLOWED) {
+		LOG_ERR("This device can only write full 32-bit words greater than %u bytes.",
+			NRFX_TDM_MIN_TRANSFER_SIZE_ALLOWED);
+		return -EIO;
+	}
+
 	ret = dmm_buffer_out_prepare(drv_cfg->mem_reg, buf.mem_block, buf.size,
 				     (void **)&buf.dmm_buf);
+	if (ret < 0) {
+		LOG_ERR("Failed to prepare buffer: %d", ret);
+		return ret;
+	}
 	ret = k_msgq_put(&drv_data->tx_queue, &buf, SYS_TIMEOUT_MS(drv_data->tx.cfg.timeout));
 	if (ret < 0) {
 		return ret;
@@ -958,7 +996,7 @@ static int tdm_nrf_trigger(const struct device *dev, enum i2s_dir dir, enum i2s_
 	case I2S_TRIGGER_DROP:
 		if (drv_data->state != I2S_STATE_READY) {
 			drv_data->discard_rx = true;
-			tdm_stop(drv_cfg->p_reg);
+			tdm_stop(drv_cfg->p_reg, false);
 		}
 		purge_queue(dev, dir);
 		drv_data->state = I2S_STATE_READY;
@@ -1027,7 +1065,7 @@ static void data_handler(const struct device *dev, const tdm_buffers_t *released
 		if (drv_data->state != I2S_STATE_STOPPING) {
 			drv_data->state = I2S_STATE_ERROR;
 		}
-		tdm_stop(drv_cfg->p_reg);
+		tdm_stop(drv_cfg->p_reg, true);
 		return;
 	}
 	if (released->p_rx_buffer) {
@@ -1073,7 +1111,7 @@ static void data_handler(const struct device *dev, const tdm_buffers_t *released
 	}
 
 	if (stop_transfer) {
-		tdm_stop(drv_cfg->p_reg);
+		tdm_stop(drv_cfg->p_reg, true);
 	} else if (status & NRFX_TDM_STATUS_NEXT_BUFFERS_NEEDED) {
 		tdm_buffers_t next = {0};
 
@@ -1120,26 +1158,40 @@ static void data_handler(const struct device *dev, const tdm_buffers_t *released
 
 static void clock_manager_init(const struct device *dev)
 {
-#if CONFIG_CLOCK_CONTROL_NRF && NRF_CLOCK_HAS_HFCLKAUDIO
-	clock_control_subsys_t subsys;
+#if DT_NODE_HAS_STATUS_OKAY(NODE_ACLK) && CONFIG_CLOCK_CONTROL_NRFS_AUDIOPLL
 	struct tdm_drv_data *drv_data = dev->data;
 
-	subsys = CLOCK_CONTROL_NRF_SUBSYS_HFAUDIO;
-	drv_data->clk_mgr = z_nrf_clock_control_get_onoff(subsys);
-	__ASSERT_NO_MSG(drv_data->clk_mgr != NULL);
-#elif DT_NODE_HAS_STATUS_OKAY(NODE_ACLK) && CONFIG_CLOCK_CONTROL_NRFS_AUDIOPLL
-	struct tdm_drv_data *drv_data = dev->data;
-
-	drv_data->audiopll = DEVICE_DT_GET(NODE_ACLK);
+	drv_data->audioclock = DEVICE_DT_GET(NODE_ACLK);
 	drv_data->aclk_spec.frequency = ACLK_FREQUENCY;
 #elif DT_NODE_HAS_STATUS_OKAY(NODE_AUDIO_AUXPLL)
 	struct tdm_drv_data *drv_data = dev->data;
 
-	drv_data->audiopll = DEVICE_DT_GET(NODE_AUDIO_AUXPLL);
+	drv_data->audioclock = DEVICE_DT_GET(NODE_AUDIO_AUXPLL);
 	drv_data->aclk_spec.frequency = ACLK_FREQUENCY;
+#elif CONFIG_CLOCK_CONTROL_NRF && (NRF_CLOCK_HAS_HFCLKAUDIO || NRF_CLOCK_HAS_HFCLK24M)
+	clock_control_subsys_t subsys;
+	struct tdm_drv_data *drv_data = dev->data;
+
+	subsys = COND_CODE_1(NRF_CLOCK_HAS_HFCLK24M, (CLOCK_CONTROL_NRF_SUBSYS_HF24M),
+		 (CLOCK_CONTROL_NRF_SUBSYS_HFAUDIO));
+	drv_data->clk_mgr = z_nrf_clock_control_get_onoff(subsys);
+	__ASSERT_NO_MSG(drv_data->clk_mgr != NULL);
+#elif NRF_CLOCK_HAS_HFCLKAUDIO
+	struct tdm_drv_data *drv_data = dev->data;
+
+	drv_data->audioclock = DEVICE_DT_GET_ONE(nordic_nrf_clock_hfclkaudio);
+	drv_data->aclk_spec.frequency =
+		DT_PROP(DT_COMPAT_GET_ANY_STATUS_OKAY(nordic_nrf_clock_hfclkaudio),
+			hfclkaudio_frequency);
+#elif NRF_CLOCK_HAS_HFCLK24M
+	struct tdm_drv_data *drv_data = dev->data;
+
+	drv_data->audioclock = DEVICE_DT_GET_ONE(nordic_nrf_clock_xo24m);
+	drv_data->aclk_spec.frequency =
+		DT_PROP(DT_COMPAT_GET_ANY_STATUS_OKAY(nordic_nrf_clock_xo24m), clock_frequency);
 #else
 	(void)dev;
-#endif
+#endif /* CONFIG_CLOCK_CONTROL_NRF && (NRF_CLOCK_HAS_HFCLKAUDIO || NRF_CLOCK_HAS_HFCLK24M) */
 }
 
 static int data_init(const struct device *dev)

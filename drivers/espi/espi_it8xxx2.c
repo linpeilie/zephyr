@@ -948,8 +948,14 @@ static const struct ec2i_t pmc2_settings[] = {
 #endif
 #endif
 
-static uint8_t h2ram_pool[MAX(H2RAM_ACPI_SHM_MAX, H2RAM_EC_HOST_CMD_MAX)]
-					__attribute__((section(".h2ram_pool")));
+#ifdef CONFIG_ESPI_IT8XXX2_H2RAM_SHARED
+#define H2RAM_STORAGE
+#else
+#define H2RAM_STORAGE static
+#endif
+
+H2RAM_STORAGE uint8_t h2ram_pool[MAX(H2RAM_ACPI_SHM_MAX, H2RAM_EC_HOST_CMD_MAX)]
+	__attribute__((section(".h2ram_pool")));
 
 #define H2RAM_WINDOW_SIZE(ram_size) ((find_msb_set((ram_size) / 16) - 1) & 0x7)
 
@@ -1308,10 +1314,16 @@ static void pmc2_it8xxx2_init(const struct device *dev)
 	const struct espi_it8xxx2_config *const config = dev->config;
 	struct pmc_regs *const pmc_reg = (struct pmc_regs *)config->base_pmc;
 
+	/* Clear processing flag before enabling host's interrupts
+	 * in case it's set by the other command during sysjump.
+	 */
+	pmc_reg->PM2STS &= ~PMC_PM2STS_GPF;
+
 	/* Dedicated interrupt for PMC2 */
 	pmc_reg->MBXCTRL |= PMC_MBXCTRL_DINT;
 	/* Enable pmc2 input buffer full interrupt */
 	pmc_reg->PM2CTL |= PMC_PM2CTL_IBFIE;
+
 	IRQ_CONNECT(IT8XXX2_PMC2_IBF_IRQ, 0, pmc2_it8xxx2_ibf_isr,
 			DEVICE_DT_INST_GET(0), 0);
 	if (!IS_ENABLED(CONFIG_ESPI_PERIPHERAL_CUSTOM_OPCODE)) {
@@ -2497,7 +2509,7 @@ static void espi_it8xxx2_oob_ch_en_isr(const struct device *dev, bool enable)
  */
 static void espi_it8xxx2_flash_ch_en_isr(const struct device *dev, bool enable)
 {
-	if (enable) {
+	if (IS_ENABLED(CONFIG_ESPI_AUTOMATIC_BOOT_DONE_ACKNOWLEDGE) && enable) {
 		espi_it8xxx2_send_vwire(dev, ESPI_VWIRE_SIGNAL_TARGET_BOOT_STS, 1);
 		espi_it8xxx2_send_vwire(dev,
 					ESPI_VWIRE_SIGNAL_TARGET_BOOT_DONE, 1);

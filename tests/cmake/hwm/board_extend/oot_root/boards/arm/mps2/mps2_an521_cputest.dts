@@ -14,8 +14,6 @@
 
 / {
 	compatible = "arm,mps2";
-	#address-cells = <1>;
-	#size-cells = <1>;
 
 	aliases {
 		led0 = &led_0;
@@ -42,10 +40,12 @@
 
 	leds {
 		compatible = "gpio-leds";
+
 		led_0: led_0 {
 			gpios = <&gpio_led0 0>;
 			label = "USERLED0";
 		};
+
 		led_1: led_1 {
 			gpios = <&gpio_led0 1>;
 			label = "USERLED1";
@@ -54,11 +54,13 @@
 
 	gpio_keys {
 		compatible = "gpio-keys";
+
 		user_button_0: button_0 {
 			label = "USERPB0";
 			gpios = <&gpio_button 0>;
 			zephyr,code = <INPUT_KEY_0>;
 		};
+
 		user_button_1: button_1 {
 			label = "USERPB1";
 			gpios = <&gpio_button 1>;
@@ -117,7 +119,7 @@
 			#size-cells = <1>;
 			ranges = <0x0 0x50000000 0x10000000>;
 
-			#include "mps2_an521-common.dtsi"
+#include "mps2_an521-common.dtsi"
 		};
 	};
 };

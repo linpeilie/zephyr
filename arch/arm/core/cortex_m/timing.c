@@ -16,7 +16,7 @@
 #include <zephyr/timing/timing.h>
 #include <cortex_m/dwt.h>
 #include <cmsis_core.h>
-#include <zephyr/sys_clock.h>
+#include <zephyr/sys/clock.h>
 
 /**
  * @brief Return the current frequency of the cycle counter
@@ -75,7 +75,7 @@ static inline uint64_t z_arm_dwt_freq_get(void)
 		dwt_frequency = (cyc_freq * ddwt) / dcyc;
 	}
 	return dwt_frequency;
-#endif /* CONFIG_SOC_FAMILY_NORDIC_NRF */
+#endif
 }
 
 void arch_timing_init(void)

@@ -15,6 +15,7 @@
  */
 
 #include <stdint.h>
+#include <inttypes.h>
 #include <time.h>
 #include <stdbool.h>
 #include <math.h>
@@ -165,11 +166,22 @@ NSI_TASK(hwtimer_init, HW_INIT, 10);
 
 /**
  * Enable the HW timer tick interrupts with a period <period> in microseconds
+ *
+ * The next interrupt will be <period> microseconds from now.
+ *
+ * If silent_ticks had been enabled, it will be cleared.
+ * If period would overflow the timer, the deadline will be set at the end of time (NSI_NEVER)
  */
 void hwtimer_enable(uint64_t period)
 {
+	uint64_t now = nsi_hws_get_time();
+
 	tick_p = period;
-	hw_timer_tick_timer = nsi_hws_get_time() + tick_p;
+	hw_timer_tick_timer = now + tick_p;
+	if (hw_timer_tick_timer < now) { /* We'd wrap around the end of time */
+		hw_timer_tick_timer = NSI_NEVER;
+	}
+	silent_ticks = 0;
 	hwtimer_update_timer();
 	nsi_hws_find_next_event();
 }
@@ -190,8 +202,8 @@ static void hwtimer_tick_timer_reached(void)
 
 		us_time_to_str(es, expected_rt - boot_time);
 		us_time_to_str(rs, real_time - boot_time);
-		printf("tick @%5llims: diff = expected_rt - real_time = "
-			"%5lli = %s - %s\n",
+		printf("tick @%5"PRIu64"ms: diff = expected_rt - real_time = "
+			"%5"PRIi64" = %s - %s\n",
 			hw_timer_tick_timer/1000U, diff, es, rs);
 #endif
 
@@ -207,7 +219,11 @@ static void hwtimer_tick_timer_reached(void)
 		}
 	}
 
-	hw_timer_tick_timer += tick_p;
+	if (tick_p > NSI_NEVER - hw_timer_tick_timer) { /* We'd wrap around the end of time */
+		hw_timer_tick_timer = NSI_NEVER;
+	} else {
+		hw_timer_tick_timer += tick_p;
+	}
 	hwtimer_update_timer();
 
 	if (silent_ticks > 0) {
@@ -249,6 +265,13 @@ NSI_HW_EVENT(hw_timer_timer, hwtimer_timer_reached, 0);
  */
 void hwtimer_wake_in_time(uint64_t time)
 {
+	uint64_t now = nsi_hws_get_time();
+
+	if (time < now) {
+		nsi_print_warning("%s: deadline was in the past (did it wrap around?)\n", __func__);
+		time = now;
+	}
+
 	if (hw_timer_awake_timer > time) {
 		hw_timer_awake_timer = time;
 		hwtimer_update_timer();
@@ -325,7 +348,7 @@ void hwtimer_adjust_rt_ratio(double ratio_correction)
 	last_drift_offset += r_drift;
 	us_time_to_str(ct, current_stime);
 
-	printf("%s(): @%s, s_diff= %llius after last adjust\n"
+	printf("%s(): @%s, s_diff= %"PRIi64"us after last adjust\n"
 		" during which we drifted %.3fms\n"
 		" total acc drift (last_drift_offset) = %.3fms\n"
 		" last_radj_rtime = %.3fms (+%.3fms )\n"

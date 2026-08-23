@@ -5,6 +5,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @file
+ * @brief Public API for the file system subsystem.
+ * @ingroup file_system_api
+ */
+
 #ifndef ZEPHYR_INCLUDE_FS_FS_H_
 #define ZEPHYR_INCLUDE_FS_FS_H_
 
@@ -63,6 +69,12 @@ enum {
 
 	/** Identifier for in-tree Virtiofs file system. */
 	FS_VIRTIOFS,
+
+	/** Identifier for in-tree RpMsgFS file system */
+	FS_RPMSGFS,
+
+	/** Identifier for in-tree Native Simulator mount file system. */
+	FS_NATIVE_MOUNT,
 
 	/** Base identifier for external file systems. */
 	FS_TYPE_EXTERNAL_BASE,
@@ -436,7 +448,7 @@ int fs_seek(struct fs_file_t *zfp, off_t offset, int whence);
  *
  * @param zfp Pointer to the file object
  *
- * @retval >= 0 a current position in file;
+ * @retval >=0 a current position in file;
  * @retval -EBADF when invoked on zfp that represents unopened/closed file;
  * @retval -ENOTSUP if not supported by underlying file system driver;
  * @retval <0 an other negative errno code on error.
@@ -497,7 +509,7 @@ int fs_sync(struct fs_file_t *zfp);
  * @retval -EROFS if @p path is within read-only directory, or when
  *         file system has been mounted with the FS_MOUNT_FLAG_READ_ONLY flag;
  * @retval -ENOTSUP when not implemented by underlying file system driver;
- * @retval <0 an other negative errno code on error
+ * @retval <0 another negative errno code on error
  */
 int fs_mkdir(const char *path);
 
@@ -576,7 +588,7 @@ int fs_closedir(struct fs_dir_t *zdp);
  *         support it.
  * @retval -EROFS if system requires formatting but @c FS_MOUNT_FLAG_READ_ONLY
  *	   has been set;
- * @retval <0 an other negative errno code on error.
+ * @retval <0 another negative errno code on error.
  */
 int fs_mount(struct fs_mount_t *mp);
 
@@ -643,7 +655,7 @@ int fs_stat(const char *path, struct fs_dirent *entry);
  * @retval 0 on success;
  * @retval -EINVAL when a bad path to a directory, or a file, is given;
  * @retval -ENOTSUP when not implemented by underlying file system driver;
- * @retval <0 an other negative errno code on error.
+ * @retval <0 another negative errno code on error.
  */
 int fs_statvfs(const char *path, struct fs_statvfs *stat);
 
@@ -701,7 +713,7 @@ int fs_unregister(int type, const struct fs_file_system_t *fs);
  * @retval 0 on success;
  * @retval -EINVAL when a bad path to a directory, or a file, is given;
  * @retval -ENOTSUP when not implemented by underlying file system driver;
- * @retval <0 an other negative errno code on error.
+ * @retval <0 another negative errno code on error.
  */
 int fs_gc(struct fs_mount_t *mp);
 

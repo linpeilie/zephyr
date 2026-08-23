@@ -96,8 +96,8 @@ extern "C" {
  * ephemeral port usage - i.e. when the service is bound using port number 0.
  * In that case, Zephyr (like other OS's) will simply choose an unused port.
  * When using ephemeral ports, it can be helpful to assign @p _port to the
- * @ref sockaddr_in.sin_port field of an IPv4 @ref sockaddr_in, or to the
- * @ref sockaddr_in6.sin6_port field of an IPv6 @ref sockaddr_in6.
+ * @ref net_sockaddr_in.sin_port field of an IPv4 @ref net_sockaddr_in, or to the
+ * @ref net_sockaddr_in6.sin6_port field of an IPv6 @ref net_sockaddr_in6.
  *
  * The service can be referenced using the @p _id variable.
  *
@@ -183,7 +183,7 @@ extern "C" {
  * @param service name of the service, such as "_tftp"
  * @param domain the domain of the service, such as "local" or "zephyrproject.org"
  * @param text information for the DNS TXT record
- * @param port a pointer to the port number that this service will use
+ * @param port the port number that this service will use
  *
  * @see <a href="https://tools.ietf.org/html/rfc6763">RFC 6763</a>
  */

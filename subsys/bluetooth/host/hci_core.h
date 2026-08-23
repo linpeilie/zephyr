@@ -34,13 +34,6 @@
 /* SCO  settings */
 #define BT_VOICE_CVSD_16BIT     0x0060
 
-/* k_poll event tags */
-enum {
-	BT_EVENT_CMD_TX,
-	BT_EVENT_CONN_TX_QUEUE,
-	BT_EVENT_CONN_FREE_TX,
-};
-
 /* bt_dev flags: the flags defined here represent BT controller state */
 enum {
 	BT_DEV_ENABLE,
@@ -291,8 +284,6 @@ struct bt_dev_le {
 
 #if defined(CONFIG_BT_CONN)
 	/* Controller buffer information */
-	uint16_t		mtu;
-	struct k_sem		pkts;
 	uint16_t		acl_mtu;
 	struct k_sem		acl_pkts;
 #endif /* CONFIG_BT_CONN */
@@ -368,7 +359,7 @@ struct bt_dev {
 #endif
 #endif
 	/* Current local Random Address */
-	bt_addr_le_t            random_addr;
+	bt_addr_t                  random_addr;
 	uint8_t                    adv_conn_id;
 
 	/* Controller version & manufacturer information */
@@ -386,7 +377,6 @@ struct bt_dev {
 
 #if defined(CONFIG_BT_HCI_VS)
 	/* Vendor HCI support */
-	uint8_t                    vs_features[BT_DEV_VS_FEAT_MAX];
 	uint8_t                    vs_commands[BT_DEV_VS_CMDS_MAX];
 #endif
 
@@ -447,7 +437,14 @@ extern const struct bt_conn_auth_cb *bt_auth;
 extern sys_slist_t bt_auth_info_cbs;
 enum bt_security_err bt_security_err_get(uint8_t hci_err);
 
-int bt_hci_recv(const struct device *dev, struct net_buf *buf);
+/* Submit work to the general purpose Bluetooth workqueue.
+ *
+ * This is used for the host's internal work items to avoid the shared system
+ * workqueue. The work runs in the RX thread context.
+ */
+int bt_work_submit(struct k_work *work);
+int bt_work_schedule(struct k_work_delayable *work, k_timeout_t delay);
+int bt_work_reschedule(struct k_work_delayable *work, k_timeout_t delay);
 
 /* Data type to store state related with command to be updated
  * when command completes successfully.
@@ -538,6 +535,7 @@ void bt_hci_le_past_received_v2(struct net_buf *buf);
 
 /* CS HCI event handlers */
 void bt_hci_le_cs_read_remote_supported_capabilities_complete(struct net_buf *buf);
+void bt_hci_le_cs_read_remote_supported_capabilities_complete_v2(struct net_buf *buf);
 void bt_hci_le_cs_read_remote_fae_table_complete(struct net_buf *buf);
 void bt_hci_le_cs_config_complete_event(struct net_buf *buf);
 void bt_hci_le_cs_security_enable_complete(struct net_buf *buf);
@@ -563,6 +561,7 @@ void bt_hci_remote_name_request_complete(struct net_buf *buf);
 void bt_hci_read_remote_features_complete(struct net_buf *buf);
 void bt_hci_read_remote_ext_features_complete(struct net_buf *buf);
 void bt_hci_role_change(struct net_buf *buf);
+void bt_hci_conn_pkt_type_changed(struct net_buf *buf);
 #if defined(CONFIG_BT_POWER_MODE_CONTROL)
 void bt_hci_link_mode_change(struct net_buf *buf);
 #endif /* CONFIG_BT_POWER_MODE_CONTROL */

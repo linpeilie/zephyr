@@ -351,7 +351,7 @@ static void espi_bus_cfg_update_isr(const struct device *dev)
 	}
 
 #if (defined(CONFIG_ESPI_FLASH_CHANNEL) && defined(CONFIG_ESPI_TAF))
-	/* If CONFIG_ESPI_TAF is set, set to auto or manual mode accroding
+	/* If CONFIG_ESPI_TAF is set, set to auto or manual mode according
 	 * to configuration.
 	 */
 	if (IS_BIT_SET(inst->ESPICFG, NPCX_ESPICFG_FLCHANMODE)) {
@@ -396,7 +396,7 @@ static uint32_t espi_taf_parse(const struct device *dev)
 	struct espi_reg *const inst = HAL_INSTANCE(dev);
 	struct npcx_taf_head taf_head;
 	uint32_t taf_addr, head_data;
-	uint8_t i, roundsize;
+	uint16_t i, roundsize, max_rxbuf_words;
 
 	/* Get type, length and tag from RX buffer */
 	head_data = inst->FLASHRXBUF[0];
@@ -405,6 +405,7 @@ static uint32_t espi_taf_parse(const struct device *dev)
 	taf_pckt.type = taf_head.type;
 	taf_pckt.len = (((uint16_t)taf_head.tag_hlen & 0xF) << 8) | taf_head.llen;
 	taf_pckt.tag = taf_head.tag_hlen >> 4;
+	taf_pckt.invalid_flag = 0;
 
 	if ((taf_pckt.len == 0) && (taf_pckt.type == NPCX_ESPI_TAF_REQ_READ)) {
 		taf_pckt.len = KB(4);
@@ -419,11 +420,24 @@ static uint32_t espi_taf_parse(const struct device *dev)
 	    (IS_ENABLED(CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT) &&
 	     (taf_pckt.type == NPCX_ESPI_TAF_REQ_RPMC_OP1))) {
 		roundsize = DIV_ROUND_UP(taf_pckt.len, sizeof(uint32_t));
+
+		max_rxbuf_words = ARRAY_SIZE(((struct espi_reg *)0)->FLASHRXBUF) -
+				  NPCX_ESPI_FLASH_HEADER_ADDRESS_LEN;
+
+		if ((roundsize > max_rxbuf_words) || (roundsize > NPCX_TAF_RX_PAYLOAD_WORDS)) {
+			LOG_ERR("TAF packet length exceeds max payload size");
+			LOG_ERR("Requested length: %d bytes, maximum payload size: %d bytes",
+				taf_pckt.len,
+				NPCX_TAF_RX_PAYLOAD_WORDS * (uint16_t)sizeof(uint32_t));
+			taf_pckt.invalid_flag = 1;
+			goto parse_exit;
+		}
+
 		for (i = 0; i < roundsize; i++) {
-			taf_pckt.src[i] = inst->FLASHRXBUF[2 + i];
+			taf_pckt.src[i] = inst->FLASHRXBUF[NPCX_ESPI_FLASH_HEADER_ADDRESS_LEN + i];
 		}
 	}
-
+parse_exit:
 	return (uint32_t)&taf_pckt;
 }
 #endif /* CONFIG_ESPI_TAF */
@@ -600,27 +614,35 @@ static void espi_vw_notify_host_warning(const struct device *dev,
 	espi_npcx_receive_vwire(dev, signal, &wire);
 
 	k_busy_wait(NPCX_ESPI_VWIRE_ACK_DELAY);
-	switch (signal) {
-	case ESPI_VWIRE_SIGNAL_HOST_RST_WARN:
-		espi_npcx_send_vwire(dev,
-				ESPI_VWIRE_SIGNAL_HOST_RST_ACK,
-				wire);
-		break;
-	case ESPI_VWIRE_SIGNAL_SUS_WARN:
-		espi_npcx_send_vwire(dev, ESPI_VWIRE_SIGNAL_SUS_ACK,
-				wire);
-		break;
-	case ESPI_VWIRE_SIGNAL_OOB_RST_WARN:
-		espi_npcx_send_vwire(dev, ESPI_VWIRE_SIGNAL_OOB_RST_ACK,
-				wire);
-		break;
+	if (!IS_ENABLED(CONFIG_ESPI_AUTOMATIC_WARNING_ACKNOWLEDGE)) {
+		struct espi_npcx_data *const data = dev->data;
+		struct espi_event evt = {ESPI_BUS_EVENT_VWIRE_RECEIVED, 0, 0 };
+
+		evt.evt_details = signal;
+		evt.evt_data = wire;
+		espi_send_callbacks(&data->callbacks, dev, evt);
+	} else {
+		switch (signal) {
+		case ESPI_VWIRE_SIGNAL_HOST_RST_WARN:
+			espi_npcx_send_vwire(dev, ESPI_VWIRE_SIGNAL_HOST_RST_ACK,
+					wire);
+			break;
+		case ESPI_VWIRE_SIGNAL_SUS_WARN:
+			espi_npcx_send_vwire(dev, ESPI_VWIRE_SIGNAL_SUS_ACK,
+					wire);
+			break;
+		case ESPI_VWIRE_SIGNAL_OOB_RST_WARN:
+			espi_npcx_send_vwire(dev, ESPI_VWIRE_SIGNAL_OOB_RST_ACK,
+					wire);
+			break;
 #if DT_NODE_EXISTS(DT_CHILD(DT_PATH(npcx_espi_vws_map), vw_dnx_warn))
-	case ESPI_VWIRE_SIGNAL_DNX_WARN:
-		espi_npcx_send_vwire(dev, ESPI_VWIRE_SIGNAL_DNX_ACK, wire);
-		break;
+		case ESPI_VWIRE_SIGNAL_DNX_WARN:
+			espi_npcx_send_vwire(dev, ESPI_VWIRE_SIGNAL_DNX_ACK, wire);
+			break;
 #endif
-	default:
-		break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -705,6 +727,8 @@ static void espi_vw_generic_isr(const struct device *dev, struct npcx_wui *wui)
 		espi_vw_notify_host_warning(dev, signal);
 	} else if (signal == ESPI_VWIRE_SIGNAL_PLTRST) {
 		espi_vw_notify_plt_rst(dev);
+	} else {
+		LOG_WRN("Unhandled VW signal: %d", signal);
 	}
 }
 
@@ -1035,14 +1059,13 @@ static int espi_npcx_send_oob(const struct device *dev,
 
 	/*
 	 * Notify host a new OOB packet is ready. Please don't write OOB_FREE
-	 * to 1 at the same tiem in case clear it unexpectedly.
+	 * to 1 at the same time in case clear it unexpectedly.
 	 */
 	oob_data = inst->OOBCTL & ~(BIT(NPCX_OOBCTL_OOB_FREE));
 	oob_data |= BIT(NPCX_OOBCTL_OOB_AVAIL);
 	inst->OOBCTL = oob_data;
 
 	while (IS_BIT_SET(inst->OOBCTL, NPCX_OOBCTL_OOB_AVAIL)) {
-		;
 	}
 
 	LOG_DBG("%s issued!!", __func__);
@@ -1163,7 +1186,7 @@ static int espi_npcx_flash_parse_completion(const struct device *dev)
 	 * First 3 bytes of flash cycle completion header in rx buffer
 	 *
 	 * [24:31] - LEN[0:7]   Data length of flash cycle completion package
-	 * [16:23] - LEN[8:15]  Ignore it since rx bufer size is 64 bytes
+	 * [16:23] - LEN[8:15]  Ignore it since rx buffer size is 64 bytes
 	 * [12:15] - TAG        Tag of flash cycle completion package
 	 * [8:11]  - CYCLE_TYPE Cycle type of flash completion
 	 * [0:7]   - Reserved
@@ -1186,7 +1209,7 @@ static int espi_npcx_flash_parse_completion_with_data(const struct device *dev,
 	 * First 3 bytes of flash cycle completion header in rx buffer
 	 *
 	 * [24:31] - LEN[0:7]   Data length of flash cycle completion package
-	 * [16:23] - LEN[8:15]  Ignore it since rx bufer size is 64 bytes
+	 * [16:23] - LEN[8:15]  Ignore it since rx buffer size is 64 bytes
 	 * [12:15] - TAG        Tag of flash cycle completion package
 	 * [8:11]  - CYCLE_TYPE Cycle type of flash completion
 	 * [0:7]   - Reserved
@@ -1390,6 +1413,21 @@ void npcx_espi_disable_interrupts(const struct device *dev)
 	npcx_miwu_irq_disable(&config->espi_rst_wui);
 }
 
+int espi_npcx_interrupt_config(const struct device *dev, uint32_t espi_flags,
+			       uint32_t espi_vendor_flags)
+{
+	/* Enable host interface interrupts if its interface is eSPI */
+	espi_host_interrupt_config(espi_flags, espi_vendor_flags);
+
+	if (espi_flags & ESPI_BUS_EVENTS) {
+		npcx_espi_enable_interrupts(dev);
+	} else {
+		npcx_espi_disable_interrupts(dev);
+	}
+
+	return 0;
+}
+
 /* eSPI driver registration */
 static int espi_npcx_init(const struct device *dev);
 
@@ -1401,6 +1439,7 @@ static DEVICE_API(espi, espi_npcx_driver_api) = {
 	.manage_callback = espi_npcx_manage_callback,
 	.read_lpc_request = espi_npcx_read_lpc_request,
 	.write_lpc_request = espi_npcx_write_lpc_request,
+	.interrupt_config = espi_npcx_interrupt_config,
 #if defined(CONFIG_ESPI_OOB_CHANNEL)
 	.send_oob = espi_npcx_send_oob,
 	.receive_oob = espi_npcx_receive_oob,

@@ -112,7 +112,7 @@ static int slip_process_byte(unsigned char c)
 
 	if (!pkt_curr) {
 		pkt_curr = net_pkt_rx_alloc_with_buffer(NULL, 256,
-							AF_UNSPEC, 0,
+							NET_AF_UNSPEC, 0,
 							K_NO_WAIT);
 		if (!pkt_curr) {
 			LOG_ERR("No more buffers");
@@ -137,12 +137,13 @@ static int slip_process_byte(unsigned char c)
 static void interrupt_handler(const struct device *dev, void *user_data)
 {
 	ARG_UNUSED(user_data);
+	unsigned char byte;
 
-	while (uart_irq_update(dev) && uart_irq_is_pending(dev)) {
-		unsigned char byte;
+	while (true) {
+		uart_irq_update(dev);
 
-		if (!uart_irq_rx_ready(dev)) {
-			continue;
+		if (uart_irq_rx_ready(dev) <= 0) {
+			return;
 		}
 
 		while (uart_fifo_read(dev, &byte, sizeof(byte))) {
@@ -173,7 +174,7 @@ static void send_data(uint8_t *cfg, uint8_t *data, size_t len)
 	struct net_pkt *pkt;
 
 	pkt = net_pkt_alloc_with_buffer(NULL, len + 5,
-					AF_UNSPEC, 0, K_NO_WAIT);
+					NET_AF_UNSPEC, 0, K_NO_WAIT);
 	if (!pkt) {
 		LOG_DBG("No pkt available");
 		return;

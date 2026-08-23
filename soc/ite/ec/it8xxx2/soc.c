@@ -12,6 +12,7 @@
 #include "ilm.h"
 #include <soc_common.h>
 #include "soc_espi.h"
+#include "soc_timer.h"
 #include <zephyr/dt-bindings/interrupt-controller/ite-intc.h>
 
 /*
@@ -193,8 +194,6 @@ static const struct pll_config_t pll_configuration[PLL_FREQ_CNT] = {
 
 void __soc_ram_code chip_run_pll_sequence(const struct pll_config_t *pll)
 {
-	/* Enable HW timer to wakeup chip from the sleep mode */
-	timer_5ms_one_shot();
 	/*
 	 * Configure PLL clock dividers.
 	 * Writing data to these registers doesn't change the
@@ -203,6 +202,9 @@ void __soc_ram_code chip_run_pll_sequence(const struct pll_config_t *pll)
 	 * The following code is intended to make the system
 	 * enter sleep mode, and wait HW timer to wakeup chip to
 	 * complete PLL update.
+	 *
+	 * Note: HW timer wakeup (timer_5ms_one_shot()) is started by caller
+	 * before calling this function.
 	 */
 	IT8XXX2_ECPM_PLLFREQR = pll->pll_freq;
 	/* Pre-set FND clock frequency = PLL / 3 */
@@ -250,6 +252,8 @@ static void chip_configure_pll(const struct pll_config_t *pll)
 		 */
 		espi_ite_ec_enable_pad_ctrl(ESPI_ITE_SOC_DEV, false);
 #endif
+		/* Enable HW timer to wakeup chip from the sleep mode */
+		timer_5ms_one_shot();
 		/* Run change PLL sequence */
 		chip_run_pll_sequence(pll);
 #ifdef CONFIG_ESPI
@@ -327,7 +331,9 @@ void riscv_idle(enum chip_pll_mode mode, unsigned int key)
 	 * interrupt here to protect the below content.
 	 */
 	csr_clear(mie, MIP_MEIP);
+#if defined(CONFIG_SYS_IDLE_HOOKS)
 	sys_trace_idle();
+#endif
 #ifdef CONFIG_ESPI
 	/*
 	 * H2RAM feature requires RAM clock to be active. Since the below doze
@@ -345,6 +351,19 @@ void riscv_idle(enum chip_pll_mode mode, unsigned int key)
 	/* Chip doze after wfi instruction */
 	chip_pll_ctrl(mode);
 
+#if defined(CONFIG_I2C_ITE_ENHANCE) && defined(CONFIG_I2C_TARGET_BUFFER_MODE)
+	/* If the event timer or free-run timer is close to expiration when system
+	 * enters idle with I2C target DMA mode enabled, the memory and CPU clocks
+	 * may become unsynchronized after wakeup. This causes CPU to fetch incorrect
+	 * data and eventually trigger SoC watchdog timeout.
+	 * Due to this hardware limitation, SoC should skip entering idle mode if
+	 * the remaining timer value is less than 150µs(safe margin).
+	 */
+	if (ite_it8xxx2_timer_block_idle()) {
+		goto __no_idle;
+	}
+#endif /* defined(CONFIG_I2C_ITE_ENHANCE) && defined(CONFIG_I2C_TARGET_BUFFER_MODE) */
+
 	do {
 #ifndef CONFIG_SOC_IT8XXX2_JTAG_DEBUG_INTERFACE
 		/* Wait for interrupt */
@@ -360,6 +379,9 @@ void riscv_idle(enum chip_pll_mode mode, unsigned int key)
 		 */
 	} while (ite_intc_no_irq());
 
+#if defined(CONFIG_I2C_ITE_ENHANCE) && defined(CONFIG_I2C_TARGET_BUFFER_MODE)
+__no_idle:
+#endif /* defined(CONFIG_I2C_ITE_ENHANCE) && defined(CONFIG_I2C_TARGET_BUFFER_MODE) */
 	if (IS_ENABLED(CONFIG_SOC_IT8XXX2_LCVCO)) {
 		if (mode != CHIP_PLL_DOZE) {
 			IT8XXX2_ECPM_PFACC2R |= PLL_FREQ_AUTO_CAL_START;
@@ -374,6 +396,9 @@ void riscv_idle(enum chip_pll_mode mode, unsigned int key)
 #ifdef CONFIG_ESPI
 	/* CPU has been woken up, the interrupt is no longer needed */
 	espi_ite_ec_enable_trans_irq(ESPI_ITE_SOC_DEV, false);
+#endif
+#if defined(CONFIG_SYS_IDLE_HOOKS)
+	sys_trace_idle_exit();
 #endif
 	/*
 	 * Enable M-mode external interrupt

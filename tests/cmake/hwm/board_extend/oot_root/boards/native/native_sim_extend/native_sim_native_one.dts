@@ -7,6 +7,7 @@
 /dts-v1/;
 #include <posix/posix.dtsi>
 #include <zephyr/dt-bindings/adc/adc.h>
+#include <zephyr/dt-bindings/display/panel.h>
 #include <zephyr/dt-bindings/i2c/i2c.h>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 
@@ -36,15 +37,11 @@
 
 	leds {
 		compatible = "gpio-leds";
+
 		led0: led_0 {
 			gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>;
 			label = "Green LED";
 		};
-	};
-
-	lvgl_pointer {
-		compatible = "zephyr,lvgl-pointer-input";
-		input = <&input_sdl_touch>;
 	};
 
 	cpus {
@@ -79,20 +76,24 @@
 
 				boot_partition: partition@0 {
 					label = "mcuboot";
-					reg = <0x00000000 0x0000C000>;
+					reg = <0x00000000 0x0000c000>;
 				};
+
 				slot0_partition: partition@c000 {
 					label = "image-0";
-					reg = <0x0000C000 0x00069000>;
+					reg = <0x0000c000 0x00069000>;
 				};
+
 				slot1_partition: partition@75000 {
 					label = "image-1";
 					reg = <0x00075000 0x00069000>;
 				};
+
 				scratch_partition: partition@de000 {
 					label = "image-scratch";
 					reg = <0x000de000 0x0001e000>;
 				};
+
 				storage_partition: partition@fc000 {
 					label = "storage";
 					reg = <0x000fc000 0x00004000>;
@@ -179,6 +180,7 @@
 
 	sdl_dc: sdl_dc {
 		compatible = "zephyr,sdl-dc";
+		pixel-format = <PANEL_PIXEL_FORMAT_ARGB_8888>;
 		height = <240>;
 		width = <320>;
 	};

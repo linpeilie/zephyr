@@ -318,7 +318,7 @@ static int rtc_ds3231_buf_to_rtc_time(const uint8_t *buf, struct rtc_time *timep
 
 		hour &= ~DS3231_BITS_TIME_12HR;
 		hour &= ~DS3231_BITS_TIME_PM;
-		timeptr->tm_hour = bcd2bin(hour + 12 * pm);
+		timeptr->tm_hour = bcd2bin(hour) + 12 * pm;
 	} else {
 		timeptr->tm_hour = bcd2bin(hour);
 	}
@@ -608,7 +608,7 @@ static int rtc_ds3231_get_alarm_states(const struct device *dev, bool *states)
 static int rtc_ds3231_alarm_set_callback(const struct device *dev, uint16_t id,
 					 rtc_alarm_callback cb, void *user_data)
 {
-	if (id < 0 || id >= ALARM_COUNT) {
+	if (id >= ALARM_COUNT) {
 		return -EINVAL;
 	}
 

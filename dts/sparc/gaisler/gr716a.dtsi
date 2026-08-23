@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "skeleton.dtsi"
-#include <dt-bindings/gpio/gpio.h>
+#include <skeleton.dtsi>
+#include <zephyr/dt-bindings/gpio/gpio.h>
 
 / {
 	cpus {

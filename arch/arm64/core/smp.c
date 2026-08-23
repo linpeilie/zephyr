@@ -14,7 +14,6 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/kernel.h>
-#include <zephyr/kernel_structs.h>
 #include <kernel_arch_interface.h>
 #include <ipi.h>
 #include <zephyr/init.h>
@@ -53,17 +52,15 @@ volatile struct boot_params __aligned(L1_CACHE_BYTES) arm64_cpu_boot_params = {
 };
 
 const uint64_t cpu_node_list[] = {
-	DT_FOREACH_CHILD_STATUS_OKAY_SEP(DT_PATH(cpus), DT_REG_ADDR, (,))
+	DT_FOREACH_CPU_STATUS_OKAY_SEP(DT_REG_ADDR, (,))
 };
 
 BUILD_ASSERT(ARRAY_SIZE(cpu_node_list) == DT_CHILD_NUM_STATUS_OKAY(DT_PATH(cpus)));
 
-/* cpu_map saves the maping of core id and mpid */
+/* cpu_map saves the mapping of core id and mpid */
 static uint64_t cpu_map[CONFIG_MP_MAX_NUM_CPUS] = {
 	[0 ... (CONFIG_MP_MAX_NUM_CPUS - 1)] = INV_MPID
 };
-
-extern void z_arm64_mm_init(bool is_primary_core);
 
 /* Called from Zephyr initialization */
 void arch_cpu_start(int cpu_num, k_thread_stack_t *stack, int sz,
@@ -137,9 +134,9 @@ void arch_cpu_start(int cpu_num, k_thread_stack_t *stack, int sz,
 }
 
 /* the C entry of secondary cores */
-void arch_secondary_cpu_init(int cpu_num)
+FUNC_NORETURN void arch_secondary_cpu_init(void)
 {
-	cpu_num = arm64_cpu_boot_params.cpu_num;
+	int cpu_num = arm64_cpu_boot_params.cpu_num;
 	arch_cpustart_t fn;
 	void *arg;
 
@@ -166,9 +163,7 @@ void arch_secondary_cpu_init(int cpu_num)
 #endif
 #endif
 
-#ifdef CONFIG_SOC_PER_CORE_INIT_HOOK
 	soc_per_core_init_hook();
-#endif /* CONFIG_SOC_PER_CORE_INIT_HOOK */
 
 	fn = arm64_cpu_boot_params.fn;
 	arg = arm64_cpu_boot_params.arg;
@@ -184,6 +179,8 @@ void arch_secondary_cpu_init(int cpu_num)
 	sev();
 
 	fn(arg);
+
+	CODE_UNREACHABLE;
 }
 
 #ifdef CONFIG_SMP

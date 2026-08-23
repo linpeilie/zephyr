@@ -19,7 +19,6 @@
 };
 
 &mspi1 {
-
 	pinctrl-0 = <&mspi1_default>;
 	pinctrl-1 = <&mspi1_sleep>;
 	pinctrl-2 = <&mspi1_psram>;
@@ -34,7 +33,7 @@
 	cmdq-buffer-size = <256>;
 
 	aps6404l: aps6404l@0 {
-		compatible = "ambiq,mspi-device", "mspi-aps6404l";
+		compatible = "ambiq,mspi-device", "aps6404l";
 		size = <DT_SIZE_M(64)>;
 		reg = <0>;
 		status = "disabled";
@@ -42,20 +41,20 @@
 		mspi-io-mode = "MSPI_IO_MODE_QUAD";
 		mspi-data-rate = "MSPI_DATA_RATE_SINGLE";
 		mspi-hardware-ce-num = <0>;
-		read-command = <0xEB>;
+		read-command = <0xeb>;
 		write-command = <0x38>;
 		command-length = "INSTR_1_BYTE";
 		address-length = "ADDR_3_BYTE";
 		rx-dummy = <6>;
 		tx-dummy = <0>;
-		xip-config = <1 0 0 0>;
+		memmap-config = <1 0 0 0>;
 		ce-break-config = <1024 3>;
 		ambiq,timing-config-mask = <3>;
 		ambiq,timing-config = <0 6 0 0 0 0 0 0>;
 	};
 
 	atxp032: atxp032@1 {
-		compatible = "ambiq,mspi-device", "mspi-atxp032";
+		compatible = "ambiq,mspi-device", "atxp032";
 		size = <DT_SIZE_M(32)>;
 		reg = <1>;
 		status = "okay";
@@ -63,13 +62,13 @@
 		mspi-io-mode = "MSPI_IO_MODE_OCTAL";
 		mspi-data-rate = "MSPI_DATA_RATE_SINGLE";
 		mspi-hardware-ce-num = <0>;
-		read-command = <0x0B>;
+		read-command = <0x0b>;
 		write-command = <0x02>;
 		command-length = "INSTR_1_BYTE";
 		address-length = "ADDR_4_BYTE";
 		rx-dummy = <8>;
 		tx-dummy = <0>;
-		xip-config = <1 0 0 0>;
+		memmap-config = <1 0 0 0>;
 		ce-break-config = <0 0>;
 		ambiq,timing-config-mask = <3>;
 		ambiq,timing-config = <0 8 0 0 0 0 0 0>;
@@ -77,9 +76,7 @@
 };
 
 &pinctrl {
-
 	mspi1_sleep: mspi1_sleep {
-
 		group1 {
 			pinmux = <GPIO_P51>,
 				 <GPIO_P52>,
@@ -96,7 +93,6 @@
 	};
 
 	mspi1_psram: mspi1_psram {
-
 		group1 {
 			pinmux = <MSPI1_0_P51>,
 				 <MSPI1_1_P52>,
@@ -131,7 +127,6 @@
 	};
 
 	mspi1_flash: mspi1_flash {
-
 		group1 {
 			pinmux = <MSPI1_0_P51>,
 				 <MSPI1_1_P52>,

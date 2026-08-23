@@ -11,6 +11,7 @@
 #define ZEPHYR_DRIVERS_ETHERNET_ETH_SAM_GMAC_PRIV_H_
 
 #include <zephyr/types.h>
+#include <zephyr/sys/ringq.h>
 
 #define ATMEL_OUI_B0 0x00
 #define ATMEL_OUI_B1 0x04
@@ -30,7 +31,7 @@
 #define GMAC_QUEUE_NUM                  DT_INST_PROP(0, num_queues)
 #define GMAC_PRIORITY_QUEUE_NUM         (GMAC_QUEUE_NUM - 1)
 #if (GMAC_PRIORITY_QUEUE_NUM >= 1)
-#ifdef CONFIG_SOC_SAMA7G54
+#if defined(CONFIG_SOC_SERIES_SAMA7G5) || defined(CONFIG_SOC_SAMA7D65)
 /* Do not check the queue numbers due to they are different for GMAC0 (6) and GMAC1 (2) */
 #else
 BUILD_ASSERT(ARRAY_SIZE(GMAC->GMAC_TBQBAPQ) + 1 == GMAC_QUEUE_NUM,
@@ -47,44 +48,48 @@ BUILD_ASSERT(ARRAY_SIZE(GMAC->GMAC_TBQBAPQ) + 1 == GMAC_QUEUE_NUM,
 #define MAIN_QUEUE_TX_DESC_COUNT        (CONFIG_NET_BUF_TX_COUNT + 1)
 
 /** RX/TX descriptors count for priority queues */
-#if GMAC_ACTIVE_PRIORITY_QUEUE_NUM >= 1
-#define PRIORITY_QUEUE1_RX_DESC_COUNT   MAIN_QUEUE_RX_DESC_COUNT
-#define PRIORITY_QUEUE1_TX_DESC_COUNT   MAIN_QUEUE_TX_DESC_COUNT
-#else
-#define PRIORITY_QUEUE1_RX_DESC_COUNT   1
-#define PRIORITY_QUEUE1_TX_DESC_COUNT   1
-#endif
+#define PRIORITY_QUEUE_RX_DESC_COUNT						\
+		(5 - (GMAC_ACTIVE_PRIORITY_QUEUE_NUM) +				\
+		 (MAIN_QUEUE_RX_DESC_COUNT) * (1 + (GMAC_ACTIVE_PRIORITY_QUEUE_NUM)))
+#define PRIORITY_QUEUE_TX_DESC_COUNT						\
+		(5 - (GMAC_ACTIVE_PRIORITY_QUEUE_NUM) +				\
+		 (MAIN_QUEUE_TX_DESC_COUNT) * (1 + (GMAC_ACTIVE_PRIORITY_QUEUE_NUM)))
+
+#define PRIORITY_QUEUE0_RX_DESC_IDX     0
+#define PRIORITY_QUEUE0_TX_DESC_IDX     0
+#define PRIORITY_QUEUE1_RX_DESC_IDX     MAIN_QUEUE_RX_DESC_COUNT
+#define PRIORITY_QUEUE1_TX_DESC_IDX     MAIN_QUEUE_TX_DESC_COUNT
 
 #if GMAC_ACTIVE_PRIORITY_QUEUE_NUM >= 2
-#define PRIORITY_QUEUE2_RX_DESC_COUNT   MAIN_QUEUE_RX_DESC_COUNT
-#define PRIORITY_QUEUE2_TX_DESC_COUNT   MAIN_QUEUE_TX_DESC_COUNT
+#define PRIORITY_QUEUE2_RX_DESC_IDX     (MAIN_QUEUE_RX_DESC_COUNT * 2)
+#define PRIORITY_QUEUE2_TX_DESC_IDX     (MAIN_QUEUE_TX_DESC_COUNT * 2)
 #else
-#define PRIORITY_QUEUE2_RX_DESC_COUNT   1
-#define PRIORITY_QUEUE2_TX_DESC_COUNT   1
+#define PRIORITY_QUEUE2_RX_DESC_IDX     (MAIN_QUEUE_RX_DESC_COUNT + 1)
+#define PRIORITY_QUEUE2_TX_DESC_IDX     (MAIN_QUEUE_TX_DESC_COUNT + 1)
 #endif
 
 #if GMAC_ACTIVE_PRIORITY_QUEUE_NUM >= 3
-#define PRIORITY_QUEUE3_RX_DESC_COUNT   MAIN_QUEUE_RX_DESC_COUNT
-#define PRIORITY_QUEUE3_TX_DESC_COUNT   MAIN_QUEUE_TX_DESC_COUNT
+#define PRIORITY_QUEUE3_RX_DESC_IDX     (MAIN_QUEUE_RX_DESC_COUNT * 3)
+#define PRIORITY_QUEUE3_TX_DESC_IDX     (MAIN_QUEUE_TX_DESC_COUNT * 3)
 #else
-#define PRIORITY_QUEUE3_RX_DESC_COUNT   1
-#define PRIORITY_QUEUE3_TX_DESC_COUNT   1
+#define PRIORITY_QUEUE3_RX_DESC_IDX     (MAIN_QUEUE_RX_DESC_COUNT + 2)
+#define PRIORITY_QUEUE3_TX_DESC_IDX     (MAIN_QUEUE_TX_DESC_COUNT + 2)
 #endif
 
 #if GMAC_ACTIVE_PRIORITY_QUEUE_NUM >= 4
-#define PRIORITY_QUEUE4_RX_DESC_COUNT   MAIN_QUEUE_RX_DESC_COUNT
-#define PRIORITY_QUEUE4_TX_DESC_COUNT   MAIN_QUEUE_TX_DESC_COUNT
+#define PRIORITY_QUEUE4_RX_DESC_IDX     (MAIN_QUEUE_RX_DESC_COUNT * 4)
+#define PRIORITY_QUEUE4_TX_DESC_IDX     (MAIN_QUEUE_TX_DESC_COUNT * 4)
 #else
-#define PRIORITY_QUEUE4_RX_DESC_COUNT   1
-#define PRIORITY_QUEUE4_TX_DESC_COUNT   1
+#define PRIORITY_QUEUE4_RX_DESC_IDX     (MAIN_QUEUE_RX_DESC_COUNT + 3)
+#define PRIORITY_QUEUE4_TX_DESC_IDX     (MAIN_QUEUE_TX_DESC_COUNT + 3)
 #endif
 
 #if GMAC_ACTIVE_PRIORITY_QUEUE_NUM >= 5
-#define PRIORITY_QUEUE5_RX_DESC_COUNT   MAIN_QUEUE_RX_DESC_COUNT
-#define PRIORITY_QUEUE5_TX_DESC_COUNT   MAIN_QUEUE_TX_DESC_COUNT
+#define PRIORITY_QUEUE5_RX_DESC_IDX     (MAIN_QUEUE_RX_DESC_COUNT * 5)
+#define PRIORITY_QUEUE5_TX_DESC_IDX     (MAIN_QUEUE_TX_DESC_COUNT * 5)
 #else
-#define PRIORITY_QUEUE5_RX_DESC_COUNT   1
-#define PRIORITY_QUEUE5_TX_DESC_COUNT   1
+#define PRIORITY_QUEUE5_RX_DESC_IDX     (MAIN_QUEUE_RX_DESC_COUNT + 4)
+#define PRIORITY_QUEUE5_TX_DESC_IDX     (MAIN_QUEUE_TX_DESC_COUNT + 4)
 #endif
 
 /*
@@ -198,27 +203,6 @@ enum queue_idx {
 	GMAC_QUE_5,  /** Priority queue 5 */
 };
 
-#if (DT_INST_PROP(0, max_frame_size) == 1518)
-	/* Maximum frame length is 1518 bytes */
-#define GMAC_MAX_FRAME_SIZE 0
-#elif (DT_INST_PROP(0, max_frame_size) == 1536)
-	/* Enable Max Frame Size of 1536 */
-#define GMAC_MAX_FRAME_SIZE GMAC_NCFGR_MAXFS
-#elif (DT_INST_PROP(0, max_frame_size) == 10240)
-	/* Jumbo Frame Enable */
-#define GMAC_MAX_FRAME_SIZE GMAC_NCFGR_JFRAME
-#else
-#error "GMAC_MAX_FRAME_SIZE is invalid, fix it at device tree."
-#endif
-
-/** Minimal ring buffer implementation */
-struct ring_buffer {
-	uint32_t *buf;
-	uint16_t len;
-	uint16_t head;
-	uint16_t tail;
-};
-
 /** Receive/transmit buffer descriptor */
 struct gmac_desc {
 	uint32_t w0;
@@ -246,9 +230,9 @@ struct gmac_queue {
 	struct net_buf **rx_frag_list;
 
 #if GMAC_MULTIPLE_TX_PACKETS == 1
-	struct ring_buffer tx_frag_list;
+	struct sys_ringq tx_frag_list;
 #if defined(CONFIG_PTP_CLOCK_SAM_GMAC)
-	struct ring_buffer tx_frames;
+	struct sys_ringq tx_frames;
 #endif
 #endif
 
@@ -264,21 +248,26 @@ struct gmac_queue {
 
 /* Device constant configuration parameters */
 struct eth_sam_dev_cfg {
-	Gmac *regs;
+	DEVICE_MMIO_ROM;
 #ifdef CONFIG_SOC_FAMILY_ATMEL_SAM
 	const struct atmel_sam_pmc_config clock_cfg;
 #endif
 	const struct pinctrl_dev_config *pcfg;
 	void (*config_func)(void);
 	const struct device *phy_dev;
+#if defined(CONFIG_PTP_CLOCK_SAM_GMAC)
+	const struct device *ptp_clock;
+#endif
+	const uint8_t num_queues;
+	const uint8_t phy_conn_type;
+	const uint8_t ref_clk_source;
+	const struct net_eth_mac_config mcfg;
 };
 
 /* Device run time data */
 struct eth_sam_dev_data {
+	DEVICE_MMIO_RAM;
 	struct net_if *iface;
-#if defined(CONFIG_PTP_CLOCK_SAM_GMAC)
-	const struct device *ptp_clock;
-#endif
 	uint8_t mac_addr[6];
 	bool link_up;
 	struct gmac_queue queue_list[GMAC_QUEUE_NUM];

@@ -21,16 +21,6 @@
 
 LOG_MODULE_REGISTER(dsi_stm32, CONFIG_MIPI_DSI_LOG_LEVEL);
 
-#if defined(CONFIG_STM32_LTDC_ARGB8888)
-#define STM32_DSI_INIT_PIXEL_FORMAT	DSI_RGB888
-#elif defined(CONFIG_STM32_LTDC_RGB888)
-#define STM32_DSI_INIT_PIXEL_FORMAT	DSI_RGB888
-#elif defined(CONFIG_STM32_LTDC_RGB565)
-#define STM32_DSI_INIT_PIXEL_FORMAT	DSI_RGB565
-#else
-#error "Invalid LTDC pixel format chosen"
-#endif /* CONFIG_STM32_LTDC_ARGB8888 */
-
 #define MAX_TX_ESC_CLK_KHZ 20000
 #define MAX_TX_ESC_CLK_DIV 8
 
@@ -272,6 +262,21 @@ static int mipi_dsi_stm32_host_init(const struct device *dev)
 	return 0;
 }
 
+static int mipi_dsi_stm32_set_colorcoding(uint32_t pixfmt, uint32_t *colorcoding)
+{
+	switch (pixfmt) {
+	case MIPI_DSI_PIXFMT_RGB888:
+		*colorcoding = DSI_RGB888;
+		break;
+	case MIPI_DSI_PIXFMT_RGB565:
+		*colorcoding = DSI_RGB565;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
 
 static int mipi_dsi_stm32_attach(const struct device *dev, uint8_t channel,
 				 const struct mipi_dsi_device *mdev)
@@ -287,7 +292,10 @@ static int mipi_dsi_stm32_attach(const struct device *dev, uint8_t channel,
 	}
 
 	vcfg->VirtualChannelID = channel;
-	vcfg->ColorCoding = STM32_DSI_INIT_PIXEL_FORMAT;
+	if (mipi_dsi_stm32_set_colorcoding(mdev->pixfmt, &vcfg->ColorCoding) < 0) {
+		LOG_ERR("MIPI PIXFMT not supported by the DSI host");
+		return -ENOTSUP;
+	}
 
 	if (mdev->mode_flags & MIPI_DSI_MODE_VIDEO_BURST) {
 		vcfg->Mode = DSI_VID_MODE_BURST;
@@ -448,11 +456,6 @@ static int mipi_dsi_stm32_init(const struct device *dev)
 	const struct mipi_dsi_stm32_config *config = dev->config;
 	int ret;
 
-	if (!device_is_ready(config->rcc)) {
-		LOG_ERR("clock control device not ready");
-		return -ENODEV;
-	}
-
 	ret = clock_control_on(config->rcc, (clock_control_subsys_t)&config->dsi_clk);
 	if (ret < 0) {
 		LOG_ERR("Enable DSI peripheral clock failed! (%d)", ret);
@@ -473,7 +476,7 @@ static int mipi_dsi_stm32_init(const struct device *dev)
 #define CHILD_GET_DATA_LANES(child) DT_PROP(child, data_lanes)
 
 #define STM32_MIPI_DSI_DEVICE(inst)								\
-	COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, host_timeouts),					\
+	IF_ENABLED(DT_INST_NODE_HAS_PROP(inst, host_timeouts),					\
 		(static DSI_HOST_TimeoutTypeDef host_timeouts_##inst = {			\
 			.TimeoutCkdiv = DT_INST_PROP_BY_IDX(inst, host_timeouts, 0),		\
 			.HighSpeedTransmissionTimeout =						\
@@ -486,8 +489,8 @@ static int mipi_dsi_stm32_init(const struct device *dev)
 			.HighSpeedWritePrespMode = DT_INST_PROP_BY_IDX(inst, host_timeouts, 6),	\
 			.LowPowerWriteTimeout = DT_INST_PROP_BY_IDX(inst, host_timeouts, 7),	\
 			.BTATimeout = DT_INST_PROP_BY_IDX(inst, host_timeouts, 8)		\
-		}), ());									\
-	COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, phy_timings),					\
+		};))										\
+	IF_ENABLED(DT_INST_NODE_HAS_PROP(inst, phy_timings),					\
 		(static DSI_PHY_TimerTypeDef phy_timings_##inst = {				\
 			.ClockLaneHS2LPTime = DT_INST_PROP_BY_IDX(inst, phy_timings, 0),	\
 			.ClockLaneLP2HSTime = DT_INST_PROP_BY_IDX(inst, phy_timings, 1),	\
@@ -495,7 +498,7 @@ static int mipi_dsi_stm32_init(const struct device *dev)
 			.DataLaneLP2HSTime = DT_INST_PROP_BY_IDX(inst, phy_timings, 3),		\
 			.DataLaneMaxReadTime = DT_INST_PROP_BY_IDX(inst, phy_timings, 4),	\
 			.StopWaitTime = DT_INST_PROP_BY_IDX(inst, phy_timings, 5)		\
-		}), ());									\
+		};))										\
 	/* Only child data-lanes property at index 0 is taken into account */			\
 	static const uint32_t data_lanes_##inst[] = {						\
 		DT_INST_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS(inst, DT_PROP_BY_IDX, (,),		\
@@ -504,24 +507,11 @@ static int mipi_dsi_stm32_init(const struct device *dev)
 	static const struct mipi_dsi_stm32_config stm32_dsi_config_##inst = {			\
 		.rcc = DEVICE_DT_GET(STM32_CLOCK_CONTROL_NODE),					\
 		.reset = RESET_DT_SPEC_INST_GET(inst),						\
-		.dsi_clk = {									\
-			.enr = DT_INST_CLOCKS_CELL_BY_NAME(inst, dsiclk, bits),			\
-			.bus = DT_INST_CLOCKS_CELL_BY_NAME(inst, dsiclk, bus),			\
-		},										\
-		COND_CODE_1(DT_INST_CLOCKS_HAS_NAME(inst, dsisrc),				\
-			(.dsisrc_clk = {							\
-				.enr = DT_INST_CLOCKS_CELL_BY_NAME(inst, dsisrc, bits),		\
-				.bus = DT_INST_CLOCKS_CELL_BY_NAME(inst, dsisrc, bus),		\
-			},),									\
-			(.dsisrc_clk = {0},))							\
-		.ref_clk = {									\
-			.enr = DT_INST_CLOCKS_CELL_BY_NAME(inst, refclk, bits),			\
-			.bus = DT_INST_CLOCKS_CELL_BY_NAME(inst, refclk, bus),			\
-		},										\
-		.pix_clk = {									\
-			.enr = DT_INST_CLOCKS_CELL_BY_NAME(inst, pixelclk, bits),		\
-			.bus = DT_INST_CLOCKS_CELL_BY_NAME(inst, pixelclk, bus),		\
-		},										\
+		.dsi_clk = STM32_DT_INST_CLOCK_INFO_BY_NAME(inst, dsiclk),			\
+		IF_ENABLED(DT_INST_CLOCKS_HAS_NAME(inst, dsisrc),				\
+			   (.dsisrc_clk = STM32_DT_INST_CLOCK_INFO_BY_NAME(inst, dsisrc),))	\
+		.ref_clk = STM32_DT_INST_CLOCK_INFO_BY_NAME(inst, refclk),			\
+		.pix_clk = STM32_DT_INST_CLOCK_INFO_BY_NAME(inst, pixelclk),			\
 		/* Use only one (the first) display configuration for DSI HOST configuration */	\
 		.data_lanes = data_lanes_##inst[0],						\
 		.active_errors = DT_INST_PROP_OR(inst, active_errors, HAL_DSI_ERROR_NONE),	\
@@ -536,13 +526,12 @@ static int mipi_dsi_stm32_init(const struct device *dev)
 					DT_INST_PROP(inst, non_continuous) ?			\
 						DSI_AUTO_CLK_LANE_CTRL_ENABLE :			\
 						DSI_AUTO_CLK_LANE_CTRL_DISABLE,			\
-				COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, phy_freq_range),	\
-					(.PHYFrequencyRange = DT_INST_PROP(inst, phy_freq_range),),\
-					())							\
-				COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, phy_low_power_offset),	\
+				IF_ENABLED(DT_INST_NODE_HAS_PROP(inst, phy_freq_range),		\
+					(.PHYFrequencyRange =					\
+						DT_INST_PROP(inst, phy_freq_range),))		\
+				IF_ENABLED(DT_INST_NODE_HAS_PROP(inst, phy_low_power_offset),	\
 					(.PHYLowPowerOffset =					\
-						DT_INST_PROP(inst, phy_low_power_offset),),	\
-					())							\
+						DT_INST_PROP(inst, phy_low_power_offset),))	\
 			},									\
 		},										\
 		.host_timeouts = COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, host_timeouts),	\
@@ -567,16 +556,13 @@ static int mipi_dsi_stm32_init(const struct device *dev)
 			.PLLNDIV = DT_INST_PROP(inst, pll_ndiv),				\
 			.PLLIDF = DT_INST_PROP(inst, pll_idf),					\
 			.PLLODF = DT_INST_PROP(inst, pll_odf),					\
-			COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, pll_vco_range),			\
-					(.PLLVCORange = DT_INST_PROP(inst, pll_vco_range),),	\
-					())							\
-			COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, pll_charge_pump),		\
+			IF_ENABLED(DT_INST_NODE_HAS_PROP(inst, pll_vco_range),			\
+					(.PLLVCORange = DT_INST_PROP(inst, pll_vco_range),))	\
+			IF_ENABLED(DT_INST_NODE_HAS_PROP(inst, pll_charge_pump),		\
 					(.PLLChargePump =					\
-						DT_INST_PROP(inst, pll_charge_pump),),		\
-					())							\
-			COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, pll_tuning),			\
-					(.PLLTuning = DT_INST_PROP(inst, pll_tuning),),		\
-					())							\
+						DT_INST_PROP(inst, pll_charge_pump),))		\
+			IF_ENABLED(DT_INST_NODE_HAS_PROP(inst, pll_tuning),			\
+					(.PLLTuning = DT_INST_PROP(inst, pll_tuning),))		\
 		},										\
 	};											\
 	DEVICE_DT_INST_DEFINE(inst, &mipi_dsi_stm32_init, NULL,					\

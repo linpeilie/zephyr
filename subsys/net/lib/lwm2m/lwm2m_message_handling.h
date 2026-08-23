@@ -8,7 +8,7 @@
 #include "lwm2m_object.h"
 #include "lwm2m_observation.h"
 
-/* LWM2M / CoAP Content-Formats */
+/* LwM2M / CoAP Content-Formats */
 #define LWM2M_FORMAT_PLAIN_TEXT	      0
 #define LWM2M_FORMAT_APP_LINK_FORMAT  40
 #define LWM2M_FORMAT_APP_OCTET_STREAM 42
@@ -50,7 +50,7 @@ int lwm2m_init_message(struct lwm2m_message *msg);
 int lwm2m_send_message_async(struct lwm2m_message *msg);
 
 void lwm2m_udp_receive(struct lwm2m_ctx *client_ctx, uint8_t *buf, uint16_t buf_len,
-		       struct sockaddr *from_addr);
+		       struct net_sockaddr *from_addr);
 
 int generate_notify_message(struct lwm2m_ctx *ctx, struct observe_node *obs, void *user_data);
 /* Notification and Send operation */

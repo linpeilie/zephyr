@@ -65,13 +65,17 @@ static int crc_set_config(const struct device *dev, struct crc_ctx *ctx)
 		break;
 	}
 	case CRC16: {
-		if (ctx->polynomial != CRC16_POLY) {
+		if ((ctx->polynomial != CRC16_POLY) && (ctx->polynomial != CRC16_REFLECT_POLY)) {
 			return -EINVAL;
 		}
 
 		data->crc_config.polynomial = CRC_POLYNOMIAL_CRC_16;
 		break;
 	}
+	/*
+	 * CRC16_ITU_T and CRC16_CCITT use the same poly
+	 */
+	case CRC16_ITU_T:
 	case CRC16_CCITT: {
 		if (ctx->polynomial != CRC16_CCITT_POLY) {
 			return -EINVAL;
@@ -103,8 +107,8 @@ static int crc_set_config(const struct device *dev, struct crc_ctx *ctx)
 	err = RP_CRC_Reconfigure(&data->ctrl, crc_cfg);
 
 	if (err != FSP_SUCCESS) {
+		data->flag_crc_updated = false;
 		ctx->state = CRC_STATE_IDLE;
-		crc_unlock(dev);
 		return -EINVAL;
 	}
 
@@ -158,6 +162,7 @@ static int crc_renesas_ra_update(const struct device *dev, struct crc_ctx *ctx, 
 
 		err = R_CRC_Calculate(&data->ctrl, &data->input_data, &ctx->result);
 		if (err != FSP_SUCCESS) {
+			data->flag_crc_updated = false;
 			ctx->state = CRC_STATE_IDLE;
 			crc_unlock(dev);
 			return -EINVAL;
@@ -179,6 +184,7 @@ static int crc_renesas_ra_update(const struct device *dev, struct crc_ctx *ctx, 
 
 		err = R_CRC_Calculate(&data->ctrl, &data->input_data, &ctx->result);
 		if (err != FSP_SUCCESS) {
+			data->flag_crc_updated = false;
 			ctx->state = CRC_STATE_IDLE;
 			crc_unlock(dev);
 			return -EINVAL;

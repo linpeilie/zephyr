@@ -102,7 +102,7 @@ static void smp_client_transport_work_fn(struct k_work *work)
 			time_stamp_cmp = entry->timestamp - time_stamp_ref;
 			if (time_stamp_cmp < CONFIG_SMP_CMD_RETRY_TIME &&
 			    time_stamp_cmp < backoff_ms) {
-				/* Update new shorter shedule */
+				/* Update new shorter schedule */
 				backoff_ms = time_stamp_cmp;
 			}
 			continue;
@@ -256,7 +256,7 @@ struct net_buf *smp_client_buf_allocation(struct smp_client_object *smp_client, 
 	struct net_buf *nb;
 	struct smp_hdr smp_header;
 
-	nb = smp_packet_alloc();
+	nb = smp_alloc_req(smp_client->smpt, smp_client_object_get_data(smp_client));
 
 	if (nb) {
 		/* Write SMP header with payload length 0 */

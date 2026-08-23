@@ -4,13 +4,13 @@
 
 '''Modified openocd and gdb runner for Cyclone V SoC DevKit.'''
 
-import os
 import re
 import subprocess
 from os import path
 from pathlib import Path
 
 from runners.core import RunnerCaps, ZephyrBinaryRunner
+from zephyr_ext_common import ZEPHYR_BASE
 
 DEFAULT_OPENOCD_TCL_PORT = 6333
 DEFAULT_OPENOCD_TELNET_PORT = 4444
@@ -28,7 +28,7 @@ class IntelCycloneVBinaryRunner(ZephyrBinaryRunner):
                  tcl_port=DEFAULT_OPENOCD_TCL_PORT,
                  telnet_port=DEFAULT_OPENOCD_TELNET_PORT,
                  gdb_port=DEFAULT_OPENOCD_GDB_PORT,
-                 gdb_init=None, no_load=False):
+                 gdb_init=None, load=True):
         super().__init__(cfg)
 
         support = path.join(cfg.board_dir, 'support')
@@ -89,7 +89,7 @@ class IntelCycloneVBinaryRunner(ZephyrBinaryRunner):
         self.serial = ['-c set _ZEPHYR_BOARD_SERIAL ' + serial] if serial else []
         self.use_elf = use_elf
         self.gdb_init = gdb_init
-        self.load_arg = [] if no_load else ['-ex', 'load']
+        self.load_arg = ['-ex', 'load'] if load else []
 
     @classmethod
     def name(cls):
@@ -98,7 +98,7 @@ class IntelCycloneVBinaryRunner(ZephyrBinaryRunner):
     @classmethod
     def capabilities(cls):
         return RunnerCaps(commands={'flash', 'debug', 'attach'},
-                          dev_id=False, flash_addr=False, erase=False)
+                          dev_id=False, flash_addr=False, erase=False, skip_load=True)
 
     @classmethod
     def do_add_parser(cls, parser):
@@ -151,8 +151,6 @@ class IntelCycloneVBinaryRunner(ZephyrBinaryRunner):
                             help='if given, no init issued in gdb server cmd')
         parser.add_argument('--no-targets', action='store_true',
                             help='if given, no target issued in gdb server cmd')
-        parser.add_argument('--no-load', action='store_true',
-                            help='if given, no load issued in gdb server cmd')
 
     @classmethod
     def do_create(cls, cfg, args):
@@ -166,7 +164,7 @@ class IntelCycloneVBinaryRunner(ZephyrBinaryRunner):
             use_elf=args.use_elf, no_halt=args.no_halt, no_init=args.no_init,
             no_targets=args.no_targets, tcl_port=args.tcl_port,
             telnet_port=args.telnet_port, gdb_port=args.gdb_port,
-            gdb_init=args.gdb_init, no_load=args.no_load)
+            gdb_init=args.gdb_init, load=args.load)
 
     def print_gdbserver_message(self):
         if not self.thread_info_enabled:
@@ -239,7 +237,7 @@ class IntelCycloneVBinaryRunner(ZephyrBinaryRunner):
 
         server_cmd = (self.openocd_cmd + self.serial + self.cfg_cmd +        #added mevalver
                       pre_init_cmd)
-        temp_str = '--cd=' + os.environ.get('ZEPHYR_BASE') #Go to Zephyr base Dir
+        temp_str = f'--cd={ZEPHYR_BASE}' #Go to Zephyr base Dir
         # Execute First Script in Zephyr Base Dir
         gdb_cmd = (self.gdb_cmd + self.tui_arg +
                    [temp_str,'-ex', f'target extended-remote localhost:{self.gdb_port}' , '-batch'])
@@ -300,7 +298,7 @@ class IntelCycloneVBinaryRunner(ZephyrBinaryRunner):
                    ['-ex', f'target extended-remote :{self.gdb_port}',
                     self.elf_name, '-q'])
 
-        temp_str = '--cd=' + os.environ.get('ZEPHYR_BASE') #Go to Zephyr base Dir
+        temp_str = f'--cd={ZEPHYR_BASE}' #Go to Zephyr base Dir
 
         # Execute First Script in Zephyr Base Dir
         gdb_cmd = (self.gdb_cmd + self.tui_arg +

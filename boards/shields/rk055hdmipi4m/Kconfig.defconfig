@@ -20,10 +20,6 @@ config INPUT
 config INPUT_GT911_INTERRUPT
 	default y
 
-# LVGL should allocate buffers equal to size of display
-config LV_Z_VDB_SIZE
-	default 100
-
 # Enable double buffering
 config LV_Z_DOUBLE_VDB
 	default y
@@ -32,9 +28,6 @@ config LV_Z_DOUBLE_VDB
 # display refreshes, which is not necessary for the eLCDIF driver
 config LV_Z_FULL_REFRESH
 	default y
-
-config LV_Z_BITS_PER_PIXEL
-	default 16
 
 config LV_DPI_DEF
 	default 128

@@ -2,7 +2,7 @@
 
 zephyr_sources_ifdef(CONFIG_KINETIS_FLASH_CONFIG	flash_configuration.c)
 
-add_subdirectory(${SOC_SERIES})
+add_subdirectory(${CONFIG_SOC_SERIES})
 
 # This is for access to pinctrl macros
 zephyr_include_directories(common)
@@ -17,4 +17,4 @@ zephyr_linker_sources_ifdef(CONFIG_KINETIS_FLASH_CONFIG
 # CMSIS SystemInit will disable watchdog unless instructed not to.
 # Add a compiler definition here to leave watchdog untouched
 # if this Kconfig is not set
-zephyr_compile_definitions_ifndef(CONFIG_WDT_DISABLE_AT_BOOT DISABLE_WDOG=1)
+zephyr_compile_definitions_ifndef(CONFIG_WDT_DISABLE_AT_BOOT DISABLE_WDOG=0)

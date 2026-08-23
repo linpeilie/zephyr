@@ -54,15 +54,16 @@ endif()
 # 1) Zephyr specified as toolchain (ZEPHYR_SDK_INSTALL_DIR still used if defined)
 # 2) No toolchain specified == Default to Zephyr toolchain
 # Until we completely deprecate it
-if(("zephyr" STREQUAL ${ZEPHYR_TOOLCHAIN_VARIANT}) OR
-   (NOT DEFINED ZEPHYR_TOOLCHAIN_VARIANT) OR
-   (DEFINED ZEPHYR_SDK_INSTALL_DIR) OR
-   (Zephyr-sdk_FIND_REQUIRED))
+if((${ZEPHYR_TOOLCHAIN_VARIANT} MATCHES "^zephyr/?") OR
+  (NOT DEFINED ZEPHYR_TOOLCHAIN_VARIANT) OR
+  (DEFINED ZEPHYR_SDK_INSTALL_DIR) OR
+  (Zephyr-sdk_FIND_REQUIRED)
+)
 
   # No toolchain was specified, so inform user that we will be searching.
   if(NOT Zephyr-sdk_FIND_QUIETLY AND
-      NOT DEFINED ZEPHYR_SDK_INSTALL_DIR AND
-      NOT DEFINED ZEPHYR_TOOLCHAIN_VARIANT)
+    NOT DEFINED ZEPHYR_SDK_INSTALL_DIR AND
+    NOT DEFINED ZEPHYR_TOOLCHAIN_VARIANT)
     message(STATUS "ZEPHYR_TOOLCHAIN_VARIANT not set, trying to locate Zephyr SDK")
   endif()
 
@@ -77,8 +78,13 @@ if(("zephyr" STREQUAL ${ZEPHYR_TOOLCHAIN_VARIANT}) OR
     # To support Zephyr SDK tools (DTC, and other tools) with 3rd party toolchains
     # then we keep track of current toolchain variant.
     set(ZEPHYR_CURRENT_TOOLCHAIN_VARIANT ${ZEPHYR_TOOLCHAIN_VARIANT})
+    # When ZEPHYR_SDK_INSTALL_DIR is set, the Zephyr SDK must be located there.
+    # Restrict the search to this location with NO_DEFAULT_PATH so that an
+    # explicitly selected, but incompatible, SDK results in a clear error
+    # instead of silently falling back to another SDK found elsewhere (for
+    # example in the CMake package registry).
     find_package(Zephyr-sdk ${Zephyr-sdk_FIND_VERSION_COMPLETE}
-                 REQUIRED QUIET CONFIG HINTS ${ZEPHYR_SDK_INSTALL_DIR}
+                 REQUIRED QUIET CONFIG HINTS ${ZEPHYR_SDK_INSTALL_DIR} NO_DEFAULT_PATH
     )
     if(DEFINED ZEPHYR_CURRENT_TOOLCHAIN_VARIANT)
       set(ZEPHYR_TOOLCHAIN_VARIANT ${ZEPHYR_CURRENT_TOOLCHAIN_VARIANT})
@@ -86,13 +92,14 @@ if(("zephyr" STREQUAL ${ZEPHYR_TOOLCHAIN_VARIANT}) OR
   else()
     # Paths that are used to find installed Zephyr SDK versions
     SET(zephyr_sdk_search_paths
-        /usr
-        /usr/local
-        /opt
-        $ENV{HOME}
-        $ENV{HOME}/.local
-        $ENV{HOME}/.local/opt
-        $ENV{HOME}/bin)
+      /usr
+      /usr/local
+      /opt
+      $ENV{HOME}
+      $ENV{HOME}/.local
+      $ENV{HOME}/.local/opt
+      $ENV{HOME}/bin
+    )
 
     # Search for Zephyr SDK version 0.0.0 which does not exist, this is needed to
     # return a list of compatible versions and find the best suited version that
@@ -135,8 +142,7 @@ if(("zephyr" STREQUAL ${ZEPHYR_TOOLCHAIN_VARIANT}) OR
       # Loop over each found Zepher SDK version until one is found that is compatible.
       foreach(zephyr_sdk_candidate ${Zephyr-sdk_CONSIDERED_VERSIONS})
         if("${zephyr_sdk_candidate}" VERSION_GREATER_EQUAL "${Zephyr-sdk_FIND_VERSION}"
-           AND "${zephyr_sdk_candidate}" VERSION_LESS${upper_bound} "${Zephyr-sdk_FIND_VERSION_MAX}"
-        )
+          AND "${zephyr_sdk_candidate}" VERSION_LESS${upper_bound} "${Zephyr-sdk_FIND_VERSION_MAX}")
           # Find the path for the current version being checked and get the directory
           # of the Zephyr SDK so it can be checked.
           cmake_path(GET Zephyr-sdk-${zephyr_sdk_candidate}_DIR PARENT_PATH zephyr_sdk_current_check_path)

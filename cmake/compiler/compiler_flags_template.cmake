@@ -17,6 +17,9 @@ set_compiler_property(PROPERTY optimization_size_aggressive)
 
 set_compiler_property(PROPERTY optimization_fast)
 
+set_compiler_property(PROPERTY optimization_lto)
+set_compiler_property(PROPERTY optimization_lto_st)
+
 #######################################################
 # This section covers flags related to warning levels #
 #######################################################
@@ -96,6 +99,12 @@ set_compiler_property(PROPERTY no_printf_return_value)
 # Flags for coverage generation
 set_compiler_property(PROPERTY coverage)
 
+# Compiler-specific flags for heap KASAN (-fsanitize=kernel-address + tuning params).
+set_compiler_property(PROPERTY heap_kasan)
+
+# Flag to disable heap KASAN instrumentation on a specific source file.
+set_compiler_property(PROPERTY no_heap_kasan)
+
 # Security canaries flags.
 set_compiler_property(PROPERTY security_canaries)
 set_compiler_property(PROPERTY security_canaries_strong)
@@ -137,6 +146,9 @@ set_property(TARGET asm PROPERTY imacros)
 # Compiler flag for disabling pointer arithmetic warnings
 set_compiler_property(PROPERTY warning_no_pointer_arithmetic)
 
+# Compiler flag for disabling misleading indentation warnings
+set_compiler_property(PROPERTY warning_no_misleading_indentation)
+
 # Compiler flags for disabling position independent code / executable
 set_compiler_property(PROPERTY no_position_independent)
 
@@ -174,3 +186,8 @@ set_compiler_property(PROPERTY no_data_sections)
 
 # Compiler flag to enable function instrumentation
 set_compiler_property(PROPERTY func_instrumentation)
+
+# Compiler flags to enable or disable code generation of VLIW
+# (Very Long Instruction Word) instructions.
+set_compiler_property(PROPERTY generate_vliw)
+set_compiler_property(PROPERTY no_generate_vliw)

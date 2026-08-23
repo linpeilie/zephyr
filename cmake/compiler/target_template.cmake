@@ -16,20 +16,13 @@ function(compiler_simple_options simple_options_out)
   get_property(flags TARGET zephyr_interface PROPERTY INTERFACE_COMPILE_OPTIONS)
 
   set(simple_options "")
+  string(GENEX_STRIP "${flags}" flags)
 
-  foreach(flag ${flags})
-
-    # Include this flag if GENEX_STRIP has no effect,
-    # otherwise skip the whole thing
-
-    string(GENEX_STRIP "${flag}" sflag)
-    if(flag STREQUAL sflag)
-      if(flag MATCHES "^SHELL:[ ]*(.*)")
-        separate_arguments(flag UNIX_COMMAND ${CMAKE_MATCH_1})
-      endif()
-      list(APPEND simple_options ${flag})
+  foreach(flag IN LISTS flags)
+    if(flag MATCHES "^SHELL:[ ]*(.*)")
+      separate_arguments(flag UNIX_COMMAND ${CMAKE_MATCH_1})
     endif()
-
+    list(APPEND simple_options ${flag})
   endforeach()
 
   set(${simple_options_out} "${simple_options}" PARENT_SCOPE)
@@ -102,7 +95,7 @@ if(NOT COMMAND compiler_set_linker_properties)
     # Compute the library directory name
 
     get_filename_component(library_dir ${library_path} DIRECTORY)
-    set_linker_property(PROPERTY lib_include_dir "-L${library_dir}")
+    set_linker_property(PROPERTY lib_include_dir "-L\"${library_dir}\"")
 
     # Compute the linker option for this library
 

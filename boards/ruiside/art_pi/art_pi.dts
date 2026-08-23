@@ -28,11 +28,11 @@
 	};
 
 	sdram1: memory@c0000000 {
-		compatible = "zephyr,memory-region","mmio-sram";
+		compatible = "zephyr,memory-region", "mmio-sram";
 		device_type = "memory";
-		reg = <0xC0000000 0x00600000>; /* Use 6 MB  MAX 32MB */
+		reg = <0xc0000000 0x00600000>; /* Use 6 MB  MAX 32MB */
 		zephyr,memory-region = "SDRAM1";
-		zephyr,memory-attr = <(DT_MEM_ARM(ATTR_MPU_RAM))>;
+		zephyr,memory-attr = <DT_MEM_ARM(ATTR_MPU_RAM)>;
 	};
 
 	ext_memory: memory@90000000 {
@@ -123,14 +123,19 @@
 	d3ppre = <2>; /* 240/2 = 120MHz APB4 Clocks */
 };
 
+&pwr {
+	power-supply = "ldo";
+};
+
 &flash0 {
 	partitions {
-		compatible = "fixed-partitions";
 		#address-cells = <1>;
 		#size-cells = <1>;
+		ranges;
 
 		/* Flash has 128KB sector size */
 		boot_partition: partition@0 {
+			compatible = "zephyr,mapped-partition";
 			label = "mcuboot";
 			reg = <0x00000000 DT_SIZE_K(128)>;
 		};
@@ -169,7 +174,7 @@
 	clocks = <&rcc STM32_CLOCK(AHB3, 16)>,
 		 <&rcc STM32_SRC_PLL2_R SDMMC_SEL(0)>;
 	bus-width = <4>;
-	cd-gpios = <&gpiod 5 (GPIO_PULL_UP|GPIO_ACTIVE_HIGH)>;
+	cd-gpios = <&gpiod 5 (GPIO_PULL_UP | GPIO_ACTIVE_HIGH)>;
 	disk-name = "SD";
 	resets;
 	reset-names = "sdmmc1_reset";
@@ -188,13 +193,13 @@
 	bl-ctrl-gpios = <&gpiod 4 GPIO_ACTIVE_HIGH>;
 	ext-sdram = <&sdram1>;
 	status = "okay";
-	clocks = <&rcc STM32_CLOCK(APB3, 3)>,<&rcc STM32_SRC_PLL3_R NO_SEL>;
+	clocks = <&rcc STM32_CLOCK(APB3, 3)>, <&rcc STM32_SRC_PLL3_R NO_SEL>;
 	width = <800>;
 	height = <480>;
-	pixel-format = <PANEL_PIXEL_FORMAT_RGB_565>;
-	def-back-color-red = <0X00>;
-	def-back-color-green = <0X00>;
-	def-back-color-blue = <0X00>;
+	pixel-format = <PANEL_PIXEL_FORMAT_RGB_888>;
+	def-back-color-red = <0x00>;
+	def-back-color-green = <0x00>;
+	def-back-color-blue = <0x00>;
 
 	display-timings {
 		compatible = "zephyr,panel-timing";
@@ -216,6 +221,8 @@
 	clock-frequency = <100000>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c1_scl_pb6 &i2c1_sda_pb7>;
+	scl-gpios = <&gpiob 6 GPIO_ACTIVE_HIGH>;
+	sda-gpios = <&gpiob 7 GPIO_ACTIVE_HIGH>;
 
 	gt911: touchscreen@5d {
 		compatible = "goodix,gt911";
@@ -245,24 +252,42 @@
 		reset-cmd;
 		reset-cmd-wait = <2000>;
 
-		partitions {
-			compatible = "fixed-partitions";
+		/* QSPI external flash mapping */
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x0 0x90000000 DT_SIZE_M(8)>;
+
+		ext_flash: ext-flash@0 {
+			compatible = "soc-nv-flash";
+			reg = <0x0 DT_SIZE_M(8)>;
+			write-block-size = <1>;
+			erase-block-size = <DT_SIZE_K(4)>;
 			#address-cells = <1>;
 			#size-cells = <1>;
+			ranges;
 
-			slot0_partition: partition@0 {
-				label = "image-0";
-				reg = <0x00000000 DT_SIZE_K(2048)>; /* 2MB */
-			};
+			partitions {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				ranges;
 
-			slot1_partition: partition@200000 {
-				label = "image-1";
-				reg = <0x00200000 DT_SIZE_K(2048)>; /* 2MB */
-			};
+				slot0_partition: partition@0 {
+					compatible = "zephyr,mapped-partition";
+					label = "image-0";
+					reg = <0x00000000 DT_SIZE_K(2048)>; /* 2MB */
+				};
 
-			storage_partition: partition@400000 {
-				label = "storage";
-				reg = <0x00400000 DT_SIZE_K(4096)>; /* 4MB */
+				slot1_partition: partition@200000 {
+					compatible = "zephyr,mapped-partition";
+					label = "image-1";
+					reg = <0x00200000 DT_SIZE_K(2048)>; /* 2MB */
+				};
+
+				storage_partition: partition@400000 {
+					compatible = "zephyr,mapped-partition";
+					label = "storage";
+					reg = <0x00400000 DT_SIZE_K(4096)>; /* 4MB */
+				};
 			};
 		};
 	};
@@ -348,7 +373,7 @@ zephyr_udc0: &usbotg_fs {
 	status = "okay";
 	phy-connection-type = "rmii";
 	phy-handle = <&eth_phy>;
-	local-mac-address = [00 80 E1 2A 75 01];
+	local-mac-address = [00 80 e1 2a 75 01];
 	pinctrl-0 = <&eth_ref_clk_pa1
 		     &eth_crs_dv_pa7
 		     &eth_rxd0_pc4
@@ -367,7 +392,7 @@ zephyr_udc0: &usbotg_fs {
 	eth_phy: ethernet-phy@0 {
 		compatible = "ethernet-phy";
 		reg = <0>;
-		default-speeds = "10BASE Full-Duplex","100BASE Full-Duplex";
+		default-speeds = "10BASE Full-Duplex", "100BASE Full-Duplex";
 	};
 };
 

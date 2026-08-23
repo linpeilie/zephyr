@@ -16,7 +16,6 @@
 #include <zephyr/sys/__assert.h>
 #include <zephyr/sys/atomic.h>
 #include <zephyr/sys/byteorder.h>
-#include <zephyr/sys/check.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/slist.h>
@@ -26,7 +25,7 @@
 #include <psa/crypto_types.h>
 #include <psa/crypto_values.h>
 
-#include "long_wq.h"
+#include "common/long_wq.h"
 #include "ecc.h"
 #include "hci_core.h"
 

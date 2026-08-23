@@ -52,23 +52,23 @@ int64_t timeutil_timegm64(const struct tm *tm)
 	unsigned int m = tm->tm_mon + 1;
 	unsigned int d = tm->tm_mday - 1;
 	int64_t ndays = time_days_from_civil(y, m, d);
-	int64_t time = tm->tm_sec;
+	int64_t secs = tm->tm_sec;
 
-	time += 60LL * (tm->tm_min + 60LL * tm->tm_hour);
-	time += 86400LL * ndays;
+	secs += 60LL * (tm->tm_min + 60LL * tm->tm_hour);
+	secs += 86400LL * ndays;
 
-	return time;
+	return secs;
 }
 
 time_t timeutil_timegm(const struct tm *tm)
 {
-	int64_t time = timeutil_timegm64(tm);
-	time_t rv = (time_t)time;
+	int64_t secs = timeutil_timegm64(tm);
+	time_t rv = (time_t)secs;
 
 	errno = 0;
 	if ((sizeof(rv) == sizeof(int32_t))
-	    && ((time < (int64_t)INT32_MIN)
-		|| (time > (int64_t)INT32_MAX))) {
+	    && ((secs < (int64_t)INT32_MIN)
+		|| (secs > (int64_t)INT32_MAX))) {
 		errno = ERANGE;
 		rv = -1;
 	}
@@ -139,12 +139,14 @@ int timeutil_sync_ref_from_local(const struct timeutil_sync_state *tsp,
 	if ((tsp->skew > 0) && (tsp->base.ref > 0) && (refp != NULL)) {
 		const struct timeutil_sync_config *cfg = tsp->cfg;
 		int64_t local_delta = local - tsp->base.local;
+#ifdef CONFIG_TIMEUTIL_APPLY_SKEW
 		/* (x * 1.0) != x for large values of x.
 		 * Therefore only apply the multiplication if the skew is not one.
 		 */
 		if (tsp->skew != 1.0f) {
 			local_delta *= (double)tsp->skew;
 		}
+#endif /* CONFIG_TIMEUTIL_APPLY_SKEW */
 		int64_t ref_delta = local_delta * cfg->ref_Hz / cfg->local_Hz;
 		int64_t ref_abs = (int64_t)tsp->base.ref + ref_delta;
 
@@ -167,14 +169,15 @@ int timeutil_sync_local_from_ref(const struct timeutil_sync_state *tsp,
 	if ((tsp->skew > 0) && (tsp->base.ref > 0) && (localp != NULL)) {
 		const struct timeutil_sync_config *cfg = tsp->cfg;
 		int64_t ref_delta = (int64_t)(ref - tsp->base.ref);
+		int64_t local_delta = (ref_delta * cfg->local_Hz) / cfg->ref_Hz;
+#ifdef CONFIG_TIMEUTIL_APPLY_SKEW
 		/* (x / 1.0) != x for large values of x.
 		 * Therefore only apply the division if the skew is not one.
 		 */
-		int64_t local_delta = (ref_delta * cfg->local_Hz) / cfg->ref_Hz;
-
 		if (tsp->skew != 1.0f) {
 			local_delta /= (double)tsp->skew;
 		}
+#endif /* CONFIG_TIMEUTIL_APPLY_SKEW */
 		int64_t local_abs = (int64_t)tsp->base.local
 				    + (int64_t)local_delta;
 

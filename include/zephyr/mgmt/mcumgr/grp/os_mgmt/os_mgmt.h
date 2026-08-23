@@ -6,8 +6,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef H_OS_MGMT_
-#define H_OS_MGMT_
+/**
+ * @file
+ * @brief Header file for the MCUmgr OS management group API.
+ * @ingroup mcumgr_os_mgmt
+ */
+
+#ifndef ZEPHYR_INCLUDE_MGMT_MCUMGR_GRP_OS_MGMT_OS_MGMT_H_
+#define ZEPHYR_INCLUDE_MGMT_MCUMGR_GRP_OS_MGMT_OS_MGMT_H_
 
 /**
  * @brief MCUmgr OS Management API
@@ -61,6 +67,9 @@ enum os_mgmt_err_code_t {
 
 	/** Query was recognized but there is no valid value for the response. */
 	OS_MGMT_ERR_QUERY_RESPONSE_VALUE_NOT_VALID,
+
+	/** Heap statistic fetch failed. */
+	OS_MGMT_ERR_HEAP_STATS_FETCH_FAILED,
 };
 
 /**
@@ -133,4 +142,4 @@ struct os_mgmt_info_append {
  * @}
  */
 
-#endif /* H_OS_MGMT_ */
+#endif /* ZEPHYR_INCLUDE_MGMT_MCUMGR_GRP_OS_MGMT_OS_MGMT_H_ */

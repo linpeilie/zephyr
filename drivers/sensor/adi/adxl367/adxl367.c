@@ -918,10 +918,11 @@ void adxl367_temp_convert(struct sensor_value *val, int16_t value)
 static void adxl367_temp_convert(struct sensor_value *val, int16_t value)
 #endif /*CONFIG_SENSOR_ASYNC_API*/
 {
-	int64_t temp_data = (value - ADXL367_TEMP_25C);
+	int32_t temp_from_25 = value - ADXL367_TEMP_25C;
+	int32_t temp_data = temp_from_25 * ADXL367_TEMP_SCALE;
 
-	val->val1 = temp_data / 54 /*temp sensitivity LSB/C*/ + 25/*bias test conditions*/;
-	val->val2 = temp_data % 54 * 10000;
+	val->val1 = temp_data / 1000000 + 25;
+	val->val2 = temp_data % 1000000;
 }
 
 static int adxl367_channel_get(const struct device *dev,
@@ -1107,7 +1108,15 @@ static int adxl367_init(const struct device *dev)
 
 #ifdef CONFIG_ADXL367_TRIGGER
 #define ADXL367_CFG_IRQ(inst) \
-		.interrupt = GPIO_DT_SPEC_INST_GET(inst, int1_gpios),
+	COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, int1_gpios),		\
+		(							\
+			.interrupt = GPIO_DT_SPEC_INST_GET(inst, int1_gpios),	\
+			.int_map_reg = ADXL367_INTMAP1_LOWER,		\
+		),							\
+		(							\
+			.interrupt = GPIO_DT_SPEC_INST_GET(inst, int2_gpios),	\
+			.int_map_reg = ADXL367_INTMAP2_LOWER,		\
+		))
 #else
 #define ADXL367_CFG_IRQ(inst)
 #endif /* CONFIG_ADXL367_TRIGGER */
@@ -1153,7 +1162,8 @@ static int adxl367_init(const struct device *dev)
 		.bus_init = adxl367_spi_init,				\
 		.spi = SPI_DT_SPEC_INST_GET(inst, ADXL367_SPI_CFG),		\
 		ADXL367_CONFIG(inst, chipid)					\
-		COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, int1_gpios),	\
+		COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios),	\
+				    DT_INST_NODE_HAS_PROP(inst, int2_gpios)),	\
 		(ADXL367_CFG_IRQ(inst)), ())				\
 	}
 
@@ -1176,7 +1186,8 @@ static int adxl367_init(const struct device *dev)
 		.bus_init = adxl367_i2c_init,				\
 		.i2c = I2C_DT_SPEC_INST_GET(inst),			\
 		ADXL367_CONFIG(inst, chipid)					\
-		COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, int1_gpios),	\
+		COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios),	\
+				    DT_INST_NODE_HAS_PROP(inst, int2_gpios)),	\
 		(ADXL367_CFG_IRQ(inst)), ())				\
 	}
 

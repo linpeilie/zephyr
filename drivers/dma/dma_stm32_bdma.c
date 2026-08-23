@@ -477,9 +477,9 @@ static bool bdma_stm32_is_valid_memory_address(const uint32_t address, const uin
 }
 
 
-BDMA_STM32_EXPORT_API int bdma_stm32_configure(const struct device *dev,
-					     uint32_t id,
-					     struct dma_config *config)
+static int bdma_stm32_configure(const struct device *dev,
+				uint32_t id,
+				struct dma_config *config)
 {
 	const struct bdma_stm32_config *dev_config = dev->config;
 	struct bdma_stm32_channel *channel =
@@ -674,9 +674,9 @@ BDMA_STM32_EXPORT_API int bdma_stm32_configure(const struct device *dev,
 	return ret;
 }
 
-BDMA_STM32_EXPORT_API int bdma_stm32_reload(const struct device *dev, uint32_t id,
-					  uint32_t src, uint32_t dst,
-					  size_t size)
+static int bdma_stm32_reload(const struct device *dev, uint32_t id,
+			     uint32_t src, uint32_t dst,
+			     size_t size)
 {
 	const struct bdma_stm32_config *config = dev->config;
 	BDMA_TypeDef *bdma = (BDMA_TypeDef *)(config->base);
@@ -722,7 +722,7 @@ BDMA_STM32_EXPORT_API int bdma_stm32_reload(const struct device *dev, uint32_t i
 	return 0;
 }
 
-BDMA_STM32_EXPORT_API int bdma_stm32_start(const struct device *dev, uint32_t id)
+static int bdma_stm32_start(const struct device *dev, uint32_t id)
 {
 	const struct bdma_stm32_config *config = dev->config;
 	BDMA_TypeDef *bdma = (BDMA_TypeDef *)(config->base);
@@ -748,7 +748,7 @@ BDMA_STM32_EXPORT_API int bdma_stm32_start(const struct device *dev, uint32_t id
 	return 0;
 }
 
-BDMA_STM32_EXPORT_API int bdma_stm32_stop(const struct device *dev, uint32_t id)
+static int bdma_stm32_stop(const struct device *dev, uint32_t id)
 {
 	const struct bdma_stm32_config *config = dev->config;
 	struct bdma_stm32_channel *channel = &config->channels[id];
@@ -785,11 +785,6 @@ static int bdma_stm32_init(const struct device *dev)
 {
 	const struct bdma_stm32_config *config = dev->config;
 	const struct device *const clk = DEVICE_DT_GET(STM32_CLOCK_CONTROL_NODE);
-
-	if (!device_is_ready(clk)) {
-		LOG_ERR("clock control device not ready");
-		return -ENODEV;
-	}
 
 	if (clock_control_on(clk,
 		(clock_control_subsys_t) &config->pclken) != 0) {
@@ -830,7 +825,7 @@ static int bdma_stm32_init(const struct device *dev)
 	return 0;
 }
 
-BDMA_STM32_EXPORT_API int bdma_stm32_get_status(const struct device *dev,
+static int bdma_stm32_get_status(const struct device *dev,
 				uint32_t id, struct dma_status *stat)
 {
 	const struct bdma_stm32_config *config = dev->config;
@@ -864,36 +859,34 @@ static DEVICE_API(dma, dma_funcs) = {
 #define BDMA_STM32_OFFSET_INIT(index)
 #endif /* CONFIG_DMAMUX_STM32 */
 
-#define BDMA_STM32_INIT_DEV(index)					\
-static struct bdma_stm32_channel					\
-	bdma_stm32_channels_##index[BDMA_STM32_##index##_CHANNEL_COUNT];\
-									\
-const struct bdma_stm32_config bdma_stm32_config_##index = {		\
-	.pclken = { .bus = DT_INST_CLOCKS_CELL(index, bus),		\
-		    .enr = DT_INST_CLOCKS_CELL(index, bits) },		\
-	.config_irq = bdma_stm32_config_irq_##index,			\
-	.base = DT_INST_REG_ADDR(index),				\
-	.support_m2m = DT_INST_PROP(index, st_mem2mem),			\
-	.max_channels = BDMA_STM32_##index##_CHANNEL_COUNT,		\
-	.channels = bdma_stm32_channels_##index,			\
-	BDMA_STM32_OFFSET_INIT(index)					\
-};									\
-									\
-static struct bdma_stm32_data bdma_stm32_data_##index = {		\
-};									\
-									\
-DEVICE_DT_INST_DEFINE(index,							\
-		    bdma_stm32_init,						\
-		    NULL,							\
-		    &bdma_stm32_data_##index, &bdma_stm32_config_##index,	\
-		    PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT,		\
-		    &dma_funcs)
+#define BDMA_STM32_INIT_DEV(index)						\
+	static struct bdma_stm32_channel					\
+		bdma_stm32_channels_##index[BDMA_STM32_##index##_CHANNEL_COUNT];\
+										\
+	const struct bdma_stm32_config bdma_stm32_config_##index = {		\
+		.pclken = STM32_DT_INST_CLOCK_INFO(index),			\
+		.config_irq = bdma_stm32_config_irq_##index,			\
+		.base = DT_INST_REG_ADDR(index),				\
+		.support_m2m = DT_INST_PROP(index, st_mem2mem),			\
+		.max_channels = BDMA_STM32_##index##_CHANNEL_COUNT,		\
+		.channels = bdma_stm32_channels_##index,			\
+		BDMA_STM32_OFFSET_INIT(index)					\
+	};									\
+										\
+	static struct bdma_stm32_data bdma_stm32_data_##index;			\
+										\
+	DEVICE_DT_INST_DEFINE(index, bdma_stm32_init, NULL,			\
+			      &bdma_stm32_data_##index,				\
+			      &bdma_stm32_config_##index,			\
+			      PRE_KERNEL_1,					\
+			      CONFIG_KERNEL_INIT_PRIORITY_DEFAULT,		\
+			      &dma_funcs)
 
-#define BDMA_STM32_DEFINE_IRQ_HANDLER(bdma, chan)			\
-static void bdma_stm32_irq_##bdma##_##chan(const struct device *dev)	\
-{									\
-	bdma_stm32_irq_handler(dev, chan);				\
-}
+#define BDMA_STM32_DEFINE_IRQ_HANDLER(bdma, chan)				\
+	static void bdma_stm32_irq_##bdma##_##chan(const struct device *dev)	\
+	{									\
+		bdma_stm32_irq_handler(dev, chan);				\
+	}
 
 
 #define BDMA_STM32_IRQ_CONNECT(bdma, chan)				\

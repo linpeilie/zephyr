@@ -16,8 +16,8 @@
 
 #define th_sport(_x) UNALIGNED_GET(UNALIGNED_MEMBER_ADDR((_x), th_sport))
 #define th_dport(_x) UNALIGNED_GET(UNALIGNED_MEMBER_ADDR((_x), th_dport))
-#define th_seq(_x) ntohl(UNALIGNED_GET(UNALIGNED_MEMBER_ADDR((_x), th_seq)))
-#define th_ack(_x) ntohl(UNALIGNED_GET(UNALIGNED_MEMBER_ADDR((_x), th_ack)))
+#define th_seq(_x) net_ntohl(UNALIGNED_GET(UNALIGNED_MEMBER_ADDR((_x), th_seq)))
+#define th_ack(_x) net_ntohl(UNALIGNED_GET(UNALIGNED_MEMBER_ADDR((_x), th_ack)))
 
 #define th_off(_x) ((_x)->th_off)
 #define th_flags(_x) UNALIGNED_GET(UNALIGNED_MEMBER_ADDR((_x), th_flags))
@@ -60,20 +60,20 @@
 #endif
 
 #define tcp_pkt_ref(_pkt) net_pkt_ref(_pkt)
+/* The allocation includes a headroom estimate for the IP and TCP headers
+ * plus options, so a zero length allocates enough buffer space for a
+ * segment without payload.
+ */
 #define tcp_pkt_alloc(_conn, _len)					\
 ({									\
 	struct net_pkt *_pkt;						\
 									\
-	if ((_len) > 0) {						\
-		_pkt = net_pkt_alloc_with_buffer(			\
-			(_conn)->iface,					\
-			(_len),						\
-			net_context_get_family((_conn)->context),	\
-			IPPROTO_TCP,					\
-			TCP_PKT_ALLOC_TIMEOUT);				\
-	} else {							\
-		_pkt = net_pkt_alloc(TCP_PKT_ALLOC_TIMEOUT);		\
-	}								\
+	_pkt = net_pkt_alloc_with_buffer(				\
+		(_conn)->iface,						\
+		(_len),							\
+		net_context_get_family((_conn)->context),		\
+		NET_IPPROTO_TCP,					\
+		TCP_PKT_ALLOC_TIMEOUT);					\
 									\
 	tp_pkt_alloc(_pkt, tp_basename(__FILE__), __LINE__);		\
 									\
@@ -89,7 +89,7 @@
 			(_conn)->iface,					\
 			(_len),						\
 			net_context_get_family((_conn)->context),	\
-			IPPROTO_TCP,					\
+			NET_IPPROTO_TCP,				\
 			TCP_PKT_ALLOC_TIMEOUT);				\
 	} else {							\
 		_pkt = net_pkt_rx_alloc(TCP_PKT_ALLOC_TIMEOUT);		\
@@ -107,7 +107,7 @@
 	if ((_len) > 0) {						\
 		_pkt = net_pkt_alloc_with_buffer(			\
 			(_iface), (_len), (_family),			\
-			IPPROTO_TCP,					\
+			NET_IPPROTO_TCP,				\
 			TCP_PKT_ALLOC_TIMEOUT);				\
 	} else {							\
 		_pkt = net_pkt_alloc(TCP_PKT_ALLOC_TIMEOUT);		\
@@ -219,9 +219,9 @@ enum tcp_data_mode {
 };
 
 union tcp_endpoint {
-	struct sockaddr sa;
-	struct sockaddr_in sin;
-	struct sockaddr_in6 sin6;
+	struct net_sockaddr sa;
+	struct net_sockaddr_in sin;
+	struct net_sockaddr_in6 sin6;
 };
 
 /* TCP Option codes */
@@ -292,6 +292,9 @@ struct tcp { /* TCP connection */
 	struct k_work_delayable timewait_timer;
 	struct k_work_delayable persist_timer;
 	struct k_work_delayable ack_timer;
+#if defined(CONFIG_NET_CONTEXT_LINGER)
+	struct k_work_delayable linger_timer;
+#endif /* CONFIG_NET_CONTEXT_LINGER */
 #if defined(CONFIG_NET_TCP_KEEPALIVE)
 	struct k_work_delayable keepalive_timer;
 #endif /* CONFIG_NET_TCP_KEEPALIVE */
@@ -329,6 +332,7 @@ struct tcp { /* TCP connection */
 	uint16_t recv_win_sent;
 	uint16_t recv_win_max;
 	uint16_t recv_win;
+	uint16_t recv_since_ack;
 	uint16_t send_win_max;
 	uint16_t send_win;
 #ifdef CONFIG_NET_TCP_RANDOMIZED_RTO

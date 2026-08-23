@@ -4,8 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef H_SETTINGS_MGMT_
-#define H_SETTINGS_MGMT_
+/**
+ * @file
+ * @brief Header file for the MCUmgr settings management group API.
+ * @ingroup mcumgr_settings_mgmt
+ */
+
+#ifndef ZEPHYR_INCLUDE_MGMT_MCUMGR_GRP_SETTINGS_MGMT_SETTINGS_MGMT_H_
+#define ZEPHYR_INCLUDE_MGMT_MCUMGR_GRP_SETTINGS_MGMT_SETTINGS_MGMT_H_
 
 /**
  * @brief MCUmgr Settings Management API
@@ -58,6 +64,13 @@ enum settings_mgmt_ret_code_t {
 
 	/** The provided key name does not support being saved. */
 	SETTINGS_MGMT_ERR_SAVE_NOT_SUPPORTED,
+
+	/**
+	 * The provided key cannot be saved before the value is longer than the size of the
+	 * largest value that can safely be read
+	 * (CONFIG_SETTINGS_SAVE_SINGLE_SUBTREE_WITHOUT_MODIFICATION_VALUE_SIZE).
+	 */
+	SETTINGS_MGMT_ERR_SAVE_FAILED_VALUE_TOO_LONG_TO_READ,
 };
 
 #ifdef __cplusplus
@@ -68,4 +81,4 @@ enum settings_mgmt_ret_code_t {
  * @}
  */
 
-#endif
+#endif /* ZEPHYR_INCLUDE_MGMT_MCUMGR_GRP_SETTINGS_MGMT_SETTINGS_MGMT_H_ */

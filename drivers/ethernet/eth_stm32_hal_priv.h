@@ -9,15 +9,12 @@
 
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
+#include <zephyr/linker/devicetree_regions.h>
 #include <zephyr/kernel.h>
 #include <zephyr/net/ethernet.h>
 #include <zephyr/net/phy.h>
 #include <zephyr/types.h>
 #include <soc.h>
-
-#define DT_DRV_COMPAT st_stm32_ethernet
-
-extern const struct device *eth_stm32_phy_dev;
 
 #if DT_HAS_COMPAT_STATUS_OKAY(st_stm32h7_ethernet)
 #define IS_ETH_DMATXDESC_OWN(dma_tx_desc) (dma_tx_desc->DESC3 & ETH_DMATXNDESCRF_OWN)
@@ -36,6 +33,11 @@ extern const struct device *eth_stm32_phy_dev;
 #elif defined(CONFIG_SOC_SERIES_STM32H7X) || defined(CONFIG_SOC_SERIES_STM32H7RSX)
 #define __eth_stm32_desc __attribute__((section(".eth_stm32_desc")))
 #define __eth_stm32_buf  __attribute__((section(".eth_stm32_buf")))
+#elif defined(CONFIG_SOC_SERIES_STM32MP13X)
+#define ETH_DMA_REGION  DT_INST_PHANDLE(0, memory_regions)
+#define ETH_SECTION Z_GENERIC_SECTION(LINKER_DT_NODE_REGION_NAME_TOKEN(ETH_DMA_REGION))
+#define __eth_stm32_desc __aligned(32) ETH_SECTION
+#define __eth_stm32_buf  __aligned(32) ETH_SECTION
 #elif defined(CONFIG_NOCACHE_MEMORY)
 #define __eth_stm32_desc __nocache __aligned(4)
 #define __eth_stm32_buf  __nocache __aligned(4)
@@ -49,9 +51,6 @@ extern const struct device *eth_stm32_phy_dev;
 #define ETH_MII_MODE	ETH_MEDIA_INTERFACE_MII
 #define ETH_RMII_MODE	ETH_MEDIA_INTERFACE_RMII
 
-#define ETH_STM32_AUTO_NEGOTIATION_ENABLE                                                          \
-	UTIL_NOT(DT_NODE_HAS_PROP(DT_INST_PHANDLE(0, phy_handle), fixed_link))
-
 #else /* CONFIG_ETH_STM32_HAL_API_V2 */
 
 #define ETH_MII_MODE	HAL_ETH_MII_MODE
@@ -60,6 +59,17 @@ extern const struct device *eth_stm32_phy_dev;
 struct eth_stm32_tx_context {
 	struct net_pkt *pkt;
 	uint16_t first_tx_buffer_index;
+	bool used;
+};
+
+struct eth_stm32_rx_buffer_header {
+	struct eth_stm32_rx_buffer_header *next;
+	uint16_t size;
+	bool used;
+};
+
+struct eth_stm32_tx_buffer_header {
+	ETH_BufferTypeDef tx_buff;
 	bool used;
 };
 
@@ -81,44 +91,66 @@ struct eth_stm32_tx_context {
 		ETH_MII_MODE : ETH_RMII_MODE)
 #endif
 
+/* Pointer on DMA desc and DMA buf depending on the HAL API */
+#if DT_HAS_COMPAT_STATUS_OKAY(st_stm32n6_ethernet)
+#define ETH_STM32_TX_DESC_PTR(cfg) (&(cfg)->dma_desc->tx_desc[0][0])
+#define ETH_STM32_RX_DESC_PTR(cfg) (&(cfg)->dma_desc->rx_desc[0][0])
+#else
+#define ETH_STM32_TX_DESC_PTR(cfg) ((cfg)->dma_desc->tx_desc)
+#define ETH_STM32_RX_DESC_PTR(cfg) ((cfg)->dma_desc->rx_desc)
+#endif
+
+#define ETH_STM32_TX_BUF_PTR(cfg) (&(cfg)->dma_buf->tx_buf[0][0])
+#define ETH_STM32_RX_BUF_PTR(cfg) (&(cfg)->dma_buf->rx_buf[0][0])
+
 /* Definition of the Ethernet driver buffers size and count */
 #define ETH_STM32_RX_BUF_SIZE	ETH_MAX_PACKET_SIZE /* buffer size for receive */
 #define ETH_STM32_TX_BUF_SIZE	ETH_MAX_PACKET_SIZE /* buffer size for transmit */
 
 BUILD_ASSERT(ETH_STM32_RX_BUF_SIZE % 4 == 0, "Rx buffer size must be a multiple of 4");
 
-extern uint8_t dma_rx_buffer[ETH_RXBUFNB][ETH_STM32_RX_BUF_SIZE];
-extern uint8_t dma_tx_buffer[ETH_TXBUFNB][ETH_STM32_TX_BUF_SIZE];
+struct eth_stm32_dma_buf {
+	uint8_t rx_buf[ETH_RXBUFNB][ETH_STM32_RX_BUF_SIZE];
+	uint8_t tx_buf[ETH_TXBUFNB][ETH_STM32_TX_BUF_SIZE];
+};
 
+struct eth_stm32_dma_desc {
 #if DT_HAS_COMPAT_STATUS_OKAY(st_stm32n6_ethernet)
-extern ETH_DMADescTypeDef dma_rx_desc_tab[ETH_DMA_RX_CH_CNT][ETH_RXBUFNB];
-extern ETH_DMADescTypeDef dma_tx_desc_tab[ETH_DMA_TX_CH_CNT][ETH_TXBUFNB];
+	ETH_DMADescTypeDef rx_desc[ETH_DMA_RX_CH_CNT][ETH_RXBUFNB] __aligned(32);
+	ETH_DMADescTypeDef tx_desc[ETH_DMA_TX_CH_CNT][ETH_TXBUFNB] __aligned(32);
 #else
-extern ETH_DMADescTypeDef dma_rx_desc_tab[ETH_RXBUFNB];
-extern ETH_DMADescTypeDef dma_tx_desc_tab[ETH_TXBUFNB];
+	ETH_DMADescTypeDef rx_desc[ETH_RXBUFNB];
+	ETH_DMADescTypeDef tx_desc[ETH_TXBUFNB];
 #endif
+};
 
 /* Device constant configuration parameters */
 struct eth_stm32_hal_dev_cfg {
 	void (*config_func)(void);
-	struct stm32_pclken pclken;
-	struct stm32_pclken pclken_rx;
-	struct stm32_pclken pclken_tx;
-#if DT_INST_CLOCKS_HAS_NAME(0, mac_clk_ptp)
-	struct stm32_pclken pclken_ptp;
+	const struct stm32_pclken *pclken;
+	uint8_t pclken_cnt;
+#ifdef CONFIG_PTP_CLOCK_STM32_HAL
+	/* Index of the clock that feeds the PTP addend calculation */
+	uint8_t rate_pclken_idx;
 #endif
 	const struct pinctrl_dev_config *pcfg;
+	const struct net_eth_mac_config mac_cfg;
+	const struct device *phy_dev;
+	struct eth_stm32_dma_buf *dma_buf;
+	struct eth_stm32_dma_desc *dma_desc;
 };
 
 /* Device run time data */
 struct eth_stm32_hal_dev_data {
 	struct net_if *iface;
-	uint8_t mac_addr[6];
+	uint8_t mac_addr[NET_ETH_ADDR_LEN];
 	ETH_HandleTypeDef heth;
-	struct k_mutex tx_mutex;
 	struct k_sem rx_int_sem;
 #if defined(CONFIG_ETH_STM32_HAL_API_V2)
 	struct k_sem tx_int_sem;
+	struct eth_stm32_rx_buffer_header rx_buffer_header[ETH_RXBUFNB];
+	struct eth_stm32_tx_buffer_header tx_buffer_header[ETH_TXBUFNB];
+	struct eth_stm32_tx_context tx_context[ETH_TX_DESC_CNT];
 #endif /* CONFIG_ETH_STM32_HAL_API_V2 */
 	K_KERNEL_STACK_MEMBER(rx_thread_stack,
 		CONFIG_ETH_STM32_HAL_RX_THREAD_STACK_SIZE);
@@ -140,9 +172,10 @@ void eth_stm32_set_mac_config(const struct device *dev, struct phy_link_state *s
 int eth_stm32_tx(const struct device *dev, struct net_pkt *pkt);
 struct net_pkt *eth_stm32_rx(const struct device *dev);
 int eth_stm32_hal_init(const struct device *dev);
-int eth_stm32_hal_start(const struct device *dev);
-int eth_stm32_hal_stop(const struct device *dev);
+int eth_stm32_hal_start(const struct device *dev, struct net_if *iface);
+int eth_stm32_hal_stop(const struct device *dev, struct net_if *iface);
 int eth_stm32_hal_set_config(const struct device *dev,
+			     struct net_if *iface,
 			     enum ethernet_config_type type,
 			     const struct ethernet_config *config);
 struct net_if *eth_stm32_get_iface(struct eth_stm32_hal_dev_data *ctx);
@@ -153,8 +186,7 @@ void eth_stm32_mcast_filter(const struct device *dev,
 #endif /* CONFIG_ETH_STM32_MULTICAST_FILTER */
 
 #ifdef CONFIG_PTP_CLOCK_STM32_HAL
-const struct device *eth_stm32_get_ptp_clock(const struct device *dev);
-bool eth_stm32_is_ptp_pkt(struct net_if *iface, struct net_pkt *pkt);
+const struct device *eth_stm32_get_ptp_clock(const struct device *dev, struct net_if *iface);
 #endif /* CONFIG_PTP_CLOCK_STM32_HAL */
 
 #endif /* ZEPHYR_DRIVERS_ETHERNET_ETH_STM32_HAL_PRIV_H_ */

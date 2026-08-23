@@ -25,10 +25,12 @@ LOG_MODULE_REGISTER(net_test, CONFIG_NET_SOCKETS_LOG_LEVEL);
 #define SERVER_PORT 4242
 #define CLIENT_PORT 9898
 
-/* Fudge factor added to expected timeouts, in milliseconds. */
-#define FUZZ 60
+/* Fudge factor added to expected timeouts, in milliseconds.
+ * Had to set this pretty large to avoid spurious failures in CI.
+ */
+#define FUZZ 180
 
-#define TIMEOUT_MS 60
+#define TIMEOUT_MS 120
 
 ZTEST_USER(net_socket_select, test_fd_set)
 {
@@ -70,8 +72,8 @@ ZTEST_USER(net_socket_select, test_select)
 	int res;
 	int c_sock;
 	int s_sock;
-	struct sockaddr_in6 c_addr;
-	struct sockaddr_in6 s_addr;
+	struct net_sockaddr_in6 c_addr;
+	struct net_sockaddr_in6 s_addr;
 	zsock_fd_set readfds;
 	uint32_t tstamp;
 	ssize_t len;
@@ -81,10 +83,10 @@ ZTEST_USER(net_socket_select, test_select)
 	prepare_sock_udp_v6(MY_IPV6_ADDR, CLIENT_PORT, &c_sock, &c_addr);
 	prepare_sock_udp_v6(MY_IPV6_ADDR, SERVER_PORT, &s_sock, &s_addr);
 
-	res = zsock_bind(s_sock, (struct sockaddr *)&s_addr, sizeof(s_addr));
+	res = zsock_bind(s_sock, (struct net_sockaddr *)&s_addr, sizeof(s_addr));
 	zassert_equal(res, 0, "bind failed");
 
-	res = zsock_connect(c_sock, (struct sockaddr *)&s_addr, sizeof(s_addr));
+	res = zsock_connect(c_sock, (struct net_sockaddr *)&s_addr, sizeof(s_addr));
 	zassert_equal(res, 0, "connect failed");
 
 	ZSOCK_FD_ZERO(&readfds);

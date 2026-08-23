@@ -29,6 +29,9 @@ For more information about the MCXW236 SoC and MCXW23-EVK board, see:
 - `MCXW23 SoC Website`_
 - `MCXW23 Datasheet`_
 - `MCXW23 Reference Manual`_
+- `MCXW23-EVK Website`_
+- `MCXW23-EVK User Manual`_
+- `MCXW23-EVK Development Board Design Files`_
 
 Supported Features
 ==================
@@ -87,7 +90,14 @@ achieved by running the following command:
 
 .. code-block:: console
 
-   west blobs fetch hal_nxp
+   west blobs fetch hal_nxp -l "mcxw23"
+
+.. note::
+
+   The ``-l`` option takes a Python regular expression that is matched against
+   each blob's path. Passing ``"mcxw23"`` limits the download to the blobs
+   required by this board instead of fetching every NXP blob. Omit the option
+   (``west blobs fetch hal_nxp``) to fetch all NXP blobs.
 
 Programming and Debugging
 *************************
@@ -177,6 +187,24 @@ should see the following message in the terminal:
    *** Booting Zephyr OS build v4.2.0-2105-g9da1d56da9e7 ***
    Hello World! mcxw23_evk/mcxw236
 
+Power Management
+================
+
+When Power Management is enabled :kconfig:option:`CONFIG_PM`, OSTIMER is used as
+OS tick timer.
+
+Limitation: Wakeup pin can't be used as wakeup source in Standby mode.
+
+Bluetooth
+=========
+
+Dynamic BLE TX Power Configuration
+----------------------------------
+
+MCXW23 supports dynamic BLE TX power configuration. However, there is a
+known limitation: when changing the TX power level, advertising must be
+restarted for the new power setting to take effect.
+
 .. include:: ../../common/board-footer.rst.inc
 
 .. _MCXW23 SoC Website:
@@ -187,3 +215,12 @@ should see the following message in the terminal:
 
 .. _MCXW23 Reference Manual:
    https://www.nxp.com/webapp/Download?colCode=MCXW23RM
+
+.. _MCXW23-EVK Website:
+   https://www.nxp.com/design/design-center/development-boards-and-designs/MCXW23-EVK
+
+.. _MCXW23-EVK User Manual:
+   https://www.nxp.com/webapp/Download?colCode=UM12389
+
+.. _MCXW23-EVK Development Board Design Files:
+   https://www.nxp.com/downloads/en/design-support/MCXW23-EVK-DESIGNFILES.zip

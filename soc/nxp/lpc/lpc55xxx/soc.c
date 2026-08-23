@@ -1,4 +1,4 @@
-/* Copyright 2017, 2019-2024 NXP
+/* Copyright 2017, 2019, 2024, 2026 NXP
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -27,8 +27,8 @@
 #include <fsl_pint.h>
 #endif
 #if CONFIG_USB_DC_NXP_LPCIP3511 || CONFIG_UDC_NXP_IP3511 || CONFIG_UHC_NXP_IP3516HS
-#include "usb_phy.h"
-#include "usb.h"
+#include <usb_phy.h>
+#include <usb.h>
 #endif
 #if defined(CONFIG_SOC_LPC55S36) && (defined(CONFIG_ADC_MCUX_LPADC) \
 	|| defined(CONFIG_DAC_MCUX_LPDAC))
@@ -47,6 +47,13 @@ static uint32_t ExternalClockFrequency;
 #define TO_CTIMER_CLOCK_SOURCE(inst, val) TO_CLOCK_ATTACH_ID(inst, val)
 #define TO_CLOCK_ATTACH_ID(inst, val) MUX_A(CM_CTIMERCLKSEL##inst, val)
 #define CTIMER_CLOCK_SETUP(node_id) CLOCK_AttachClk(CTIMER_CLOCK_SOURCE(node_id));
+
+#if defined(CONFIG_SOC_LPC55S36)
+#define CTIMER_CLOCK_DIV_NAME(inst) kCLOCK_DivCtimer##inst##Clk
+#define CTIMER_CLOCK_DIV_ID(inst) CTIMER_CLOCK_DIV_NAME(inst)
+#define CTIMER_CLOCK_DIV_SETUP(node_id) \
+	CLOCK_SetClkDiv(CTIMER_CLOCK_DIV_ID(DT_CLOCKS_CELL(node_id, name)), 1U, false);
+#endif /* CONFIG_SOC_LPC55S36 */
 
 #ifdef CONFIG_INIT_PLL0
 const pll_setup_t pll0Setup = {
@@ -239,6 +246,8 @@ __weak void clock_init(void)
 #if DT_NODE_HAS_COMPAT_STATUS(DT_NODELABEL(wwdt0), nxp_lpc_wwdt, okay)
 	/* Enable 1 MHz FRO clock for WWDT */
 	SYSCON->CLOCK_CTRL |= SYSCON_CLOCK_CTRL_FRO1MHZ_CLK_ENA_MASK;
+	/* Set clock divider for WWDT clock source. */
+	CLOCK_SetClkDiv(kCLOCK_DivWdtClk, 1U, true);
 #endif
 
 #if DT_NODE_HAS_COMPAT_STATUS(DT_NODELABEL(mailbox0), nxp_lpc_mailbox, okay)
@@ -351,6 +360,11 @@ DT_FOREACH_STATUS_OKAY(nxp_lpc_ctimer, CTIMER_CLOCK_SETUP)
 
 DT_FOREACH_STATUS_OKAY(nxp_ctimer_pwm, CTIMER_CLOCK_SETUP)
 
+#if defined(CONFIG_SOC_LPC55S36)
+	DT_FOREACH_STATUS_OKAY(nxp_lpc_ctimer, CTIMER_CLOCK_DIV_SETUP)
+	DT_FOREACH_STATUS_OKAY(nxp_ctimer_pwm, CTIMER_CLOCK_DIV_SETUP)
+#endif /* CONFIG_SOC_LPC55S36 */
+
 #if (DT_NODE_HAS_COMPAT_STATUS(DT_NODELABEL(flexcomm6), nxp_lpc_i2s, okay))
 #if defined(CONFIG_SOC_LPC55S36)
 	CLOCK_SetClkDiv(kCLOCK_DivFlexcom6Clk, 0U, true);
@@ -439,6 +453,36 @@ DT_FOREACH_STATUS_OKAY(nxp_ctimer_pwm, CTIMER_CLOCK_SETUP)
 	CLOCK_SetClkDiv(kCLOCK_DivArmTrClkDiv, 1U, true);
 #endif
 
+#if CONFIG_AUDIO_CODEC_WM8904
+	CLOCK_AttachClk(kPLL0_to_MCLK);
+	SYSCON->MCLKDIV = SYSCON_MCLKDIV_DIV(0U);
+	SYSCON->MCLKIO  = 1U;
+#endif /* CONFIG_AUDIO_CODEC_WM8904 */
+
+#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(hscmp0))
+	POWER_DisablePD(kPDRUNCFG_PD_VREF);
+	POWER_DisablePD(kPDRUNCFG_PD_CMPBIAS);
+	POWER_DisablePD(kPDRUNCFG_PD_HSCMP0);
+	POWER_DisablePD(kPDRUNCFG_PD_HSCMP0_DAC);
+#endif
+
+#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(hscmp1))
+	POWER_DisablePD(kPDRUNCFG_PD_VREF);
+	POWER_DisablePD(kPDRUNCFG_PD_CMPBIAS);
+	POWER_DisablePD(kPDRUNCFG_PD_HSCMP1);
+	POWER_DisablePD(kPDRUNCFG_PD_HSCMP1_DAC);
+#endif
+
+#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(hscmp2))
+	POWER_DisablePD(kPDRUNCFG_PD_VREF);
+	POWER_DisablePD(kPDRUNCFG_PD_CMPBIAS);
+	POWER_DisablePD(kPDRUNCFG_PD_HSCMP2);
+	POWER_DisablePD(kPDRUNCFG_PD_HSCMP2_DAC);
+#endif
+
+	if (IS_ENABLED(CONFIG_NXP_GINT)) {
+		CLOCK_EnableClock(kCLOCK_Gint);
+	}
 }
 
 /**

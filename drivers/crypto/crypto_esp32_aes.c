@@ -15,8 +15,8 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "hal/aes_hal.h"
-#include "hal/aes_ll.h"
+#include <hal/aes_hal.h>
+#include <hal/aes_ll.h>
 
 LOG_MODULE_REGISTER(esp32_aes, CONFIG_CRYPTO_LOG_LEVEL);
 
@@ -458,7 +458,7 @@ static int aes_init(const struct device *dev)
 	return 0;
 }
 
-static const struct crypto_driver_api aes_crypto_api = {
+static DEVICE_API(crypto, aes_crypto_api) = {
 	.query_hw_caps = aes_query_hw_caps,
 	.cipher_begin_session = aes_cipher_begin_session,
 	.cipher_free_session = aes_cipher_free_session,

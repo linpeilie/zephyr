@@ -3,6 +3,7 @@
 /*
  * Copyright (c) 2015-2016 Intel Corporation
  * Copyright (c) 2023 Nordic Semiconductor
+ * Copyright (c) 2025 Xiaomi Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -22,7 +23,6 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/__assert.h>
 #include <zephyr/sys/atomic.h>
-#include <zephyr/sys/check.h>
 #include <zephyr/sys/iterable_sections.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/sys/math_extras.h>
@@ -30,7 +30,7 @@
 #include <zephyr/sys/util.h>
 #include <zephyr/net_buf.h>
 #include <zephyr/sys/util_macro.h>
-#include <zephyr/sys_clock.h>
+#include <zephyr/sys/clock.h>
 #include <zephyr/toolchain.h>
 
 #include "buf_view.h"
@@ -67,7 +67,7 @@ LOG_MODULE_REGISTER(bt_l2cap, CONFIG_BT_L2CAP_LOG_LEVEL);
 #define L2CAP_LE_PSM_IS_DYN(_psm) \
 	(_psm >= L2CAP_LE_PSM_DYN_START && _psm <= L2CAP_LE_PSM_DYN_END)
 
-#define L2CAP_CONN_TIMEOUT	K_SECONDS(40)
+#define L2CAP_CONN_TIMEOUT	K_SECONDS(CONFIG_BT_L2CAP_CONN_RTX_TIMEOUT)
 #define L2CAP_DISC_TIMEOUT	K_SECONDS(2)
 /** @brief Local L2CAP RTX (Response Timeout eXpired)
  *
@@ -395,8 +395,9 @@ static bool l2cap_chan_add(struct bt_conn *conn, struct bt_l2cap_chan *chan,
 	/* All dynamic channels have the destroy handler which makes sure that
 	 * the RTX work structure is properly released with a cancel sync.
 	 * The fixed signal channel is only removed when disconnected and the
-	 * disconnected handler is always called from the workqueue itself so
-	 * canceling from there should always succeed.
+	 * disconnected handler is always called from the Bluetooth workqueue,
+	 * which the RTX work also runs on, so canceling from there should
+	 * always succeed.
 	 */
 	k_work_init_delayable(&le_chan->rtx_work, l2cap_rtx_timeout);
 
@@ -414,8 +415,7 @@ void bt_l2cap_connected(struct bt_conn *conn)
 {
 	struct bt_l2cap_chan *chan;
 
-	if (IS_ENABLED(CONFIG_BT_CLASSIC) &&
-	    conn->type == BT_CONN_TYPE_BR) {
+	if (bt_conn_is_br(conn)) {
 		bt_l2cap_br_connected(conn);
 		return;
 	}
@@ -464,8 +464,7 @@ void bt_l2cap_disconnected(struct bt_conn *conn)
 {
 	struct bt_l2cap_chan *chan, *next;
 
-	if (IS_ENABLED(CONFIG_BT_CLASSIC) &&
-	    conn->type == BT_CONN_TYPE_BR) {
+	if (bt_conn_is_br(conn)) {
 		bt_l2cap_br_disconnected(conn);
 		return;
 	}
@@ -540,7 +539,7 @@ static void l2cap_chan_send_req(struct bt_l2cap_chan *chan,
 	 * final expiration, when the response is received, or the physical
 	 * link is lost.
 	 */
-	k_work_reschedule(&(BT_L2CAP_LE_CHAN(chan)->rtx_work), timeout);
+	bt_work_reschedule(&(BT_L2CAP_LE_CHAN(chan)->rtx_work), timeout);
 }
 
 static int l2cap_le_conn_req(struct bt_l2cap_le_chan *ch)
@@ -584,8 +583,8 @@ static int l2cap_ecred_conn_req(struct bt_l2cap_chan **chan, int channels)
 	struct bt_l2cap_le_chan *ch;
 	int i;
 	uint8_t ident;
-	uint16_t req_psm;
-	uint16_t req_mtu;
+	__maybe_unused uint16_t req_psm;
+	__maybe_unused uint16_t req_mtu;
 
 	if (!chan || !channels) {
 		return -EINVAL;
@@ -687,8 +686,7 @@ void bt_l2cap_security_changed(struct bt_conn *conn, uint8_t hci_status)
 {
 	struct bt_l2cap_chan *chan, *next;
 
-	if (IS_ENABLED(CONFIG_BT_CLASSIC) &&
-	    conn->type == BT_CONN_TYPE_BR) {
+	if (bt_conn_is_br(conn)) {
 		l2cap_br_encrypt_change(conn, hci_status);
 		return;
 	}
@@ -1106,7 +1104,21 @@ static void le_conn_param_rsp(struct bt_l2cap *l2cap, struct net_buf *buf)
 		return;
 	}
 
-	LOG_DBG("LE conn param rsp result %u", sys_le16_to_cpu(rsp->result));
+	__maybe_unused uint16_t result = sys_le16_to_cpu(rsp->result);
+
+	LOG_DBG("L2CAP conn param rsp result %u", result);
+
+	if (IS_ENABLED(CONFIG_BT_USER_CONN_PARAM_REJECTED) &&
+	    result == BT_L2CAP_CONN_PARAM_REJECTED) {
+		struct bt_conn *conn = l2cap->chan.chan.conn;
+
+		/* Mirror le_conn_update_complete(): only notify for
+		 * application-initiated updates, not host-initiated (auto) ones.
+		 */
+		if (!atomic_test_bit(conn->flags, BT_CONN_PERIPHERAL_PARAM_AUTO_UPDATE)) {
+			bt_conn_notify_le_param_rejected(conn, BT_CONN_PARAM_REJECT_ERR_L2CAP_CPUP);
+		}
+	}
 }
 
 static void le_conn_param_update_req(struct bt_l2cap *l2cap, uint8_t ident,
@@ -1274,6 +1286,8 @@ static void l2cap_chan_rx_init(struct bt_l2cap_le_chan *chan)
 {
 	LOG_DBG("chan %p", chan);
 
+	chan->rx.cid = 0U;
+
 	/* Redirect to experimental API. */
 	IF_ENABLED(CONFIG_BT_L2CAP_SEG_RECV, ({
 		if (chan->chan.ops->seg_recv) {
@@ -1367,11 +1381,16 @@ static void l2cap_chan_destroy(struct bt_l2cap_chan *chan)
 	 */
 	struct k_work_q *rtx_work_queue = le_chan->rtx_work.queue;
 
-	if (rtx_work_queue == NULL || k_current_get() != &rtx_work_queue->thread) {
+	if (rtx_work_queue == NULL || k_current_get() != rtx_work_queue->thread_id) {
 		k_work_cancel_delayable_sync(&le_chan->rtx_work, &le_chan->rtx_sync);
 	} else {
 		k_work_cancel_delayable(&le_chan->rtx_work);
 	}
+
+	/* Make sure the RX work is not left queued with a reference to a
+	 * channel object that may be freed or re-used after this call.
+	 */
+	(void)k_work_cancel(&le_chan->rx_work);
 
 	/* Remove buffers on the SDU RX queue */
 	while ((buf = k_fifo_get(&le_chan->rx_queue, K_NO_WAIT))) {
@@ -1380,8 +1399,7 @@ static void l2cap_chan_destroy(struct bt_l2cap_chan *chan)
 
 	/* Destroy segmented SDU if it exists */
 	if (le_chan->_sdu) {
-		net_buf_unref(le_chan->_sdu);
-		le_chan->_sdu = NULL;
+		net_buf_drop(&le_chan->_sdu);
 		le_chan->_sdu_len = 0U;
 	}
 }
@@ -1449,19 +1467,20 @@ static uint16_t l2cap_chan_accept(struct bt_conn *conn,
 
 	le_chan->required_sec_level = server->sec_level;
 
-	if (!l2cap_chan_add(conn, *chan, l2cap_chan_destroy)) {
-		return BT_L2CAP_LE_ERR_NO_RESOURCES;
-	}
-
 	/* Init TX parameters */
 	l2cap_chan_tx_init(le_chan);
 	le_chan->tx.cid = scid;
 	le_chan->tx.mps = mps;
 	le_chan->tx.mtu = mtu;
-	l2cap_chan_tx_give_credits(le_chan, credits);
 
 	/* Init RX parameters */
 	l2cap_chan_rx_init(le_chan);
+
+	if (!l2cap_chan_add(conn, *chan, l2cap_chan_destroy)) {
+		return BT_L2CAP_LE_ERR_NO_RESOURCES;
+	}
+
+	l2cap_chan_tx_give_credits(le_chan, credits);
 
 	/* Set channel PSM */
 	le_chan->psm = server->psm;
@@ -1759,7 +1778,13 @@ static void le_ecred_reconf_req(struct bt_l2cap *l2cap, uint8_t ident,
 
 	while (buf->len >= sizeof(scid)) {
 		struct bt_l2cap_chan *chan;
+
 		scid = net_buf_pull_le16(buf);
+		if (!L2CAP_LE_CID_IS_DYN(scid)) {
+			result = BT_L2CAP_RECONF_INVALID_CID;
+			goto response;
+		}
+
 		chan = bt_l2cap_le_lookup_tx_cid(conn, scid);
 		if (!chan) {
 			result = BT_L2CAP_RECONF_INVALID_CID;
@@ -2392,8 +2417,7 @@ static void l2cap_chan_shutdown(struct bt_l2cap_chan *chan)
 
 	/* Destroy segmented SDU if it exists */
 	if (le_chan->_sdu) {
-		net_buf_unref(le_chan->_sdu);
-		le_chan->_sdu = NULL;
+		net_buf_drop(&le_chan->_sdu);
 		le_chan->_sdu_len = 0U;
 	}
 
@@ -2540,11 +2564,11 @@ int bt_l2cap_chan_recv_complete(struct bt_l2cap_chan *chan, struct net_buf *buf)
 		return -ENOTCONN;
 	}
 
-	if (IS_ENABLED(CONFIG_BT_CLASSIC) && conn->type == BT_CONN_TYPE_BR) {
+	if (bt_conn_is_br(conn)) {
 		return bt_l2cap_br_chan_recv_complete(chan);
 	}
 
-	if (conn->type != BT_CONN_TYPE_LE) {
+	if (!bt_conn_is_le(conn)) {
 		return -ENOTSUP;
 	}
 
@@ -2648,8 +2672,7 @@ static void l2cap_chan_le_recv_seg(struct bt_l2cap_le_chan *chan,
 		return;
 	}
 
-	buf = chan->_sdu;
-	chan->_sdu = NULL;
+	buf = net_buf_take(&chan->_sdu);
 	chan->_sdu_len = 0U;
 
 	l2cap_chan_le_recv_sdu(chan, buf, seg);
@@ -2756,6 +2779,14 @@ static void l2cap_chan_le_recv(struct bt_l2cap_le_chan *chan,
 			bt_l2cap_chan_disconnect(&chan->chan);
 			return;
 		}
+
+		if (chan->_sdu->user_data_size < sizeof(uint16_t)) {
+			LOG_ERR("SDU buffer user_data_size %u is too small",
+				chan->_sdu->user_data_size);
+			net_buf_drop(&chan->_sdu);
+			bt_l2cap_chan_disconnect(&chan->chan);
+			return;
+		}
 		chan->_sdu_len = sdu_len;
 
 		/* Send sdu_len/mps worth of credits */
@@ -2779,8 +2810,7 @@ static void l2cap_chan_le_recv(struct bt_l2cap_le_chan *chan,
 	owned_ref = net_buf_ref(buf);
 	err = chan->chan.ops->recv(&chan->chan, owned_ref);
 	if (err != -EINPROGRESS) {
-		net_buf_unref(owned_ref);
-		owned_ref = NULL;
+		net_buf_drop(&owned_ref);
 	}
 
 	if (err < 0) {
@@ -2821,7 +2851,7 @@ static void l2cap_chan_recv_queue(struct bt_l2cap_le_chan *chan,
 	}
 
 	k_fifo_put(&chan->rx_queue, buf);
-	k_work_submit(&chan->rx_work);
+	bt_work_submit(&chan->rx_work);
 }
 #endif /* CONFIG_BT_L2CAP_DYNAMIC_CHANNEL */
 
@@ -2858,8 +2888,7 @@ void bt_l2cap_recv(struct bt_conn *conn, struct net_buf *buf, bool complete)
 	struct bt_l2cap_chan *chan;
 	uint16_t cid;
 
-	if (IS_ENABLED(CONFIG_BT_CLASSIC) &&
-	    conn->type == BT_CONN_TYPE_BR) {
+	if (bt_conn_is_br(conn)) {
 		bt_l2cap_br_recv(conn, buf);
 		return;
 	}
@@ -2919,8 +2948,9 @@ static void l2cap_disconnected(struct bt_l2cap_chan *chan)
 
 #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	/* Cancel RTX work on signal channel.
-	 * Disconnected callback is always called from system workqueue
-	 * so this should always succeed.
+	 * Disconnected callback is always called from the Bluetooth
+	 * workqueue, which the RTX work also runs on, so this should
+	 * always succeed.
 	 */
 	(void)k_work_cancel_delayable(&le_chan->rtx_work);
 #endif /* CONFIG_BT_L2CAP_DYNAMIC_CHANNEL */
@@ -3128,7 +3158,7 @@ int bt_l2cap_ecred_chan_reconfigure(struct bt_l2cap_chan **chans, uint16_t mtu)
 		return -ENOTCONN;
 	}
 
-	if (conn->type != BT_CONN_TYPE_LE) {
+	if (!bt_conn_is_le(conn)) {
 		return -EINVAL;
 	}
 
@@ -3220,7 +3250,7 @@ int bt_l2cap_ecred_chan_reconfigure_explicit(struct bt_l2cap_chan **chans, size_
 		return -ENOTCONN;
 	}
 
-	if (conn->type != BT_CONN_TYPE_LE) {
+	if (!bt_conn_is_le(conn)) {
 		return -EINVAL;
 	}
 
@@ -3280,8 +3310,7 @@ int bt_l2cap_chan_connect(struct bt_conn *conn, struct bt_l2cap_chan *chan,
 		return -EINVAL;
 	}
 
-	if (IS_ENABLED(CONFIG_BT_CLASSIC) &&
-	    conn->type == BT_CONN_TYPE_BR) {
+	if (bt_conn_is_br(conn)) {
 		return bt_l2cap_br_chan_connect(conn, chan, psm);
 	}
 
@@ -3306,8 +3335,7 @@ int bt_l2cap_chan_disconnect(struct bt_l2cap_chan *chan)
 		return -ENOTCONN;
 	}
 
-	if (IS_ENABLED(CONFIG_BT_CLASSIC) &&
-	    conn->type == BT_CONN_TYPE_BR) {
+	if (bt_conn_is_br(conn)) {
 		return bt_l2cap_br_chan_disconnect(chan);
 	}
 
@@ -3448,8 +3476,7 @@ int bt_l2cap_chan_send(struct bt_l2cap_chan *chan, struct net_buf *buf)
 		return -ESHUTDOWN;
 	}
 
-	if (IS_ENABLED(CONFIG_BT_CLASSIC) &&
-	    chan->conn->type == BT_CONN_TYPE_BR) {
+	if (bt_conn_is_br(chan->conn)) {
 		return bt_l2cap_br_chan_send_cb(chan, buf, NULL, NULL);
 	}
 

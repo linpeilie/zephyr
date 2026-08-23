@@ -372,28 +372,6 @@ extern "C" {
  */
 #define Z_INTERNAL_MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define Z_INTERNAL_MIN(a, b) (((a) < (b)) ? (a) : (b))
-
-#define _minmax_unique(op, a, b, ua, ub) ({ \
-		__typeof__(a) ua = (a);     \
-		__typeof__(b) ub = (b);     \
-		op(ua, ub);                 \
-	})
-
-#define _minmax_cnt(op, a, b, cnt) \
-	_minmax_unique(op, a, b, UTIL_CAT(_value_a_, cnt), UTIL_CAT(_value_b_, cnt))
-
-#define _minmax3_unique(op, a, b, c, ua, ub, uc) ({ \
-		__typeof__(a) ua = (a);             \
-		__typeof__(b) ub = (b);             \
-		__typeof__(c) uc = (c);             \
-		op(ua, op(ub, uc));                 \
-	})
-
-#define _minmax3_cnt(op, a, b, c, cnt)            \
-	_minmax3_unique(op, a, b, c,              \
-			UTIL_CAT(_value_a_, cnt), \
-			UTIL_CAT(_value_b_, cnt), \
-			UTIL_CAT(_value_c_, cnt))
 /**
  * @endcond
  */
@@ -403,7 +381,7 @@ extern "C" {
  * @brief Obtain the maximum of two values.
  *
  * @note Arguments are evaluated twice. Use @ref max for a single evaluation
- * version.
+ * version (provided by <zephyr/sys/minmax.h>).
  *
  * @param a First value.
  * @param b Second value.
@@ -413,32 +391,12 @@ extern "C" {
 #define MAX(a, b) Z_INTERNAL_MAX(a, b)
 #endif
 
-#ifndef __cplusplus
-/** @brief Return larger value of two provided expressions.
- *
- * Macro ensures that expressions are evaluated only once.
- *
- * @note Macro has limited usage compared to the standard macro as it cannot be
- *	 used:
- *	 - to generate constant integer, e.g. __aligned(max(4,5))
- *	 - static variable, e.g. array like static uint8_t array[max(...)];
- */
-#define max(a, b) _minmax_cnt(Z_INTERNAL_MAX, a, b, __COUNTER__)
-#endif
-
-/** @brief Return larger value of three provided expressions.
- *
- * Macro ensures that expressions are evaluated only once. See @ref max for
- * macro limitations.
- */
-#define max3(a, b, c) _minmax3_cnt(Z_INTERNAL_MAX, a, b, c, __COUNTER__)
-
 #ifndef MIN
 /**
  * @brief Obtain the minimum of two values.
  *
  * @note Arguments are evaluated twice. Use @ref min for a single evaluation
- * version.
+ * version (provided by <zephyr/sys/minmax.h>).
  *
  * @param a First value.
  * @param b Second value.
@@ -447,23 +405,6 @@ extern "C" {
  */
 #define MIN(a, b) Z_INTERNAL_MIN(a, b)
 #endif
-
-#ifndef __cplusplus
-/** @brief Return smaller value of two provided expressions.
- *
- * Macro ensures that expressions are evaluated only once. See @ref max for
- * macro limitations.
- */
-#define min(a, b) _minmax_cnt(Z_INTERNAL_MIN, a, b, __COUNTER__)
-#endif
-
-/** @brief Return smaller value of three provided expressions.
- *
- * Macro ensures that expressions are evaluated only once. See @ref max for
- * macro limitations.
- */
-#define min3(a, b, c) _minmax3_cnt(Z_INTERNAL_MIN, a, b, c, __COUNTER__)
-
 
 #ifndef MAX_FROM_LIST
 /**
@@ -591,7 +532,7 @@ extern "C" {
  * @brief Clamp a value to a given range.
  *
  * @note Arguments are evaluated multiple times. Use @ref clamp for a single
- * evaluation version.
+ * evaluation version (provided by <zephyr/sys/minmax.h>).
  *
  * @param val Value to be clamped.
  * @param low Lowest allowed value (inclusive).
@@ -600,23 +541,6 @@ extern "C" {
  * @returns Clamped value.
  */
 #define CLAMP(val, low, high) (((val) <= (low)) ? (low) : Z_INTERNAL_MIN(val, high))
-#endif
-
-#ifndef __cplusplus
-/** @brief Return a value clamped to a given range.
- *
- * Macro ensures that expressions are evaluated only once. See @ref max for
- * macro limitations.
- */
-#define clamp(val, low, high) ({                                               \
-		/* random suffix to avoid naming conflict */                   \
-		__typeof__(val) _value_val_ = (val);                           \
-		__typeof__(low) _value_low_ = (low);                           \
-		__typeof__(high) _value_high_ = (high);                        \
-		(_value_val_ < _value_low_)  ? _value_low_ :                   \
-		(_value_val_ > _value_high_) ? _value_high_ :                  \
-					       _value_val_;                    \
-	})
 #endif
 
 /**
@@ -645,7 +569,7 @@ extern "C" {
  * @param[in] first_match If true returns when first match is found, else returns the best fit.
  *
  * @retval -1 Contiguous bits not found.
- * @retval non-negative Starting index of the bits group.
+ * @retval >=0 Starting index of the bits group.
  */
 int bitmask_find_gap(uint32_t mask, size_t num_bits, size_t total_bits, bool first_match);
 
@@ -762,8 +686,8 @@ int char2hex(char c, uint8_t *x);
 /**
  * @brief      Convert a single hexadecimal nibble into a character.
  *
- * @param c     The number to convert
- * @param x     The address of storage for the converted character.
+ * @param x     The number to convert
+ * @param c     The address of storage for the converted character.
  *
  *  @return Zero on success or (negative) error code otherwise.
  */
@@ -1027,6 +951,93 @@ static inline size_t sys_count_bits(const void *value, size_t len)
 	return cnt;
 }
 
+/**
+ * @brief Returns the sign of a number.
+ *
+ * @param x The input value to determine the sign
+ *
+ * @retval 1 if x is positive
+ * @retval -1 if x is negative
+ * @retval 0 if x is zero
+ */
+#define SYS_SIGN(x) (((x) > 0) - ((x) < 0))
+
+/**
+ * @brief Compute the Greatest Common Divisor (GCD) of two integers
+ * using the Euclidean algorithm.
+ *
+ * @param a First integer
+ * @param b Second integer
+ *
+ * @return The greatest common divisor of a and b, always returns an unsigned value.
+ *         If one of the parameters is 0, returns the absolute value of the other parameter.
+ */
+#define sys_gcd(a, b) ((((__typeof__(a))-1) < 0) ? sys_gcd_s(a, b) : sys_gcd_u(a, b))
+
+/**
+ * @cond INTERNAL_HIDDEN
+ */
+static ALWAYS_INLINE uint32_t sys_gcd_u(uint32_t a, uint32_t b)
+{
+	uint32_t c;
+
+	if (a == 0) {
+		return b;
+	}
+
+	if (b == 0) {
+		return a;
+	}
+
+	c = a % b;
+	while (c != 0) {
+		a = b;
+		b = c;
+		c = a % b;
+	}
+
+	return b;
+}
+
+static ALWAYS_INLINE uint32_t sys_gcd_s(int32_t a, int32_t b)
+{
+	return sys_gcd_u(a < 0 ? -(uint32_t)a : (uint32_t)a, b < 0 ? -(uint32_t)b : (uint32_t)b);
+}
+/**
+ * @endcond
+ */
+
+/**
+ * @brief Compute the Least Common Multiple (LCM) of two integers.
+ *
+ * @param a First integer
+ * @param b Second integer
+ *
+ * @retval The least common multiple of a and b.
+ * @retval 0 if either input is 0.
+ */
+#define sys_lcm(a, b) ((((__typeof__(a))-1) < 0) ? sys_lcm_s(a, b) : sys_lcm_u(a, b))
+
+/**
+ * @cond INTERNAL_HIDDEN
+ */
+static ALWAYS_INLINE uint64_t sys_lcm_u(uint32_t a, uint32_t b)
+{
+	if (a == 0 || b == 0) {
+		return 0;
+	}
+
+	return (uint64_t)(a / sys_gcd_u(a, b)) * (uint64_t)b;
+}
+
+static ALWAYS_INLINE uint64_t sys_lcm_s(int32_t a, int32_t b)
+{
+	return sys_lcm_u(a < 0 ? -(uint32_t)a : (uint32_t)a, b < 0 ? -(uint32_t)b : (uint32_t)b);
+}
+/**
+ * @endcond
+ */
+
 #ifdef __cplusplus
 }
 #endif
@@ -1086,18 +1097,33 @@ static inline size_t sys_count_bits(const void *value, size_t len)
  * @param delay_stmt Delay statement to perform each poll iteration
  *                   e.g.: NULL, k_yield(), k_msleep(1) or k_busy_wait(1)
  *
- * @retval expr As a boolean return, if false then it has timed out.
+ * @return expr As a boolean return, if false then it has timed out.
  */
 #define WAIT_FOR(expr, timeout, delay_stmt)                                                        \
 	({                                                                                         \
 		uint32_t _wf_cycle_count = k_us_to_cyc_ceil32(timeout);                            \
 		uint32_t _wf_start = k_cycle_get_32();                                             \
-		while (!(expr) && (_wf_cycle_count > (k_cycle_get_32() - _wf_start))) {            \
+		bool _wf_ret;                                                                      \
+		while (!(_wf_ret = (expr)) &&                                                      \
+		       (_wf_cycle_count > (k_cycle_get_32() - _wf_start))) {                       \
 			delay_stmt;                                                                \
 			Z_SPIN_DELAY(10);                                                          \
 		}                                                                                  \
-		(expr);                                                                            \
+		(_wf_ret);                                                                         \
 	})
+
+/**
+ * @brief Define symbol as static unless we are building with ZTEST.
+ *
+ * Define the annotated symbol (function or variable) as static (private to the translation unit),
+ * unless we are building with ZTEST. This macro can be used to define private symbols which need
+ * to be accessible from tests.
+ */
+#ifdef CONFIG_ZTEST
+#define ZTESTABLE_STATIC
+#else
+#define ZTESTABLE_STATIC static
+#endif
 
 /**
  * @}

@@ -28,6 +28,8 @@ struct chsc5x_data {
 	struct gpio_callback int_gpio_cb;
 };
 
+INPUT_TOUCH_STRUCT_CHECK(struct chsc5x_config);
+
 enum {
 	CHSC5X_IC_TYPE_CHSC5472 = 0x00,
 	CHSC5X_IC_TYPE_CHSC5448 = 0x01,
@@ -43,9 +45,9 @@ enum {
 #define CHSC5X_BASE_ADDR2         0x00
 #define CHSC5X_BASE_ADDR3         0x00
 #define CHSC5X_ADDRESS_MODE       0x00
-#define CHSC5X_ADDRESS_IC_TYPE    0x81
+#define CHSC5X_ADDRESS_IC_TYPE    0x80
 #define CHSC5X_ADDRESS_TOUCH_DATA 0x2C
-#define CHSC5X_SIZE_TOUCH_DATA    7
+#define CHSC5X_SIZE_TOUCH_DATA    8
 
 #define CHSC5X_OFFSET_EVENT_TYPE    0x00
 #define CHSC5X_OFFSET_FINGER_NUMBER 0x01
@@ -55,6 +57,9 @@ enum {
 #define CHSC5X_OFFSET_XY_COORDINATE 0x05
 #define CHSC5X_OFFSET_TOUCH_EVENT   0x06
 
+#define CHSC5X_EVENT_TYPE_TOUCH     0xFF
+#define CHSC5X_EVENT_TYPE_GESTURE   0xFE /* Not supported */
+
 static void chsc5x_work_handler(struct k_work *work)
 {
 	struct chsc5x_data *data = CONTAINER_OF(work, struct chsc5x_data, work);
@@ -63,7 +68,7 @@ static void chsc5x_work_handler(struct k_work *work)
 	uint16_t row, col;
 	bool is_pressed;
 	int ret;
-	const uint8_t write_buffer[] = {
+	static const uint8_t write_buffer[] = {
 		CHSC5X_BASE_ADDR1,
 		CHSC5X_BASE_ADDR2,
 		CHSC5X_BASE_ADDR3,
@@ -75,6 +80,10 @@ static void chsc5x_work_handler(struct k_work *work)
 				sizeof(read_buffer));
 	if (ret < 0) {
 		LOG_ERR("Could not read data: %i", ret);
+		return;
+	}
+
+	if (read_buffer[CHSC5X_OFFSET_EVENT_TYPE] != CHSC5X_EVENT_TYPE_TOUCH) {
 		return;
 	}
 
@@ -98,30 +107,32 @@ static void chsc5x_isr_handler(const struct device *dev, struct gpio_callback *c
 	k_work_submit(&data->work);
 }
 
-static int chsc5x_chip_init(const struct device *dev)
+#if defined(CONFIG_INPUT_CHSC5X_VERIFY_IC_TYPE)
+static int chsc5x_verify_ic(const struct device *dev)
 {
 	const struct chsc5x_config *cfg = dev->config;
-	uint8_t ic_type;
 	int ret;
-	const uint8_t write_buffer[] = {
+	static const uint8_t write_buffer[] = {
 		CHSC5X_BASE_ADDR1,
 		CHSC5X_BASE_ADDR2,
 		CHSC5X_BASE_ADDR3,
 		CHSC5X_ADDRESS_IC_TYPE,
 	};
+	uint8_t read_buffer[4];
 
 	if (!i2c_is_ready_dt(&cfg->i2c)) {
-		LOG_ERR("I2C bus %s not ready", cfg->i2c.bus->name);
+		LOG_ERR_DEVICE_NOT_READY(cfg->i2c.bus);
 		return -ENODEV;
 	}
 
-	ret = i2c_write_read_dt(&cfg->i2c, write_buffer, sizeof(write_buffer), &ic_type, 1);
+	ret = i2c_write_read_dt(&cfg->i2c, write_buffer, sizeof(write_buffer), read_buffer,
+				sizeof(read_buffer));
 	if (ret < 0) {
 		LOG_ERR("Could not read data: %i", ret);
 		return ret;
 	}
 
-	switch (ic_type) {
+	switch (read_buffer[0]) {
 	case CHSC5X_IC_TYPE_CHSC5472:
 	case CHSC5X_IC_TYPE_CHSC5448:
 	case CHSC5X_IC_TYPE_CHSC5448A:
@@ -132,12 +143,13 @@ static int chsc5x_chip_init(const struct device *dev)
 	case CHSC5X_IC_TYPE_CHSC1716:
 		break;
 	default:
-		LOG_ERR("CHSC5X wrong ic type: returned 0x%02x", ic_type);
+		LOG_ERR("CHSC5X wrong ic type: returned 0x%02x", read_buffer[0]);
 		return -ENODEV;
 	}
 
 	return 0;
 }
+#endif /* CONFIG_INPUT_CHSC5X_VERIFY_IC_TYPE */
 
 static int chsc5x_reset(const struct device *dev)
 {
@@ -146,7 +158,7 @@ static int chsc5x_reset(const struct device *dev)
 
 	if (config->reset_gpio.port != NULL) {
 		if (!gpio_is_ready_dt(&config->reset_gpio)) {
-			LOG_ERR("GPIO port %s not ready", config->reset_gpio.port->name);
+			LOG_ERR_DEVICE_NOT_READY(config->reset_gpio.port);
 			return -ENODEV;
 		}
 
@@ -186,7 +198,7 @@ static int chsc5x_pm_action(const struct device *dev, enum pm_device_action acti
 		break;
 
 	case PM_DEVICE_ACTION_SUSPEND: {
-		const uint8_t write_buffer[] = {
+		static const uint8_t write_buffer[] = {
 			CHSC5X_BASE_ADDR1,
 			CHSC5X_BASE_ADDR2,
 			CHSC5X_BASE_ADDR3,
@@ -225,7 +237,7 @@ static int chsc5x_init(const struct device *dev)
 	}
 
 	if (!gpio_is_ready_dt(&config->int_gpio)) {
-		LOG_ERR("GPIO port %s not ready", config->int_gpio.port->name);
+		LOG_ERR_DEVICE_NOT_READY(config->int_gpio.port);
 		return -ENODEV;
 	}
 
@@ -249,7 +261,17 @@ static int chsc5x_init(const struct device *dev)
 		return ret;
 	}
 
-	return chsc5x_chip_init(dev);
+#if defined(CONFIG_INPUT_CHSC5X_VERIFY_IC_TYPE)
+	/* It takes about 94ms until chip is ready after reset. */
+	k_msleep(100);
+
+	ret =  chsc5x_verify_ic(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to verify ic: %d", ret);
+		return ret;
+	}
+#endif /* CONFIG_INPUT_CHSC5X_VERIFY_IC_TYPE */
+	return ret;
 };
 
 #define CHSC5X_DEFINE(index)                                                                       \

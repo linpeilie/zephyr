@@ -1,7 +1,7 @@
-/* obex.c - IrDA Oject Exchange Protocol handling */
+/* obex.c - IrDA Object Exchange Protocol handling */
 
 /*
- * Copyright 2024-2025 NXP
+ * Copyright 2024-2026 NXP
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -30,6 +30,28 @@ LOG_MODULE_REGISTER(bt_obex);
 
 #define OBEX_SERVER(node) CONTAINER_OF(node, struct bt_obex_server, _node)
 
+/* bt_obex flags */
+enum {
+	BT_OBEX_HAS_TARGET, /* Has target_header */
+	BT_OBEX_REQ_1ST,    /* First Request */
+	BT_OBEX_REQ_SRM,    /* Request SRM Set */
+	BT_OBEX_REQ_SRMP,   /* Request SRMP Set */
+	BT_OBEX_RSP_SRM,    /* Response SRM Set */
+	BT_OBEX_RSP_SRMP,   /* Response SRMP Set */
+	BT_OBEX_RSP_RECV,   /* Response received */
+	BT_OBEX_REQ_RECV,   /* Request received */
+	BT_OBEX_REQ_F_BIT,  /* Request Final bit set */
+};
+
+/* SRM disable value */
+#define BT_OBEX_SRM_DISABLE 0
+
+/* SRM enable value */
+#define BT_OBEX_SRM_ENABLE 1
+
+/* SRMP wait value*/
+#define BT_OBEX_SRMP_WAIT 1
+
 static struct net_buf *obex_alloc_buf(struct bt_obex *obex)
 {
 	struct net_buf *buf;
@@ -41,7 +63,7 @@ static struct net_buf *obex_alloc_buf(struct bt_obex *obex)
 	}
 
 	buf = obex->_transport_ops->alloc_buf(obex, NULL);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Fail to alloc buffer");
 	}
 	return buf;
@@ -73,10 +95,10 @@ static int obex_transport_disconn(struct bt_obex *obex)
 	}
 
 	err = obex->_transport_ops->disconnect(obex);
-	if (err) {
+	if (err != 0) {
 		LOG_ERR("Fail to disconnect transport (err %d)", err);
 	}
-	return -EINVAL;
+	return err;
 }
 
 struct bt_obex_has_header {
@@ -97,7 +119,7 @@ static bool bt_obex_has_header_cb(struct bt_obex_hdr *hdr, void *user_data)
 	return true;
 }
 
-static bool bt_obex_has_header(struct net_buf *buf, uint8_t id)
+bool bt_obex_has_header(struct net_buf *buf, uint8_t id)
 {
 	struct bt_obex_has_header data;
 	int err;
@@ -219,8 +241,12 @@ static int obex_server_connect(struct bt_obex_server *server, uint16_t len, stru
 
 	if (mopl > server->obex->tx.mtu) {
 		LOG_WRN("MOPL exceeds MTU (%d > %d)", mopl, server->obex->tx.mtu);
-		rsp_code = BT_OBEX_RSP_CODE_PRECON_FAIL;
-		goto failed;
+		/* In mainstream mobile operating system settings, such as IPhone and Android,
+		 * MOPL is usually greater than the MTU of rfcomm or l2cap.
+		 * Therefore, the smaller value among them is selected as the final MOPL and
+		 * transmitted to the application by callback.
+		 */
+		mopl = server->obex->tx.mtu;
 	}
 
 	server->tx.mopl = mopl;
@@ -231,7 +257,7 @@ static int obex_server_connect(struct bt_obex_server *server, uint16_t len, stru
 
 failed:
 	buf = obex_alloc_buf(server->obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Cannot allocate buffer");
 		return -ENOBUFS;
 	}
@@ -245,7 +271,7 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		net_buf_unref(buf);
 	}
 
@@ -290,7 +316,7 @@ static int obex_server_disconn(struct bt_obex_server *server, uint16_t len, stru
 
 failed:
 	buf = obex_alloc_buf(server->obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Cannot allocate buffer");
 		return -ENOBUFS;
 	}
@@ -300,11 +326,147 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		net_buf_unref(buf);
 	}
 
 	return err;
+}
+
+static bool obex_srm_is_valid(uint8_t srm)
+{
+	if (srm == BT_OBEX_SRM_DISABLE) {
+		return true;
+	}
+
+	if (srm == BT_OBEX_SRM_ENABLE) {
+		return true;
+	}
+
+	return false;
+}
+
+static bool obex_srm_is_enabled(uint8_t srm)
+{
+	if (srm == BT_OBEX_SRM_ENABLE) {
+		return true;
+	}
+
+	return false;
+}
+
+static int obex_server_parse_srm(struct bt_obex_server *server, struct net_buf *buf, bool first,
+				 int bit)
+{
+	int err;
+	uint8_t srm;
+
+	err = bt_obex_get_header_srm(buf, &srm);
+	if (err != 0) {
+		/* No SRM header included */
+		return 0;
+	}
+
+	if (!obex_srm_is_valid(srm)) {
+		LOG_ERR("SRM value is invalid");
+		return -EINVAL;
+	}
+
+	if (!obex_srm_is_enabled(srm)) {
+		/* SRM is disabled */
+		return 0;
+	}
+
+	if (!first) {
+		LOG_WRN("SRM header should not be included");
+		return -EINVAL;
+	}
+
+	atomic_set_bit(&server->_flags, bit);
+
+	return 0;
+}
+
+static int obex_server_parse_req_srm(struct bt_obex_server *server, struct net_buf *buf, bool first)
+{
+	int err;
+
+	if (first) {
+		atomic_clear(&server->_flags);
+	}
+
+	err = obex_server_parse_srm(server, buf, first, BT_OBEX_REQ_SRM);
+	if (err != 0) {
+		return err;
+	}
+
+	atomic_set_bit_to(&server->_flags, BT_OBEX_REQ_1ST, first);
+	return 0;
+}
+
+static int obex_server_parse_rsp_srm(struct bt_obex_server *server, struct net_buf *buf, bool first)
+{
+	return obex_server_parse_srm(server, buf, first, BT_OBEX_RSP_SRM);
+}
+
+static int obex_server_parse_srmp(struct bt_obex_server *server, struct net_buf *buf, bool first,
+				  int check_bit, int update_bit)
+{
+	int err;
+	uint8_t srmp;
+
+	err = bt_obex_get_header_srm_param(buf, &srmp);
+	if (err == 0 && srmp != BT_OBEX_SRMP_WAIT) {
+		LOG_WRN("SRMP value is invalid");
+		return -EINVAL;
+	}
+
+	if (err == 0 && !atomic_test_bit(&server->_flags, check_bit)) {
+		LOG_WRN("BIT %d is not set", check_bit);
+		return -EINVAL;
+	}
+
+	if (!first && !atomic_test_bit(&server->_flags, update_bit) && err == 0) {
+		LOG_WRN("SRMP header should not be included");
+		return -EINVAL;
+	}
+
+	atomic_set_bit_to(&server->_flags, update_bit, err == 0);
+
+	return 0;
+}
+
+static int obex_server_rsp_check(struct bt_obex_server *server, bool first)
+{
+	if (first) {
+		return 0;
+	}
+
+	if (!(atomic_test_bit(&server->_flags, BT_OBEX_REQ_SRM) &&
+	      atomic_test_bit(&server->_flags, BT_OBEX_RSP_SRM))) {
+		if (atomic_test_bit(&server->_flags, BT_OBEX_REQ_RECV)) {
+			return 0;
+		}
+
+		LOG_ERR("SRM is not enabled, request is not received");
+		return -EPROTO;
+	}
+
+	LOG_DBG("SRM is enabled");
+
+	if (atomic_test_bit(&server->_flags, BT_OBEX_REQ_SRMP) ||
+	    atomic_test_bit(&server->_flags, BT_OBEX_RSP_SRMP) ||
+	    !atomic_test_bit(&server->_flags, BT_OBEX_REQ_F_BIT)) {
+		if (atomic_test_bit(&server->_flags, BT_OBEX_REQ_RECV)) {
+			return 0;
+		}
+
+		LOG_ERR("SRM is enabled but waiting or final bit is not set, "
+			"request is not received");
+		return -EPROTO;
+	}
+
+	return 0;
 }
 
 static int obex_server_put_common(struct bt_obex_server *server, bool final, uint16_t len,
@@ -336,9 +498,9 @@ static int obex_server_put_common(struct bt_obex_server *server, bool final, uin
 		goto failed;
 	}
 
+	opcode = atomic_get(&server->_opcode);
 	req_code = final ? BT_OBEX_OPCODE_PUT_F : BT_OBEX_OPCODE_PUT;
 	if (!atomic_cas(&server->_opcode, 0, req_code)) {
-		opcode = atomic_get(&server->_opcode);
 		if ((opcode != BT_OBEX_OPCODE_PUT_F) && (opcode != BT_OBEX_OPCODE_PUT)) {
 			LOG_WRN("Unexpected put request");
 			rsp_code = BT_OBEX_RSP_CODE_FORBIDDEN;
@@ -351,17 +513,33 @@ static int obex_server_put_common(struct bt_obex_server *server, bool final, uin
 			goto failed;
 		}
 
-		if (opcode != req_code) {
-			atomic_cas(&server->_opcode, opcode, req_code);
+		if ((opcode != req_code) && !atomic_cas(&server->_opcode, opcode, req_code)) {
+			LOG_WRN("OP code mismatch %u != %u", (uint8_t)atomic_get(&server->_opcode),
+				opcode);
+			rsp_code = BT_OBEX_RSP_CODE_INTER_ERROR;
+			goto failed;
 		}
 	}
+
+	err = obex_server_parse_req_srm(server, buf, opcode == 0);
+	if (err != 0) {
+		LOG_WRN("Invalid SRM header received");
+	}
+
+	err = obex_server_parse_srmp(server, buf, opcode == 0, BT_OBEX_REQ_SRM, BT_OBEX_REQ_SRMP);
+	if (err != 0) {
+		LOG_WRN("Invalid SRMP header received");
+	}
+
+	atomic_set_bit(&server->_flags, BT_OBEX_REQ_RECV);
+	atomic_set_bit_to(&server->_flags, BT_OBEX_REQ_F_BIT, final);
 
 	server->ops->put(server, final, buf);
 	return 0;
 
 failed:
 	buf = obex_alloc_buf(server->obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Cannot allocate buffer");
 		return -ENOBUFS;
 	}
@@ -371,7 +549,7 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		net_buf_unref(buf);
 	}
 
@@ -417,9 +595,9 @@ static int obex_server_get_common(struct bt_obex_server *server, bool final, uin
 		goto failed;
 	}
 
+	opcode = atomic_get(&server->_opcode);
 	req_code = final ? BT_OBEX_OPCODE_GET_F : BT_OBEX_OPCODE_GET;
 	if (!atomic_cas(&server->_opcode, 0, req_code)) {
-		opcode = atomic_get(&server->_opcode);
 		if ((opcode != BT_OBEX_OPCODE_GET_F) && (opcode != BT_OBEX_OPCODE_GET)) {
 			LOG_WRN("Unexpected get request");
 			rsp_code = BT_OBEX_RSP_CODE_FORBIDDEN;
@@ -432,17 +610,33 @@ static int obex_server_get_common(struct bt_obex_server *server, bool final, uin
 			goto failed;
 		}
 
-		if (opcode != req_code) {
-			atomic_cas(&server->_opcode, opcode, req_code);
+		if ((opcode != req_code) && !atomic_cas(&server->_opcode, opcode, req_code)) {
+			LOG_WRN("OP code mismatch %u != %u", (uint8_t)atomic_get(&server->_opcode),
+				opcode);
+			rsp_code = BT_OBEX_RSP_CODE_INTER_ERROR;
+			goto failed;
 		}
 	}
+
+	err = obex_server_parse_req_srm(server, buf, opcode == 0);
+	if (err != 0) {
+		LOG_WRN("Invalid SRM header received");
+	}
+
+	err = obex_server_parse_srmp(server, buf, opcode == 0, BT_OBEX_REQ_SRM, BT_OBEX_REQ_SRMP);
+	if (err != 0) {
+		LOG_WRN("Invalid SRMP header received");
+	}
+
+	atomic_set_bit(&server->_flags, BT_OBEX_REQ_RECV);
+	atomic_set_bit_to(&server->_flags, BT_OBEX_REQ_F_BIT, final);
 
 	server->ops->get(server, final, buf);
 	return 0;
 
 failed:
 	buf = obex_alloc_buf(server->obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Cannot allocate buffer");
 		return -ENOBUFS;
 	}
@@ -452,7 +646,7 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		net_buf_unref(buf);
 	}
 
@@ -508,7 +702,7 @@ static int obex_server_setpath(struct bt_obex_server *server, uint16_t len, stru
 
 failed:
 	buf = obex_alloc_buf(server->obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Cannot allocate buffer");
 		return -ENOBUFS;
 	}
@@ -518,7 +712,7 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		net_buf_unref(buf);
 	}
 
@@ -569,8 +763,11 @@ static int obex_server_action_common(struct bt_obex_server *server, bool final, 
 			goto failed;
 		}
 
-		if (opcode != req_code) {
-			atomic_cas(&server->_opcode, opcode, req_code);
+		if ((opcode != req_code) && !atomic_cas(&server->_opcode, opcode, req_code)) {
+			LOG_WRN("OP code mismatch %u != %u", (uint8_t)atomic_get(&server->_opcode),
+				opcode);
+			rsp_code = BT_OBEX_RSP_CODE_INTER_ERROR;
+			goto failed;
 		}
 	}
 
@@ -579,7 +776,7 @@ static int obex_server_action_common(struct bt_obex_server *server, bool final, 
 
 failed:
 	buf = obex_alloc_buf(server->obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Cannot allocate buffer");
 		return -ENOBUFS;
 	}
@@ -589,7 +786,7 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		net_buf_unref(buf);
 	}
 
@@ -632,7 +829,7 @@ static int obex_server_session(struct bt_obex_server *server, uint16_t len, stru
 
 failed:
 	buf = obex_alloc_buf(server->obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Cannot allocate buffer");
 		return -ENOBUFS;
 	}
@@ -642,7 +839,7 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		net_buf_unref(buf);
 	}
 
@@ -682,7 +879,7 @@ static int obex_server_abort(struct bt_obex_server *server, uint16_t len, struct
 
 failed:
 	buf = obex_alloc_buf(server->obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Cannot allocate buffer");
 		return -ENOBUFS;
 	}
@@ -692,7 +889,7 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		net_buf_unref(buf);
 	}
 
@@ -850,7 +1047,7 @@ static int obex_server_recv(struct bt_obex *obex, struct net_buf *buf)
 failed:
 	LOG_WRN("Failed to process request");
 	buf = obex_alloc_buf(obex);
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_ERR("Failed to allocate buf");
 		return -ENOBUFS;
 	}
@@ -868,7 +1065,7 @@ failed:
 	rsp_hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(obex, BT_OBEX_MIN_MTU, buf);
-	if (err) {
+	if (err != 0) {
 		LOG_ERR("Failed to send obex rep err %d", err);
 		net_buf_unref(buf);
 	}
@@ -882,6 +1079,24 @@ struct client_handler {
 		       struct net_buf *buf);
 };
 
+static void obex_client_save_last_operation(struct bt_obex_client *client, uint8_t opcode)
+{
+	atomic_set(&client->_pre_opcode, opcode);
+	atomic_ptr_set(&client->obex->_last_client, client);
+}
+
+static void obex_client_clear_active_state(struct bt_obex_client *client)
+{
+	atomic_clear(&client->_opcode);
+	atomic_ptr_clear(&client->obex->_active_client);
+}
+
+static void obex_client_req_complete(struct bt_obex_client *client)
+{
+	obex_client_save_last_operation(client, (uint8_t)atomic_get(&client->_opcode));
+	obex_client_clear_active_state(client);
+}
+
 static int obex_client_connect(struct bt_obex_client *client, uint8_t rsp_code, uint16_t len,
 			       struct net_buf *buf)
 {
@@ -892,8 +1107,7 @@ static int obex_client_connect(struct bt_obex_client *client, uint8_t rsp_code, 
 
 	LOG_DBG("");
 
-	atomic_clear(&client->_opcode);
-	atomic_ptr_clear(&client->obex->_active_client);
+	obex_client_clear_active_state(client);
 
 	if (atomic_get(&client->_state) != BT_OBEX_CONNECTING) {
 		LOG_WRN("Invalid connection state %u", (uint8_t)atomic_get(&client->_state));
@@ -961,7 +1175,12 @@ static int obex_client_connect(struct bt_obex_client *client, uint8_t rsp_code, 
 
 	if (mopl > client->obex->tx.mtu) {
 		LOG_WRN("MOPL exceeds MTU (%d > %d)", mopl, client->obex->tx.mtu);
-		goto failed;
+		/* In mainstream mobile operating system settings, such as IPhone and Android,
+		 * MOPL is usually greater than the MTU of rfcomm or l2cap.
+		 * Therefore, the smaller value among them is selected as the final MOPL and
+		 * transmitted to the application by callback.
+		 */
+		mopl = client->obex->tx.mtu;
 	}
 
 	client->tx.mopl = mopl;
@@ -972,6 +1191,8 @@ static int obex_client_connect(struct bt_obex_client *client, uint8_t rsp_code, 
 	if (atomic_get(&client->_state) == BT_OBEX_DISCONNECTED) {
 		sys_slist_find_and_remove(&client->obex->_clients, &client->_node);
 	}
+
+	obex_client_save_last_operation(client, BT_OBEX_OPCODE_CONNECT);
 
 	if (client->ops->connect) {
 		client->ops->connect(client, rsp_code, version, mopl, buf);
@@ -989,8 +1210,7 @@ static int obex_client_disconn(struct bt_obex_client *client, uint8_t rsp_code, 
 {
 	LOG_DBG("");
 
-	atomic_clear(&client->_opcode);
-	atomic_ptr_clear(&client->obex->_active_client);
+	obex_client_clear_active_state(client);
 
 	if (atomic_get(&client->_state) != BT_OBEX_DISCONNECTING) {
 		return -EINVAL;
@@ -1003,15 +1223,104 @@ static int obex_client_disconn(struct bt_obex_client *client, uint8_t rsp_code, 
 		sys_slist_find_and_remove(&client->obex->_clients, &client->_node);
 	}
 
+	obex_client_save_last_operation(client, BT_OBEX_OPCODE_DISCONN);
+
 	if (client->ops->disconnect) {
 		client->ops->disconnect(client, rsp_code, buf);
 	}
 	return 0;
 }
 
+static int obex_client_parse_srm(struct bt_obex_client *client, struct net_buf *buf, bool first,
+				 int bit)
+{
+	int err;
+	uint8_t srm;
+
+	err = bt_obex_get_header_srm(buf, &srm);
+	if (err != 0) {
+		/* No SRM header included */
+		return 0;
+	}
+
+	if (!obex_srm_is_valid(srm)) {
+		LOG_ERR("SRM value is invalid");
+		return -EINVAL;
+	}
+
+	if (!obex_srm_is_enabled(srm)) {
+		/* SRM is disabled */
+		return 0;
+	}
+
+	if (!first) {
+		LOG_WRN("SRM header should not be included");
+		return -EINVAL;
+	}
+
+	atomic_set_bit(&client->_flags, bit);
+
+	return 0;
+}
+
+static int obex_client_parse_req_srm(struct bt_obex_client *client, struct net_buf *buf, bool first)
+{
+	int err;
+
+	if (first) {
+		atomic_clear(&client->_flags);
+	}
+
+	err = obex_client_parse_srm(client, buf, first, BT_OBEX_REQ_SRM);
+	if (err != 0) {
+		return err;
+	}
+
+	if (first) {
+		atomic_set_bit(&client->_flags, BT_OBEX_REQ_1ST);
+	}
+
+	return 0;
+}
+
+static int obex_client_parse_rsp_srm(struct bt_obex_client *client, struct net_buf *buf, bool first)
+{
+	return obex_client_parse_srm(client, buf, first, BT_OBEX_RSP_SRM);
+}
+
+static int obex_client_parse_srmp(struct bt_obex_client *client, struct net_buf *buf, bool first,
+				  int check_bit, int update_bit)
+{
+	int err;
+	uint8_t srmp;
+
+	err = bt_obex_get_header_srm_param(buf, &srmp);
+	if (err == 0 && srmp != BT_OBEX_SRMP_WAIT) {
+		LOG_WRN("SRMP value is invalid");
+		return -EINVAL;
+	}
+
+	if (err == 0 && !atomic_test_bit(&client->_flags, check_bit)) {
+		LOG_WRN("BIT %d is not set", check_bit);
+		return -EINVAL;
+	}
+
+	if (!first && !atomic_test_bit(&client->_flags, update_bit) && err == 0) {
+		LOG_WRN("SRMP header should not be included");
+		return -EINVAL;
+	}
+
+	atomic_set_bit_to(&client->_flags, update_bit, err == 0);
+
+	return 0;
+}
+
 static int obex_client_put_common(struct bt_obex_client *client, uint8_t rsp_code, uint16_t len,
 				  struct net_buf *buf)
 {
+	int err;
+	bool first;
+
 	LOG_DBG("");
 
 	if (len != buf->len) {
@@ -1029,9 +1338,22 @@ static int obex_client_put_common(struct bt_obex_client *client, uint8_t rsp_cod
 		return -ENOTSUP;
 	}
 
+	atomic_set_bit(&client->_flags, BT_OBEX_RSP_RECV);
+
+	first = atomic_test_and_clear_bit(&client->_flags, BT_OBEX_REQ_1ST);
+
+	err = obex_client_parse_rsp_srm(client, buf, first);
+	if (err != 0) {
+		LOG_WRN("Invalid SRM header received");
+	}
+
+	err = obex_client_parse_srmp(client, buf, first, BT_OBEX_RSP_SRM, BT_OBEX_RSP_SRMP);
+	if (err != 0) {
+		LOG_WRN("Invalid SRMP header received");
+	}
+
 	if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
-		atomic_clear(&client->_opcode);
-		atomic_ptr_clear(&client->obex->_active_client);
+		obex_client_req_complete(client);
 	}
 
 	client->ops->put(client, rsp_code, buf);
@@ -1053,6 +1375,9 @@ static int obex_client_put_final(struct bt_obex_client *client, uint8_t rsp_code
 static int obex_client_get_common(struct bt_obex_client *client, uint8_t rsp_code, uint16_t len,
 				  struct net_buf *buf)
 {
+	int err;
+	bool first;
+
 	LOG_DBG("");
 
 	if (len != buf->len) {
@@ -1070,9 +1395,22 @@ static int obex_client_get_common(struct bt_obex_client *client, uint8_t rsp_cod
 		return -ENOTSUP;
 	}
 
+	atomic_set_bit(&client->_flags, BT_OBEX_RSP_RECV);
+
+	first = atomic_test_and_clear_bit(&client->_flags, BT_OBEX_REQ_1ST);
+
+	err = obex_client_parse_rsp_srm(client, buf, first);
+	if (err != 0) {
+		LOG_WRN("Invalid SRM header received");
+	}
+
+	err = obex_client_parse_srmp(client, buf, first, BT_OBEX_RSP_SRM, BT_OBEX_RSP_SRMP);
+	if (err != 0) {
+		LOG_WRN("Invalid SRMP header received");
+	}
+
 	if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
-		atomic_clear(&client->_opcode);
-		atomic_ptr_clear(&client->obex->_active_client);
+		obex_client_req_complete(client);
 	}
 
 	client->ops->get(client, rsp_code, buf);
@@ -1112,8 +1450,7 @@ static int obex_client_setpath(struct bt_obex_client *client, uint8_t rsp_code, 
 	}
 
 	if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
-		atomic_clear(&client->_opcode);
-		atomic_ptr_clear(&client->obex->_active_client);
+		obex_client_req_complete(client);
 	}
 
 	client->ops->setpath(client, rsp_code, buf);
@@ -1141,8 +1478,7 @@ static int obex_client_action_common(struct bt_obex_client *client, uint8_t rsp_
 	}
 
 	if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
-		atomic_clear(&client->_opcode);
-		atomic_ptr_clear(&client->obex->_active_client);
+		obex_client_req_complete(client);
 	}
 
 	client->ops->action(client, rsp_code, buf);
@@ -1189,13 +1525,13 @@ static int obex_client_abort(struct bt_obex_client *client, uint8_t rsp_code, ui
 		int err = -EINVAL;
 
 		handler = obex_client_find_handler(atomic_get(&client->_pre_opcode));
-		if (handler) {
+		if (handler != NULL) {
 			err = handler->handler(client, rsp_code, len, buf);
-			if (err) {
+			if (err != 0) {
 				LOG_WRN("Handler err %d", err);
 			}
+			return err;
 		}
-		return err;
 	}
 
 	if (client->ops->abort == NULL) {
@@ -1203,8 +1539,9 @@ static int obex_client_abort(struct bt_obex_client *client, uint8_t rsp_code, ui
 		return -ENOTSUP;
 	}
 
-	atomic_clear(&client->_opcode);
-	atomic_ptr_clear(&client->obex->_active_client);
+	atomic_clear(&client->_pre_opcode);
+	atomic_ptr_clear(&client->obex->_last_client);
+	obex_client_clear_active_state(client);
 
 	if (rsp_code != BT_OBEX_RSP_CODE_SUCCESS) {
 		LOG_WRN("Disconnect transport");
@@ -1248,6 +1585,30 @@ static struct client_handler *obex_client_find_handler(uint8_t opcode)
 	return NULL;
 }
 
+static struct bt_obex_client *obex_get_last_client(struct bt_obex *obex)
+{
+	struct bt_obex_client *client;
+
+	client = atomic_ptr_get(&obex->_last_client);
+	if (client == NULL) {
+		LOG_WRN("Last client not found");
+		return NULL;
+	}
+
+	if (!atomic_cas(&client->_opcode, 0, BT_OBEX_OPCODE_ABORT)) {
+		LOG_WRN("opcode cannot be set");
+		return NULL;
+	}
+
+	if (!atomic_cas(&client->_pre_opcode, BT_OBEX_OPCODE_ABORT, 0)) {
+		LOG_WRN("Last opcode is not ABORT");
+		(void)atomic_cas(&client->_opcode, BT_OBEX_OPCODE_ABORT, 0);
+		return NULL;
+	}
+
+	return client;
+}
+
 static int obex_client_recv(struct bt_obex *obex, struct net_buf *buf)
 {
 	struct client_handler *handler;
@@ -1262,6 +1623,11 @@ static int obex_client_recv(struct bt_obex *obex, struct net_buf *buf)
 	}
 
 	if (client == NULL) {
+		LOG_WRN("No active OBEX client.");
+		client = obex_get_last_client(obex);
+	}
+
+	if (client == NULL) {
 		LOG_WRN("No executing OBEX request");
 		return -EINVAL;
 	}
@@ -1269,9 +1635,9 @@ static int obex_client_recv(struct bt_obex *obex, struct net_buf *buf)
 	hdr = net_buf_pull_mem(buf, sizeof(*hdr));
 	len = sys_be16_to_cpu(hdr->len);
 	handler = obex_client_find_handler(atomic_get(&client->_opcode));
-	if (handler) {
+	if (handler != NULL) {
 		err = handler->handler(client, hdr->code, len - sizeof(*hdr), buf);
-		if (err) {
+		if (err != 0) {
 			LOG_WRN("Handler err %d", err);
 		}
 		return err;
@@ -1298,6 +1664,7 @@ int bt_obex_transport_connected(struct bt_obex *obex)
 	}
 
 	atomic_ptr_clear(&obex->_active_client);
+	atomic_ptr_clear(&obex->_last_client);
 
 	return 0;
 }
@@ -1309,6 +1676,7 @@ int bt_obex_transport_disconnected(struct bt_obex *obex)
 
 	obex->_transport_ops = NULL;
 	atomic_ptr_clear(&obex->_active_client);
+	atomic_ptr_clear(&obex->_last_client);
 
 	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&obex->_clients, client, cnext, _node) {
 		atomic_clear(&client->_opcode);
@@ -1327,7 +1695,7 @@ int bt_obex_transport_disconnected(struct bt_obex *obex)
 
 int bt_obex_reg_transport(struct bt_obex *obex, const struct bt_obex_transport_ops *ops)
 {
-	if (!obex || !ops) {
+	if (obex == NULL || ops == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -1488,7 +1856,7 @@ int bt_obex_connect(struct bt_obex_client *client, uint16_t mopl, struct net_buf
 
 	if (buf == NULL) {
 		buf = obex_alloc_buf(client->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -1513,10 +1881,9 @@ int bt_obex_connect(struct bt_obex_client *client, uint16_t mopl, struct net_buf
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(client->obex, client->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		atomic_set(&client->_state, BT_OBEX_DISCONNECTED);
-		atomic_clear(&client->_opcode);
-		atomic_ptr_clear(&client->obex->_active_client);
+		obex_client_clear_active_state(client);
 		sys_slist_find_and_remove(&client->obex->_clients, &client->_node);
 
 		if (allocated) {
@@ -1608,9 +1975,9 @@ int bt_obex_connect_rsp(struct bt_obex_server *server, uint8_t rsp_code, uint16_
 		}
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(server->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -1633,7 +2000,7 @@ int bt_obex_connect_rsp(struct bt_obex_server *server, uint8_t rsp_code, uint16_
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		atomic_set(&server->_state, old_state);
 
 		if (allocated) {
@@ -1677,9 +2044,9 @@ int bt_obex_disconnect(struct bt_obex_client *client, struct net_buf *buf)
 		return -EBUSY;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(client->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -1691,9 +2058,8 @@ int bt_obex_disconnect(struct bt_obex_client *client, struct net_buf *buf)
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(client->obex, client->tx.mopl, buf);
-	if (err) {
-		atomic_clear(&client->_opcode);
-		atomic_ptr_clear(&client->obex->_active_client);
+	if (err != 0) {
+		obex_client_clear_active_state(client);
 
 		if (allocated) {
 			net_buf_unref(buf);
@@ -1731,9 +2097,9 @@ int bt_obex_disconnect_rsp(struct bt_obex_server *server, uint8_t rsp_code, stru
 		return -EINVAL;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(server->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -1751,7 +2117,7 @@ int bt_obex_disconnect_rsp(struct bt_obex_server *server, uint8_t rsp_code, stru
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		atomic_set(&server->_state, old_state);
 
 		if (allocated) {
@@ -1764,6 +2130,43 @@ int bt_obex_disconnect_rsp(struct bt_obex_server *server, uint8_t rsp_code, stru
 	return err;
 }
 
+static int obex_client_req_check(struct bt_obex_client *client, bool first)
+{
+	if (first) {
+		return 0;
+	}
+
+	if (!(atomic_test_bit(&client->_flags, BT_OBEX_REQ_SRM) &&
+	      atomic_test_bit(&client->_flags, BT_OBEX_RSP_SRM))) {
+		if (atomic_test_bit(&client->_flags, BT_OBEX_RSP_RECV)) {
+			return 0;
+		}
+
+		LOG_ERR("SRM is not enabled, response is not received");
+		return -EPROTO;
+	}
+
+	LOG_DBG("SRM is enabled");
+
+	if (atomic_test_bit(&client->_flags, BT_OBEX_RSP_SRMP) ||
+	    atomic_test_bit(&client->_flags, BT_OBEX_REQ_SRMP)) {
+		if (atomic_test_bit(&client->_flags, BT_OBEX_RSP_RECV)) {
+			return 0;
+		}
+
+		LOG_ERR("SRM is enabled but in wait state, response is not received");
+		return -EPROTO;
+	}
+
+	if (!atomic_test_bit(&client->_flags, BT_OBEX_REQ_SRMP) &&
+	    atomic_test_bit(&client->_flags, BT_OBEX_REQ_F_BIT)) {
+		LOG_ERR("SRM is enabled, no requests can be sent anymore");
+		return -EPROTO;
+	}
+
+	return 0;
+}
+
 int bt_obex_put(struct bt_obex_client *client, bool final, struct net_buf *buf)
 {
 	struct bt_obex_req_hdr *hdr;
@@ -1772,6 +2175,7 @@ int bt_obex_put(struct bt_obex_client *client, bool final, struct net_buf *buf)
 	uint8_t req_code;
 	uint8_t opcode;
 	bool allocated = false;
+	atomic_val_t flags;
 
 	if (client == NULL || client->obex == NULL) {
 		LOG_WRN("Invalid parameter");
@@ -1795,9 +2199,9 @@ int bt_obex_put(struct bt_obex_client *client, bool final, struct net_buf *buf)
 		return -EBUSY;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(client->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -1805,37 +2209,69 @@ int bt_obex_put(struct bt_obex_client *client, bool final, struct net_buf *buf)
 	}
 
 	opcode = atomic_get(&client->_opcode);
+	flags = atomic_get(&client->_flags);
 
 	req_code = final ? BT_OBEX_OPCODE_PUT_F : BT_OBEX_OPCODE_PUT;
 	if (!atomic_cas(&client->_opcode, 0, req_code)) {
 		if ((opcode != BT_OBEX_OPCODE_PUT_F) && (opcode != BT_OBEX_OPCODE_PUT)) {
 			LOG_WRN("Operation inprogress");
-			return -EBUSY;
+			err = -EBUSY;
+			goto failed;
 		}
 
 		if (!final && (opcode == BT_OBEX_OPCODE_PUT_F)) {
 			LOG_WRN("Unexpected put request without final bit");
-			return -EBUSY;
+			err = -EBUSY;
+			goto failed;
 		}
 
-		if (opcode != req_code) {
-			atomic_cas(&client->_opcode, opcode, req_code);
+		if ((opcode != req_code) && !atomic_cas(&client->_opcode, opcode, req_code)) {
+			LOG_WRN("OP code mismatch %u != %u", (uint8_t)atomic_get(&client->_opcode),
+				opcode);
+			err = -EINVAL;
+			goto failed;
 		}
+	}
+
+	err = obex_client_req_check(client, opcode == 0);
+	if (err != 0) {
+		goto failed;
+	}
+
+	err = obex_client_parse_req_srm(client, buf, opcode == 0);
+	if (err != 0) {
+		goto failed;
+	}
+
+	err = obex_client_parse_srmp(client, buf, opcode == 0, BT_OBEX_REQ_SRM, BT_OBEX_REQ_SRMP);
+	if (err != 0) {
+		goto failed;
 	}
 
 	hdr = net_buf_push(buf, sizeof(*hdr));
 	hdr->code = req_code;
 	hdr->len = sys_cpu_to_be16(buf->len);
 
-	err = obex_send(client->obex, client->tx.mopl, buf);
-	if (err) {
-		atomic_set(&client->_opcode, opcode);
-		atomic_ptr_set(&client->obex->_active_client, active_client);
+	atomic_clear_bit(&client->_flags, BT_OBEX_RSP_RECV);
 
-		if (allocated) {
-			net_buf_unref(buf);
-		}
+	if (final) {
+		atomic_set_bit(&client->_flags, BT_OBEX_REQ_F_BIT);
 	}
+
+	err = obex_send(client->obex, client->tx.mopl, buf);
+	if (err == 0) {
+		return 0;
+	}
+
+failed:
+	atomic_set(&client->_flags, flags);
+	atomic_set(&client->_opcode, opcode);
+	atomic_ptr_set(&client->obex->_active_client, active_client);
+
+	if (allocated) {
+		net_buf_unref(buf);
+	}
+
 	return err;
 }
 
@@ -1845,6 +2281,8 @@ int bt_obex_put_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct net_
 	int err;
 	uint8_t opcode;
 	bool allocated = false;
+	bool first;
+	atomic_val_t flags;
 
 	if (server == NULL || server->obex == NULL) {
 		LOG_WRN("Invalid parameter");
@@ -1859,15 +2297,6 @@ int bt_obex_put_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct net_
 	if (atomic_get(&server->_state) != BT_OBEX_CONNECTED) {
 		LOG_WRN("Invalid state, connect is not established");
 		return -EINVAL;
-	}
-
-	if (!buf) {
-		buf = obex_alloc_buf(server->obex);
-		if (!buf) {
-			LOG_WRN("No buffers");
-			return -ENOBUFS;
-		}
-		allocated = true;
 	}
 
 	opcode = atomic_get(&server->_opcode);
@@ -1881,20 +2310,54 @@ int bt_obex_put_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct net_
 		return -EINVAL;
 	}
 
+	if (buf == NULL) {
+		buf = obex_alloc_buf(server->obex);
+		if (buf == NULL) {
+			LOG_WRN("No buffers");
+			return -ENOBUFS;
+		}
+		allocated = true;
+	}
+
+	flags = atomic_get(&server->_flags);
+	first = atomic_test_and_clear_bit(&server->_flags, BT_OBEX_REQ_1ST);
+
+	err = obex_server_rsp_check(server, first);
+	if (err != 0) {
+		goto failed;
+	}
+
+	err = obex_server_parse_rsp_srm(server, buf, first);
+	if (err != 0) {
+		goto failed;
+	}
+
+	err = obex_server_parse_srmp(server, buf, first, BT_OBEX_RSP_SRM, BT_OBEX_RSP_SRMP);
+	if (err != 0) {
+		goto failed;
+	}
+
 	hdr = net_buf_push(buf, sizeof(*hdr));
 	hdr->code = rsp_code;
 	hdr->len = sys_cpu_to_be16(buf->len);
 
+	atomic_clear_bit(&server->_flags, BT_OBEX_REQ_RECV);
+
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (!err) {
-		if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
-			atomic_clear(&server->_opcode);
-			atomic_ptr_clear(&server->obex->_active_server);
-		}
-	} else {
-		if (allocated) {
-			net_buf_unref(buf);
-		}
+	if (err != 0) {
+		goto failed;
+	}
+
+	if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
+		atomic_clear(&server->_opcode);
+		atomic_ptr_clear(&server->obex->_active_server);
+	}
+	return 0;
+
+failed:
+	atomic_set(&server->_flags, flags);
+	if (allocated) {
+		net_buf_unref(buf);
 	}
 	return err;
 }
@@ -1907,6 +2370,7 @@ int bt_obex_get(struct bt_obex_client *client, bool final, struct net_buf *buf)
 	uint8_t req_code;
 	uint8_t opcode;
 	bool allocated = false;
+	atomic_val_t flags;
 
 	if (client == NULL || client->obex == NULL) {
 		LOG_WRN("Invalid parameter");
@@ -1930,9 +2394,9 @@ int bt_obex_get(struct bt_obex_client *client, bool final, struct net_buf *buf)
 		return -EBUSY;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(client->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -1940,37 +2404,69 @@ int bt_obex_get(struct bt_obex_client *client, bool final, struct net_buf *buf)
 	}
 
 	opcode = atomic_get(&client->_opcode);
+	flags = atomic_get(&client->_flags);
 
 	req_code = final ? BT_OBEX_OPCODE_GET_F : BT_OBEX_OPCODE_GET;
 	if (!atomic_cas(&client->_opcode, 0, req_code)) {
 		if ((opcode != BT_OBEX_OPCODE_GET_F) && (opcode != BT_OBEX_OPCODE_GET)) {
 			LOG_WRN("Operation inprogress");
-			return -EBUSY;
+			err = -EBUSY;
+			goto failed;
 		}
 
 		if (!final && (opcode == BT_OBEX_OPCODE_GET_F)) {
 			LOG_WRN("Unexpected get request without final bit");
-			return -EBUSY;
+			err = -EBUSY;
+			goto failed;
 		}
 
-		if (opcode != req_code) {
-			atomic_cas(&client->_opcode, opcode, req_code);
+		if ((opcode != req_code) && !atomic_cas(&client->_opcode, opcode, req_code)) {
+			LOG_WRN("OP code mismatch %u != %u", (uint8_t)atomic_get(&client->_opcode),
+				opcode);
+			err = -EINVAL;
+			goto failed;
 		}
+	}
+
+	err = obex_client_req_check(client, opcode == 0);
+	if (err != 0) {
+		goto failed;
+	}
+
+	err = obex_client_parse_req_srm(client, buf, opcode == 0);
+	if (err != 0) {
+		goto failed;
+	}
+
+	err = obex_client_parse_srmp(client, buf, opcode == 0, BT_OBEX_REQ_SRM, BT_OBEX_REQ_SRMP);
+	if (err != 0) {
+		goto failed;
 	}
 
 	hdr = net_buf_push(buf, sizeof(*hdr));
 	hdr->code = req_code;
 	hdr->len = sys_cpu_to_be16(buf->len);
 
-	err = obex_send(client->obex, client->tx.mopl, buf);
-	if (err) {
-		atomic_set(&client->_opcode, opcode);
-		atomic_ptr_set(&client->obex->_active_client, active_client);
+	atomic_clear_bit(&client->_flags, BT_OBEX_RSP_RECV);
 
-		if (allocated) {
-			net_buf_unref(buf);
-		}
+	if (final) {
+		atomic_set_bit(&client->_flags, BT_OBEX_REQ_F_BIT);
 	}
+
+	err = obex_send(client->obex, client->tx.mopl, buf);
+	if (err == 0) {
+		return 0;
+	}
+
+failed:
+	atomic_set(&client->_flags, flags);
+	atomic_set(&client->_opcode, opcode);
+	atomic_ptr_set(&client->obex->_active_client, active_client);
+
+	if (allocated) {
+		net_buf_unref(buf);
+	}
+
 	return err;
 }
 
@@ -1980,6 +2476,8 @@ int bt_obex_get_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct net_
 	int err;
 	uint8_t opcode;
 	bool allocated = false;
+	bool first;
+	atomic_val_t flags;
 
 	if (server == NULL || server->obex == NULL) {
 		LOG_WRN("Invalid parameter");
@@ -1996,15 +2494,6 @@ int bt_obex_get_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct net_
 		return -EINVAL;
 	}
 
-	if (!buf) {
-		buf = obex_alloc_buf(server->obex);
-		if (!buf) {
-			LOG_WRN("No buffers");
-			return -ENOBUFS;
-		}
-		allocated = true;
-	}
-
 	opcode = atomic_get(&server->_opcode);
 	if ((opcode != BT_OBEX_OPCODE_GET_F) && (opcode != BT_OBEX_OPCODE_GET)) {
 		LOG_WRN("Invalid response");
@@ -2016,20 +2505,54 @@ int bt_obex_get_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct net_
 		return -EINVAL;
 	}
 
+	if (buf == NULL) {
+		buf = obex_alloc_buf(server->obex);
+		if (buf == NULL) {
+			LOG_WRN("No buffers");
+			return -ENOBUFS;
+		}
+		allocated = true;
+	}
+
+	flags = atomic_get(&server->_flags);
+	first = atomic_test_and_clear_bit(&server->_flags, BT_OBEX_REQ_1ST);
+
+	err = obex_server_rsp_check(server, first);
+	if (err != 0) {
+		goto failed;
+	}
+
+	err = obex_server_parse_rsp_srm(server, buf, first);
+	if (err != 0) {
+		goto failed;
+	}
+
+	err = obex_server_parse_srmp(server, buf, first, BT_OBEX_RSP_SRM, BT_OBEX_RSP_SRMP);
+	if (err != 0) {
+		goto failed;
+	}
+
 	hdr = net_buf_push(buf, sizeof(*hdr));
 	hdr->code = rsp_code;
 	hdr->len = sys_cpu_to_be16(buf->len);
 
+	atomic_clear_bit(&server->_flags, BT_OBEX_REQ_RECV);
+
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (!err) {
-		if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
-			atomic_clear(&server->_opcode);
-			atomic_ptr_clear(&server->obex->_active_server);
-		}
-	} else {
-		if (allocated) {
-			net_buf_unref(buf);
-		}
+	if (err != 0) {
+		goto failed;
+	}
+
+	if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
+		atomic_clear(&server->_opcode);
+		atomic_ptr_clear(&server->obex->_active_server);
+	}
+	return 0;
+
+failed:
+	atomic_set(&server->_flags, flags);
+	if (allocated) {
+		net_buf_unref(buf);
 	}
 	return err;
 }
@@ -2077,7 +2600,7 @@ int bt_obex_abort(struct bt_obex_client *client, struct net_buf *buf)
 	}
 
 	active_client = atomic_ptr_get(&client->obex->_active_client);
-	if (active_client != client) {
+	if ((active_client != NULL) && (active_client != client)) {
 		LOG_WRN("One OBEX request is executing");
 		return -EBUSY;
 	}
@@ -2093,9 +2616,9 @@ int bt_obex_abort(struct bt_obex_client *client, struct net_buf *buf)
 		return -ENOTSUP;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(client->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -2110,7 +2633,7 @@ int bt_obex_abort(struct bt_obex_client *client, struct net_buf *buf)
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(client->obex, client->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		atomic_set(&client->_opcode, opcode);
 		atomic_ptr_set(&client->obex->_active_client, active_client);
 
@@ -2149,9 +2672,9 @@ int bt_obex_abort_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct ne
 		return -EINVAL;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(server->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -2163,7 +2686,7 @@ int bt_obex_abort_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct ne
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (!err) {
+	if (err == 0) {
 		atomic_clear(&server->_opcode);
 		atomic_ptr_clear(&server->obex->_active_server);
 	} else {
@@ -2206,9 +2729,9 @@ int bt_obex_setpath(struct bt_obex_client *client, uint8_t flags, struct net_buf
 		return -EINPROGRESS;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(client->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -2223,9 +2746,8 @@ int bt_obex_setpath(struct bt_obex_client *client, uint8_t flags, struct net_buf
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(client->obex, client->tx.mopl, buf);
-	if (err) {
-		atomic_clear(&client->_opcode);
-		atomic_ptr_clear(&client->obex->_active_client);
+	if (err != 0) {
+		obex_client_clear_active_state(client);
 
 		if (allocated) {
 			net_buf_unref(buf);
@@ -2260,9 +2782,9 @@ int bt_obex_setpath_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct 
 		return -EINVAL;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(server->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -2274,7 +2796,7 @@ int bt_obex_setpath_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct 
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (!err) {
+	if (err == 0) {
 		atomic_clear(&server->_opcode);
 		atomic_ptr_clear(&server->obex->_active_server);
 	} else {
@@ -2316,9 +2838,9 @@ int bt_obex_action(struct bt_obex_client *client, bool final, struct net_buf *bu
 		return -EBUSY;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(client->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -2339,8 +2861,10 @@ int bt_obex_action(struct bt_obex_client *client, bool final, struct net_buf *bu
 			return -EBUSY;
 		}
 
-		if (opcode != req_code) {
-			atomic_cas(&client->_opcode, opcode, req_code);
+		if ((opcode != req_code) && !atomic_cas(&client->_opcode, opcode, req_code)) {
+			LOG_WRN("OP code mismatch %u != %u", (uint8_t)atomic_get(&client->_opcode),
+				opcode);
+			return -EINVAL;
 		}
 	}
 
@@ -2349,7 +2873,7 @@ int bt_obex_action(struct bt_obex_client *client, bool final, struct net_buf *bu
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(client->obex, client->tx.mopl, buf);
-	if (err) {
+	if (err != 0) {
 		atomic_set(&client->_opcode, opcode);
 		atomic_ptr_set(&client->obex->_active_client, active_client);
 
@@ -2382,9 +2906,9 @@ int bt_obex_action_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct n
 		return -EINVAL;
 	}
 
-	if (!buf) {
+	if (buf == NULL) {
 		buf = obex_alloc_buf(server->obex);
-		if (!buf) {
+		if (buf == NULL) {
 			LOG_WRN("No buffers");
 			return -ENOBUFS;
 		}
@@ -2407,7 +2931,7 @@ int bt_obex_action_rsp(struct bt_obex_server *server, uint8_t rsp_code, struct n
 	hdr->len = sys_cpu_to_be16(buf->len);
 
 	err = obex_send(server->obex, server->tx.mopl, buf);
-	if (!err) {
+	if (err == 0) {
 		if (rsp_code != BT_OBEX_RSP_CODE_CONTINUE) {
 			atomic_clear(&server->_opcode);
 			atomic_ptr_clear(&server->obex->_active_server);
@@ -2479,7 +3003,7 @@ static bool bt_obex_unicode_is_valid(uint16_t len, const uint8_t *str)
 	return true;
 }
 
-static bool bt_obex_string_is_valid(uint8_t id, uint16_t len, const uint8_t *str)
+bool bt_obex_string_is_valid(uint8_t id, uint16_t len, const uint8_t *str)
 {
 	if (BT_OBEX_HEADER_ENCODING(id) == BT_OBEX_HEADER_ENCODING_UNICODE) {
 		return bt_obex_unicode_is_valid(len, str);
@@ -2492,7 +3016,7 @@ int bt_obex_add_header_count(struct net_buf *buf, uint32_t count)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -2518,7 +3042,7 @@ int bt_obex_add_header_name(struct net_buf *buf, uint16_t len, const uint8_t *na
 	 * see the GET and SETPATH Operations. An empty Name header is defined as a Name
 	 * header of length 3 (one byte opcode + two byte length).
 	 */
-	if (!buf || (len && !name)) {
+	if (buf == NULL || (len > 0 && name == NULL)) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2528,14 +3052,14 @@ int bt_obex_add_header_name(struct net_buf *buf, uint16_t len, const uint8_t *na
 		return -ENOMEM;
 	}
 
-	if (len && !bt_obex_string_is_valid(BT_OBEX_HEADER_ID_NAME, len, name)) {
+	if (len > 0 && !bt_obex_string_is_valid(BT_OBEX_HEADER_ID_NAME, len, name)) {
 		LOG_WRN("Invalid string");
 		return -EINVAL;
 	}
 
 	net_buf_add_u8(buf, BT_OBEX_HEADER_ID_NAME);
 	net_buf_add_be16(buf, (uint16_t)total);
-	if (len) {
+	if (len > 0) {
 		net_buf_add_mem(buf, name, len);
 	}
 	return 0;
@@ -2545,7 +3069,7 @@ int bt_obex_add_header_type(struct net_buf *buf, uint16_t len, const uint8_t *ty
 {
 	size_t total;
 
-	if (!buf || !type || !len) {
+	if (buf == NULL || type == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2570,7 +3094,7 @@ int bt_obex_add_header_len(struct net_buf *buf, uint32_t len)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -2589,7 +3113,7 @@ int bt_obex_add_header_time_iso_8601(struct net_buf *buf, uint16_t len, const ui
 {
 	size_t total;
 
-	if (!buf || !t || !len) {
+	if (buf == NULL || t == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2614,7 +3138,7 @@ int bt_obex_add_header_time(struct net_buf *buf, uint32_t t)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -2633,7 +3157,7 @@ int bt_obex_add_header_description(struct net_buf *buf, uint16_t len, const uint
 {
 	size_t total;
 
-	if (!buf || !dec || !len) {
+	if (buf == NULL || dec == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2658,7 +3182,7 @@ int bt_obex_add_header_target(struct net_buf *buf, uint16_t len, const uint8_t *
 {
 	size_t total;
 
-	if (!buf || !target || !len) {
+	if (buf == NULL || target == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2683,7 +3207,7 @@ int bt_obex_add_header_http(struct net_buf *buf, uint16_t len, const uint8_t *ht
 {
 	size_t total;
 
-	if (!buf || !http || !len) {
+	if (buf == NULL || http == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2708,7 +3232,7 @@ int bt_obex_add_header_body(struct net_buf *buf, uint16_t len, const uint8_t *bo
 {
 	size_t total;
 
-	if (!buf || !body || !len) {
+	if (buf == NULL || body == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2733,7 +3257,13 @@ int bt_obex_add_header_end_body(struct net_buf *buf, uint16_t len, const uint8_t
 {
 	size_t total;
 
-	if (!buf || !body || !len) {
+	/*
+	 * OBEX Version 1.5, section 2.2.9 Body, End-of-Body
+	 * The `body` could be a NULL, so the `len` of the name could 0.
+	 * In some cases, the object body data is generated on the fly and the end cannot
+	 * be anticipated, so it is legal to send a zero length End-of-Body header.
+	 */
+	if ((buf == NULL) || ((len != 0) && (body == NULL))) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2758,7 +3288,7 @@ int bt_obex_add_header_who(struct net_buf *buf, uint16_t len, const uint8_t *who
 {
 	size_t total;
 
-	if (!buf || !who || !len) {
+	if (buf == NULL || who == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2783,7 +3313,7 @@ int bt_obex_add_header_conn_id(struct net_buf *buf, uint32_t conn_id)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -2803,13 +3333,13 @@ int bt_obex_add_header_app_param(struct net_buf *buf, size_t count, const struct
 	size_t total;
 	uint16_t len = 0;
 
-	if (!buf || !data || !count) {
+	if (buf == NULL || data == NULL || count == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
 
 	for (size_t i = 0; i < count; i++) {
-		if (data[i].data_len && !data[i].data) {
+		if (data[i].data_len > 0 && data[i].data == NULL) {
 			LOG_WRN("Invalid parameter");
 			return -EINVAL;
 		}
@@ -2838,13 +3368,13 @@ int bt_obex_add_header_auth_challenge(struct net_buf *buf, size_t count,
 	size_t total;
 	uint16_t len = 0;
 
-	if (!buf || !data || !count) {
+	if (buf == NULL || data == NULL || count == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
 
 	for (size_t i = 0; i < count; i++) {
-		if (data[i].data_len && !data[i].data) {
+		if (data[i].data_len > 0 && data[i].data == NULL) {
 			LOG_WRN("Invalid parameter");
 			return -EINVAL;
 		}
@@ -2872,13 +3402,13 @@ int bt_obex_add_header_auth_rsp(struct net_buf *buf, size_t count, const struct 
 	size_t total;
 	uint16_t len = 0;
 
-	if (!buf || !data || !count) {
+	if (buf == NULL || data == NULL || count == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
 
 	for (size_t i = 0; i < count; i++) {
-		if (data[i].data_len && !data[i].data) {
+		if (data[i].data_len > 0 && data[i].data == NULL) {
 			LOG_WRN("Invalid parameter");
 			return -EINVAL;
 		}
@@ -2905,7 +3435,7 @@ int bt_obex_add_header_creator_id(struct net_buf *buf, uint32_t creator_id)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -2924,7 +3454,7 @@ int bt_obex_add_header_wan_uuid(struct net_buf *buf, uint16_t len, const uint8_t
 {
 	size_t total;
 
-	if (!buf || !uuid || !len) {
+	if (buf == NULL || uuid == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2949,7 +3479,7 @@ int bt_obex_add_header_obj_class(struct net_buf *buf, uint16_t len, const uint8_
 {
 	size_t total;
 
-	if (!buf || !obj_class || !len) {
+	if (buf == NULL || obj_class == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -2975,7 +3505,7 @@ int bt_obex_add_header_session_param(struct net_buf *buf, uint16_t len,
 {
 	size_t total;
 
-	if (!buf || !session_param || !len) {
+	if (buf == NULL || session_param == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3000,7 +3530,7 @@ int bt_obex_add_header_session_seq_number(struct net_buf *buf, uint32_t session_
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -3015,11 +3545,11 @@ int bt_obex_add_header_session_seq_number(struct net_buf *buf, uint32_t session_
 	return 0;
 }
 
-int bt_obex_add_header_action_id(struct net_buf *buf, uint32_t action_id)
+int bt_obex_add_header_action_id(struct net_buf *buf, uint8_t action_id)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -3030,7 +3560,7 @@ int bt_obex_add_header_action_id(struct net_buf *buf, uint32_t action_id)
 	}
 
 	net_buf_add_u8(buf, BT_OBEX_HEADER_ID_ACTION_ID);
-	net_buf_add_be32(buf, action_id);
+	net_buf_add_u8(buf, action_id);
 	return 0;
 }
 
@@ -3038,7 +3568,7 @@ int bt_obex_add_header_dest_name(struct net_buf *buf, uint16_t len, const uint8_
 {
 	size_t total;
 
-	if (!buf || !dest_name || !len) {
+	if (buf == NULL || dest_name == NULL || len == 0) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3063,7 +3593,7 @@ int bt_obex_add_header_perm(struct net_buf *buf, uint32_t perm)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -3082,7 +3612,7 @@ int bt_obex_add_header_srm(struct net_buf *buf, uint8_t srm)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -3101,7 +3631,7 @@ int bt_obex_add_header_srm_param(struct net_buf *buf, uint8_t srm_param)
 {
 	size_t total;
 
-	if (!buf) {
+	if (buf == NULL) {
 		LOG_WRN("Invalid buf");
 		return -EINVAL;
 	}
@@ -3124,7 +3654,7 @@ int bt_obex_header_parse(struct net_buf *buf,
 	uint8_t header_id;
 	uint16_t header_value_len;
 
-	if (!buf || !func) {
+	if (buf == NULL || func == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3198,7 +3728,7 @@ int bt_obex_get_header_count(struct net_buf *buf, uint32_t *count)
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !count) {
+	if (buf == NULL || count == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3209,11 +3739,11 @@ int bt_obex_get_header_count(struct net_buf *buf, uint32_t *count)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*count)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*count)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3226,7 +3756,7 @@ int bt_obex_get_header_name(struct net_buf *buf, uint16_t *len, const uint8_t **
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !name) {
+	if (buf == NULL || len == NULL || name == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3237,7 +3767,7 @@ int bt_obex_get_header_name(struct net_buf *buf, uint16_t *len, const uint8_t **
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
@@ -3255,7 +3785,7 @@ int bt_obex_get_header_type(struct net_buf *buf, uint16_t *len, const uint8_t **
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !type) {
+	if (buf == NULL || len == NULL || type == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3266,11 +3796,11 @@ int bt_obex_get_header_type(struct net_buf *buf, uint16_t *len, const uint8_t **
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3284,7 +3814,7 @@ int bt_obex_get_header_len(struct net_buf *buf, uint32_t *len)
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len) {
+	if (buf == NULL || len == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3295,11 +3825,11 @@ int bt_obex_get_header_len(struct net_buf *buf, uint32_t *len)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*len)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*len)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3312,7 +3842,7 @@ int bt_obex_get_header_time_iso_8601(struct net_buf *buf, uint16_t *len, const u
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !t) {
+	if (buf == NULL || len == NULL || t == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3323,11 +3853,11 @@ int bt_obex_get_header_time_iso_8601(struct net_buf *buf, uint16_t *len, const u
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3341,7 +3871,7 @@ int bt_obex_get_header_time(struct net_buf *buf, uint32_t *t)
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !t) {
+	if (buf == NULL || t == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3352,11 +3882,11 @@ int bt_obex_get_header_time(struct net_buf *buf, uint32_t *t)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*t)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*t)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3369,7 +3899,7 @@ int bt_obex_get_header_description(struct net_buf *buf, uint16_t *len, const uin
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !dec) {
+	if (buf == NULL || len == NULL || dec == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3380,11 +3910,11 @@ int bt_obex_get_header_description(struct net_buf *buf, uint16_t *len, const uin
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3398,7 +3928,7 @@ int bt_obex_get_header_target(struct net_buf *buf, uint16_t *len, const uint8_t 
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !target) {
+	if (buf == NULL || len == NULL || target == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3409,11 +3939,11 @@ int bt_obex_get_header_target(struct net_buf *buf, uint16_t *len, const uint8_t 
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3427,7 +3957,7 @@ int bt_obex_get_header_http(struct net_buf *buf, uint16_t *len, const uint8_t **
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !http) {
+	if (buf == NULL || len == NULL || http == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3438,11 +3968,11 @@ int bt_obex_get_header_http(struct net_buf *buf, uint16_t *len, const uint8_t **
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3456,7 +3986,7 @@ int bt_obex_get_header_body(struct net_buf *buf, uint16_t *len, const uint8_t **
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !body) {
+	if (buf == NULL || len == NULL || body == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3467,11 +3997,11 @@ int bt_obex_get_header_body(struct net_buf *buf, uint16_t *len, const uint8_t **
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3485,7 +4015,7 @@ int bt_obex_get_header_end_body(struct net_buf *buf, uint16_t *len, const uint8_
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !body) {
+	if (buf == NULL || len == NULL || body == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3496,11 +4026,11 @@ int bt_obex_get_header_end_body(struct net_buf *buf, uint16_t *len, const uint8_
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3514,7 +4044,7 @@ int bt_obex_get_header_who(struct net_buf *buf, uint16_t *len, const uint8_t **w
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !who) {
+	if (buf == NULL || len == NULL || who == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3525,11 +4055,11 @@ int bt_obex_get_header_who(struct net_buf *buf, uint16_t *len, const uint8_t **w
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3543,7 +4073,7 @@ int bt_obex_get_header_conn_id(struct net_buf *buf, uint32_t *conn_id)
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !conn_id) {
+	if (buf == NULL || conn_id == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3554,11 +4084,11 @@ int bt_obex_get_header_conn_id(struct net_buf *buf, uint32_t *conn_id)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*conn_id)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*conn_id)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3572,7 +4102,7 @@ int bt_obex_tlv_parse(uint16_t len, const uint8_t *data,
 	uint16_t index = 0;
 	struct bt_obex_tlv tlv;
 
-	if (!len || !data || !func) {
+	if (len == 0 || data == NULL || func == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3599,7 +4129,7 @@ int bt_obex_get_header_app_param(struct net_buf *buf, uint16_t *len, const uint8
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !app_param) {
+	if (buf == NULL || len == NULL || app_param == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3610,11 +4140,11 @@ int bt_obex_get_header_app_param(struct net_buf *buf, uint16_t *len, const uint8
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3623,12 +4153,53 @@ int bt_obex_get_header_app_param(struct net_buf *buf, uint16_t *len, const uint8
 	return 0;
 }
 
+struct bt_obex_has_app_param {
+	uint8_t id;
+	bool found;
+};
+
+static bool bt_obex_has_app_param_cb(struct bt_obex_tlv *tlv, void *user_data)
+{
+	struct bt_obex_has_app_param *data = user_data;
+
+	if (tlv->type == data->id) {
+		data->found = true;
+		return false;
+	}
+	return true;
+}
+
+bool bt_obex_has_app_param(struct net_buf *buf, uint8_t id)
+{
+	struct bt_obex_has_app_param ap;
+	uint16_t len = 0;
+	const uint8_t *data = NULL;
+	int err;
+
+	if (bt_obex_get_header_app_param(buf, &len, &data) != 0) {
+		return false;
+	}
+	if (len == 0U || data == NULL) {
+		return false;
+	}
+
+	ap.id = id;
+	ap.found = false;
+
+	err = bt_obex_tlv_parse(len, data, bt_obex_has_app_param_cb, &ap);
+	if (err != 0) {
+		return false;
+	}
+
+	return ap.found;
+}
+
 int bt_obex_get_header_auth_challenge(struct net_buf *buf, uint16_t *len, const uint8_t **auth)
 {
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !auth) {
+	if (buf == NULL || len == NULL || auth == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3639,11 +4210,11 @@ int bt_obex_get_header_auth_challenge(struct net_buf *buf, uint16_t *len, const 
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3657,7 +4228,7 @@ int bt_obex_get_header_auth_rsp(struct net_buf *buf, uint16_t *len, const uint8_
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !auth) {
+	if (buf == NULL || len == NULL || auth == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3668,11 +4239,11 @@ int bt_obex_get_header_auth_rsp(struct net_buf *buf, uint16_t *len, const uint8_
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3686,7 +4257,7 @@ int bt_obex_get_header_creator_id(struct net_buf *buf, uint32_t *creator_id)
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !creator_id) {
+	if (buf == NULL || creator_id == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3697,11 +4268,11 @@ int bt_obex_get_header_creator_id(struct net_buf *buf, uint32_t *creator_id)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*creator_id)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*creator_id)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3714,7 +4285,7 @@ int bt_obex_get_header_wan_uuid(struct net_buf *buf, uint16_t *len, const uint8_
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !uuid) {
+	if (buf == NULL || len == NULL || uuid == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3725,11 +4296,11 @@ int bt_obex_get_header_wan_uuid(struct net_buf *buf, uint16_t *len, const uint8_
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3743,7 +4314,7 @@ int bt_obex_get_header_obj_class(struct net_buf *buf, uint16_t *len, const uint8
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !obj_class) {
+	if (buf == NULL || len == NULL || obj_class == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3754,11 +4325,11 @@ int bt_obex_get_header_obj_class(struct net_buf *buf, uint16_t *len, const uint8
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3773,7 +4344,7 @@ int bt_obex_get_header_session_param(struct net_buf *buf, uint16_t *len,
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !session_param) {
+	if (buf == NULL || len == NULL || session_param == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3784,11 +4355,11 @@ int bt_obex_get_header_session_param(struct net_buf *buf, uint16_t *len,
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3802,7 +4373,7 @@ int bt_obex_get_header_session_seq_number(struct net_buf *buf, uint32_t *session
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !session_seq_number) {
+	if (buf == NULL || session_seq_number == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3813,11 +4384,11 @@ int bt_obex_get_header_session_seq_number(struct net_buf *buf, uint32_t *session
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*session_seq_number)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*session_seq_number)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3825,12 +4396,12 @@ int bt_obex_get_header_session_seq_number(struct net_buf *buf, uint32_t *session
 	return 0;
 }
 
-int bt_obex_get_header_action_id(struct net_buf *buf, uint32_t *action_id)
+int bt_obex_get_header_action_id(struct net_buf *buf, uint8_t *action_id)
 {
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !action_id) {
+	if (buf == NULL || action_id == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3841,15 +4412,15 @@ int bt_obex_get_header_action_id(struct net_buf *buf, uint32_t *action_id)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*action_id)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*action_id)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
-	*action_id = sys_get_be32(data.hdr.data);
+	*action_id = data.hdr.data[0];
 	return 0;
 }
 
@@ -3858,7 +4429,7 @@ int bt_obex_get_header_dest_name(struct net_buf *buf, uint16_t *len, const uint8
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !len || !dest_name) {
+	if (buf == NULL || len == NULL || dest_name == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3869,11 +4440,11 @@ int bt_obex_get_header_dest_name(struct net_buf *buf, uint16_t *len, const uint8
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if (!data.hdr.len || !data.hdr.data) {
+	if (data.hdr.len == 0 || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3887,7 +4458,7 @@ int bt_obex_get_header_perm(struct net_buf *buf, uint32_t *perm)
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !perm) {
+	if (buf == NULL || perm == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3898,11 +4469,11 @@ int bt_obex_get_header_perm(struct net_buf *buf, uint32_t *perm)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*perm)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*perm)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3915,7 +4486,7 @@ int bt_obex_get_header_srm(struct net_buf *buf, uint8_t *srm)
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !srm) {
+	if (buf == NULL || srm == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3926,11 +4497,11 @@ int bt_obex_get_header_srm(struct net_buf *buf, uint8_t *srm)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*srm)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*srm)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 
@@ -3943,7 +4514,7 @@ int bt_obex_get_header_srm_param(struct net_buf *buf, uint8_t *srm_param)
 	struct bt_obex_find_header_data data;
 	int err;
 
-	if (!buf || !srm_param) {
+	if (buf == NULL || srm_param == NULL) {
 		LOG_WRN("Invalid parameter");
 		return -EINVAL;
 	}
@@ -3954,11 +4525,11 @@ int bt_obex_get_header_srm_param(struct net_buf *buf, uint8_t *srm_param)
 	data.found = false;
 
 	err = bt_obex_header_parse(buf, bt_obex_find_header_cb, &data);
-	if (err) {
+	if (err != 0) {
 		return err;
 	}
 
-	if ((data.hdr.len != sizeof(*srm_param)) || !data.hdr.data) {
+	if ((data.hdr.len != sizeof(*srm_param)) || data.hdr.data == NULL) {
 		return -ENODATA;
 	}
 

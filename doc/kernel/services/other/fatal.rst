@@ -117,6 +117,13 @@ reports the failed test and its location, but lacks additional debugging
 information provided to assist the user in diagnosing the problem; its use is
 discouraged.
 
+Custom Header
+=============
+
+In some cases, asserts need to be redirected at the macro level. For these cases,
+:kconfig:option:`CONFIG_ASSERT_CUSTOM_HEADER` can be used to inject an application provided
+header named ``zephyr_custom_assert.h`` at the end of :zephyr_file:`include/zephyr/sys/__assert.h`.
+
 Build Assertions
 ================
 
@@ -145,7 +152,7 @@ With GCC, the output resembles:
 .. code-block:: none
 
 	tests/kernel/fatal/src/main.c: In function 'test_main':
-	include/toolchain/gcc.h:28:37: error: static assertion failed: "Invalid value of FOO"
+	include/zephyr/toolchain/gcc.h:28:37: error: static assertion failed: "Invalid value of FOO"
 	 #define BUILD_ASSERT(EXPR, MSG) _Static_assert(EXPR, "" MSG)
 					 ^~~~~~~~~~~~~~
 	tests/kernel/fatal/src/main.c:370:2: note: in expansion of macro 'BUILD_ASSERT'
@@ -226,6 +233,19 @@ invokes a fatal stack overflow error. An error in this case does not indicate
 that the entire stack buffer has overflowed, but instead that the current
 function stack frame has been corrupted. See the compiler documentation for
 more details.
+
+By default a single canary value, generated at boot, is shared by all threads.
+When :kconfig:option:`CONFIG_STACK_CANARIES_TLS` is enabled, the canary is
+instead stored in :ref:`thread-local storage <thread_local_storage>` so that
+each thread has its own value, making the canary location and value harder to
+predict at the cost of additional per-thread setup.
+
+As a complementary hardening measure, :kconfig:option:`CONFIG_STACK_POINTER_RANDOM`
+applies a randomized offset to each thread's initial stack pointer when the
+thread is created. This is a limited form of address space layout randomization
+that makes the location of any given stack frame non-deterministic, hindering
+some classes of security attack, at the cost of consuming up to the configured
+number of bytes from each thread's stack region.
 
 Other Exceptions
 ================

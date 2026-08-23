@@ -70,6 +70,7 @@ struct dhcp_msg {
 #define DHCPV4_OPTIONS_REBINDING	59
 #define DHCPV4_OPTIONS_VENDOR_CLASS_ID	60
 #define DHCPV4_OPTIONS_CLIENT_ID	61
+#define DHCPV4_OPTIONS_CAPTIVE_PORTAL	114
 #define DHCPV4_OPTIONS_END		255
 
 /* Useful size macros */
@@ -92,6 +93,14 @@ struct dhcp_msg {
 /* Maximum number of REQUEST retransmits before reverting to DISCOVER. */
 #define DHCPV4_MAX_NUMBER_OF_ATTEMPTS	3
 
+/* Maximum number of INIT-REBOOT REQUEST retransmits before reverting to DISCOVER */
+#ifdef CONFIG_NET_DHCPV4_INIT_REBOOT_ATTEMPTS
+#define DHCPV4_INIT_REBOOT_MAX_ATTEMPTS	CONFIG_NET_DHCPV4_INIT_REBOOT_ATTEMPTS
+#else
+/* INIT-REBOOT support is disabled; the state is never entered. */
+#define DHCPV4_INIT_REBOOT_MAX_ATTEMPTS	0
+#endif
+
 /* Initial message retry timeout (s).  This timeout increases
  * exponentially on each retransmit.
  * RFC2131 4.1
@@ -102,7 +111,7 @@ struct dhcp_msg {
  * initial DISCOVER message. MAx value is defined with
  * CONFIG_NET_DHCPV4_INITIAL_DELAY_MAX. Default max value
  * should be 10.
- * RFC2131 4.1.1
+ * RFC2131 4.4.1
  */
 #define DHCPV4_INITIAL_DELAY_MIN 1
 

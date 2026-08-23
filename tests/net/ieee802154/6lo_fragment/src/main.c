@@ -101,7 +101,7 @@ LOG_MODULE_REGISTER(net_test, CONFIG_NET_L2_IEEE802154_LOG_LEVEL);
 #define udp_src_port_8bit_y 0xf011 /* compressible */
 #define udp_dst_port_8bit   0xf122
 
-/* uncompressible ports */
+/* incompressible ports */
 #define udp_src_port_16bit 0xff11
 #define udp_dst_port_16bit 0xff22
 
@@ -239,14 +239,14 @@ static struct net_pkt *create_pkt(struct net_fragment_data *data)
 
 	pkt = net_pkt_alloc_on_iface(
 		net_if_get_first_by_type(&NET_L2_GET_NAME(DUMMY)), K_FOREVER);
-	if (!pkt) {
+	if (pkt == NULL) {
 		return NULL;
 	}
 
 	net_pkt_set_ip_hdr_len(pkt, NET_IPV6H_LEN);
 
 	buf = net_pkt_get_frag(pkt, NET_IPV6UDPH_LEN, K_FOREVER);
-	if (!buf) {
+	if (buf == NULL) {
 		net_pkt_unref(pkt);
 		return NULL;
 	}
@@ -265,8 +265,8 @@ static struct net_pkt *create_pkt(struct net_fragment_data *data)
 	buf->data[44] = len >> 8;
 	buf->data[45] = (uint8_t) len;
 
-	data->ipv6.len = htons(len);
-	data->udp.len = htons(len);
+	data->ipv6.len = net_htons(len);
+	data->udp.len = net_htons(len);
 
 	while (remaining > 0) {
 		uint8_t copy;
@@ -307,12 +307,12 @@ static struct net_fragment_data test_data_1 = {
 	.ipv6.tcflow = 0x00,
 	.ipv6.flow = 0x00,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sam00,
 	.ipv6.dst = dst_dam00,
-	.udp.src_port = htons(udp_src_port_4bit),
-	.udp.dst_port = htons(udp_dst_port_4bit),
+	.udp.src_port = net_htons(udp_src_port_4bit),
+	.udp.dst_port = net_htons(udp_dst_port_4bit),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 70,
@@ -324,12 +324,12 @@ static struct net_fragment_data test_data_2 = {
 	.ipv6.tcflow = 0x20,
 	.ipv6.flow = 0x3412,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sam01,
 	.ipv6.dst = dst_dam01,
-	.udp.src_port = htons(udp_src_port_8bit_y),
-	.udp.dst_port = htons(udp_dst_port_8bit),
+	.udp.src_port = net_htons(udp_src_port_8bit_y),
+	.udp.dst_port = net_htons(udp_dst_port_8bit),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 200,
@@ -341,12 +341,12 @@ static struct net_fragment_data test_data_3 = {
 	.ipv6.tcflow = 0x21,
 	.ipv6.flow = 0x3412,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sam10,
 	.ipv6.dst = dst_dam10,
-	.udp.src_port = htons(udp_src_port_8bit),
-	.udp.dst_port = htons(udp_dst_port_8bit_y),
+	.udp.src_port = net_htons(udp_src_port_8bit),
+	.udp.dst_port = net_htons(udp_dst_port_8bit_y),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 300,
@@ -358,12 +358,12 @@ static struct net_fragment_data test_data_4 = {
 	.ipv6.tcflow = 0x20,
 	.ipv6.flow = 0x00,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sam00,
 	.ipv6.dst = dst_m1_dam00,
-	.udp.src_port = htons(udp_src_port_16bit),
-	.udp.dst_port = htons(udp_dst_port_16bit),
+	.udp.src_port = net_htons(udp_src_port_16bit),
+	.udp.dst_port = net_htons(udp_dst_port_16bit),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 400,
@@ -375,12 +375,12 @@ static struct net_fragment_data test_data_5 = {
 	.ipv6.tcflow = 0x23,
 	.ipv6.flow = 0x4567,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sam01,
 	.ipv6.dst = dst_m1_dam01,
-	.udp.src_port = htons(udp_src_port_16bit),
-	.udp.dst_port = htons(udp_dst_port_16bit),
+	.udp.src_port = net_htons(udp_src_port_16bit),
+	.udp.dst_port = net_htons(udp_dst_port_16bit),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 500,
@@ -392,12 +392,12 @@ static struct net_fragment_data test_data_6 = {
 	.ipv6.tcflow = 0x0,
 	.ipv6.flow = 0x0,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sam10,
 	.ipv6.dst = dst_m1_dam10,
-	.udp.src_port = htons(udp_src_port_8bit),
-	.udp.dst_port = htons(udp_dst_port_8bit),
+	.udp.src_port = net_htons(udp_src_port_8bit),
+	.udp.dst_port = net_htons(udp_dst_port_8bit),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 1200,
@@ -409,12 +409,12 @@ static struct net_fragment_data test_data_7 = {
 	.ipv6.tcflow = 0x20,
 	.ipv6.flow = 0x00,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sac1_sam00,
 	.ipv6.dst = dst_m1_dam00,
-	.udp.src_port = htons(udp_src_port_16bit),
-	.udp.dst_port = htons(udp_dst_port_16bit),
+	.udp.src_port = net_htons(udp_src_port_16bit),
+	.udp.dst_port = net_htons(udp_dst_port_16bit),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 70,
@@ -426,12 +426,12 @@ static struct net_fragment_data test_data_8 = {
 	.ipv6.tcflow = 0x20,
 	.ipv6.flow = 0x00,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sac1_sam00,
 	.ipv6.dst = dst_m1_dam00,
-	.udp.src_port = htons(udp_src_port_16bit),
-	.udp.dst_port = htons(udp_dst_port_16bit),
+	.udp.src_port = net_htons(udp_src_port_16bit),
+	.udp.dst_port = net_htons(udp_dst_port_16bit),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 1200,
@@ -444,12 +444,12 @@ static struct net_fragment_data test_data_9 = {
 	.ipv6.tcflow = 0x20,
 	.ipv6.flow = 0x00,
 	.ipv6.len = 0,
-	.ipv6.nexthdr = IPPROTO_UDP,
+	.ipv6.nexthdr = NET_IPPROTO_UDP,
 	.ipv6.hop_limit = 0xff,
 	.ipv6.src = src_sam00,
 	.ipv6.dst = dst_m1_dam01,
-	.udp.src_port = htons(udp_src_port_16bit),
-	.udp.dst_port = htons(udp_dst_port_16bit),
+	.udp.src_port = net_htons(udp_src_port_16bit),
+	.udp.dst_port = net_htons(udp_dst_port_16bit),
 	.udp.len = 0x00,
 	.udp.chksum = 0x00,
 	.len = 90,
@@ -476,7 +476,7 @@ static bool test_fragment(struct net_fragment_data *data)
 	int hdr_diff;
 
 	pkt = create_pkt(data);
-	if (!pkt) {
+	if (pkt == NULL) {
 		TC_PRINT("%s: failed to create buffer\n", __func__);
 		goto end;
 	}
@@ -493,14 +493,36 @@ static bool test_fragment(struct net_fragment_data *data)
 	}
 
 	if (!ieee802154_6lo_requires_fragmentation(pkt, 0, 0)) {
-		f_pkt = pkt;
+		size_t pkt_len = net_pkt_get_len(pkt);
+		size_t copied;
+
+		f_pkt = net_pkt_alloc(K_FOREVER);
+		if (f_pkt == NULL) {
+			goto end;
+		}
+
+		dfrag = net_pkt_get_frag(f_pkt, pkt_len, K_FOREVER);
+		if (dfrag == NULL) {
+			goto end;
+		}
+
+		net_pkt_frag_add(f_pkt, dfrag);
+
+		copied = net_buf_linearize(dfrag->data, net_buf_tailroom(dfrag), pkt->buffer, 0,
+					   pkt_len);
+		if (copied != pkt_len) {
+			goto end;
+		}
+
+		net_buf_add(dfrag, copied);
+		net_pkt_unref(pkt);
 		pkt = NULL;
 
 		goto reassemble;
 	}
 
 	f_pkt = net_pkt_alloc(K_FOREVER);
-	if (!f_pkt) {
+	if (f_pkt == NULL) {
 		goto end;
 	}
 
@@ -512,7 +534,7 @@ static bool test_fragment(struct net_fragment_data *data)
 		buf = ieee802154_6lo_fragment(&ctx, &frame_buf, data->iphc);
 
 		dfrag = net_pkt_get_frag(f_pkt, frame_buf.len, K_FOREVER);
-		if (!dfrag) {
+		if (dfrag == NULL) {
 			goto end;
 		}
 
@@ -538,12 +560,12 @@ reassemble:
 	buf = f_pkt->buffer;
 	while (buf) {
 		rxpkt = net_pkt_rx_alloc(K_FOREVER);
-		if (!rxpkt) {
+		if (rxpkt == NULL) {
 			goto end;
 		}
 
 		dfrag = net_pkt_get_frag(rxpkt, buf->len, K_FOREVER);
-		if (!dfrag) {
+		if (dfrag == NULL) {
 			goto end;
 		}
 
@@ -578,15 +600,15 @@ compare:
 	}
 
 end:
-	if (pkt) {
+	if (pkt != NULL) {
 		net_pkt_unref(pkt);
 	}
 
-	if (f_pkt) {
+	if (f_pkt != NULL) {
 		net_pkt_unref(f_pkt);
 	}
 
-	if (rxpkt) {
+	if (rxpkt != NULL) {
 		net_pkt_unref(rxpkt);
 	}
 

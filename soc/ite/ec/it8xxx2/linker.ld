@@ -42,12 +42,12 @@
 #define ROM_SIZE DT_REG_SIZE_BY_IDX(SPI_CTRL, 1)
 #endif
 #else /* CONFIG_XIP */
-#define ROM_BASE CONFIG_SRAM_BASE_ADDRESS
-#define ROM_SIZE KB(CONFIG_SRAM_SIZE)
+#define ROM_BASE DT_CHOSEN_SRAM_ADDR
+#define ROM_SIZE DT_CHOSEN_SRAM_SIZE
 #endif /* CONFIG_XIP */
 
-#define RAM_BASE CONFIG_SRAM_BASE_ADDRESS
-#define RAM_SIZE KB(CONFIG_SRAM_SIZE)
+#define RAM_BASE DT_CHOSEN_SRAM_ADDR
+#define RAM_SIZE DT_CHOSEN_SRAM_SIZE
 
 #ifdef CONFIG_RISCV_PMP
 	#define MPU_MIN_SIZE 4
@@ -90,10 +90,7 @@ SECTIONS
     {
 
 #include <zephyr/linker/rel-sections.ld>
-
-#ifdef CONFIG_LLEXT
 #include <zephyr/linker/llext-sections.ld>
-#endif
 
     /*
      * The .plt and .iplt are here according to
@@ -173,6 +170,9 @@ SECTIONS
 #ifdef CONFIG_SOC_IT8XXX2_LIBRARY_TO_RAM
 		*(EXCLUDE_FILE (
 #endif
+#ifdef CONFIG_SOC_IT8XXX2_SWITCH_IN_RAM
+			*libarch__riscv__core.a:*
+#endif
 #ifdef CONFIG_SOC_IT8XXX2_SERIAL_IN_RAM
 			*libdrivers__serial.a:*
 #endif
@@ -190,6 +190,9 @@ SECTIONS
 
 #ifdef CONFIG_SOC_IT8XXX2_LIBRARY_TO_RAM
 		*(EXCLUDE_FILE (
+#endif
+#ifdef CONFIG_SOC_IT8XXX2_SWITCH_IN_RAM
+			*libarch__riscv__core.a:*
 #endif
 #ifdef CONFIG_SOC_IT8XXX2_SERIAL_IN_RAM
 			*libdrivers__serial.a:*
@@ -226,6 +229,9 @@ SECTIONS
 #ifdef CONFIG_SOC_IT8XXX2_EXCEPTIONS_IN_RAM
 		KEEP(*(".exception.entry.*"))
 		*(".exception.other.*")
+#endif
+#ifdef CONFIG_SOC_IT8XXX2_SWITCH_IN_RAM
+		*libarch__riscv__core.a:*(.text .text.*)
 #endif
 #ifdef CONFIG_SOC_IT8XXX2_SERIAL_IN_RAM
 		*libdrivers__serial.a:*(.text .text.*)

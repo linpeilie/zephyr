@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/dt-bindings/pinctrl/esp-pinctrl-common.h>
-#include <dt-bindings/pinctrl/esp32s3-pinctrl.h>
-#include <zephyr/dt-bindings/pinctrl/esp32s3-gpio-sigmap.h>
+#include <zephyr/dt-bindings/pinctrl/esp32s3-pinctrl.h>
 
 &pinctrl {
 	uart0_default: uart0_default {
@@ -116,7 +114,7 @@
 	twai_default: twai_default {
 		group1 {
 			pinmux = <TWAI_TX_GPIO41>,
-				<TWAI_RX_GPIO42>;
+				 <TWAI_RX_GPIO42>;
 		};
 	};
 };

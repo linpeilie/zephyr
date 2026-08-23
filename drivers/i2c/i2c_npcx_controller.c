@@ -88,9 +88,6 @@ LOG_MODULE_REGISTER(i2c_npcx, CONFIG_I2C_LOG_LEVEL);
 /* Timeout for SCL held to low by slave device . (SMBus spec. unit:ms). */
 #define I2C_MIN_TIMEOUT 25
 
-/* Default maximum time we allow for an I2C transfer (unit:ms) */
-#define I2C_TRANS_TIMEOUT K_MSEC(100)
-
 /* Valid bit fields in SMBST register */
 #define NPCX_VALID_SMBST_MASK ~(BIT(NPCX_SMBST_XMIT) | BIT(NPCX_SMBST_MASTER))
 
@@ -140,6 +137,18 @@ static const struct npcx_i2c_timing_cfg npcx_25m_speed_confs[] = {
 	[NPCX_I2C_BUS_SPEED_100KHZ] = {.HLDT = 15, .k1 = 125, .k2 = 0},
 	[NPCX_I2C_BUS_SPEED_400KHZ] = {.HLDT = 8, .k1 = 40, .k2 = 26},
 	[NPCX_I2C_BUS_SPEED_1MHZ] = {.HLDT = 7, .k1 = 16, .k2 = 12},
+};
+
+static const struct npcx_i2c_timing_cfg npcx_40m_speed_confs[] = {
+	[NPCX_I2C_BUS_SPEED_100KHZ] = {.HLDT = 17, .k1 = 202, .k2 = 0},
+	[NPCX_I2C_BUS_SPEED_400KHZ] = {.HLDT = 13, .k1 = 64, .k2 = 42},
+	[NPCX_I2C_BUS_SPEED_1MHZ] = {.HLDT = 7, .k1 = 26, .k2 = 20},
+};
+
+static const struct npcx_i2c_timing_cfg npcx_45m_speed_confs[] = {
+	[NPCX_I2C_BUS_SPEED_100KHZ] = {.HLDT = 17, .k1 = 226, .k2 = 0},
+	[NPCX_I2C_BUS_SPEED_400KHZ] = {.HLDT = 15, .k1 = 72, .k2 = 48},
+	[NPCX_I2C_BUS_SPEED_1MHZ] = {.HLDT = 7, .k1 = 28, .k2 = 22},
 };
 
 static const struct npcx_i2c_timing_cfg npcx_50m_speed_confs[] = {
@@ -383,9 +392,10 @@ static int i2c_ctrl_recovery(const struct device *dev)
 
 static int i2c_ctrl_wait_completion(const struct device *dev)
 {
+	const struct i2c_ctrl_config *const config = dev->config;
 	struct i2c_ctrl_data *const data = dev->data;
 
-	if (k_sem_take(&data->sync_sem, I2C_TRANS_TIMEOUT) == 0) {
+	if (k_sem_take(&data->sync_sem, config->transfer_timeout) == 0) {
 		return data->trans_err;
 	} else {
 		return -ETIMEDOUT;
@@ -967,7 +977,7 @@ int npcx_i2c_ctrl_target_unregister(const struct device *i2c_dev,
 		i2c_tgt_mask &= ~BIT(cur_addr_slot);
 	}
 
-	/* Input addrss is not in the smbaddr */
+	/* Input address is not in the smbaddr */
 	if (i2c_tgt_mask == 0 || reg_smbaddr == NULL) {
 		LOG_ERR("Address %#x is not found", target_cfg->address);
 		return -EINVAL;
@@ -1156,6 +1166,10 @@ static int i2c_ctrl_init(const struct device *dev)
 		data->ptr_speed_confs = npcx_20m_speed_confs;
 	} else if (i2c_rate == 25000000) {
 		data->ptr_speed_confs = npcx_25m_speed_confs;
+	} else if (i2c_rate == 40000000) {
+		data->ptr_speed_confs = npcx_40m_speed_confs;
+	} else if (i2c_rate == 45000000) {
+		data->ptr_speed_confs = npcx_45m_speed_confs;
 	} else if (i2c_rate == 50000000) {
 		data->ptr_speed_confs = npcx_50m_speed_confs;
 	} else {
@@ -1218,6 +1232,7 @@ static int i2c_ctrl_init(const struct device *dev)
 		.base = DT_INST_REG_ADDR(inst),                                                    \
 		.irq = DT_INST_IRQN(inst),                                                         \
 		.clk_cfg = NPCX_DT_CLK_CFG_ITEM(inst),                                             \
+		.transfer_timeout = I2C_DT_INST_TRANSFER_TIMEOUT(inst),                            \
 		IF_ENABLED(CONFIG_I2C_TARGET, (                                                    \
 			.smb_wui = NPCX_DT_WUI_ITEM_BY_NAME(inst, smb_wui),                        \
 			.wakeup_source = DT_INST_PROP_OR(inst, wakeup_source, 0)                   \

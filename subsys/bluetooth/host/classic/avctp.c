@@ -5,6 +5,7 @@
 /*
  * Copyright (c) 2015-2016 Intel Corporation
  * Copyright (C) 2024 Xiaomi Corporation
+ * Copyright 2025 NXP
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -22,8 +23,8 @@
 #include <zephyr/bluetooth/classic/sdp.h>
 
 #include "avctp_internal.h"
-#include "host/hci_core.h"
-#include "host/conn_internal.h"
+#include <host/hci_core.h>
+#include <host/conn_internal.h>
 #include "l2cap_br_internal.h"
 
 #define LOG_LEVEL CONFIG_BT_AVCTP_LOG_LEVEL
@@ -63,7 +64,7 @@ static void avctp_tx_raise(int msec)
 		return;
 	}
 	LOG_DBG("kick TX");
-	k_work_schedule(&avctp_tx_work, K_MSEC(msec));
+	bt_work_schedule(&avctp_tx_work, K_MSEC(msec));
 }
 
 static void bt_avctp_clear_tx(struct bt_avctp *session)
@@ -119,12 +120,8 @@ static void avctp_l2cap_disconnected(struct bt_l2cap_chan *chan)
 
 	session = AVCTP_CHAN(chan);
 	LOG_DBG("chan %p session %p", chan, session);
-	session->br_chan.chan.conn = NULL;
 
-	if (session->reassembly_buf != NULL) {
-		net_buf_unref(session->reassembly_buf);
-		session->reassembly_buf = NULL;
-	}
+	net_buf_drop(&session->reassembly_buf);
 
 	k_sem_take(&avctp_lock, K_FOREVER);
 	bt_avctp_clear_tx(session);
@@ -138,6 +135,29 @@ static void avctp_l2cap_disconnected(struct bt_l2cap_chan *chan)
 static void avctp_l2cap_encrypt_changed(struct bt_l2cap_chan *chan, uint8_t status)
 {
 	LOG_DBG("");
+}
+
+static struct net_buf *avctp_l2cap_alloc_buf(struct bt_l2cap_chan *chan)
+{
+	struct net_buf *buf;
+	struct bt_avctp *session;
+
+	if (chan == NULL) {
+		LOG_ERR("Invalid AVCTP chan");
+		return NULL;
+	}
+
+	session = AVCTP_CHAN(chan);
+	LOG_DBG("chan %p session %p", chan, session);
+
+	if (session->ops != NULL && session->ops->alloc_buf != NULL) {
+		buf = session->ops->alloc_buf(session);
+		if (buf == NULL) {
+			LOG_ERR("Failed to allocate buffer");
+		}
+		return buf;
+	}
+	return NULL;
 }
 
 static void avctp_tx_cb(struct bt_conn *conn, void *user_data, int err)
@@ -330,10 +350,6 @@ static void avctp_tx_processor(struct k_work *item)
 		goto failed;
 	}
 
-	if (net_buf_tailroom(buf) < chunk_size) {
-		LOG_WRN("Not enough tailroom for AVCTP payload (len: %d)", chunk_size);
-		goto failed;
-	}
 	net_buf_pull_mem(buf, chunk_size);
 
 	user_data->sent_len += chunk_size;
@@ -426,8 +442,7 @@ static int avctp_recv_fragmented(struct bt_avctp *avctp, struct net_buf *buf)
 
 		if (avctp->reassembly_buf != NULL) {
 			LOG_WRN("Interleaving fragments not allowed (tid=%u, cr=%u)", tid, cr);
-			net_buf_unref(avctp->reassembly_buf);
-			avctp->reassembly_buf = NULL;
+			net_buf_drop(&avctp->reassembly_buf);
 		}
 
 		if (avctp->rx_pool == NULL) {
@@ -501,8 +516,7 @@ static int avctp_recv_fragmented(struct bt_avctp *avctp, struct net_buf *buf)
 
 			dispatch_avctp_packet(avctp, avctp->reassembly_buf, hdr_common,
 					      sys_be16_to_cpu(hdr_reassembly->pid));
-			net_buf_unref(avctp->reassembly_buf);
-			avctp->reassembly_buf = NULL;
+			net_buf_drop(&avctp->reassembly_buf);
 			return 0;
 		}
 		return 0;
@@ -511,10 +525,7 @@ static int avctp_recv_fragmented(struct bt_avctp *avctp, struct net_buf *buf)
 	LOG_WRN("No matching START packet found for tid=%u, cr=%u", tid, cr);
 
 failed:
-	if (avctp->reassembly_buf != NULL) {
-		net_buf_unref(avctp->reassembly_buf);
-		avctp->reassembly_buf = NULL;
-	}
+	net_buf_drop(&avctp->reassembly_buf);
 	return 0; /* Need keep L2CAP up */
 }
 
@@ -543,8 +554,7 @@ static int avctp_l2cap_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
 
 	if (session->reassembly_buf != NULL) {
 		LOG_WRN("AVCTP: aborting in-progress reassembly due to SINGLE pkt");
-		net_buf_unref(session->reassembly_buf);
-		session->reassembly_buf = NULL;
+		net_buf_drop(&session->reassembly_buf);
 	}
 
 	if (buf->len < BT_AVCTP_HDR_SIZE_SINGLE) {
@@ -561,6 +571,7 @@ static const struct bt_l2cap_chan_ops ops = {
 	.disconnected = avctp_l2cap_disconnected,
 	.encrypt_change = avctp_l2cap_encrypt_changed,
 	.recv = avctp_l2cap_recv,
+	.alloc_buf = avctp_l2cap_alloc_buf,
 };
 
 int bt_avctp_connect(struct bt_conn *conn, uint16_t psm, struct bt_avctp *session)
@@ -698,12 +709,18 @@ int bt_avctp_server_register(struct bt_avctp_server *server)
 	return err;
 }
 
-int bt_avctp_init(void)
+void bt_avctp_init(void)
 {
+	static bool initialized;
+
+	if (initialized) {
+		return;
+	}
+
+	initialized = true;
+
 	LOG_DBG("Initializing AVCTP");
 	/* Locking semaphore initialized to 1 (unlocked) */
 	k_sem_init(&avctp_lock, 1, 1);
 	k_work_init_delayable(&avctp_tx_work, avctp_tx_processor);
-
-	return 0;
 }

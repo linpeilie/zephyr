@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2021 Bosch Sensortec GmbH
  * Copyright (c) 2022 Nordic Semiconductor ASA
+ * Copyright (c) 2026 Infineon Technologies AG,
+ * or an affiliate of Infineon Technologies AG.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -18,6 +20,11 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
+
+#define BMI270_WR_LEN                           32
+#define BMI270_CONFIG_FILE_RETRIES              15
+#define BMI270_CONFIG_FILE_POLL_PERIOD_US       10000
+#define BMI270_INTER_WRITE_DELAY_US             1000
 
 #define BMI270_REG_CHIP_ID         0x00
 #define BMI270_REG_ERROR           0x02
@@ -257,8 +264,13 @@
 #define BMI270_SET_BITS_POS_0(reg_data, bitname, data) \
 	((reg_data & ~(bitname##_MSK)) | (data & bitname##_MSK))
 
+/* Temperature Sensor Constants */
+#define BMI270_TEMP_INVALID        0x8000
+#define BMI270_TEMP_CENTER_OFFSET  23000000LL
+#define BMI270_TEMP_LSB_PER_DEG    512LL
+
 struct bmi270_data {
-	int16_t ax, ay, az, gx, gy, gz;
+	int16_t ax, ay, az, gx, gy, gz, temp;
 	uint8_t acc_range, acc_odr, gyr_odr;
 	uint16_t gyr_range;
 

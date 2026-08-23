@@ -9,9 +9,46 @@
 #include <zephyr/net/ocpp.h>
 #include <zephyr/random/random.h>
 
+/* Test for parsing rpc message manually */
+int parse_rpc_msg(char *msg, int msglen, char *uid, int uidlen,
+		  int *pdu, bool *is_rsp);
+
+ZTEST(net_ocpp, test_parse_rpc_msg)
+{
+	char msg[256];
+	char uid[64];
+	int pdu;
+	bool is_rsp;
+	int ret;
+
+	/* valid CallResult: [3, uid, payload] */
+	strcpy(msg, "[3,\"abc-123\",{\"status\":\"Accepted\"}]");
+	ret = parse_rpc_msg(msg, sizeof(msg), uid, sizeof(uid), &pdu, &is_rsp);
+	zassert_equal(ret, 0, "callresult parse failed %d", ret);
+	zassert_true(is_rsp, "callresult must be response");
+	zassert_str_equal(uid, "abc-123", "uid %s", uid);
+	zassert_str_equal(msg, "{\"status\":\"Accepted\"}", "payload %s", msg);
+
+	/* valid Call: [2, uid, action, payload] */
+	strcpy(msg, "[2,\"abc-123\",\"BootNotification\",{\"k\":\"v\"}]");
+	ret = parse_rpc_msg(msg, sizeof(msg), uid, sizeof(uid), &pdu, &is_rsp);
+	zassert_equal(ret, 0, "call parse failed %d", ret);
+	zassert_false(is_rsp, "call must not be response");
+	zassert_str_equal(msg, "{\"k\":\"v\"}", "payload %s", msg);
+
+	/* truncated frames must fail, not crash on NULL action/payload */
+	strcpy(msg, "[2,\"abc-123\"]");
+	zassert_not_equal(parse_rpc_msg(msg, sizeof(msg), uid, sizeof(uid),
+					&pdu, &is_rsp), 0, "truncated call must fail");
+
+	strcpy(msg, "[3,\"abc-123\"]");
+	zassert_not_equal(parse_rpc_msg(msg, sizeof(msg), uid, sizeof(uid),
+					&pdu, &is_rsp), 0, "truncated callresult must fail");
+}
+
 static void test_ocpp_charge_cycle(ocpp_session_handle_t hndl)
 {
-	int ret;
+	int ret = -EINVAL;
 	int retry = 3;
 	enum ocpp_auth_status status;
 	const uint32_t timeout_ms = 500;
@@ -26,7 +63,7 @@ static void test_ocpp_charge_cycle(ocpp_session_handle_t hndl)
 			break;
 		}
 	}
-	zassert_equal(ret, 0, "CP authorize fail %d");
+	zassert_equal(ret, 0, "CP authorize fail %d", ret);
 	zassert_equal(status, OCPP_AUTH_ACCEPTED, "idtag not authorized");
 
 	ret = ocpp_start_transaction(hndl, sys_rand32_get(), 1, timeout_ms);
@@ -81,7 +118,7 @@ int test_ocpp_init(void)
 	struct ocpp_cs_info csi = { "122.165.245.213", /* ssh.linumiz.com */
 				    "/steve/websocket/CentralSystemService/zephyr",
 				    8180,
-				    AF_INET };
+				    NET_AF_INET };
 
 	net_dhcpv4_start(net_if_get_default());
 

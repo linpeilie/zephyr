@@ -20,6 +20,7 @@
 #define ZEPHYR_INCLUDE_ARCH_RISCV_THREAD_H_
 
 #ifndef _ASMLANGUAGE
+#include <stdbool.h>
 #include <zephyr/types.h>
 
 /*
@@ -77,7 +78,7 @@ struct _thread_arch {
 	unsigned int u_mode_pmp_end_index;
 	unsigned int u_mode_pmp_update_nr;
 #endif
-#ifdef CONFIG_PMP_STACK_GUARD
+#ifdef CONFIG_PMP_KERNEL_MODE_DYNAMIC
 	unsigned int m_mode_pmp_end_index;
 	unsigned long m_mode_pmpaddr_regs[CONFIG_PMP_SLOTS];
 	unsigned long m_mode_pmpcfg_regs[CONFIG_PMP_SLOTS / (__riscv_xlen / 8)];
@@ -94,6 +95,13 @@ BUILD_ASSERT(sizeof(struct _thread_arch) >= 1);
 #endif
 
 typedef struct _thread_arch _thread_arch_t;
+
+#ifdef CONFIG_USERSPACE
+/* Exported accessor for the per-thread user-mode flag, used by
+ * arch_is_user_context() so loadable extensions can resolve it.
+ */
+extern bool z_riscv_thread_is_user_mode(void);
+#endif
 
 #endif /* _ASMLANGUAGE */
 

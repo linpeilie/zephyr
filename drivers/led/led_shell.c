@@ -29,7 +29,7 @@ static int parse_common_args(const struct shell *sh, char **argv,
 	char *end_ptr;
 
 	*dev = shell_device_get_binding(argv[arg_idx_dev]);
-	if (!*dev) {
+	if (*dev == NULL) {
 		shell_error(sh,
 			    "LED device %s not found", argv[arg_idx_dev]);
 		return -ENODEV;
@@ -239,7 +239,7 @@ static int cmd_set_color(const struct shell *sh, size_t argc, char **argv)
 	num_colors = argc - arg_idx_value;
 	if (num_colors > MAX_CHANNEL_ARGS) {
 		shell_error(sh,
-			    "Invalid number of colors %d (max %d)",
+			    "Invalid number of colors %zu (max %d)",
 			     num_colors, MAX_CHANNEL_ARGS);
 		return -EINVAL;
 	}
@@ -332,7 +332,7 @@ cmd_write_channels(const struct shell *sh, size_t argc, char **argv)
 	num_channels = argc - arg_idx_value;
 	if (num_channels > MAX_CHANNEL_ARGS) {
 		shell_error(sh,
-			    "Can't write %d channels (max %d)",
+			    "Can't write %zu channels (max %d)",
 			     num_channels, MAX_CHANNEL_ARGS);
 		return -EINVAL;
 	}

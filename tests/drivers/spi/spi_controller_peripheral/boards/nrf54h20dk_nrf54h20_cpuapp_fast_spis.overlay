@@ -4,6 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/ {
+	zephyr,user {
+		sck-gpios = <&gpio7 3 GPIO_ACTIVE_HIGH>;
+	};
+};
+
 &pinctrl {
 	spis120_default_alt: spis120_default_alt {
 		group1 {
@@ -110,6 +116,7 @@
 	memory-regions = <&dma_fast_region>;
 	cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
 	zephyr,pm-device-runtime-auto;
+
 	dut_spi_dt: test-spi-dev@0 {
 		compatible = "vnd,spi-device";
 		reg = <0>;

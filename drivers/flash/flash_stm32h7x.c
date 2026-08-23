@@ -15,13 +15,8 @@
 #include <zephyr/sys/barrier.h>
 #include <soc.h>
 #include <stm32_bitops.h>
-#if defined(CONFIG_SOC_SERIES_STM32H7RSX)
-#include <stm32h7rsxx_ll_bus.h>
-#include <stm32h7rsxx_ll_utils.h>
-#else
-#include <stm32h7xx_ll_bus.h>
-#include <stm32h7xx_ll_utils.h>
-#endif /* CONFIG_SOC_SERIES_STM32H7RSX */
+#include <stm32_ll_bus.h>
+#include <stm32_ll_utils.h>
 
 #include "flash_stm32.h"
 #include "stm32_hsem.h"
@@ -149,9 +144,9 @@ uint8_t flash_stm32_get_rdp_level(const struct device *dev)
 	return (regs->OPTSR_CUR & FLASH_OPTSR_RDP_Msk) >> FLASH_OPTSR_RDP_Pos;
 }
 
-void flash_stm32_set_rdp_level(const struct device *dev, uint8_t level)
+int flash_stm32_set_rdp_level(const struct device *dev, uint8_t level)
 {
-	write_optsr(dev, FLASH_OPTSR_RDP_Msk, (uint32_t)level << FLASH_OPTSR_RDP_Pos);
+	return write_optsr(dev, FLASH_OPTSR_RDP_Msk, (uint32_t)level << FLASH_OPTSR_RDP_Pos);
 }
 #endif /* CONFIG_FLASH_STM32_READOUT_PROTECTION */
 
@@ -324,7 +319,7 @@ bool flash_stm32_valid_range(const struct device *dev, off_t offset, uint32_t le
 		 * Locations beyond bank2 are caught by flash_stm32_range_exists
 		 */
 		if ((offset < BANK2_OFFSET) && (offset + len > REAL_FLASH_SIZE_KB / 2)) {
-			LOG_ERR("Range ovelaps flash bank discontinuity");
+			LOG_ERR("Range overlaps flash bank discontinuity");
 			return false;
 		}
 	}
@@ -398,7 +393,7 @@ static int flash_stm32_check_status(const struct device *dev)
 
 #ifdef DUAL_BANK
 	sr = regs->SR2;
-	if (sr & (FLASH_FLAG_SNECCERR_BANK1 | FLASH_FLAG_DBECCERR_BANK1)) {
+	if (sr & (FLASH_FLAG_SNECCERR_BANK2 | FLASH_FLAG_DBECCERR_BANK2)) {
 		uint32_t word = regs->ECC_FA2 & FLASH_ECC_FA_FAIL_ECC_ADDR;
 
 		LOG_WRN("Bank%d ECC error at 0x%08x", 2,
@@ -796,6 +791,9 @@ static int flash_stm32h7_write(const struct device *dev, off_t offset, const voi
 		rc = rc2;
 	}
 
+#ifdef CONFIG_DCACHE
+	flash_stm32h7_flush_caches(dev, offset, len);
+#endif
 	flash_stm32_sem_give(dev);
 
 	return rc;
@@ -911,7 +909,7 @@ void flash_stm32_page_layout(const struct device *dev, const struct flash_pages_
 static struct flash_stm32_priv flash_data = {
 	.regs = (FLASH_TypeDef *)DT_INST_REG_ADDR(0),
 #if DT_NODE_HAS_PROP(DT_INST(0, st_stm32h7_flash_controller), clocks)
-	.pclken = {.bus = DT_INST_CLOCKS_CELL(0, bus), .enr = DT_INST_CLOCKS_CELL(0, bits)},
+	.pclken = STM32_DT_INST_CLOCK_INFO(0),
 #endif
 };
 
@@ -935,11 +933,6 @@ static int stm32h7_flash_init(const struct device *dev)
 	/* Only stm32h7 dual core devices have the clocks property */
 	struct flash_stm32_priv *p = FLASH_STM32_PRIV(dev);
 	const struct device *const clk = DEVICE_DT_GET(STM32_CLOCK_CONTROL_NODE);
-
-	if (!device_is_ready(clk)) {
-		LOG_ERR("clock control device not ready");
-		return -ENODEV;
-	}
 
 	/* enable clock : enable the RCC_AHB3ENR_FLASHEN bit */
 	if (clock_control_on(clk, (clock_control_subsys_t)&p->pclken) != 0) {

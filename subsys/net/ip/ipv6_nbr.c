@@ -19,6 +19,7 @@ LOG_MODULE_REGISTER(net_ipv6_nd, CONFIG_NET_IPV6_ND_LOG_LEVEL);
 #include <errno.h>
 #include <stdlib.h>
 #include <zephyr/net/net_core.h>
+#include <zephyr/net/net_log.h>
 #include <zephyr/net/net_pkt.h>
 #include <zephyr/net/net_stats.h>
 #include <zephyr/net/net_context.h>
@@ -26,6 +27,7 @@ LOG_MODULE_REGISTER(net_ipv6_nd, CONFIG_NET_IPV6_ND_LOG_LEVEL);
 #include <zephyr/net/dns_resolve.h>
 #include <zephyr/net/icmp.h>
 #include <zephyr/net/ethernet.h>
+#include <zephyr/random/random.h>
 #include "net_private.h"
 #include "connection.h"
 #include "icmpv6.h"
@@ -34,7 +36,7 @@ LOG_MODULE_REGISTER(net_ipv6_nd, CONFIG_NET_IPV6_ND_LOG_LEVEL);
 #include "ipv6.h"
 #include "nbr.h"
 #include "6lo.h"
-#include "route.h"
+#include "route_ipv6.h"
 #include "net_stats.h"
 #include "pmtu.h"
 
@@ -49,7 +51,7 @@ LOG_MODULE_REGISTER(net_ipv6_nd, CONFIG_NET_IPV6_ND_LOG_LEVEL);
 /* Maximum reachable time value specified in RFC 4861 section
  * 6.2.1. Router Configuration Variables, AdvReachableTime
  */
-#define MAX_REACHABLE_TIME 3600000
+#define MAX_REACHABLE_TIME NET_IPV6_MAX_REACHABLE_TIME
 
 /* IPv6 minimum link MTU specified in RFC 8200 section 5
  * Packet Size Issues
@@ -69,8 +71,8 @@ static uint32_t stale_counter;
 #endif
 
 #if defined(CONFIG_NET_IPV6_ND)
-static struct k_work_delayable ipv6_nd_reachable_timer;
 static void ipv6_nd_reachable_timeout(struct k_work *work);
+static K_WORK_DELAYABLE_DEFINE(ipv6_nd_reachable_timer, ipv6_nd_reachable_timeout);
 static void ipv6_nd_restart_reachable_timer(struct net_nbr *nbr, int64_t time);
 #endif
 
@@ -85,8 +87,10 @@ static void ipv6_nd_restart_reachable_timer(struct net_nbr *nbr, int64_t time);
 extern void net_neighbor_remove(struct net_nbr *nbr);
 extern void net_neighbor_table_clear(struct net_nbr_table *table);
 
+static void ipv6_ns_reply_timeout(struct k_work *work);
+
 /** Neighbor Solicitation reply timer */
-static struct k_work_delayable ipv6_ns_reply_timer;
+static K_WORK_DELAYABLE_DEFINE(ipv6_ns_reply_timer, ipv6_ns_reply_timeout);
 
 NET_NBR_POOL_INIT(net_neighbor_pool,
 		  CONFIG_NET_IPV6_MAX_NEIGHBORS,
@@ -254,7 +258,7 @@ void nbr_print(void)
 
 static struct net_nbr *nbr_lookup(struct net_nbr_table *table,
 				  struct net_if *iface,
-				  const struct in6_addr *addr)
+				  const struct net_in6_addr *addr)
 {
 	int i;
 
@@ -306,7 +310,7 @@ static inline void nbr_free(struct net_nbr *nbr)
 	net_nbr_unlink(nbr, NULL);
 }
 
-bool net_ipv6_nbr_rm(struct net_if *iface, struct in6_addr *addr)
+bool net_ipv6_nbr_rm(struct net_if *iface, struct net_in6_addr *addr)
 {
 	struct net_nbr *nbr;
 #if defined(CONFIG_NET_MGMT_EVENT_INFO)
@@ -322,7 +326,7 @@ bool net_ipv6_nbr_rm(struct net_if *iface, struct in6_addr *addr)
 	}
 
 	/* Remove any routes with nbr as nexthop in first place */
-	net_route_del_by_nexthop(iface, addr);
+	net_route_ipv6_del_by_nexthop(iface, addr);
 
 	nbr_free(nbr);
 
@@ -338,6 +342,34 @@ bool net_ipv6_nbr_rm(struct net_if *iface, struct in6_addr *addr)
 
 	net_ipv6_nbr_unlock();
 	return true;
+}
+
+void net_ipv6_nbr_clear_cache(struct net_if *iface)
+{
+	/* The lock is recursive, so it can be held across net_ipv6_nbr_rm(),
+	 * which takes it again. Removing an entry frees its slot, so the
+	 * indexed scan simply skips it on the next pass.
+	 */
+	net_ipv6_nbr_lock();
+
+	for (int i = 0; i < CONFIG_NET_IPV6_MAX_NEIGHBORS; i++) {
+		struct net_nbr *nbr = get_nbr(i);
+		struct net_in6_addr addr;
+
+		if (!nbr->ref || nbr->iface != iface ||
+		    net_ipv6_nbr_data(nbr)->state == NET_IPV6_NBR_STATE_STATIC) {
+			continue;
+		}
+
+		/* Copy the address out first: net_ipv6_nbr_rm() frees the entry
+		 * and then reads the address it is passed, so a pointer into the
+		 * freed entry would be a use-after-free.
+		 */
+		net_ipaddr_copy(&addr, &net_ipv6_nbr_data(nbr)->addr);
+		net_ipv6_nbr_rm(iface, &addr);
+	}
+
+	net_ipv6_nbr_unlock();
 }
 
 #if defined(CONFIG_NET_IPV6_NBR_CACHE)
@@ -458,7 +490,7 @@ static void ipv6_ns_reply_timeout(struct k_work *work)
 }
 
 static void nbr_init(struct net_nbr *nbr, struct net_if *iface,
-		     const struct in6_addr *addr, bool is_router,
+		     const struct net_in6_addr *addr, bool is_router,
 		     enum net_ipv6_nbr_state state)
 {
 	nbr->idx = NET_NBR_LLADDR_UNKNOWN;
@@ -482,7 +514,7 @@ static void nbr_init(struct net_nbr *nbr, struct net_if *iface,
 }
 
 static struct net_nbr *nbr_new(struct net_if *iface,
-			       const struct in6_addr *addr, bool is_router,
+			       const struct net_in6_addr *addr, bool is_router,
 			       enum net_ipv6_nbr_state state)
 {
 	struct net_nbr *nbr = net_nbr_get(&net_neighbor.table);
@@ -502,7 +534,7 @@ static struct net_nbr *nbr_new(struct net_if *iface,
 
 static void dbg_update_neighbor_lladdr(const struct net_linkaddr *new_lladdr,
 				       const struct net_linkaddr *old_lladdr,
-				       const struct in6_addr *addr)
+				       const struct net_in6_addr *addr)
 {
 	char out[sizeof("xx:xx:xx:xx:xx:xx:xx:xx")];
 
@@ -517,7 +549,7 @@ static void dbg_update_neighbor_lladdr(const struct net_linkaddr *new_lladdr,
 
 static void dbg_update_neighbor_lladdr_raw(uint8_t *new_lladdr,
 					   struct net_linkaddr *old_lladdr,
-					   struct in6_addr *addr)
+					   struct net_in6_addr *addr)
 {
 	struct net_linkaddr lladdr = {
 		.len = old_lladdr->len,
@@ -608,7 +640,7 @@ static void ipv6_nd_remove_old_stale_nbr(void)
 }
 
 static struct net_nbr *add_nbr(struct net_if *iface,
-			       const struct in6_addr *addr,
+			       const struct net_in6_addr *addr,
 			       bool is_router,
 			       enum net_ipv6_nbr_state state)
 {
@@ -638,7 +670,7 @@ static struct net_nbr *add_nbr(struct net_if *iface,
 }
 
 struct net_nbr *net_ipv6_nbr_add(struct net_if *iface,
-				 const struct in6_addr *addr,
+				 const struct net_in6_addr *addr,
 				 const struct net_linkaddr *lladdr,
 				 bool is_router,
 				 enum net_ipv6_nbr_state state)
@@ -722,7 +754,7 @@ void net_neighbor_table_clear(struct net_nbr_table *table)
 	NET_DBG("Neighbor table %p cleared", table);
 }
 
-struct in6_addr *net_ipv6_nbr_lookup_by_index(struct net_if *iface,
+struct net_in6_addr *net_ipv6_nbr_lookup_by_index(struct net_if *iface,
 					      uint8_t idx)
 {
 	int i;
@@ -767,7 +799,7 @@ int net_ipv6_start_dad(struct net_if *iface, struct net_if_addr *ifaddr)
 				&ifaddr->address.in6_addr, true);
 }
 
-static inline bool dad_failed(struct net_if *iface, struct in6_addr *addr)
+static inline bool dad_failed(struct net_if *iface, struct net_in6_addr *addr)
 {
 	if (net_ipv6_is_ll_addr(addr)) {
 		NET_ERR("DAD failed, no ll IPv6 address!");
@@ -781,17 +813,17 @@ static inline bool dad_failed(struct net_if *iface, struct in6_addr *addr)
 #endif /* CONFIG_NET_IPV6_DAD */
 
 #if defined(CONFIG_NET_IPV6_NBR_CACHE)
-static struct in6_addr *check_route(struct net_if *iface,
-				    struct in6_addr *dst,
+static struct net_in6_addr *check_route(struct net_if *iface,
+				    struct net_in6_addr *dst,
 				    bool *try_route)
 {
-	struct in6_addr *nexthop = NULL;
+	struct net_in6_addr *nexthop = NULL;
 	struct net_route_entry *route;
 	struct net_if_router *router;
 
-	route = net_route_lookup(iface, dst);
+	route = net_route_ipv6_lookup(iface, dst);
 	if (route) {
-		nexthop = net_route_get_nexthop(route);
+		nexthop = net_route_ipv6_get_nexthop(route);
 
 		NET_DBG("Route %p nexthop %s iface %p/%d",
 			route,
@@ -800,7 +832,7 @@ static struct in6_addr *check_route(struct net_if *iface,
 			iface, net_if_get_by_iface(iface));
 
 		if (!nexthop) {
-			net_route_del(route);
+			net_route_ipv6_del(route);
 
 			NET_DBG("No route to host %s",
 				net_sprint_ipv6_addr(dst));
@@ -837,10 +869,10 @@ static struct in6_addr *check_route(struct net_if *iface,
 enum net_verdict net_ipv6_prepare_for_send(struct net_pkt *pkt)
 {
 	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(ipv6_access, struct net_ipv6_hdr);
-	struct in6_addr *nexthop = NULL;
+	struct net_in6_addr *nexthop = NULL;
 	struct net_if *iface = NULL;
 	struct net_ipv6_hdr *ip_hdr;
-	struct in6_addr dst_ip;
+	struct net_in6_addr dst_ip;
 	struct net_nbr *nbr;
 	int ret;
 
@@ -862,13 +894,13 @@ enum net_verdict net_ipv6_prepare_for_send(struct net_pkt *pkt)
 		uint16_t mtu;
 
 		if (IS_ENABLED(CONFIG_NET_IPV6_PMTU)) {
-			struct sockaddr_in6 dst = {
-				.sin6_family = AF_INET6,
+			struct net_sockaddr_in6 dst = {
+				.sin6_family = NET_AF_INET6,
 			};
 
 			net_ipv6_addr_copy_raw((uint8_t *)&dst.sin6_addr, ip_hdr->dst);
 
-			ret = net_pmtu_get_mtu((struct sockaddr *)&dst);
+			ret = net_pmtu_get_mtu((struct net_sockaddr *)&dst);
 			if (ret <= 0) {
 				goto use_interface_mtu;
 			}
@@ -881,6 +913,10 @@ use_interface_mtu:
 		}
 
 		if (mtu < pkt_len) {
+			if (net_pkt_dont_fragment(pkt)) {
+				return NET_DROP;
+			}
+
 			ret = net_ipv6_send_fragmented_pkt(net_pkt_iface(pkt),
 							   pkt, pkt_len, mtu);
 			if (ret < 0) {
@@ -909,11 +945,11 @@ use_interface_mtu:
 	 * not enter this branch.
 	 */
 	if ((net_pkt_lladdr_dst(pkt)->len > 0 &&
-	     ((IS_ENABLED(CONFIG_NET_ROUTING) &&
+	     ((IS_ENABLED(CONFIG_NET_IPV6_FORWARDING) &&
 	      (net_ipv6_is_ll_addr(&dst_ip) ||
 	       net_if_ipv6_addr_onlink(NULL, &dst_ip) ||
 	       net_pkt_forwarding(pkt))) ||
-	      !IS_ENABLED(CONFIG_NET_ROUTING))) ||
+	      !IS_ENABLED(CONFIG_NET_IPV6_FORWARDING))) ||
 	    net_ipv6_is_addr_mcast(&dst_ip) ||
 	    /* Workaround Linux bug, see:
 	     * https://github.com/zephyrproject-rtos/zephyr/issues/3111
@@ -971,16 +1007,16 @@ use_interface_mtu:
 try_send:
 	if (IS_ENABLED(CONFIG_NET_IPV6_PMTU)) {
 		struct net_pmtu_entry *entry;
-		struct sockaddr_in6 dst = {
-			.sin6_family = AF_INET6,
+		struct net_sockaddr_in6 dst = {
+			.sin6_family = NET_AF_INET6,
 		};
 
-		net_ipaddr_copy(&dst.sin6_addr, (struct in6_addr *)ip_hdr->dst);
+		net_ipaddr_copy(&dst.sin6_addr, (struct net_in6_addr *)ip_hdr->dst);
 
-		entry = net_pmtu_get_entry((struct sockaddr *)&dst);
+		entry = net_pmtu_get_entry((struct net_sockaddr *)&dst);
 		if (entry == NULL) {
-			ret = net_pmtu_update_mtu((struct sockaddr *)&dst,
-						  net_if_get_mtu(iface));
+			ret = net_pmtu_update_mtu((struct net_sockaddr *)&dst,
+						  net_if_get_mtu(net_pkt_iface(pkt)));
 			if (ret < 0) {
 				NET_DBG("Cannot update PMTU for %s (%d)",
 					net_sprint_ipv6_addr(&dst.sin6_addr),
@@ -1029,7 +1065,7 @@ try_send:
 	net_ipv6_nbr_unlock();
 
 #if defined(CONFIG_NET_IPV6_ND)
-	struct in6_addr src_ip;
+	struct net_in6_addr src_ip;
 
 	net_ipv6_addr_copy_raw(src_ip.s6_addr, ip_hdr->src);
 
@@ -1065,7 +1101,7 @@ try_send:
 }
 
 struct net_nbr *net_ipv6_nbr_lookup(struct net_if *iface,
-				    struct in6_addr *addr)
+				    const struct net_in6_addr *addr)
 {
 	struct net_nbr *nbr;
 
@@ -1108,8 +1144,12 @@ struct net_nbr *net_ipv6_get_nbr(struct net_if *iface, uint8_t idx)
 
 static inline uint8_t get_llao_len(struct net_if *iface)
 {
-	uint8_t total_len = net_if_get_link_addr(iface)->len +
-			 sizeof(struct net_icmpv6_nd_opt_hdr);
+	struct net_linkaddr *lladdr = net_if_get_link_addr(iface);
+	uint8_t total_len;
+
+	NET_ASSERT(lladdr != NULL);
+
+	total_len = lladdr->len + sizeof(struct net_icmpv6_nd_opt_hdr);
 
 	return ROUND_UP(total_len, 8U);
 }
@@ -1122,6 +1162,8 @@ static inline bool set_llao(struct net_pkt *pkt,
 		.type = type,
 		.len  = llao_len >> 3,
 	};
+
+	NET_ASSERT(lladdr != NULL);
 
 	if (net_pkt_write(pkt, &opt_hdr,
 			  sizeof(struct net_icmpv6_nd_opt_hdr)) ||
@@ -1159,8 +1201,8 @@ static bool read_llao(struct net_pkt *pkt,
 	return true;
 }
 
-int net_ipv6_send_na(struct net_if *iface, const struct in6_addr *src,
-		     const struct in6_addr *dst, const struct in6_addr *tgt,
+int net_ipv6_send_na(struct net_if *iface, const struct net_in6_addr *src,
+		     const struct net_in6_addr *dst, const struct net_in6_addr *tgt,
 		     uint8_t flags)
 {
 	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(na_access,
@@ -1175,7 +1217,7 @@ int net_ipv6_send_na(struct net_if *iface, const struct in6_addr *src,
 	pkt = net_pkt_alloc_with_buffer(iface,
 					sizeof(struct net_icmpv6_na_hdr) +
 					llao_len,
-					AF_INET6, IPPROTO_ICMPV6,
+					NET_AF_INET6, NET_IPPROTO_ICMPV6,
 					ND_NET_BUF_TIMEOUT);
 	if (!pkt) {
 		return -ENOMEM;
@@ -1209,7 +1251,7 @@ int net_ipv6_send_na(struct net_if *iface, const struct in6_addr *src,
 	}
 
 	net_pkt_cursor_init(pkt);
-	net_ipv6_finalize(pkt, IPPROTO_ICMPV6);
+	net_ipv6_finalize(pkt, NET_IPPROTO_ICMPV6);
 
 	dbg_addr_sent_tgt("Neighbor Advertisement", src, dst, &na_hdr->tgt,
 			  pkt);
@@ -1221,7 +1263,7 @@ int net_ipv6_send_na(struct net_if *iface, const struct in6_addr *src,
 		goto drop;
 	}
 
-	net_stats_update_icmp_sent(net_pkt_iface(pkt));
+	net_stats_update_icmp_sent(iface);
 	net_stats_update_ipv6_nd_sent(iface);
 
 	return 0;
@@ -1233,8 +1275,8 @@ drop:
 }
 
 static void ns_routing_info(struct net_pkt *pkt,
-			    struct in6_addr *nexthop,
-			    struct in6_addr *tgt)
+			    struct net_in6_addr *nexthop,
+			    struct net_in6_addr *tgt)
 {
 	if (CONFIG_NET_IPV6_LOG_LEVEL >= LOG_LEVEL_DBG) {
 		char out[NET_IPV6_ADDR_LEN];
@@ -1257,11 +1299,11 @@ static void ns_routing_info(struct net_pkt *pkt,
 	}
 }
 
-static int handle_ns_input(struct net_icmp_ctx *ctx,
-			   struct net_pkt *pkt,
-			   struct net_icmp_ip_hdr *hdr,
-			   struct net_icmp_hdr *icmp_hdr,
-			   void *user_data)
+static enum net_verdict handle_ns_input(struct net_icmp_ctx *ctx,
+					struct net_pkt *pkt,
+					struct net_icmp_ip_hdr *hdr,
+					struct net_icmp_hdr *icmp_hdr,
+					void *user_data)
 {
 	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(ns_access,
 					      struct net_icmpv6_ns_hdr);
@@ -1273,13 +1315,17 @@ static int handle_ns_input(struct net_icmp_ctx *ctx,
 	struct net_icmpv6_nd_opt_hdr *nd_opt_hdr;
 	struct net_icmpv6_ns_hdr *ns_hdr;
 	struct net_if_addr *ifaddr;
-	const struct in6_addr *na_src;
-	const struct in6_addr *na_dst;
-	struct in6_addr *tgt;
-	struct in6_addr ns_tgt, ns_src, ns_dst;
+	const struct net_in6_addr *na_src;
+	const struct net_in6_addr *na_dst;
+	struct net_in6_addr *tgt;
+	struct net_in6_addr ns_tgt, ns_src, ns_dst;
 	struct net_linkaddr src_lladdr;
+	struct net_pkt_cursor backup;
+	int ret;
 
 	src_lladdr.len = 0;
+
+	net_pkt_cursor_backup(pkt, &backup);
 
 	if (net_if_flag_is_set(net_pkt_iface(pkt), NET_IF_IPV6_NO_ND)) {
 		goto drop;
@@ -1300,16 +1346,29 @@ static int handle_ns_input(struct net_icmp_ctx *ctx,
 
 	net_stats_update_ipv6_nd_recv(net_pkt_iface(pkt));
 
-	if (((length < (sizeof(struct net_ipv6_hdr) +
-			  sizeof(struct net_icmp_hdr) +
-			  sizeof(struct net_icmpv6_ns_hdr))) ||
-	    (ip_hdr->hop_limit != NET_IPV6_ND_HOP_LIMIT)) &&
-	    (net_ipv6_is_addr_mcast(&ns_tgt) &&
-	     icmp_hdr->code != 0U)) {
+	if (length < (sizeof(struct net_ipv6_hdr) +
+		      sizeof(struct net_icmp_hdr) +
+		      sizeof(struct net_icmpv6_ns_hdr))) {
 		goto drop;
 	}
 
-	net_pkt_acknowledge_data(pkt, &ns_access);
+	if (ip_hdr->hop_limit != NET_IPV6_ND_HOP_LIMIT) {
+		goto drop;
+	}
+
+	if (net_ipv6_is_addr_mcast(&ns_tgt)) {
+		goto drop;
+	}
+
+	if (icmp_hdr->code != 0U) {
+		goto drop;
+	}
+
+	ret = net_pkt_acknowledge_data(pkt, &ns_access);
+	if (ret < 0) {
+		NET_ERR("DROP: failed to acknowledge NS data");
+		goto drop;
+	}
 
 	net_pkt_set_ipv6_ext_opt_len(pkt, sizeof(struct net_icmpv6_ns_hdr));
 	length -= (sizeof(struct net_ipv6_hdr) + sizeof(struct net_icmp_hdr));
@@ -1321,7 +1380,11 @@ static int handle_ns_input(struct net_icmp_ctx *ctx,
 	       net_pkt_ipv6_ext_opt_len(pkt) < length) {
 		uint8_t prev_opt_len;
 
-		net_pkt_acknowledge_data(pkt, &nd_access);
+		ret = net_pkt_acknowledge_data(pkt, &nd_access);
+		if (ret < 0) {
+			NET_ERR("DROP: failed to acknowledge ND data");
+			goto drop;
+		}
 
 		switch (nd_opt_hdr->type) {
 		case NET_ICMPV6_ND_OPT_SLLAO:
@@ -1355,7 +1418,7 @@ static int handle_ns_input(struct net_icmp_ctx *ctx,
 					net_pkt_get_data(pkt, &nd_access);
 	}
 
-	if (IS_ENABLED(CONFIG_NET_ROUTING)) {
+	if (IS_ENABLED(CONFIG_NET_IPV6_FORWARDING)) {
 		ifaddr = net_if_ipv6_addr_lookup(&ns_tgt, NULL);
 	} else {
 		ifaddr = net_if_ipv6_addr_lookup_by_iface(
@@ -1363,8 +1426,8 @@ static int handle_ns_input(struct net_icmp_ctx *ctx,
 	}
 
 	if (!ifaddr) {
-		if (IS_ENABLED(CONFIG_NET_ROUTING)) {
-			struct in6_addr *nexthop;
+		if (IS_ENABLED(CONFIG_NET_IPV6_FORWARDING)) {
+			struct net_in6_addr *nexthop;
 
 			nexthop = check_route(NULL, &ns_tgt, NULL);
 			if (nexthop) {
@@ -1437,7 +1500,7 @@ nexthop_found:
 
 		/* We reuse the received packet for the NA addresses*/
 		net_ipv6_addr_create_ll_allnodes_mcast(&ns_dst);
-		net_ipaddr_copy((struct in6_addr *)ip_hdr->src,
+		net_ipaddr_copy((struct net_in6_addr *)ip_hdr->src,
 				net_if_ipv6_select_src_addr(
 					net_pkt_iface(pkt), &ns_dst));
 
@@ -1469,7 +1532,7 @@ nexthop_found:
 	}
 
 	/* Neighbor Unreachability Detection (NUD) */
-	if (IS_ENABLED(CONFIG_NET_ROUTING)) {
+	if (IS_ENABLED(CONFIG_NET_IPV6_FORWARDING)) {
 		ifaddr = net_if_ipv6_addr_lookup(&ns_dst, NULL);
 	} else {
 		ifaddr = net_if_ipv6_addr_lookup_by_iface(
@@ -1500,25 +1563,27 @@ send_na:
 
 	if (!net_ipv6_send_na(net_pkt_iface(pkt), na_src,
 			      na_dst, tgt, flags)) {
-		return 0;
+		net_pkt_cursor_restore(pkt, &backup);
+		return NET_CONTINUE;
 	}
 
 	NET_DBG("DROP: Cannot send NA");
 
-	return -EIO;
+	return NET_DROP;
 
 drop:
 	net_stats_update_ipv6_nd_drop(net_pkt_iface(pkt));
 
-	return -EIO;
+	return NET_DROP;
 
 silent_drop:
 	/* If the event is not really an error then just ignore it and
-	 * return 0 so that icmpv6 module will not complain about it.
+	 * return NET_CONTINUE so that icmpv6 module will not complain about it.
 	 */
 	net_stats_update_ipv6_nd_drop(net_pkt_iface(pkt));
 
-	return 0;
+	net_pkt_cursor_restore(pkt, &backup);
+	return NET_CONTINUE;
 }
 #endif /* CONFIG_NET_IPV6_NBR_CACHE */
 
@@ -1667,7 +1732,7 @@ void net_ipv6_nbr_set_reachable_timer(struct net_if *iface,
 }
 
 void net_ipv6_nbr_reachability_hint(struct net_if *iface,
-				    const struct in6_addr *ipv6_addr)
+				    const struct net_in6_addr *ipv6_addr)
 {
 	struct net_nbr *nbr = NULL;
 
@@ -1695,7 +1760,7 @@ void net_ipv6_nbr_reachability_hint(struct net_if *iface,
 #if defined(CONFIG_NET_IPV6_NBR_CACHE)
 static inline bool handle_na_neighbor(struct net_pkt *pkt,
 				      struct net_icmpv6_na_hdr *na_hdr,
-				      struct in6_addr *na_tgt,
+				      struct net_in6_addr *na_tgt,
 				      uint16_t tllao_offset)
 {
 	struct net_linkaddr lladdr = { 0 };
@@ -1880,11 +1945,11 @@ err:
 	return false;
 }
 
-static int handle_na_input(struct net_icmp_ctx *ctx,
-			   struct net_pkt *pkt,
-			   struct net_icmp_ip_hdr *hdr,
-			   struct net_icmp_hdr *icmp_hdr,
-			   void *user_data)
+static enum net_verdict handle_na_input(struct net_icmp_ctx *ctx,
+					struct net_pkt *pkt,
+					struct net_icmp_ip_hdr *hdr,
+					struct net_icmp_hdr *icmp_hdr,
+					void *user_data)
 {
 	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(na_access,
 					      struct net_icmpv6_na_hdr);
@@ -1894,12 +1959,16 @@ static int handle_na_input(struct net_icmp_ctx *ctx,
 	uint16_t tllao_offset = 0U;
 	struct net_icmpv6_nd_opt_hdr *nd_opt_hdr;
 	struct net_icmpv6_na_hdr *na_hdr;
-	struct in6_addr na_tgt, na_dst;
+	struct net_in6_addr na_tgt, na_dst;
 	struct net_if_addr *ifaddr;
+	struct net_pkt_cursor backup;
+	int ret;
 
 	if (net_if_flag_is_set(net_pkt_iface(pkt), NET_IF_IPV6_NO_ND)) {
 		goto drop;
 	}
+
+	net_pkt_cursor_backup(pkt, &backup);
 
 	na_hdr = (struct net_icmpv6_na_hdr *)net_pkt_get_data(pkt, &na_access);
 	if (!na_hdr) {
@@ -1915,19 +1984,35 @@ static int handle_na_input(struct net_icmp_ctx *ctx,
 	net_ipv6_addr_copy_raw(na_tgt.s6_addr, na_hdr->tgt);
 	net_ipv6_addr_copy_raw(na_dst.s6_addr, ip_hdr->dst);
 
-	if (((length < (sizeof(struct net_ipv6_hdr) +
-			sizeof(struct net_icmp_hdr) +
-			sizeof(struct net_icmpv6_na_hdr) +
-			sizeof(struct net_icmpv6_nd_opt_hdr))) ||
-	     (ip_hdr->hop_limit != NET_IPV6_ND_HOP_LIMIT) ||
-	     net_ipv6_is_addr_mcast(&na_tgt) ||
-	     (na_hdr->flags & NET_ICMPV6_NA_FLAG_SOLICITED &&
-	      net_ipv6_is_addr_mcast(&na_dst))) &&
-	    (icmp_hdr->code != 0U)) {
+	if (length < (sizeof(struct net_ipv6_hdr) +
+		      sizeof(struct net_icmp_hdr) +
+		      sizeof(struct net_icmpv6_na_hdr) +
+		      sizeof(struct net_icmpv6_nd_opt_hdr))) {
 		goto drop;
 	}
 
-	net_pkt_acknowledge_data(pkt, &na_access);
+	if (ip_hdr->hop_limit != NET_IPV6_ND_HOP_LIMIT) {
+		goto drop;
+	}
+
+	if (net_ipv6_is_addr_mcast(&na_tgt)) {
+		goto drop;
+	}
+
+	if ((na_hdr->flags & NET_ICMPV6_NA_FLAG_SOLICITED) &&
+	     net_ipv6_is_addr_mcast(&na_dst)) {
+		goto drop;
+	}
+
+	if (icmp_hdr->code != 0U) {
+		goto drop;
+	}
+
+	ret = net_pkt_acknowledge_data(pkt, &na_access);
+	if (ret < 0) {
+		NET_ERR("DROP: failed to acknowledge NA data");
+		goto drop;
+	}
 
 	net_pkt_set_ipv6_ext_opt_len(pkt, sizeof(struct net_icmpv6_na_hdr));
 	length -= (sizeof(struct net_ipv6_hdr) + sizeof(struct net_icmp_hdr));
@@ -1963,7 +2048,12 @@ static int handle_na_input(struct net_icmp_ctx *ctx,
 			goto drop;
 		}
 
-		net_pkt_acknowledge_data(pkt, &nd_access);
+		ret = net_pkt_acknowledge_data(pkt, &nd_access);
+		if (ret < 0) {
+			NET_ERR("DROP: failed to acknowledge ND data");
+			goto drop;
+		}
+
 		nd_opt_hdr = (struct net_icmpv6_nd_opt_hdr *)
 					net_pkt_get_data(pkt, &nd_access);
 	}
@@ -1993,19 +2083,20 @@ static int handle_na_input(struct net_icmp_ctx *ctx,
 		net_stats_update_ipv6_nd_drop(net_pkt_iface(pkt));
 	}
 
-	return 0;
+	net_pkt_cursor_restore(pkt, &backup);
+	return NET_CONTINUE;
 
 drop:
 	net_stats_update_ipv6_nd_drop(net_pkt_iface(pkt));
 
-	return -EIO;
+	return NET_DROP;
 }
 
 int net_ipv6_send_ns(struct net_if *iface,
 		     struct net_pkt *pending,
-		     const struct in6_addr *src,
-		     const struct in6_addr *dst,
-		     const struct in6_addr *tgt,
+		     const struct net_in6_addr *src,
+		     const struct net_in6_addr *dst,
+		     const struct net_in6_addr *tgt,
 		     bool is_my_address)
 {
 	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(ns_access,
@@ -2013,7 +2104,7 @@ int net_ipv6_send_ns(struct net_if *iface,
 	struct net_pkt *pkt = NULL;
 	int ret = -ENOBUFS;
 	struct net_icmpv6_ns_hdr *ns_hdr;
-	struct in6_addr node_dst;
+	struct net_in6_addr node_dst;
 	struct net_nbr *nbr;
 	uint8_t llao_len;
 
@@ -2044,7 +2135,7 @@ int net_ipv6_send_ns(struct net_if *iface,
 	pkt = net_pkt_alloc_with_buffer(iface,
 					sizeof(struct net_icmpv6_ns_hdr) +
 					llao_len,
-					AF_INET6, IPPROTO_ICMPV6,
+					NET_AF_INET6, NET_IPPROTO_ICMPV6,
 					ND_NET_BUF_TIMEOUT);
 	if (!pkt) {
 		ret = -ENOMEM;
@@ -2083,7 +2174,7 @@ int net_ipv6_send_ns(struct net_if *iface,
 	}
 
 	net_pkt_cursor_init(pkt);
-	net_ipv6_finalize(pkt, IPPROTO_ICMPV6);
+	net_ipv6_finalize(pkt, NET_IPPROTO_ICMPV6);
 
 	net_ipv6_nbr_lock();
 	nbr = add_nbr(iface, tgt, false,
@@ -2128,6 +2219,7 @@ int net_ipv6_send_ns(struct net_if *iface,
 
 			/* Let the system timeout and then send the NS again */
 			net_ipv6_nbr_unlock();
+			net_pkt_unref(pkt);
 			return 0;
 		}
 	}
@@ -2148,7 +2240,7 @@ int net_ipv6_send_ns(struct net_if *iface,
 
 	net_ipv6_nbr_unlock();
 
-	net_stats_update_icmp_sent(net_pkt_iface(pkt));
+	net_stats_update_icmp_sent(iface);
 	net_stats_update_ipv6_nd_sent(iface);
 
 	return 0;
@@ -2173,8 +2265,8 @@ int net_ipv6_send_rs(struct net_if *iface)
 {
 	uint8_t llao_len = 0U;
 	int ret = -ENOBUFS;
-	const struct in6_addr *src;
-	struct in6_addr dst;
+	const struct net_in6_addr *src;
+	struct net_in6_addr dst;
 	struct net_pkt *pkt;
 
 	net_ipv6_addr_create_ll_allrouters_mcast(&dst);
@@ -2187,7 +2279,7 @@ int net_ipv6_send_rs(struct net_if *iface)
 	pkt = net_pkt_alloc_with_buffer(iface,
 					sizeof(struct net_icmpv6_rs_hdr) +
 					llao_len,
-					AF_INET6, IPPROTO_ICMPV6,
+					NET_AF_INET6, NET_IPPROTO_ICMPV6,
 					ND_NET_BUF_TIMEOUT);
 	if (!pkt) {
 		return -ENOMEM;
@@ -2209,7 +2301,7 @@ int net_ipv6_send_rs(struct net_if *iface)
 	}
 
 	net_pkt_cursor_init(pkt);
-	net_ipv6_finalize(pkt, IPPROTO_ICMPV6);
+	net_ipv6_finalize(pkt, NET_IPPROTO_ICMPV6);
 
 	dbg_addr_sent("Router Solicitation", src, &dst, pkt);
 
@@ -2220,7 +2312,7 @@ int net_ipv6_send_rs(struct net_if *iface)
 		goto drop;
 	}
 
-	net_stats_update_icmp_sent(net_pkt_iface(pkt));
+	net_stats_update_icmp_sent(iface);
 	net_stats_update_ipv6_nd_sent(iface);
 
 	return 0;
@@ -2236,8 +2328,357 @@ int net_ipv6_start_rs(struct net_if *iface)
 	return net_ipv6_send_rs(iface);
 }
 
+#if defined(CONFIG_NET_IPV6_ND_RA_TX)
+/* Router Advertisement transmission constants from RFC 4861 ch. 10. */
+#define MIN_DELAY_BETWEEN_RAS 3000 /* ms */
+#define MAX_RA_DELAY_TIME     500  /* ms */
+
+static struct k_work_delayable ipv6_ra_timer;
+static struct k_work_delayable ipv6_ra_solicited_timer;
+
+static int add_ra_prefix_option(struct net_pkt *pkt,
+				struct net_if_ipv6_prefix *prefix)
+{
+	struct net_icmpv6_nd_opt_hdr opt_hdr = {
+		.type = NET_ICMPV6_ND_OPT_PREFIX_INFO,
+		.len = (sizeof(struct net_icmpv6_nd_opt_hdr) +
+			sizeof(struct net_icmpv6_nd_opt_prefix_info)) / 8U,
+	};
+	struct net_icmpv6_nd_opt_prefix_info pfx_info = { 0 };
+	uint32_t lifetime;
+
+	if (prefix->is_infinite) {
+		lifetime = NET_IPV6_ND_INFINITE_LIFETIME;
+	} else {
+		lifetime = net_timeout_remaining(&prefix->lifetime,
+						 k_uptime_get_32());
+	}
+
+	pfx_info.prefix_len = prefix->len;
+	pfx_info.flags = NET_ICMPV6_RA_FLAG_ONLINK | NET_ICMPV6_RA_FLAG_AUTONOMOUS;
+	pfx_info.valid_lifetime = net_htonl(lifetime);
+	pfx_info.preferred_lifetime = net_htonl(lifetime);
+	net_ipv6_addr_copy_raw(pfx_info.prefix, prefix->prefix.s6_addr);
+
+	if (net_pkt_write(pkt, &opt_hdr, sizeof(opt_hdr)) ||
+	    net_pkt_write(pkt, &pfx_info, sizeof(pfx_info))) {
+		return -ENOBUFS;
+	}
+
+	return 0;
+}
+
+int net_ipv6_send_ra(struct net_if *iface, const struct net_in6_addr *dst)
+{
+	struct net_icmpv6_ra_hdr ra_hdr = { 0 };
+	struct net_in6_addr dst_addr;
+	struct net_if_ipv6 *ipv6;
+	const struct net_in6_addr *src;
+	struct net_pkt *pkt = NULL;
+	bool is_multicast;
+	uint8_t llao_len;
+	size_t pkt_len;
+	int adv_count = 0;
+	int ret = -ENOBUFS;
+
+	is_multicast = (dst == NULL);
+	if (is_multicast) {
+		net_ipv6_addr_create_ll_allnodes_mcast(&dst_addr);
+		dst = &dst_addr;
+	}
+
+	/* The prefix array is walked twice below, so keep the interface
+	 * locked while the advertisement is constructed. The lock is released
+	 * before the packet is handed over to the TX path, as that may need
+	 * to take the lock of another interface.
+	 */
+	net_if_lock(iface);
+
+	ipv6 = iface->config.ip.ipv6;
+	if (ipv6 == NULL) {
+		ret = -ENOTSUP;
+		goto unlock;
+	}
+
+	/* Router Advertisements must be sourced from a link-local address. */
+	src = net_if_ipv6_get_ll(iface, NET_ADDR_PREFERRED);
+	if (src == NULL) {
+		NET_DBG("No LL address for RA on iface %d",
+			net_if_get_by_iface(iface));
+		ret = -EADDRNOTAVAIL;
+		goto unlock;
+	}
+
+	llao_len = get_llao_len(iface);
+
+	ARRAY_FOR_EACH(ipv6->prefix, i) {
+		if (ipv6->prefix[i].is_used && ipv6->prefix[i].is_advertised) {
+			adv_count++;
+		}
+	}
+
+	pkt_len = sizeof(struct net_icmpv6_ra_hdr) + llao_len +
+		  adv_count * (sizeof(struct net_icmpv6_nd_opt_hdr) +
+			       sizeof(struct net_icmpv6_nd_opt_prefix_info));
+
+	pkt = net_pkt_alloc_with_buffer(iface, pkt_len, NET_AF_INET6,
+					NET_IPPROTO_ICMPV6, ND_NET_BUF_TIMEOUT);
+	if (pkt == NULL) {
+		ret = -ENOMEM;
+		goto unlock;
+	}
+
+	net_pkt_set_ipv6_hop_limit(pkt, NET_IPV6_ND_HOP_LIMIT);
+
+	ra_hdr.cur_hop_limit = net_if_ipv6_get_hop_limit(iface);
+	ra_hdr.router_lifetime =
+		net_htons(CONFIG_NET_IPV6_ND_RA_TX_ROUTER_LIFETIME);
+
+	if (net_ipv6_create(pkt, src, dst) ||
+	    net_icmpv6_create(pkt, NET_ICMPV6_RA, 0) ||
+	    net_pkt_write(pkt, &ra_hdr, sizeof(ra_hdr))) {
+		goto drop;
+	}
+
+	if (llao_len > 0U &&
+	    !set_llao(pkt, net_if_get_link_addr(iface), llao_len,
+		      NET_ICMPV6_ND_OPT_SLLAO)) {
+		goto drop;
+	}
+
+	ARRAY_FOR_EACH(ipv6->prefix, i) {
+		if (!ipv6->prefix[i].is_used || !ipv6->prefix[i].is_advertised) {
+			continue;
+		}
+
+		if (add_ra_prefix_option(pkt, &ipv6->prefix[i]) < 0) {
+			goto drop;
+		}
+	}
+
+	net_pkt_cursor_init(pkt);
+	net_ipv6_finalize(pkt, NET_IPPROTO_ICMPV6);
+
+	dbg_addr_sent("Router Advertisement", src, dst, pkt);
+
+	/* Rate limiting of the multicast advertisements is based on this
+	 * timestamp, so take it before the packet is actually sent.
+	 */
+	if (is_multicast) {
+		ipv6->ra_last_sent = k_uptime_get();
+	}
+
+	net_if_unlock(iface);
+
+	if (net_send_data(pkt) < 0) {
+		net_stats_update_ipv6_nd_drop(iface);
+		net_pkt_unref(pkt);
+
+		return -EINVAL;
+	}
+
+	net_stats_update_icmp_sent(iface);
+	net_stats_update_ipv6_nd_sent(iface);
+
+	return 0;
+
+drop:
+	net_pkt_unref(pkt);
+
+unlock:
+	net_if_unlock(iface);
+
+	return ret;
+}
+
+static bool ipv6_ra_have_router(void)
+{
+	STRUCT_SECTION_FOREACH(net_if, iface) {
+		struct net_if_ipv6 *ipv6 = iface->config.ip.ipv6;
+
+		if (ipv6 != NULL && ipv6->is_router) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/* Periodically transmit unsolicited Router Advertisements on all router
+ * interfaces.
+ */
+static void ipv6_ra_timeout(struct k_work *work)
+{
+	ARG_UNUSED(work);
+
+	STRUCT_SECTION_FOREACH(net_if, iface) {
+		struct net_if_ipv6 *ipv6 = iface->config.ip.ipv6;
+
+		if (ipv6 == NULL || !ipv6->is_router) {
+			continue;
+		}
+
+		if (!net_if_is_up(iface)) {
+			continue;
+		}
+
+		(void)net_ipv6_send_ra(iface, NULL);
+	}
+
+	if (ipv6_ra_have_router()) {
+		k_work_reschedule(&ipv6_ra_timer,
+				  K_SECONDS(CONFIG_NET_IPV6_ND_RA_TX_INTERVAL));
+	}
+}
+
+void net_ipv6_ra_update_timer(void)
+{
+	if (ipv6_ra_have_router()) {
+		/* Do not restart an already running period. */
+		k_work_schedule(&ipv6_ra_timer,
+				K_SECONDS(CONFIG_NET_IPV6_ND_RA_TX_INTERVAL));
+	} else {
+		(void)k_work_cancel_delayable(&ipv6_ra_timer);
+	}
+}
+
+/* Reschedule the solicited advertisement timer according to the earliest
+ * advertisement that is still due.
+ */
+static void ipv6_ra_solicited_update(void)
+{
+	int64_t now = k_uptime_get();
+	int64_t next = 0;
+
+	STRUCT_SECTION_FOREACH(net_if, iface) {
+		struct net_if_ipv6 *ipv6;
+
+		net_if_lock(iface);
+
+		ipv6 = iface->config.ip.ipv6;
+		if (ipv6 != NULL && ipv6->ra_pending_at != 0 &&
+		    (next == 0 || ipv6->ra_pending_at < next)) {
+			next = ipv6->ra_pending_at;
+		}
+
+		net_if_unlock(iface);
+	}
+
+	if (next != 0) {
+		k_work_reschedule(&ipv6_ra_solicited_timer,
+				  K_MSEC(MAX(next - now, 0)));
+	}
+}
+
+/* Transmit the Router Advertisements that were requested by a received Router
+ * Solicitation and that are now due.
+ */
+static void ipv6_ra_solicited_timeout(struct k_work *work)
+{
+	int64_t now = k_uptime_get();
+
+	ARG_UNUSED(work);
+
+	STRUCT_SECTION_FOREACH(net_if, iface) {
+		struct net_if_ipv6 *ipv6;
+		bool do_send = false;
+
+		net_if_lock(iface);
+
+		ipv6 = iface->config.ip.ipv6;
+		if (ipv6 != NULL && ipv6->ra_pending_at != 0 &&
+		    ipv6->ra_pending_at <= now) {
+			ipv6->ra_pending_at = 0;
+			do_send = ipv6->is_router && net_if_is_up(iface);
+		}
+
+		net_if_unlock(iface);
+
+		if (do_send) {
+			(void)net_ipv6_send_ra(iface, NULL);
+		}
+	}
+
+	ipv6_ra_solicited_update();
+}
+
+static enum net_verdict handle_rs_input(struct net_icmp_ctx *ctx,
+					struct net_pkt *pkt,
+					struct net_icmp_ip_hdr *hdr,
+					struct net_icmp_hdr *icmp_hdr,
+					void *user_data)
+{
+	struct net_if *iface = net_pkt_iface(pkt);
+	struct net_ipv6_hdr *ip_hdr = hdr->ipv6;
+	uint16_t length = net_pkt_get_len(pkt);
+	struct net_if_ipv6 *ipv6;
+	int64_t now, due;
+
+	ARG_UNUSED(ctx);
+	ARG_UNUSED(user_data);
+
+	dbg_addr_recv("Router Solicitation", &ip_hdr->src, &ip_hdr->dst, pkt);
+
+	net_stats_update_ipv6_nd_recv(iface);
+
+	/* Validate the solicitation as required by RFC 4861 ch. 6.1.1. The
+	 * hop limit check makes sure that the solicitation originates from
+	 * this link and cannot be spoofed by an off-link sender.
+	 */
+	if (length < (sizeof(struct net_ipv6_hdr) +
+		      sizeof(struct net_icmp_hdr) +
+		      sizeof(struct net_icmpv6_rs_hdr))) {
+		goto drop;
+	}
+
+	if (ip_hdr->hop_limit != NET_IPV6_ND_HOP_LIMIT) {
+		goto drop;
+	}
+
+	if (icmp_hdr->code != 0U) {
+		goto drop;
+	}
+
+	net_if_lock(iface);
+
+	ipv6 = iface->config.ip.ipv6;
+	if (ipv6 == NULL || !ipv6->is_router) {
+		net_if_unlock(iface);
+		goto drop;
+	}
+
+	/* Answer the solicitation with a (multicast) Router Advertisement,
+	 * RFC 4861 ch. 6.2.6. The advertisement is delayed by a random amount
+	 * of time and consecutive multicast advertisements are kept at least
+	 * MIN_DELAY_BETWEEN_RAS apart so that a burst of solicitations cannot
+	 * be amplified into a burst of advertisements.
+	 */
+	if (ipv6->ra_pending_at == 0) {
+		now = k_uptime_get();
+		due = now + (int64_t)(sys_rand32_get() % MAX_RA_DELAY_TIME);
+
+		if (due - ipv6->ra_last_sent < MIN_DELAY_BETWEEN_RAS) {
+			due = ipv6->ra_last_sent + MIN_DELAY_BETWEEN_RAS;
+		}
+
+		ipv6->ra_pending_at = due;
+	}
+
+	net_if_unlock(iface);
+
+	ipv6_ra_solicited_update();
+
+	return NET_OK;
+
+drop:
+	net_stats_update_ipv6_nd_drop(iface);
+
+	return NET_DROP;
+}
+#endif /* CONFIG_NET_IPV6_ND_RA_TX */
+
 static inline struct net_nbr *handle_ra_neighbor(struct net_pkt *pkt, uint8_t len,
-						 struct in6_addr *ra_src)
+						 struct net_in6_addr *ra_src)
 {
 	struct net_linkaddr lladdr;
 
@@ -2254,7 +2695,7 @@ static inline void handle_prefix_onlink(struct net_pkt *pkt,
 			struct net_icmpv6_nd_opt_prefix_info *prefix_info)
 {
 	struct net_if_ipv6_prefix *prefix;
-	struct in6_addr received_prefix;
+	struct net_in6_addr received_prefix;
 
 	net_ipv6_addr_copy_raw(received_prefix.s6_addr, prefix_info->prefix);
 
@@ -2266,7 +2707,7 @@ static inline void handle_prefix_onlink(struct net_pkt *pkt,
 		}
 
 		prefix = net_if_ipv6_prefix_add(net_pkt_iface(pkt),
-						(struct in6_addr *)prefix_info->prefix,
+						(struct net_in6_addr *)prefix_info->prefix,
 						prefix_info->prefix_len,
 						prefix_info->valid_lifetime);
 		if (prefix) {
@@ -2336,8 +2777,8 @@ static inline void handle_prefix_autonomous(struct net_pkt *pkt,
 			struct net_icmpv6_nd_opt_prefix_info *prefix_info)
 {
 	struct net_if *iface = net_pkt_iface(pkt);
-	struct in6_addr received_prefix;
-	struct in6_addr addr = { };
+	struct net_in6_addr received_prefix;
+	struct net_in6_addr addr = { };
 	struct net_if_addr *ifaddr;
 	int ret;
 
@@ -2357,6 +2798,7 @@ static inline void handle_prefix_autonomous(struct net_pkt *pkt,
 			 net_if_get_link_addr(iface));
 	if (ret < 0) {
 		NET_WARN("IPv6 IID generation issue (%d)", ret);
+		return;
 	}
 
 	ifaddr = net_if_ipv6_addr_lookup(&addr, NULL);
@@ -2415,6 +2857,7 @@ static inline bool handle_ra_prefix(struct net_pkt *pkt)
 				   struct net_icmpv6_nd_opt_prefix_info);
 	struct net_icmpv6_nd_opt_prefix_info *pfx_info;
 	uint32_t valid_lifetime, preferred_lifetime;
+	int ret;
 
 	pfx_info = (struct net_icmpv6_nd_opt_prefix_info *)
 				net_pkt_get_data(pkt, &rapfx_access);
@@ -2422,10 +2865,13 @@ static inline bool handle_ra_prefix(struct net_pkt *pkt)
 		return false;
 	}
 
-	net_pkt_acknowledge_data(pkt, &rapfx_access);
+	ret = net_pkt_acknowledge_data(pkt, &rapfx_access);
+	if (ret < 0) {
+		return false;
+	}
 
-	valid_lifetime = ntohl(pfx_info->valid_lifetime);
-	preferred_lifetime = ntohl(pfx_info->preferred_lifetime);
+	valid_lifetime = net_ntohl(pfx_info->valid_lifetime);
+	preferred_lifetime = net_ntohl(pfx_info->preferred_lifetime);
 
 	if (valid_lifetime >= preferred_lifetime &&
 	    !net_ipv6_is_ll_addr_raw(pfx_info->prefix)) {
@@ -2461,8 +2907,13 @@ static inline bool handle_ra_6co(struct net_pkt *pkt, uint8_t len)
 	 * bits in the Context Prefix field that are valid.  The value ranges
 	 * from 0 to 128.  If it is more than 64, then the Length MUST be 3.
 	 */
-	if ((context->context_len > 64 && len != 3U) ||
+	if (context->context_len > 128U ||
+	    (context->context_len > 64 && len != 3U) ||
 	    (context->context_len <= 64U && len != 2U)) {
+		/* Per RFC 6775 the context length is at most 128. A larger
+		 * value makes context_len/8 exceed the prefix size and
+		 * underflows the memset length below.
+		 */
 		return false;
 	}
 
@@ -2485,13 +2936,13 @@ static inline bool handle_ra_6co(struct net_pkt *pkt, uint8_t len)
 #endif
 
 static inline bool handle_ra_route_info(struct net_pkt *pkt, uint8_t len,
-					struct in6_addr *ra_src)
+					struct net_in6_addr *ra_src)
 {
 	NET_PKT_DATA_ACCESS_DEFINE(routeinfo_access,
 				   struct net_icmpv6_nd_opt_route_info);
 	struct net_icmpv6_nd_opt_route_info *route_info;
 	struct net_route_entry *route;
-	struct in6_addr prefix_buf = { 0 };
+	struct net_in6_addr prefix_buf = { 0 };
 	uint8_t prefix_field_len = (len - 1) * 8;
 	uint32_t route_lifetime;
 	uint8_t prefix_len;
@@ -2510,7 +2961,7 @@ static inline bool handle_ra_route_info(struct net_pkt *pkt, uint8_t len,
 	}
 
 	prefix_len = route_info->prefix_len;
-	route_lifetime = ntohl(route_info->route_lifetime);
+	route_lifetime = net_ntohl(route_info->route_lifetime);
 	preference = route_info->flags.prf;
 
 	ret = net_pkt_read(pkt, &prefix_buf, prefix_field_len);
@@ -2520,20 +2971,20 @@ static inline bool handle_ra_route_info(struct net_pkt *pkt, uint8_t len,
 	}
 
 	if (route_lifetime == 0) {
-		route = net_route_lookup(net_pkt_orig_iface(pkt), &prefix_buf);
+		route = net_route_ipv6_lookup(net_pkt_orig_iface(pkt), &prefix_buf);
 		if (route != NULL) {
-			ret = net_route_del(route);
+			ret = net_route_ipv6_del(route);
 			if (ret < 0) {
 				NET_DBG("Failed to delete route");
 			}
 		}
 	} else {
-		route = net_route_add(net_pkt_orig_iface(pkt),
-				      &prefix_buf,
-				      prefix_len,
-				      ra_src,
-				      route_lifetime,
-				      preference);
+		route = net_route_ipv6_add(net_pkt_orig_iface(pkt),
+					   &prefix_buf,
+					   prefix_len,
+					   ra_src,
+					   route_lifetime,
+					   preference);
 		if (route == NULL) {
 			NET_DBG("Failed to add route");
 		}
@@ -2548,11 +2999,11 @@ static inline bool handle_ra_rdnss(struct net_pkt *pkt, uint8_t len)
 	NET_PKT_DATA_ACCESS_DEFINE(rdnss_access, struct net_icmpv6_nd_opt_rdnss);
 	struct net_icmpv6_nd_opt_rdnss *rdnss;
 	struct dns_resolve_context *ctx;
-	struct sockaddr_in6 dns = {
-		.sin6_family = AF_INET6
+	struct net_sockaddr_in6 dns = {
+		.sin6_family = NET_AF_INET6
 	};
-	const struct sockaddr *dns_servers[] = {
-		(struct sockaddr *)&dns, NULL
+	const struct net_sockaddr *dns_servers[] = {
+		(struct net_sockaddr *)&dns, NULL
 	};
 	int interfaces[] = {
 		net_if_get_by_iface(net_pkt_iface(pkt))
@@ -2597,7 +3048,7 @@ static inline bool handle_ra_rdnss(struct net_pkt *pkt, uint8_t len)
 							      interfaces,
 							      DNS_SOURCE_IPV6_RA);
 	} else {
-		dns.sin6_port = htons(53);
+		dns.sin6_port = net_htons(53);
 		ret = dns_resolve_remove_server_addresses(ctx, dns_servers, interfaces);
 	}
 
@@ -2613,11 +3064,11 @@ static inline bool handle_ra_rdnss(struct net_pkt *pkt, uint8_t len)
 }
 #endif
 
-static int handle_ra_input(struct net_icmp_ctx *ctx,
-			   struct net_pkt *pkt,
-			   struct net_icmp_ip_hdr *hdr,
-			   struct net_icmp_hdr *icmp_hdr,
-			   void *user_data)
+static enum net_verdict handle_ra_input(struct net_icmp_ctx *ctx,
+					struct net_pkt *pkt,
+					struct net_icmp_ip_hdr *hdr,
+					struct net_icmp_hdr *icmp_hdr,
+					void *user_data)
 {
 	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(ra_access,
 					      struct net_icmpv6_ra_hdr);
@@ -2630,13 +3081,17 @@ static int handle_ra_input(struct net_icmp_ctx *ctx,
 	struct net_if_router *router;
 	uint32_t mtu, reachable_time, retrans_timer;
 	uint16_t router_lifetime;
-	struct in6_addr ra_src;
+	struct net_in6_addr ra_src;
+	struct net_pkt_cursor backup;
+	int ret;
 
 	ARG_UNUSED(user_data);
 
 	if (net_if_flag_is_set(net_pkt_iface(pkt), NET_IF_IPV6_NO_ND)) {
 		goto drop;
 	}
+
+	net_pkt_cursor_backup(pkt, &backup);
 
 	ra_hdr = (struct net_icmpv6_ra_hdr *)net_pkt_get_data(pkt, &ra_access);
 	if (!ra_hdr) {
@@ -2650,21 +3105,34 @@ static int handle_ra_input(struct net_icmp_ctx *ctx,
 
 	net_ipv6_addr_copy_raw(ra_src.s6_addr, ip_hdr->src);
 
-	if (((length < (sizeof(struct net_ipv6_hdr) +
-			sizeof(struct net_icmp_hdr) +
-			sizeof(struct net_icmpv6_ra_hdr) +
-			sizeof(struct net_icmpv6_nd_opt_hdr))) ||
-	     (ip_hdr->hop_limit != NET_IPV6_ND_HOP_LIMIT) ||
-	     !net_ipv6_is_ll_addr(&ra_src)) &&
-		icmp_hdr->code != 0U) {
+	if (length < (sizeof(struct net_ipv6_hdr) +
+		      sizeof(struct net_icmp_hdr) +
+		      sizeof(struct net_icmpv6_ra_hdr) +
+		      sizeof(struct net_icmpv6_nd_opt_hdr))) {
 		goto drop;
 	}
 
-	net_pkt_acknowledge_data(pkt, &ra_access);
+	if (ip_hdr->hop_limit != NET_IPV6_ND_HOP_LIMIT) {
+		goto drop;
+	}
 
-	router_lifetime = ntohs(ra_hdr->router_lifetime);
-	reachable_time = ntohl(ra_hdr->reachable_time);
-	retrans_timer = ntohl(ra_hdr->retrans_timer);
+	if (!net_ipv6_is_ll_addr(&ra_src)) {
+		goto drop;
+	}
+
+	if (icmp_hdr->code != 0U) {
+		goto drop;
+	}
+
+	ret = net_pkt_acknowledge_data(pkt, &ra_access);
+	if (ret < 0) {
+		NET_ERR("DROP: failed to acknowledge RA data");
+		goto drop;
+	}
+
+	router_lifetime = net_ntohs(ra_hdr->router_lifetime);
+	reachable_time = net_ntohl(ra_hdr->reachable_time);
+	retrans_timer = net_ntohl(ra_hdr->retrans_timer);
 
 	if (ra_hdr->cur_hop_limit) {
 		net_if_ipv6_set_hop_limit(net_pkt_iface(pkt),
@@ -2674,7 +3142,7 @@ static int handle_ra_input(struct net_icmp_ctx *ctx,
 	}
 
 	if (reachable_time && reachable_time <= MAX_REACHABLE_TIME &&
-	    (net_if_ipv6_get_reachable_time(net_pkt_iface(pkt)) !=
+	    (net_if_ipv6_get_base_reachable_time(net_pkt_iface(pkt)) !=
 	     reachable_time)) {
 		net_if_ipv6_set_base_reachable_time(net_pkt_iface(pkt),
 						    reachable_time);
@@ -2694,7 +3162,11 @@ static int handle_ra_input(struct net_icmp_ctx *ctx,
 				net_pkt_get_data(pkt, &nd_access);
 
 	while (nd_opt_hdr) {
-		net_pkt_acknowledge_data(pkt, &nd_access);
+		ret = net_pkt_acknowledge_data(pkt, &nd_access);
+		if (ret < 0) {
+			NET_ERR("DROP: failed to acknowledge ND data");
+			goto drop;
+		}
 
 		switch (nd_opt_hdr->type) {
 		case NET_ICMPV6_ND_OPT_SLLAO:
@@ -2750,7 +3222,7 @@ static int handle_ra_input(struct net_icmp_ctx *ctx,
 			break;
 #endif
 		case NET_ICMPV6_ND_OPT_ROUTE:
-			if (!IS_ENABLED(CONFIG_NET_ROUTE)) {
+			if (!IS_ENABLED(CONFIG_NET_IPV6_ROUTE)) {
 				NET_DBG("Route option skipped");
 				goto skip;
 			}
@@ -2818,7 +3290,7 @@ static int handle_ra_input(struct net_icmp_ctx *ctx,
 		}
 	} else {
 		net_if_ipv6_router_add(net_pkt_iface(pkt), &ra_src,
-				       router_lifetime);
+				       router_lifetime != 0, router_lifetime);
 	}
 
 	net_ipv6_nbr_lock();
@@ -2847,35 +3319,39 @@ static int handle_ra_input(struct net_icmp_ctx *ctx,
 	/* Cancel the RS timer on iface */
 	net_if_stop_rs(net_pkt_iface(pkt));
 
-	return 0;
+	net_pkt_cursor_restore(pkt, &backup);
+	return NET_CONTINUE;
 
 drop:
 	net_stats_update_ipv6_nd_drop(net_pkt_iface(pkt));
 
-	return -EIO;
+	return NET_DROP;
 }
 #endif /* CONFIG_NET_IPV6_ND */
 
-#if defined(CONFIG_NET_IPV6_PMTU)
+#if defined(CONFIG_NET_IPV6_PMTU_PTB)
 /* Packet format described in RFC 4443 ch 3.2. Packet Too Big Message */
-static int handle_ptb_input(struct net_icmp_ctx *ctx,
-			    struct net_pkt *pkt,
-			    struct net_icmp_ip_hdr *hdr,
-			    struct net_icmp_hdr *icmp_hdr,
+static enum net_verdict handle_ptb_input(struct net_icmp_ctx *ctx,
+					 struct net_pkt *pkt,
+					 struct net_icmp_ip_hdr *hdr,
+					 struct net_icmp_hdr *icmp_hdr,
 			    void *user_data)
 {
 	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(ptb_access, struct net_icmpv6_ptb);
 	struct net_ipv6_hdr *ip_hdr = hdr->ipv6;
 	uint16_t length = net_pkt_get_len(pkt);
 	struct net_icmpv6_ptb *ptb_hdr;
-	struct sockaddr_in6 sockaddr_src = {
-		.sin6_family = AF_INET6,
+	struct net_sockaddr_in6 sockaddr_src = {
+		.sin6_family = NET_AF_INET6,
 	};
 	struct net_pmtu_entry *entry;
+	struct net_pkt_cursor backup;
 	uint32_t mtu;
 	int ret;
 
 	ARG_UNUSED(user_data);
+
+	net_pkt_cursor_backup(pkt, &backup);
 
 	ptb_hdr = (struct net_icmpv6_ptb *)net_pkt_get_data(pkt, &ptb_access);
 	if (!ptb_hdr) {
@@ -2897,9 +3373,13 @@ static int handle_ptb_input(struct net_icmp_ctx *ctx,
 		goto drop;
 	}
 
-	net_pkt_acknowledge_data(pkt, &ptb_access);
+	ret = net_pkt_acknowledge_data(pkt, &ptb_access);
+	if (ret < 0) {
+		NET_DBG("DROP: cannot acknowledge PTB data");
+		goto drop;
+	}
 
-	mtu = ntohl(ptb_hdr->mtu);
+	mtu = net_ntohl(ptb_hdr->mtu);
 
 	if (mtu < MIN_IPV6_MTU || mtu > MAX_IPV6_MTU) {
 		NET_DBG("DROP: Unsupported MTU %u, min is %u, max is %u",
@@ -2907,9 +3387,9 @@ static int handle_ptb_input(struct net_icmp_ctx *ctx,
 		goto drop;
 	}
 
-	net_ipaddr_copy(&sockaddr_src.sin6_addr, (struct in6_addr *)&ip_hdr->src);
+	net_ipaddr_copy(&sockaddr_src.sin6_addr, (struct net_in6_addr *)&ip_hdr->src);
 
-	entry = net_pmtu_get_entry((struct sockaddr *)&sockaddr_src);
+	entry = net_pmtu_get_entry((struct net_sockaddr *)&sockaddr_src);
 	if (entry == NULL) {
 		NET_DBG("DROP: Cannot find PMTU entry for %s",
 			net_sprint_ipv6_addr(&ip_hdr->src));
@@ -2932,21 +3412,23 @@ static int handle_ptb_input(struct net_icmp_ctx *ctx,
 			net_sprint_ipv6_addr(&ip_hdr->src), ret, mtu);
 	}
 
-	return 0;
+	net_pkt_cursor_restore(pkt, &backup);
+	return NET_CONTINUE;
 drop:
 	net_stats_update_ipv6_pmtu_drop(net_pkt_iface(pkt));
 
-	return -EIO;
+	return NET_DROP;
 
 silent_drop:
 	/* If the event is not really an error then just ignore it and
-	 * return 0 so that icmpv6 module will not complain about it.
+	 * return NET_CONTINUE so that icmpv6 module will not complain about it.
 	 */
 	net_stats_update_ipv6_pmtu_drop(net_pkt_iface(pkt));
 
-	return 0;
+	net_pkt_cursor_restore(pkt, &backup);
+	return NET_CONTINUE;
 }
-#endif /* CONFIG_NET_IPV6_PMTU */
+#endif /* CONFIG_NET_IPV6_PMTU_PTB */
 
 #if defined(CONFIG_NET_IPV6_NBR_CACHE)
 static struct net_icmp_ctx ns_ctx;
@@ -2957,9 +3439,13 @@ static struct net_icmp_ctx na_ctx;
 static struct net_icmp_ctx ra_ctx;
 #endif /* CONFIG_NET_IPV6_ND */
 
-#if defined(CONFIG_NET_IPV6_PMTU)
+#if defined(CONFIG_NET_IPV6_ND_RA_TX)
+static struct net_icmp_ctx rs_ctx;
+#endif /* CONFIG_NET_IPV6_ND_RA_TX */
+
+#if defined(CONFIG_NET_IPV6_PMTU_PTB)
 static struct net_icmp_ctx ptb_ctx;
-#endif /* CONFIG_NET_IPV6_PMTU */
+#endif /* CONFIG_NET_IPV6_PMTU_PTB */
 
 #if defined(CONFIG_NET_TEST) && defined(CONFIG_NET_IPV6_NBR_CACHE)
 /* Check if the NS reply timer is pending and cancel it if so.
@@ -2981,38 +3467,112 @@ int net_ipv6_nbr_test_cancel(void)
 }
 #endif /* CONFIG_NET_TEST */
 
+#if defined(CONFIG_NET_IPV6_UNSOLICITED_NA)
+static void send_unsolicited_na(struct net_if *iface, const struct net_in6_addr *addr)
+{
+	struct net_in6_addr dst;
+	int ret;
+
+	net_ipv6_addr_create_ll_allnodes_mcast(&dst);
+
+	/* RFC 4861 ch 7.2.6: an unsolicited Neighbor Advertisement to the
+	 * all-nodes multicast address, target set to our own address and the
+	 * Override flag set so neighbors replace a stale link-layer address.
+	 */
+	ret = net_ipv6_send_na(iface, addr, &dst, addr, NET_ICMPV6_NA_FLAG_OVERRIDE);
+	if (ret < 0) {
+		NET_DBG("Cannot send unsolicited NA for %s on iface %d (%d)",
+			net_sprint_ipv6_addr(addr), net_if_get_by_iface(iface), ret);
+	}
+}
+
+static void unsolicited_na_addr_event(uint64_t mgmt_event, struct net_if *iface, void *info,
+				      size_t info_length, void *user_data __unused)
+{
+	struct net_if_addr *ifaddr;
+	struct net_in6_addr addr;
+
+	if (mgmt_event != NET_EVENT_IPV6_ADDR_ADD && mgmt_event != NET_EVENT_IPV6_DAD_SUCCEED) {
+		return;
+	}
+
+	/* With DAD disabled an address is preferred as soon as it is added, so
+	 * NET_EVENT_IPV6_ADDR_ADD can fire while the interface is still down.
+	 * Only announce on an up interface (matches gratuitous ARP).
+	 */
+	if (!net_if_is_up(iface)) {
+		return;
+	}
+
+	if (info == NULL || info_length != sizeof(struct net_in6_addr)) {
+		return;
+	}
+
+	net_ipaddr_copy(&addr, (const struct net_in6_addr *)info);
+
+	/* Only announce a usable (preferred) address, and announce each exactly
+	 * once: with DAD enabled the address is still tentative on ADDR_ADD and
+	 * is announced later on DAD_SUCCEED (which also fires when an address is
+	 * re-validated as the interface comes back up, covering reconnects);
+	 * with DAD disabled it is already preferred on ADDR_ADD.
+	 */
+	ifaddr = net_if_ipv6_addr_lookup_by_iface(iface, &addr);
+	if (ifaddr == NULL || ifaddr->addr_state != NET_ADDR_PREFERRED) {
+		return;
+	}
+
+	send_unsolicited_na(iface, &addr);
+}
+
+NET_MGMT_REGISTER_EVENT_HANDLER(unsolicited_na_addr_events,
+				NET_EVENT_IPV6_ADDR_ADD | NET_EVENT_IPV6_DAD_SUCCEED,
+				unsolicited_na_addr_event, NULL);
+#endif /* CONFIG_NET_IPV6_UNSOLICITED_NA */
+
 void net_ipv6_nbr_init(void)
 {
 	int ret;
 
 #if defined(CONFIG_NET_IPV6_NBR_CACHE)
-	ret = net_icmp_init_ctx(&ns_ctx, NET_ICMPV6_NS, 0, handle_ns_input);
+	ret = net_icmp_init_ctx(&ns_ctx, NET_AF_INET6, NET_ICMPV6_NS, 0, handle_ns_input);
 	if (ret < 0) {
 		NET_ERR("Cannot register %s handler (%d)", STRINGIFY(NET_ICMPV6_NS),
 			ret);
 	}
 
-	ret = net_icmp_init_ctx(&na_ctx, NET_ICMPV6_NA, 0, handle_na_input);
+	ret = net_icmp_init_ctx(&na_ctx, NET_AF_INET6, NET_ICMPV6_NA, 0, handle_na_input);
 	if (ret < 0) {
 		NET_ERR("Cannot register %s handler (%d)", STRINGIFY(NET_ICMPV6_NA),
 			ret);
 	}
-
-	k_work_init_delayable(&ipv6_ns_reply_timer, ipv6_ns_reply_timeout);
 #endif
 #if defined(CONFIG_NET_IPV6_ND)
-	ret = net_icmp_init_ctx(&ra_ctx, NET_ICMPV6_RA, 0, handle_ra_input);
+	ret = net_icmp_init_ctx(&ra_ctx, NET_AF_INET6, NET_ICMPV6_RA, 0, handle_ra_input);
 	if (ret < 0) {
 		NET_ERR("Cannot register %s handler (%d)", STRINGIFY(NET_ICMPV6_RA),
 			ret);
 	}
-
-	k_work_init_delayable(&ipv6_nd_reachable_timer,
-			      ipv6_nd_reachable_timeout);
 #endif
 
-#if defined(CONFIG_NET_IPV6_PMTU)
-	ret = net_icmp_init_ctx(&ptb_ctx, NET_ICMPV6_PACKET_TOO_BIG, 0, handle_ptb_input);
+#if defined(CONFIG_NET_IPV6_ND_RA_TX)
+	ret = net_icmp_init_ctx(&rs_ctx, NET_AF_INET6, NET_ICMPV6_RS, 0,
+				handle_rs_input);
+	if (ret < 0) {
+		NET_ERR("Cannot register %s handler (%d)", STRINGIFY(NET_ICMPV6_RS),
+			ret);
+	}
+
+	/* The advertisement timers are only started once an interface
+	 * actually takes the router role, see net_ipv6_ra_update_timer().
+	 */
+	k_work_init_delayable(&ipv6_ra_timer, ipv6_ra_timeout);
+	k_work_init_delayable(&ipv6_ra_solicited_timer,
+			      ipv6_ra_solicited_timeout);
+#endif
+
+#if defined(CONFIG_NET_IPV6_PMTU_PTB)
+	ret = net_icmp_init_ctx(&ptb_ctx, NET_AF_INET6, NET_ICMPV6_PACKET_TOO_BIG, 0,
+				handle_ptb_input);
 	if (ret < 0) {
 		NET_ERR("Cannot register %s handler (%d)", STRINGIFY(NET_ICMPV6_PACKET_TOO_BIG),
 			ret);

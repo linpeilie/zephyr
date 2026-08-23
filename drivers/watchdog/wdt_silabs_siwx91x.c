@@ -149,10 +149,6 @@ static int siwx91x_wdt_setup(const struct device *dev, uint8_t options)
 		return -ENOTSUP;
 	}
 
-	if (options & (WDT_OPT_PAUSE_IN_SLEEP)) {
-		return -ENOTSUP;
-	}
-
 	RSI_WWDT_ConfigSysRstTimer(config->reg, data->delay_reset);
 	RSI_WWDT_ConfigIntrTimer(config->reg, data->delay_irq);
 
@@ -249,7 +245,7 @@ static DEVICE_API(wdt, siwx91x_wdt_driver_api) = {
 	.feed = siwx91x_wdt_feed,
 };
 
-#define siwx91x_WDT_INIT(inst)                                                                     \
+#define SIWX91X_WDT_INIT(inst)                                                                     \
 	static struct siwx91x_wdt_data siwx91x_wdt_data_##inst;                                    \
 	static void siwx91x_wdt_irq_configure_##inst(void)                                         \
 	{                                                                                          \
@@ -267,4 +263,4 @@ static DEVICE_API(wdt, siwx91x_wdt_driver_api) = {
 			      &siwx91x_wdt_config_##inst, PRE_KERNEL_1,                            \
 			      CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &siwx91x_wdt_driver_api);
 
-DT_INST_FOREACH_STATUS_OKAY(siwx91x_WDT_INIT)
+DT_INST_FOREACH_STATUS_OKAY(SIWX91X_WDT_INIT)

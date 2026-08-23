@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <ctype.h>
+
+#include <zephyr/sys/minmax.h>
+
 #include "shell_ops.h"
 #include "shell_help.h"
 #include "shell_utils.h"
@@ -103,7 +106,17 @@ static void formatted_text_print(const struct shell *sh, const char *str,
 		 * not begin with a space.
 		 */
 		while (isspace((int) (*(str + offset))) != 0) {
+			bool is_newline = (*(str + offset) == '\n');
+
 			++offset;
+
+			if (is_newline) {
+				/* Stop after consuming the newline so that
+				 * intentional indentation spaces that follow
+				 * are preserved for the next iteration.
+				 */
+				break;
+			}
 		}
 
 		z_cursor_next_line_move(sh);
@@ -141,7 +154,7 @@ static void help_item_print(const struct shell *sh, const char *item_name,
 	}
 
 	if (!IS_ENABLED(CONFIG_NEWLIB_LIBC) &&
-	    !IS_ENABLED(CONFIG_ARCH_POSIX)) {
+	    !IS_ENABLED(CONFIG_NATIVE_LIBC)) {
 		/* print option name */
 		z_shell_fprintf(sh, SHELL_NORMAL, "%s%-*s", tabulator,
 				item_name_width, item_name);

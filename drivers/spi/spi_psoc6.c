@@ -15,7 +15,7 @@ LOG_MODULE_REGISTER(spi_psoc6);
 #include <errno.h>
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/spi.h>
-#include <zephyr/drivers/spi/rtio.h>
+#include "spi_rtio.h"
 #include <soc.h>
 
 #include "spi_context.h"
@@ -232,8 +232,8 @@ static int spi_psoc6_configure(const struct device *dev,
 	if (SPI_OP_MODE_GET(spi_cfg->operation) == SPI_OP_MODE_MASTER) {
 		spi_psoc6_master_get_defaults(&data->cfg);
 
-		if (spi_cfg->slave > SPI_CHIP_SELECT_COUNT) {
-			LOG_ERR("Slave %d is greater than %d",
+		if (spi_cfg->slave >= SPI_CHIP_SELECT_COUNT) {
+			LOG_ERR("Slave %d is greater than or equal to %d",
 				spi_cfg->slave, SPI_CHIP_SELECT_COUNT);
 			return -EINVAL;
 		}

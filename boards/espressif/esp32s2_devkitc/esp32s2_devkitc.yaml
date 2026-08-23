@@ -18,10 +18,9 @@ supported:
   - counter
   - entropy
   - input
-  - can
   - dma
   - crypto
-testing:
-  ignore_tags:
-    - bluetooth
+  - retained_mem
+  - netif:wifi
+  - pulse_io
 vendor: espressif

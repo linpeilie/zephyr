@@ -13,6 +13,12 @@
 #include <zephyr/pm/device_runtime.h>
 #include <string.h>
 
+#include <zephyr/posix/netinet/in.h>
+#include <zephyr/posix/sys/socket.h>
+#include <zephyr/posix/arpa/inet.h>
+#include <zephyr/posix/unistd.h>
+#include <zephyr/posix/poll.h>
+
 #include <zephyr/drivers/cellular.h>
 
 #define L4_EVENT_MASK \
@@ -281,7 +287,7 @@ int sample_echo_packet(struct sockaddr *ai_addr, socklen_t ai_addrlen, uint16_t 
 	{
 		const struct timeval tv = { .tv_sec = 10 };
 
-		if (zsock_setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+		if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
 			printk("Failed to set socket receive timeout (%d)\n", errno);
 			return -1;
 		}
@@ -485,27 +491,29 @@ int main(void)
 	}
 
 	{
+		struct sockaddr *ai_addr = net_sad(&sample_test_dns_addrinfo.ai_addr_storage);
 		char ip_str[INET6_ADDRSTRLEN];
 		const void *src;
 
-		switch (sample_test_dns_addrinfo.ai_addr.sa_family) {
+		switch (sample_test_dns_addrinfo.ai_addr_storage.ss_family) {
 		case AF_INET:
-			src = &net_sin(&sample_test_dns_addrinfo.ai_addr)->sin_addr;
-			port = &net_sin(&sample_test_dns_addrinfo.ai_addr)->sin_port;
+			src = &net_sin(ai_addr)->sin_addr;
+			port = &net_sin(ai_addr)->sin_port;
 			break;
 		case AF_INET6:
-			src = &net_sin6(&sample_test_dns_addrinfo.ai_addr)->sin6_addr;
-			port = &net_sin6(&sample_test_dns_addrinfo.ai_addr)->sin6_port;
+			src = &net_sin6(ai_addr)->sin6_addr;
+			port = &net_sin6(ai_addr)->sin6_port;
 			break;
 		default:
 			printk("Unsupported address family\n");
 			return -1;
 		}
-		inet_ntop(sample_test_dns_addrinfo.ai_addr.sa_family, src, ip_str, sizeof(ip_str));
+		inet_ntop(sample_test_dns_addrinfo.ai_addr_storage.ss_family, src, ip_str,
+			  sizeof(ip_str));
 		printk("Resolved to %s\n", ip_str);
 	}
 
-	ret = sample_echo_packet(&sample_test_dns_addrinfo.ai_addr,
+	ret = sample_echo_packet(net_sad(&sample_test_dns_addrinfo.ai_addr_storage),
 				 sample_test_dns_addrinfo.ai_addrlen, port);
 
 	if (ret < 0) {
@@ -513,7 +521,7 @@ int main(void)
 		return -1;
 	}
 
-	ret = sample_transmit_packets(&sample_test_dns_addrinfo.ai_addr,
+	ret = sample_transmit_packets(net_sad(&sample_test_dns_addrinfo.ai_addr_storage),
 				      sample_test_dns_addrinfo.ai_addrlen, port);
 
 	if (ret < 0) {
@@ -541,7 +549,7 @@ int main(void)
 	/* Wait a bit to avoid (unsuccessfully) trying to send the first echo packet too quickly. */
 	k_sleep(K_SECONDS(5));
 
-	ret = sample_echo_packet(&sample_test_dns_addrinfo.ai_addr,
+	ret = sample_echo_packet(net_sad(&sample_test_dns_addrinfo.ai_addr_storage),
 				 sample_test_dns_addrinfo.ai_addrlen, port);
 
 	if (ret < 0) {

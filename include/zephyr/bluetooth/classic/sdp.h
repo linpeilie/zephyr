@@ -7,13 +7,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#ifndef ZEPHYR_INCLUDE_BLUETOOTH_SDP_H_
-#define ZEPHYR_INCLUDE_BLUETOOTH_SDP_H_
+#ifndef ZEPHYR_INCLUDE_BLUETOOTH_CLASSIC_SDP_H_
+#define ZEPHYR_INCLUDE_BLUETOOTH_CLASSIC_SDP_H_
 
 /**
  * @file
  * @brief Service Discovery Protocol (SDP)
  * @defgroup bt_sdp Service Discovery Protocol (SDP)
+ * @since 1.6
+ * @version 0.1.0
  * @ingroup bluetooth
  * @{
  */
@@ -206,6 +208,8 @@ extern "C" {
 #define BT_SDP_ATTR_HID_SUPERVISION_TIMEOUT     0x020c /**< HID Supervision Timeout */
 #define BT_SDP_ATTR_HID_NORMALLY_CONNECTABLE    0x020d /**< HID Normally Connectable */
 #define BT_SDP_ATTR_HID_BOOT_DEVICE             0x020e /**< HID Boot Device */
+#define BT_SDP_ATTR_HID_SSR_HOST_MAX_LATENCY    0x020f /**< HID SSR Host Max Latency */
+#define BT_SDP_ATTR_HID_SSR_HOST_MIN_TIMEOUT    0x0210 /**< HID SSR Host Min Timeout */
 /**
  * @}
  */
@@ -515,6 +519,32 @@ struct bt_sdp_record {
 { \
 	BT_SDP_ATTR_SUPPORTED_FEATURES, \
 	{ BT_SDP_TYPE_SIZE(BT_SDP_UINT16), BT_SDP_ARRAY_16(_features) } \
+}
+
+/**
+ *  @brief SDP Supported Capabilities Attribute Declaration Macro.
+ *
+ *  Helper macro to declare supported capabilities of a profile/protocol.
+ *
+ *  @param _capabilities Capability mask as 8bit unsigned integer.
+ */
+#define BT_SDP_SUPPORTED_CAPABILITIES(_capabilities) \
+{ \
+	BT_SDP_ATTR_SUPPORTED_CAPABILITIES, \
+	{ BT_SDP_TYPE_SIZE(BT_SDP_UINT8), BT_SDP_ARRAY_8(_capabilities) } \
+}
+
+/**
+ *  @brief SDP Supported Functions Attribute Declaration Macro.
+ *
+ *  Helper macro to declare supported functions of a profile/protocol.
+ *
+ *  @param _functions Function mask as 32bit unsigned integer.
+ */
+#define BT_SDP_SUPPORTED_FUNCTIONS(_functions) \
+{ \
+	BT_SDP_ATTR_SUPPORTED_FUNCTIONS, \
+	{ BT_SDP_TYPE_SIZE(BT_SDP_UINT32), BT_SDP_ARRAY_32(_functions) } \
 }
 
 /**
@@ -1065,4 +1095,4 @@ int bt_sdp_attr_addl_proto_read(const struct bt_sdp_attribute *attr, uint16_t in
  * @}
  */
 
-#endif /* ZEPHYR_INCLUDE_BLUETOOTH_SDP_H_ */
+#endif /* ZEPHYR_INCLUDE_BLUETOOTH_CLASSIC_SDP_H_ */

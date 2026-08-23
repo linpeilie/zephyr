@@ -109,8 +109,8 @@ static int wait(struct shell_mqtt *sh, int timeout)
 static int get_mqtt_broker_addrinfo(struct shell_mqtt *sh)
 {
 	int rc;
-	struct zsock_addrinfo hints = { .ai_family = AF_INET,
-					.ai_socktype = SOCK_STREAM,
+	struct zsock_addrinfo hints = { .ai_family = NET_AF_INET,
+					.ai_socktype = NET_SOCK_STREAM,
 					.ai_protocol = 0 };
 
 	if (sh->haddr != NULL) {
@@ -162,10 +162,10 @@ static void sh_mqtt_close_and_cleanup(struct shell_mqtt *sh)
 
 static void broker_init(struct shell_mqtt *sh)
 {
-	struct sockaddr_in *broker4 = (struct sockaddr_in *)&sh->broker;
+	struct net_sockaddr_in *broker4 = (struct net_sockaddr_in *)&sh->broker;
 
-	broker4->sin_family = AF_INET;
-	broker4->sin_port = htons(CONFIG_SHELL_MQTT_SERVER_PORT);
+	broker4->sin_family = NET_AF_INET;
+	broker4->sin_port = net_htons(CONFIG_SHELL_MQTT_SERVER_PORT);
 
 	net_ipaddr_copy(&broker4->sin_addr, &net_sin(sh->haddr->ai_addr)->sin_addr);
 }
@@ -670,7 +670,7 @@ static int init(const struct shell_transport *transport, const void *config,
 	k_work_queue_init(&sh->workq);
 	k_work_queue_start(&sh->workq, sh_mqtt_workq_stack,
 			   K_KERNEL_STACK_SIZEOF(sh_mqtt_workq_stack), K_PRIO_COOP(7), NULL);
-	(void)k_thread_name_set(&sh->workq.thread, "sh_mqtt_workq");
+	(void)k_thread_name_set(sh->workq.thread_id, "sh_mqtt_workq");
 	k_work_init(&sh->net_disconnected_work, net_disconnect_handler);
 	k_work_init_delayable(&sh->connect_dwork, sh_mqtt_connect_handler);
 	k_work_init_delayable(&sh->subscribe_dwork, sh_mqtt_subscribe_handler);

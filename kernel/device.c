@@ -15,19 +15,6 @@
 #include <zephyr/toolchain.h>
 #include <zephyr/pm/device_runtime.h>
 
-/**
- * @brief Initialize state for all static devices.
- *
- * The state object is always zero-initialized, but this may not be
- * sufficient.
- */
-void z_device_state_init(void)
-{
-	STRUCT_SECTION_FOREACH(device, dev) {
-		k_object_init(dev);
-	}
-}
-
 int do_device_init(const struct device *dev)
 {
 	int rc = 0;
@@ -85,7 +72,7 @@ int z_impl_device_init(const struct device *dev)
 #ifdef CONFIG_USERSPACE
 static inline int z_vrfy_device_init(const struct device *dev)
 {
-	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_ANY));
+	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
 	return z_impl_device_init(dev);
 }
@@ -128,7 +115,7 @@ static inline const struct device *z_vrfy_device_get_binding(const char *name)
 
 static inline bool z_vrfy_device_is_ready(const struct device *dev)
 {
-	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_ANY));
+	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
 	return z_impl_device_is_ready(dev);
 }
@@ -239,7 +226,7 @@ int z_impl_device_deinit(const struct device *dev)
 #ifdef CONFIG_USERSPACE
 static inline int z_vrfy_device_deinit(const struct device *dev)
 {
-	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_ANY));
+	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
 	return z_impl_device_deinit(dev);
 }

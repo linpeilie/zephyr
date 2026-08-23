@@ -10,14 +10,8 @@ if DISPLAY
 
 if LVGL
 
-config LV_Z_VDB_SIZE
-	default 100
-
 config LV_Z_DOUBLE_VDB
 	default y
-
-config LV_Z_BITS_PER_PIXEL
-	default 32
 
 config LV_Z_FULL_REFRESH
 	default y

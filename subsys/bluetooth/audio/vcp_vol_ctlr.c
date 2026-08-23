@@ -28,9 +28,9 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/__assert.h>
 #include <zephyr/sys/atomic.h>
-#include <zephyr/sys/check.h>
 #include <zephyr/sys/slist.h>
 #include <zephyr/sys/util.h>
+#include <zephyr/toolchain.h>
 #include <zephyr/types.h>
 
 #include "common/bt_str.h"
@@ -136,6 +136,8 @@ static uint8_t vcp_vol_ctlr_read_vol_state_cb(struct bt_conn *conn, uint8_t err,
 	int cb_err = err;
 	struct bt_vcp_vol_ctlr *vol_ctlr = vol_ctlr_get_by_conn(conn);
 
+	ARG_UNUSED(params);
+
 	atomic_clear_bit(vol_ctlr->flags, BT_VCP_VOL_CTLR_FLAG_BUSY);
 
 	if (cb_err) {
@@ -165,6 +167,8 @@ static uint8_t vcp_vol_ctlr_read_vol_flag_cb(struct bt_conn *conn, uint8_t err,
 {
 	int cb_err = err;
 	struct bt_vcp_vol_ctlr *vol_ctlr = vol_ctlr_get_by_conn(conn);
+
+	ARG_UNUSED(params);
 
 	atomic_clear_bit(vol_ctlr->flags, BT_VCP_VOL_CTLR_FLAG_BUSY);
 
@@ -306,7 +310,7 @@ static void vcp_vol_ctlr_write_vcs_cp_cb(struct bt_conn *conn, uint8_t err,
 		cb_err = BT_ATT_ERR_UNLIKELY;
 	} else if (err == BT_VCP_ERR_INVALID_COUNTER && vol_ctlr->state_handle) {
 		vol_ctlr->read_params.func = internal_read_vol_state_cb;
-		vol_ctlr->read_params.handle_count = 1;
+		vol_ctlr->read_params.handle_count = 1U;
 		vol_ctlr->read_params.single.handle = vol_ctlr->state_handle;
 		vol_ctlr->read_params.single.offset = 0U;
 
@@ -571,7 +575,7 @@ static int write_common_vcs_cp(struct bt_vcp_vol_ctlr *vol_ctlr)
 
 static int vcp_vol_ctlr_common_vcs_cp(struct bt_vcp_vol_ctlr *vol_ctlr, uint8_t opcode)
 {
-	CHECKIF(vol_ctlr == NULL) {
+	if (vol_ctlr == NULL) {
 		LOG_DBG("NULL ctlr");
 		return -EINVAL;
 	}
@@ -674,7 +678,6 @@ static void vcp_vol_ctlr_aics_discover_cb(struct bt_aics *inst, int err)
 
 	if (vol_ctlr == NULL) {
 		LOG_ERR("Could not lookup vol_ctlr from aics");
-		vcp_vol_ctlr_discover_complete(vol_ctlr, BT_GATT_ERR(BT_ATT_ERR_UNLIKELY));
 
 		return;
 	}
@@ -808,8 +811,6 @@ static void vcp_vol_ctlr_vocs_discover_cb(struct bt_vocs *inst, int err)
 
 	if (vol_ctlr == NULL) {
 		LOG_ERR("Could not lookup vol_ctlr from vocs");
-		vcp_vol_ctlr_discover_complete(vol_ctlr, BT_GATT_ERR(BT_ATT_ERR_UNLIKELY));
-
 		return;
 	}
 
@@ -845,32 +846,29 @@ static void vcp_vol_ctlr_vocs_set_offset_cb(struct bt_vocs *inst, int err)
 static void vcp_vol_ctlr_reset(struct bt_vcp_vol_ctlr *vol_ctlr)
 {
 	memset(&vol_ctlr->state, 0, sizeof(vol_ctlr->state));
-	vol_ctlr->vol_flags = 0;
-	vol_ctlr->start_handle = 0;
-	vol_ctlr->end_handle = 0;
-	vol_ctlr->state_handle = 0;
-	vol_ctlr->control_handle = 0;
-	vol_ctlr->vol_flag_handle = 0;
+	vol_ctlr->vol_flags = 0U;
+	vol_ctlr->start_handle = 0U;
+	vol_ctlr->end_handle = 0U;
+	vol_ctlr->state_handle = 0U;
+	vol_ctlr->control_handle = 0U;
+	vol_ctlr->vol_flag_handle = 0U;
 #if defined(CONFIG_BT_VCP_VOL_CTLR_VOCS)
-	vol_ctlr->vocs_inst_cnt = 0;
+	vol_ctlr->vocs_inst_cnt = 0U;
 #endif /* CONFIG_BT_VCP_VOL_CTLR_VOCS */
 #if defined(CONFIG_BT_VCP_VOL_CTLR_AICS)
-	vol_ctlr->aics_inst_cnt = 0;
+	vol_ctlr->aics_inst_cnt = 0U;
 #endif /* CONFIG_BT_VCP_VOL_CTLR_AICS */
 
 	memset(&vol_ctlr->discover_params, 0, sizeof(vol_ctlr->discover_params));
 
-	if (vol_ctlr->conn != NULL) {
-		struct bt_conn *conn = vol_ctlr->conn;
-
-		bt_conn_unref(conn);
-		vol_ctlr->conn = NULL;
-	}
+	bt_conn_drop(&vol_ctlr->conn);
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
 	struct bt_vcp_vol_ctlr *vol_ctlr = vol_ctlr_get_by_conn(conn);
+
+	ARG_UNUSED(reason);
 
 	if (vol_ctlr->conn == conn) {
 		vcp_vol_ctlr_reset(vol_ctlr);
@@ -936,6 +934,7 @@ int bt_vcp_vol_ctlr_discover(struct bt_conn *conn, struct bt_vcp_vol_ctlr **out_
 {
 	static bool initialized;
 	struct bt_vcp_vol_ctlr *vol_ctlr;
+	struct bt_conn *ref;
 	int err;
 
 	/*
@@ -948,12 +947,12 @@ int bt_vcp_vol_ctlr_discover(struct bt_conn *conn, struct bt_vcp_vol_ctlr **out_
 	 * 5) When everything above have been discovered, the callback is called
 	 */
 
-	CHECKIF(conn == NULL) {
+	if (conn == NULL) {
 		LOG_DBG("NULL conn");
 		return -EINVAL;
 	}
 
-	CHECKIF(out_vol_ctlr == NULL) {
+	if (out_vol_ctlr == NULL) {
 		LOG_DBG("NULL ctlr");
 		return -EINVAL;
 	}
@@ -970,24 +969,37 @@ int bt_vcp_vol_ctlr_discover(struct bt_conn *conn, struct bt_vcp_vol_ctlr **out_
 		initialized = true;
 	}
 
+	ref = bt_conn_ref(conn);
+	if (ref == NULL) {
+		err = -ENOTCONN;
+		goto cleanup;
+	}
+
 	vcp_vol_ctlr_reset(vol_ctlr);
 
 	memcpy(&vol_ctlr->uuid, BT_UUID_VCS, sizeof(vol_ctlr->uuid));
 
-	vol_ctlr->conn = bt_conn_ref(conn);
 	vol_ctlr->discover_params.func = primary_discover_func;
 	vol_ctlr->discover_params.uuid = &vol_ctlr->uuid.uuid;
 	vol_ctlr->discover_params.type = BT_GATT_DISCOVER_PRIMARY;
 	vol_ctlr->discover_params.start_handle = BT_ATT_FIRST_ATTRIBUTE_HANDLE;
 	vol_ctlr->discover_params.end_handle = BT_ATT_LAST_ATTRIBUTE_HANDLE;
 
+	vol_ctlr->conn = ref;
+
 	err = bt_gatt_discover(conn, &vol_ctlr->discover_params);
-	if (err == 0) {
-		*out_vol_ctlr = vol_ctlr;
-	} else {
-		atomic_clear_bit(vol_ctlr->flags, BT_VCP_VOL_CTLR_FLAG_BUSY);
+	if (err != 0) {
+		bt_conn_unref(ref);
+		vol_ctlr->conn = NULL;
+		goto cleanup;
 	}
 
+	*out_vol_ctlr = vol_ctlr;
+
+	return 0;
+
+cleanup:
+	atomic_clear_bit(vol_ctlr->flags, BT_VCP_VOL_CTLR_FLAG_BUSY);
 	return err;
 }
 
@@ -995,7 +1007,7 @@ int bt_vcp_vol_ctlr_cb_register(struct bt_vcp_vol_ctlr_cb *cb)
 {
 	struct bt_vcp_vol_ctlr_cb *tmp;
 
-	CHECKIF(cb == NULL) {
+	if (cb == NULL) {
 		return -EINVAL;
 	}
 
@@ -1013,7 +1025,7 @@ int bt_vcp_vol_ctlr_cb_register(struct bt_vcp_vol_ctlr_cb *cb)
 
 int bt_vcp_vol_ctlr_cb_unregister(struct bt_vcp_vol_ctlr_cb *cb)
 {
-	CHECKIF(cb == NULL) {
+	if (cb == NULL) {
 		return -EINVAL;
 	}
 
@@ -1028,7 +1040,7 @@ int bt_vcp_vol_ctlr_cb_unregister(struct bt_vcp_vol_ctlr_cb *cb)
 int bt_vcp_vol_ctlr_included_get(struct bt_vcp_vol_ctlr *vol_ctlr,
 			       struct bt_vcp_included *included)
 {
-	CHECKIF(!included || vol_ctlr == NULL) {
+	if (!included || vol_ctlr == NULL) {
 		return -EINVAL;
 	}
 
@@ -1052,7 +1064,7 @@ struct bt_vcp_vol_ctlr *bt_vcp_vol_ctlr_get_by_conn(const struct bt_conn *conn)
 {
 	struct bt_vcp_vol_ctlr *vol_ctlr;
 
-	CHECKIF(conn == NULL) {
+	if (conn == NULL) {
 		LOG_DBG("NULL conn pointer");
 		return NULL;
 	}
@@ -1069,12 +1081,12 @@ struct bt_vcp_vol_ctlr *bt_vcp_vol_ctlr_get_by_conn(const struct bt_conn *conn)
 
 int bt_vcp_vol_ctlr_conn_get(const struct bt_vcp_vol_ctlr *vol_ctlr, struct bt_conn **conn)
 {
-	CHECKIF(vol_ctlr == NULL) {
+	if (vol_ctlr == NULL) {
 		LOG_DBG("NULL vol_ctlr pointer");
 		return -EINVAL;
 	}
 
-	CHECKIF(conn == NULL) {
+	if (conn == NULL) {
 		LOG_DBG("NULL conn pointer");
 		return -EINVAL;
 	}
@@ -1093,7 +1105,7 @@ int bt_vcp_vol_ctlr_read_state(struct bt_vcp_vol_ctlr *vol_ctlr)
 {
 	int err;
 
-	CHECKIF(vol_ctlr == NULL) {
+	if (vol_ctlr == NULL) {
 		LOG_DBG("NULL ctlr");
 		return -EINVAL;
 	}
@@ -1112,7 +1124,7 @@ int bt_vcp_vol_ctlr_read_state(struct bt_vcp_vol_ctlr *vol_ctlr)
 	}
 
 	vol_ctlr->read_params.func = vcp_vol_ctlr_read_vol_state_cb;
-	vol_ctlr->read_params.handle_count = 1;
+	vol_ctlr->read_params.handle_count = 1U;
 	vol_ctlr->read_params.single.handle = vol_ctlr->state_handle;
 	vol_ctlr->read_params.single.offset = 0U;
 
@@ -1128,7 +1140,7 @@ int bt_vcp_vol_ctlr_read_flags(struct bt_vcp_vol_ctlr *vol_ctlr)
 {
 	int err;
 
-	CHECKIF(vol_ctlr == NULL) {
+	if (vol_ctlr == NULL) {
 		LOG_DBG("NULL ctlr");
 		return -EINVAL;
 	}
@@ -1147,7 +1159,7 @@ int bt_vcp_vol_ctlr_read_flags(struct bt_vcp_vol_ctlr *vol_ctlr)
 	}
 
 	vol_ctlr->read_params.func = vcp_vol_ctlr_read_vol_flag_cb;
-	vol_ctlr->read_params.handle_count = 1;
+	vol_ctlr->read_params.handle_count = 1U;
 	vol_ctlr->read_params.single.handle = vol_ctlr->vol_flag_handle;
 	vol_ctlr->read_params.single.offset = 0U;
 
@@ -1199,7 +1211,7 @@ static int write_set_vol_cp(struct bt_vcp_vol_ctlr *vol_ctlr)
 
 int bt_vcp_vol_ctlr_set_vol(struct bt_vcp_vol_ctlr *vol_ctlr, uint8_t volume)
 {
-	CHECKIF(vol_ctlr == NULL) {
+	if (vol_ctlr == NULL) {
 		LOG_DBG("NULL ctlr");
 		return -EINVAL;
 	}

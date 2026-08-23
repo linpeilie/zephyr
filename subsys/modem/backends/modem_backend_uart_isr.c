@@ -6,11 +6,13 @@
 
 #include "modem_backend_uart_isr.h"
 #include "../modem_workqueue.h"
-
+#include <zephyr/pm/device_runtime.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(modem_backend_uart_isr, CONFIG_MODEM_MODULES_LOG_LEVEL);
 
 #include <string.h>
+#include <zephyr/drivers/gpio.h>
 
 static void modem_backend_uart_isr_flush(struct modem_backend_uart *backend)
 {
@@ -91,9 +93,7 @@ static void modem_backend_uart_isr_irq_handler(const struct device *uart, void *
 {
 	struct modem_backend_uart *backend = (struct modem_backend_uart *)user_data;
 
-	if (uart_irq_update(uart) < 1) {
-		return;
-	}
+	uart_irq_update(uart);
 
 	if (uart_irq_rx_ready(uart)) {
 		modem_backend_uart_isr_irq_handler_receive_ready(backend);
@@ -106,13 +106,27 @@ static void modem_backend_uart_isr_irq_handler(const struct device *uart, void *
 
 static int modem_backend_uart_isr_open(void *data)
 {
+	int ret;
 	struct modem_backend_uart *backend = (struct modem_backend_uart *)data;
 
 	ring_buf_reset(&backend->isr.receive_rdb[0]);
 	ring_buf_reset(&backend->isr.receive_rdb[1]);
 	ring_buf_reset(&backend->isr.transmit_rb);
 	atomic_set(&backend->isr.transmit_buf_len, 0);
+
+	ret = pm_device_runtime_get(backend->uart);
+	if (ret < 0) {
+		LOG_ERR_PM_DEVICE_RUNTIME_GET(backend->uart, ret);
+		return ret;
+	}
+	if (backend->dtr_gpio) {
+		gpio_pin_set_dt(backend->dtr_gpio, 1);
+	}
+
 	modem_backend_uart_isr_flush(backend);
+	if (backend->dtr_gpio) {
+		gpio_pin_set_dt(backend->dtr_gpio, 1);
+	}
 	uart_irq_rx_enable(backend->uart);
 	uart_irq_tx_enable(backend->uart);
 	modem_pipe_notify_opened(&backend->pipe);
@@ -166,17 +180,27 @@ static bool modem_backend_uart_isr_transmit_buf_above_limit(struct modem_backend
 	return backend->isr.transmit_buf_put_limit < get_transmit_buf_length(backend);
 }
 
-static int modem_backend_uart_isr_transmit(void *data, const uint8_t *buf, size_t size)
+static int modem_backend_uart_isr_transmit_chain(void *data,
+						 const struct modem_pipe_data_fragment *frags,
+						 size_t num_frags)
 {
 	struct modem_backend_uart *backend = (struct modem_backend_uart *)data;
-	int written;
+	int written = 0;
+	int put;
 
 	if (modem_backend_uart_isr_transmit_buf_above_limit(backend) == true) {
 		return 0;
 	}
 
 	uart_irq_tx_disable(backend->uart);
-	written = ring_buf_put(&backend->isr.transmit_rb, buf, size);
+	for (int i = 0; i < num_frags; i++) {
+		put = ring_buf_put(&backend->isr.transmit_rb, frags[i].data, frags[i].size);
+		written += put;
+		if (put < frags[i].size) {
+			/* No more space in buffer, terminate */
+			break;
+		}
+	}
 	uart_irq_tx_enable(backend->uart);
 
 	/* Update transmit buf capacity tracker */
@@ -232,17 +256,29 @@ static int modem_backend_uart_isr_receive(void *data, uint8_t *buf, size_t size)
 
 static int modem_backend_uart_isr_close(void *data)
 {
+	int ret;
 	struct modem_backend_uart *backend = (struct modem_backend_uart *)data;
 
+	if (backend->dtr_gpio) {
+		gpio_pin_set_dt(backend->dtr_gpio, 0);
+	}
 	uart_irq_rx_disable(backend->uart);
 	uart_irq_tx_disable(backend->uart);
+	if (backend->dtr_gpio) {
+		gpio_pin_set_dt(backend->dtr_gpio, 0);
+	}
+	ret = pm_device_runtime_put_async(backend->uart, K_NO_WAIT);
+	if (ret < 0) {
+		LOG_ERR_PM_DEVICE_RUNTIME_PUT(backend->uart, ret);
+		return ret;
+	}
 	modem_pipe_notify_closed(&backend->pipe);
 	return 0;
 }
 
 static const struct modem_pipe_api modem_backend_uart_isr_api = {
 	.open = modem_backend_uart_isr_open,
-	.transmit = modem_backend_uart_isr_transmit,
+	.transmit_chain = modem_backend_uart_isr_transmit_chain,
 	.receive = modem_backend_uart_isr_receive,
 	.close = modem_backend_uart_isr_close,
 };

@@ -55,11 +55,6 @@ void arch_bss_zero(void)
 	}
 
 	arch_early_memset(__bss_start, 0, __bss_end - __bss_start);
-#if DT_NODE_HAS_STATUS_OKAY(DT_CHOSEN(zephyr_ccm))
-	arch_early_memset(&__ccm_bss_start, 0,
-		       (uintptr_t) &__ccm_bss_end
-		       - (uintptr_t) &__ccm_bss_start);
-#endif
 #if DT_NODE_HAS_STATUS_OKAY(DT_CHOSEN(zephyr_dtcm))
 	arch_early_memset(&__dtcm_bss_start, 0,
 		       (uintptr_t) &__dtcm_bss_end
@@ -102,27 +97,5 @@ void arch_bss_zero_boot(void)
 		       - (uintptr_t)&lnkr_boot_bss_start);
 }
 #endif /* CONFIG_LINKER_USE_BOOT_SECTION */
-
-#ifdef CONFIG_LINKER_USE_PINNED_SECTION
-/**
- * @brief Clear BSS within the pinned region
- *
- * This routine clears the BSS within the pinned region.
- * This is separate from arch_bss_zero() as pinned region may
- * contain symbols required for the boot process before
- * paging is initialized.
- */
-#ifdef CONFIG_LINKER_USE_BOOT_SECTION
-__boot_func
-#else
-__pinned_func
-#endif /* CONFIG_LINKER_USE_BOOT_SECTION */
-void arch_bss_zero_pinned(void)
-{
-	arch_early_memset(&lnkr_pinned_bss_start, 0,
-		       (uintptr_t)&lnkr_pinned_bss_end
-		       - (uintptr_t)&lnkr_pinned_bss_start);
-}
-#endif /* CONFIG_LINKER_USE_PINNED_SECTION */
 
 /* LCOV_EXCL_STOP */

@@ -116,8 +116,7 @@ static int bmm150_set_odr(const struct device *dev, uint8_t val)
 #if defined(BMM150_SET_ATTR_REP)
 static int bmm150_read_rep_xy(const struct device *dev)
 {
-	struct bmm150_data *data = dev->driver->data;
-	const struct bmm150_config *config = dev->config;
+	struct bmm150_data *data = dev->data;
 	uint8_t reg_val;
 
 	if (bmm150_reg_read(dev, BMM150_REG_REP_XY, &reg_val, 1) < 0) {
@@ -454,7 +453,7 @@ static int bmm150_attr_set(const struct device *dev,
 			   enum sensor_attribute attr,
 			   const struct sensor_value *val)
 {
-	struct bmm150_magn_data *data = dev->data;
+	struct bmm150_data *data = dev->data;
 
 	switch (attr) {
 #if defined(CONFIG_BMM150_SAMPLING_RATE_RUNTIME)
@@ -651,8 +650,8 @@ static int pm_action(const struct device *dev, enum pm_device_action action)
 		else {
 			ret = bmm150_trigger_mode_power_ctrl(dev, true);
 		}
-		break;
 #endif
+		break;
 #ifdef CONFIG_PM_DEVICE
 	case PM_DEVICE_ACTION_SUSPEND:
 		ret = bmm150_power_control(dev, 0); /* Suspend */

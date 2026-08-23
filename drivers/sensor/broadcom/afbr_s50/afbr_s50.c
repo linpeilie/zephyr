@@ -119,9 +119,10 @@ static void data_ready_work_handler(struct rtio_iodev_sqe *iodev_sqe)
 						   0;
 
 	status = Argus_EvaluateData(data->platform.argus.handle, &edata->payload);
-	if (status != STATUS_OK || edata->payload.Status != STATUS_OK) {
+	if (status != STATUS_OK) {
 		LOG_ERR("Data not valid: %d, %d", status, edata->payload.Status);
 		handle_error_on_result(data, -EIO);
+		return;
 	}
 	CHECKIF(Argus_IsDataEvaluationPending(data->platform.argus.handle)) {
 		LOG_WRN("Overrun. More pending data than what we've served.");
@@ -380,8 +381,7 @@ BUILD_ASSERT(CONFIG_MAIN_STACK_SIZE >= 4096,
 
 #define AFBR_S50_INIT(inst)									   \
 												   \
-	BUILD_ASSERT(DT_INST_PROP(inst, odr) > 0, "Please set valid ODR");			   \
-	BUILD_ASSERT(DT_INST_PROP(inst, dual_freq_mode == 0) ||					   \
+	BUILD_ASSERT(DT_INST_PROP(inst, dual_freq_mode) == 0 ||					   \
 		     ((DT_INST_PROP(inst, dual_freq_mode) != 0) ^				   \
 		      ((DT_INST_PROP(inst, measurement_mode) & ARGUS_MODE_FLAG_HIGH_SPEED) != 0)), \
 		     "High Speed mode is not compatible with Dual-Frequency mode enabled. "	   \

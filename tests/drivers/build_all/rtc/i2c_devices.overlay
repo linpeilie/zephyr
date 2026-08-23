@@ -48,6 +48,11 @@
 				backup-switch-mode = "disabled";
 				trickle-resistor-ohms = <3000>;
 				int-gpios = <&test_gpio 0 0>;
+
+				test_rv3028_rtc: rv3028_rtc {
+					compatible = "microcrystal,rv3028-rtc";
+					status = "okay";
+				};
 			};
 
 			test_rv8263: rv8263@4 {
@@ -74,6 +79,7 @@
 				reg = <0x7>;
 				irq-frequency = <512>;
 			};
+
 			test_rx8130ce: rx8130ce-rtc@8 {
 				compatible = "epson,rx8130ce-rtc";
 				reg = <0x8>;
@@ -104,14 +110,27 @@
 				int1-gpios = <&test_gpio 0 0>;
 			};
 
-			test_rv3032: rv3032@c {
-				compatible = "microcrystal,rv3032";
+			test_rv3032: rv3032c7@c {
+				compatible = "microcrystal,rv3032-mfd";
 				reg = <0xc>;
-				clkout-frequency = <1>;
+				int-gpios = <&test_gpio 0 0>;
+				evi-gpios = <&test_gpio 0 0>;
 				backup-switch-mode = "disabled";
 				trickle-resistor-ohms = <600>;
 				trickle-charger-mode = <1750>;
-				int-gpios = <&test_gpio 0 0>;
+				always-on;
+				status = "okay";
+
+				test_rv3032_rtc: rv3032_rtc {
+					compatible = "microcrystal,rv3032";
+					status = "okay";
+				};
+			};
+
+			test_max31331: max31331@d {
+				compatible = "adi,max31331";
+				reg = <0xd>;
+				interrupt-gpios = <&test_gpio 0 0>;
 			};
 		};
 	};
